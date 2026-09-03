@@ -132,6 +132,8 @@ def main():
     ap.add_argument('--rate', type=float, default=1.0); ap.add_argument('--base-speed', type=float, default=1.05)
     ap.add_argument('--steps', type=int, default=8); ap.add_argument('--out', default='out/synth.wav'); ap.add_argument('--mp3', action='store_true')
     ap.add_argument('--gain-db', type=float, default=-1.0, help='피크 정규화 목표(dBFS)')
+    ap.add_argument('--bright-db', type=float, default=0.0, help='3kHz 위 고역을 올려 밝게 (예 4)')
+    ap.add_argument('--punch', type=float, default=0.0, help='0~1. 소프트 압축으로 또렷·강하게 (예 0.5)')
     a = ap.parse_args()
     text = a.text or open(a.text_file, encoding='utf-8').read()
     sys.path.insert(0, a.helper)
@@ -154,6 +156,16 @@ def main():
         pieces.append(np.zeros(int(sr * u['pause_ms'] / 1000), dtype=np.float32))
         print(f'  [{i}/{len(units)}] {len(w)/sr:4.1f}s  속도 {speed:.2f}  쉼 {u["pause_ms"]}ms  {u["text"][:38]}', flush=True)
     out = np.concatenate(pieces)
+    if a.bright_db:
+        # 고역 선반(high-shelf): 3kHz 1차 저역통과를 빼서 고역 성분을 뽑고 더한다
+        alpha = float(np.exp(-2 * np.pi * 3000 / sr)); lp = np.empty_like(out); acc = 0.0
+        for i in range(len(out)):
+            acc = alpha * acc + (1 - alpha) * out[i]; lp[i] = acc
+        out = out + (10 ** (a.bright_db / 20) - 1) * (out - lp)
+    if a.punch:
+        # 소프트 압축: 큰 소리는 눌러 주고 전체를 올려 또렷하게
+        k = 1 + 4 * a.punch
+        out = np.tanh(k * out / (np.abs(out).max() or 1.0)) / np.tanh(k)
     peak = np.abs(out).max() or 1.0
     out = out / peak * (10 ** (a.gain_db / 20))
     os.makedirs(os.path.dirname(a.out) or '.', exist_ok=True)
