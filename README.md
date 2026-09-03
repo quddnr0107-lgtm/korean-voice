@@ -1,8 +1,7 @@
 # korean-voice — 한국어 음성 자연화
 
 대형 음성 서비스(일레븐랩스·구글·네이버 클로바)와 **같은 구조**를, **파일 0개·저장소 0개·서버는 Cloudflare
-Worker 하나**로 만든 것. 이 저장소(militaryapplyhelper)와는 무관하고 보관용으로 얹혀 있다. 폴더째 새
-저장소로 옮기면 그대로 동작한다.
+Worker 하나**로 만든 것. (2026-09-03 militaryapplyhelper 저장소의 `korean-voice/` 폴더에서 이력째 옮겨 왔다.)
 
 ```
 텍스트 ──▶ ① 정규화(normalize) ──▶ ② 운율 계획(prepare) ──▶ ③ 음성 합성 ──▶ ④ 재생
