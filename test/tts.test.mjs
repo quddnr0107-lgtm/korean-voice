@@ -1,7 +1,7 @@
 // worker.js의 /api/tts — 가짜 AI 바인딩으로 흐름을 검증한다(실제 모델 호출 없음).
 import test from 'node:test';
 import assert from 'node:assert';
-import { handleTts, _reset, MODEL } from '../worker.mjs';
+import { handleTts, _reset, MODEL } from '../lib/melotts.mjs';
 
 const post = (body) => new Request('https://x/api/tts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 const fakeAudio = Buffer.from('ID3fake-mp3-bytes').toString('base64');

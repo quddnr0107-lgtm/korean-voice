@@ -1,9 +1,9 @@
-# korean-voice 즉시 합성 서버 — CPU 하나로 돈다 (x86_64 · arm64 모두)
+# korean-voice 즉시 합성 서버 — CPU 하나로 돈다 (x86_64 · arm64 모두). Cloudflare Containers(Workers Builds)가 이 파일로 이미지를 만든다.
 #   docker build -t korean-voice-tts .
 #   docker run -d --name tts -p 8790:8790 -v tts-cache:/app/cache --restart unless-stopped korean-voice-tts
 FROM python:3.11-slim
 WORKDIR /app
-RUN pip install --no-cache-dir onnxruntime numpy soundfile librosa PyYAML imageio-ffmpeg && \
+RUN pip install --no-cache-dir onnxruntime numpy soundfile PyYAML imageio-ffmpeg && \
     apt-get update && apt-get install -y --no-install-recommends curl ca-certificates && rm -rf /var/lib/apt/lists/*
 # Supertonic 3 자산(384MB) — 이미지에 굽는다(서버가 켜지자마자 바로 답한다)
 RUN mkdir -p supertonic3/onnx supertonic3/voice_styles supertonic3/py && \

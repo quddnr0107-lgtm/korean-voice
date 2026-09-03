@@ -8,77 +8,15 @@
 // 차례로 시도하고 성공한 코드를 기억하며, 전부 실패하면 사유를 그대로 돌려준다. 프런트는 그때
 // 브라우저 음성(Web Speech)으로 폴백한다.
 // UMD 파일: 번들러/Node에선 module.exports(default import), 브라우저에선 window.KoVoice.
-import KoVoiceMod from './public/ko-voice.js';
-const KoVoice = (KoVoiceMod && KoVoiceMod.normalize) ? KoVoiceMod : globalThis.KoVoice;
+import { Container, getContainer } from '@cloudflare/containers';
+import { handleTts, json } from './lib/melotts.mjs';
+export { handleTts, MODEL, LANGS, MAX_CHARS, _reset } from './lib/melotts.mjs';
 
-export const MODEL = '@cf/myshell-ai/melotts';
-export const LANGS = ['kr', 'ko'];
-export const MAX_CHARS = 600;
-let langOk = null;
-export const _reset = () => { langOk = null; };
-
-const json = (obj, status = 200, extra = {}) => new Response(JSON.stringify(obj), {
-  status, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', ...extra },
-});
-
-async function toBytes(out) {
-  if (!out) return null;
-  if (typeof out.audio === 'string') return Uint8Array.from(atob(out.audio), (c) => c.charCodeAt(0));
-  if (out instanceof ArrayBuffer) return new Uint8Array(out);
-  if (ArrayBuffer.isView(out)) return new Uint8Array(out.buffer, out.byteOffset, out.byteLength);
-  if (typeof out.getReader === 'function') return new Uint8Array(await new Response(out).arrayBuffer());
-  if (typeof out.arrayBuffer === 'function') return new Uint8Array(await out.arrayBuffer());
-  return null;
-}
-
-async function synthesize(ai, spoken) {
-  const order = langOk ? [langOk].concat(LANGS.filter((l) => l !== langOk)) : LANGS;
-  let lastErr = null;
-  for (const lang of order) {
-    try {
-      const bytes = await toBytes(await ai.run(MODEL, { prompt: spoken, lang }));
-      if (bytes && bytes.length) { langOk = lang; return bytes; }
-      lastErr = new Error('empty audio (lang=' + lang + ')');
-    } catch (e) { lastErr = e; }
-  }
-  throw lastErr || new Error('synthesis failed');
-}
-
-async function cacheKey(spoken) {
-  const d = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(spoken));
-  const hex = Array.from(new Uint8Array(d)).map((b) => b.toString(16).padStart(2, '0')).join('');
-  return new Request('https://korean-voice.internal/tts/' + hex);
-}
-
-export async function handleTts(request, env, ctx) {
-  const ai = env && env.AI;
-  if (request.method === 'GET') return json({ ok: true, available: !!ai, engine: ai ? 'workers-ai:melotts' : null, lang: langOk, maxChars: MAX_CHARS });
-  if (request.method !== 'POST') return json({ ok: false, error: 'method_not_allowed' }, 405);
-  let body = {};
-  try { body = await request.json(); } catch (_) { body = {}; }
-  const text = String(body.text == null ? '' : body.text).slice(0, MAX_CHARS).trim();
-  if (!text) return json({ ok: false, error: 'empty_text' }, 400);
-  if (!ai) return json({ ok: false, error: 'tts_unavailable', reason: 'AI 바인딩이 없습니다 (wrangler.jsonc의 ai 바인딩)' }, 503);
-
-  const spoken = (body.normalize === false ? text : KoVoice.normalize(text)).replace(/⏸+/g, ',');
-  const cache = (typeof caches !== 'undefined' && caches && caches.default) ? caches.default : null;
-  const key = cache ? await cacheKey(spoken) : null;
-  const audioHeaders = { 'Content-Type': 'audio/mpeg', 'Cache-Control': 'public, max-age=604800' };
-  if (cache) {
-    try {
-      const hit = await cache.match(key);
-      if (hit) return new Response(hit.body, { headers: { ...audioHeaders, 'X-TTS-Cache': 'hit' } });
-    } catch (_) { /* 캐시 실패는 무시 */ }
-  }
-  let bytes;
-  try { bytes = await synthesize(ai, spoken); } catch (e) {
-    return json({ ok: false, error: 'synthesis_failed', reason: String((e && e.message) || e), tried: LANGS }, 502);
-  }
-  if (cache) {
-    const put = cache.put(key, new Response(bytes, { headers: audioHeaders })).catch(() => {});
-    if (ctx && ctx.waitUntil) ctx.waitUntil(put); else await put;
-  }
-  return new Response(bytes, { headers: { ...audioHeaders, 'X-TTS-Cache': 'miss', 'X-TTS-Lang': langOk || '' } });
+// 컨테이너 = server/server.py (포트 8790). 10분 요청이 없으면 잠든다(비용 0). 첫 요청이 깨우며 모델 로드 약 2초.
+export class TtsContainer extends Container {
+  defaultPort = 8790;
+  sleepAfter = '10m';
+  envVars = { STEPS: '16', ALLOW_ORIGIN: '*', CACHE_DIR: '/app/cache' };
 }
 
 const SECURITY = {
@@ -87,9 +25,115 @@ const SECURITY = {
   'Referrer-Policy': 'strict-origin-when-cross-origin',
 };
 
+/* ── 즉시 합성 서버(컨테이너) — server/server.py 가 Supertonic 3 를 돌린다 ─────────────────────────
+   GET  /tts?v=female|male&t=문장[&s=16]  → R2 캐시(korean-voice-tts) 적중이면 바로, 아니면 컨테이너가 합성 → R2 저장
+   POST /warm {v, texts:[…]}              → 컨테이너 대기열(앞서 굽기)
+   GET  /health                           → 컨테이너 상태(잠들어 있으면 깨운다)
+   캐시 키는 server.py 의 cache_key 와 같다: sha1("voice|steps|text") · text 는 공백 정리·400자. */
+const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, OPTIONS', 'Access-Control-Allow-Headers': 'Range, Content-Type', 'Access-Control-Expose-Headers': 'Content-Length, Content-Range, Accept-Ranges' };
+const VOICES = ['female', 'male'];
+const DEFAULT_STEPS = 16;
+const cleanText = (t) => String(t == null ? '' : t).replace(/\s+/g, ' ').trim().slice(0, 400);
+async function sha1(s) {
+  const d = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(s));
+  return Array.from(new Uint8Array(d)).map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+function container(env) {
+  if (!env.TTS_CONTAINER) return null;
+  return getContainer(env.TTS_CONTAINER, 'main');   // 인스턴스 하나가 캐시·대기열을 공유한다
+}
+function audioResponse(body, size, status, extra) {
+  return new Response(body, { status, headers: { 'Content-Type': 'audio/mpeg', 'Accept-Ranges': 'bytes', 'Cache-Control': 'public, max-age=31536000, immutable', ...(size != null ? { 'Content-Length': String(size) } : {}), ...CORS, ...extra } });
+}
+async function handleLiveTts(request, env, ctx) {
+  const url = new URL(request.url);
+  const v = url.searchParams.get('v') || 'female';
+  const t = cleanText(url.searchParams.get('t'));
+  const s = Math.max(4, Math.min(32, parseInt(url.searchParams.get('s') || DEFAULT_STEPS, 10) || DEFAULT_STEPS));
+  if (!VOICES.includes(v)) return json({ ok: false, error: 'bad_voice' }, 400, CORS);
+  if (!t) return json({ ok: false, error: 'empty_text' }, 400, CORS);
+  const key = `tts/${v}/${await sha1(`${v}|${s}|${t}`)}.mp3`;
+  // 1) R2 캐시
+  if (env.TTS_CACHE) {
+    try {
+      const range = request.headers.get('Range');
+      const obj = await env.TTS_CACHE.get(key, range ? { range: request.headers } : undefined);
+      if (obj) {
+        if (request.method === 'HEAD') return audioResponse(null, obj.size, 200, { 'X-TTS-Cache': 'r2' });
+        if (range && obj.range) {
+          const start = obj.range.offset || 0; const len = obj.range.length != null ? obj.range.length : obj.size - start;
+          return audioResponse(obj.body, len, 206, { 'Content-Range': `bytes ${start}-${start + len - 1}/${obj.size}`, 'X-TTS-Cache': 'r2' });
+        }
+        return audioResponse(obj.body, obj.size, 200, { 'X-TTS-Cache': 'r2' });
+      }
+    } catch (_) { /* 캐시 실패는 합성으로 */ }
+  }
+  // 2) 컨테이너 합성
+  const c = container(env);
+  if (!c) return json({ ok: false, error: 'tts_unavailable', reason: '컨테이너 바인딩 없음' }, 503, CORS);
+  let res;
+  try {
+    const target = new URL(request.url); target.pathname = '/tts';
+    target.search = '?v=' + encodeURIComponent(v) + '&t=' + encodeURIComponent(t) + '&s=' + s;
+    res = await c.fetch(new Request(target.toString(), { method: 'GET' }));
+  } catch (e) {
+    return json({ ok: false, error: 'container_failed', reason: String((e && e.message) || e).slice(0, 300) }, 502, CORS);
+  }
+  if (!res.ok || !(res.headers.get('Content-Type') || '').startsWith('audio/')) {
+    const body = await res.text().catch(() => '');
+    return json({ ok: false, error: 'synthesis_failed', status: res.status, reason: body.slice(0, 300) }, 502, CORS);
+  }
+  const bytes = new Uint8Array(await res.arrayBuffer());
+  if (env.TTS_CACHE) {
+    const put = env.TTS_CACHE.put(key, bytes, { httpMetadata: { contentType: 'audio/mpeg', cacheControl: 'public, max-age=31536000, immutable' } }).catch(() => {});
+    if (ctx && ctx.waitUntil) ctx.waitUntil(put); else await put;
+  }
+  return audioResponse(bytes, bytes.length, 200, { 'X-TTS-Cache': 'miss' });
+}
+async function handleWarm(request, env) {
+  let body = {};
+  try { body = await request.json(); } catch (_) { body = {}; }
+  const v = body.v || 'female';
+  if (!VOICES.includes(v)) return json({ ok: false, error: 'bad_voice' }, 400, CORS);
+  const texts = Array.isArray(body.texts) ? body.texts.map(cleanText).filter(Boolean).slice(0, 400) : [];
+  const s = Math.max(4, Math.min(32, parseInt(body.s || DEFAULT_STEPS, 10) || DEFAULT_STEPS));
+  // R2 에 이미 있는 것은 뺀다(컨테이너 대기열을 아낀다)
+  const todo = [];
+  if (env.TTS_CACHE) {
+    for (const t of texts) { const key = `tts/${v}/${await sha1(`${v}|${s}|${t}`)}.mp3`; if (!(await env.TTS_CACHE.head(key).catch(() => null))) todo.push(t); }
+  } else todo.push(...texts);
+  if (!todo.length) return json({ ok: true, queued: 0, cached: texts.length }, 200, CORS);
+  const c = container(env);
+  if (!c) return json({ ok: false, error: 'tts_unavailable' }, 503, CORS);
+  try {
+    const target = new URL(request.url); target.pathname = '/warm'; target.search = '';
+    const r = await c.fetch(new Request(target.toString(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ v, s, texts: todo }) }));
+    const j = await r.json().catch(() => ({}));
+    return json({ ok: true, ...j, skipped: texts.length - todo.length }, 200, CORS);
+  } catch (e) {
+    return json({ ok: false, error: 'container_failed', reason: String((e && e.message) || e).slice(0, 300) }, 502, CORS);
+  }
+}
+async function handleHealth(request, env) {
+  const c = container(env);
+  if (!c) return json({ ok: false, available: false, reason: '컨테이너 바인딩 없음' }, 200, CORS);
+  try {
+    const target = new URL(request.url); target.pathname = '/health'; target.search = '';
+    const r = await c.fetch(new Request(target.toString(), { method: 'GET' }));
+    const j = await r.json().catch(() => ({}));
+    return json({ ...j, ok: !!j.ok, available: !!j.ok, cache: env.TTS_CACHE ? 'r2' : 'none' }, 200, CORS);
+  } catch (e) {
+    return json({ ok: false, available: false, reason: String((e && e.message) || e).slice(0, 300) }, 200, CORS);
+  }
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    if (request.method === 'OPTIONS' && ['/tts', '/warm', '/health', '/api/tts'].includes(url.pathname)) return new Response(null, { status: 204, headers: { ...CORS, 'Access-Control-Max-Age': '86400' } });
+    if (url.pathname === '/tts') return handleLiveTts(request, env, ctx);
+    if (url.pathname === '/warm' && request.method === 'POST') return handleWarm(request, env);
+    if (url.pathname === '/health') return handleHealth(request, env);
     if (url.pathname === '/api/tts') return handleTts(request, env, ctx);
     const res = await env.ASSETS.fetch(request);
     const out = new Response(res.body, res);
