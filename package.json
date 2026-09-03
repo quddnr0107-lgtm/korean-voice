@@ -1,0 +1,16 @@
+{
+  "name": "korean-voice",
+  "version": "0.1.0",
+  "private": true,
+  "description": "한국어 음성 자연화 — 텍스트 정규화·운율 계획·신경망 음성(Cloudflare Workers AI)·브라우저 폴백. 파일·저장소 없는 Worker 하나.",
+  "scripts": {
+    "check": "node --check public/ko-voice.js && node --check public/lab.js && node --check worker.mjs",
+    "test": "node --test",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "dry-run": "wrangler deploy --dry-run"
+  },
+  "devDependencies": {
+    "wrangler": "^4.128.0"
+  }
+}

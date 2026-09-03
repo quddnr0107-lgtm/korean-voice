@@ -1,0 +1,18 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "korean-voice",
+  "main": "worker.mjs",
+  "compatibility_date": "2026-06-01",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
+  // 신경망 한국어 음성. 모델은 Cloudflare가 돌리고 우리는 파일·저장소를 두지 않는다.
+  // 요금: 생성한 오디오 분당 과금(무료 할당량 안에서는 0). 시크릿이 아니라 여기 둬도 된다.
+  "ai": {
+    "binding": "AI"
+  },
+  "observability": {
+    "enabled": true
+  }
+}

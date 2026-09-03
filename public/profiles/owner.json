@@ -1,0 +1,121 @@
+{
+  "source": "본인 녹음 15개, 총 368초 (원본은 저장소에 없음)",
+  "f0_hz": {
+    "median": 222.2,
+    "p10": 155.3,
+    "p90": 307.7
+  },
+  "syllables_per_s": 4.95,
+  "pause_ms": {
+    "phrase_median": 300,
+    "phrase_p75": 380,
+    "sentence_median": 855,
+    "per_minute": 28.2
+  },
+  "declination_pct": -7.7,
+  "final_fall_ratio": 0.35,
+  "final_rise_ratio": 0.57,
+  "files": [
+    {
+      "file": "0fca2a0e",
+      "duration_s": 54.4,
+      "f0_median": 210.5,
+      "syl_per_s": 5.38
+    },
+    {
+      "file": "327e4ff1",
+      "duration_s": 30.8,
+      "f0_median": 222.2,
+      "syl_per_s": 5.24
+    },
+    {
+      "file": "377460a5",
+      "duration_s": 18.6,
+      "f0_median": 210.5,
+      "syl_per_s": 4.61
+    },
+    {
+      "file": "53600320",
+      "duration_s": 28.4,
+      "f0_median": 205.1,
+      "syl_per_s": 5.42
+    },
+    {
+      "file": "53a995cf",
+      "duration_s": 18.3,
+      "f0_median": 231.9,
+      "syl_per_s": 5.13
+    },
+    {
+      "file": "73123e3d",
+      "duration_s": 6.7,
+      "f0_median": 231.9,
+      "syl_per_s": 4.49
+    },
+    {
+      "file": "743520cb",
+      "duration_s": 13.7,
+      "f0_median": 197.5,
+      "syl_per_s": 6.42
+    },
+    {
+      "file": "96361703",
+      "duration_s": 5.8,
+      "f0_median": 285.7,
+      "syl_per_s": 4.95
+    },
+    {
+      "file": "a7373a36",
+      "duration_s": 29.1,
+      "f0_median": 285.7,
+      "syl_per_s": 5.16
+    },
+    {
+      "file": "b244abdb",
+      "duration_s": 28.6,
+      "f0_median": 242.4,
+      "syl_per_s": 5.91
+    },
+    {
+      "file": "b4012967",
+      "duration_s": 9.5,
+      "f0_median": 200.0,
+      "syl_per_s": 4.91
+    },
+    {
+      "file": "ba9d66bc",
+      "duration_s": 39.6,
+      "f0_median": 225.4,
+      "syl_per_s": 4.69
+    },
+    {
+      "file": "cf5daa77",
+      "duration_s": 21.5,
+      "f0_median": 222.2,
+      "syl_per_s": 4.41
+    },
+    {
+      "file": "e9d991f1",
+      "duration_s": 49.9,
+      "f0_median": 231.9,
+      "syl_per_s": 4.9
+    },
+    {
+      "file": "f39b827d",
+      "duration_s": 12.6,
+      "f0_median": 216.2,
+      "syl_per_s": 4.06
+    }
+  ],
+  "engine": {
+    "rate": 0.9,
+    "pause": {
+      "ip": 855,
+      "comma": 300,
+      "conj": 255,
+      "weak": 150
+    },
+    "declination": 0.077,
+    "questionRise": 1.08
+  }
+}
