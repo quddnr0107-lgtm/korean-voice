@@ -1,0 +1,22 @@
+# 서버 한 대에 TTS + HTTPS(Caddy).  DNS: tts.yebijun.drillstudy.com → 이 서버 IP (Cloudflare 프록시 켜도 됨)
+#   docker compose up -d --build
+services:
+  tts:
+    build: .
+    restart: unless-stopped
+    volumes:
+      - tts-cache:/app/cache
+    environment:
+      STEPS: "16"
+      ALLOW_ORIGIN: "*"
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+    depends_on: [tts]
+volumes:
+  tts-cache:
+  caddy-data:

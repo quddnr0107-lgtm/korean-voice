@@ -1,0 +1,7 @@
+tts.yebijun.drillstudy.com {
+	encode gzip
+	reverse_proxy tts:8790
+	header Cache-Control "public, max-age=31536000, immutable" {
+		# /tts 응답만 오래 캐시 — /health 는 서버가 no-store 를 준다
+	}
+}
