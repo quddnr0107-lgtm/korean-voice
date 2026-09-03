@@ -15,7 +15,7 @@ export { handleTts, MODEL, LANGS, MAX_CHARS, _reset } from './lib/melotts.mjs';
 // 컨테이너 = server/server.py (포트 8790). 10분 요청이 없으면 잠든다(비용 0). 첫 요청이 깨우며 모델 로드 약 2초.
 export class TtsContainer extends Container {
   defaultPort = 8790;
-  sleepAfter = '10m';
+  sleepAfter = '3m';   // 유휴 3분이면 잠든다(비용 0). 깨우는 데 수 초 · 캐시(R2)는 잠들어도 즉시 답한다
   envVars = { STEPS: '16', ALLOW_ORIGIN: '*', CACHE_DIR: '/app/cache' };
 }
 

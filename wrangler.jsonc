@@ -12,7 +12,7 @@
     "binding": "AI"
   },
   // ── 즉시 합성 서버 = 컨테이너 (server/Dockerfile · Supertonic 3 · CPU) ──
-  // Workers Builds 가 main 푸시마다 Dockerfile 을 빌드해 올린다. 요청이 없으면 10분 뒤 잠들어(비용 0) 첫 요청에 다시 뜬다.
+  // Workers Builds 가 main 푸시마다 Dockerfile 을 빌드해 올린다. 요청이 없으면 3분 뒤 잠들어(비용 0) 첫 요청에 다시 뜬다.
   // standard-3 = 2 vCPU · 8 GiB: 문장 하나 합성 약 3~4초(첫 청취자만). 캐시는 R2(korean-voice-tts)에 영구 보관 → 두 번째부터 즉시.
   "containers": [
     {
