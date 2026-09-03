@@ -120,8 +120,9 @@ async function handleHealth(request, env) {
   try {
     const target = new URL(request.url); target.pathname = '/health'; target.search = '';
     const r = await c.fetch(new Request(target.toString(), { method: 'GET' }));
-    const j = await r.json().catch(() => ({}));
-    return json({ ...j, ok: !!j.ok, available: !!j.ok, cache: env.TTS_CACHE ? 'r2' : 'none' }, 200, CORS);
+    const raw = await r.text().catch(() => '');
+    let j = {}; try { j = JSON.parse(raw); } catch (_) { j = {}; }
+    return json({ ...j, ok: !!j.ok, available: !!j.ok, cache: env.TTS_CACHE ? 'r2' : 'none', ...(j.ok ? {} : { container_status: r.status, container_body: raw.slice(0, 200) }) }, 200, CORS);
   } catch (e) {
     return json({ ok: false, available: false, reason: String((e && e.message) || e).slice(0, 300) }, 200, CORS);
   }
