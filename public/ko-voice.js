@@ -184,6 +184,8 @@
     t = t.replace(/(?<![\d.])(\d{1,2})\/(\d{1,2})(?![\d/])/g, (m, a, b) => (+a >= 1 && +a <= 12 && +b >= 1 && +b <= 31) ? readWithUnit(a, '월') + ' ' + readSino(b) + ' 일' : readSino(b) + ' 분의 ' + readSino(a));
     // 시각: 10:30 → 열 시 삼십 분
     t = t.replace(/\b(\d{1,2}):(\d{2})(?::(\d{2}))?\b/g, (m, h, mi, s) => readWithUnit(h, '시') + ' ' + readSino(mi) + ' 분' + (s ? ' ' + readSino(s) + ' 초' : ''));
+    // 비율: 2.5:1 → 이 점 오 대 일 (시각 hh:mm은 위에서 이미 처리됨)
+    t = t.replace(/(\d+(?:\.\d+)?)\s*:\s*(\d+(?:\.\d+)?)(?![\d:])/g, (m, a, b) => readNumber(a) + ' 대 ' + readNumber(b));
     // 영하: -3도
     t = t.replace(/(^|[\s(])-(\d+)\s*(도|℃)/g, (m, p, n) => p + '영하 ' + readSino(n) + ' 도');
     // 제6회 → 제육 회
@@ -206,6 +208,7 @@
       return w; // 일반 영단어는 엔진의 영어 발음에 맡긴다
     });
     // 기호 → 쉼표·낱말
+    t = t.replace(/\s*[~∼～]\s*/g, '에서 '); // 남은 물결표(시각 뒤 등): 아홉 시~열 시 → 아홉 시에서 열 시
     t = t.replace(/\s*[·ㆍ]\s*/g, ', ').replace(/\s*\/\s*/g, ', ').replace(/&/g, ' 그리고 ').replace(/\+/g, ' 플러스 ');
     t = t.replace(/[“”"'‘’「」『』]/g, '').replace(/[()\[\]{}<>]/g, ', ');
     t = t.replace(/[→⇒]/g, ' 에서 ').replace(/[※▶▷■□◆◇○●★☆✓✔]/g, '');
