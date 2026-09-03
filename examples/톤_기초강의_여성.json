@@ -1,0 +1,49 @@
+{
+  "source": "본인 녹음 3개, 총 556초 (원본은 저장소에 없음)",
+  "f0_hz": {
+    "median": 216.1,
+    "p10": 150.2,
+    "p90": 323.8
+  },
+  "syllables_per_s": 4.24,
+  "pause_ms": {
+    "phrase_median": 340,
+    "phrase_p75": 455,
+    "sentence_median": 1000,
+    "per_minute": 24.3
+  },
+  "declination_pct": -25.0,
+  "final_fall_ratio": 0.6,
+  "final_rise_ratio": 0.32,
+  "files": [
+    {
+      "file": "26후반기_예비",
+      "duration_s": 116.6,
+      "f0_median": 211.2,
+      "syl_per_s": 4.24
+    },
+    {
+      "file": "26후반기_예비",
+      "duration_s": 198.3,
+      "f0_median": 216.1,
+      "syl_per_s": 4.19
+    },
+    {
+      "file": "26후반기_예비",
+      "duration_s": 240.7,
+      "f0_median": 217.4,
+      "syl_per_s": 4.37
+    }
+  ],
+  "engine": {
+    "rate": 0.8,
+    "pause": {
+      "ip": 900,
+      "comma": 340,
+      "conj": 289,
+      "weak": 170
+    },
+    "declination": 0.15,
+    "questionRise": 1.08
+  }
+}
