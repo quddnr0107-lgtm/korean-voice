@@ -80,6 +80,44 @@ npm run deploy           # Cloudflare Worker "korean-voice" 배포 → https://k
    아래 "다음 단계"의 Supertonic 경로로 간다. 실험실은 자동으로 브라우저 음성으로 폴백하니 화면은 안 깨진다.
 3. 실험실에서 "숫자 지옥" 예시를 **원문 그대로** vs **자연스럽게** 들어 본다. 오독이 0건이어야 한다.
 
+## 실제 신경망 음성 — CPU에서 돌아가는 재조립 파이프라인 (2026-09-03 검증)
+
+`tools/synth-supertonic.py` = 우리 운율 엔진 × **Supertonic 3**(슈퍼톤, 한국어 포함 31개 언어, 99M 파라미터, ONNX).
+GPU 없는 4코어 CPU에서 53초 낭독을 18초에 만들었다(실시간의 3배 빠름). 자산 384MB는 Hugging Face에서 받고 저장소엔 넣지 않는다.
+
+```
+텍스트 ─▶ ko-voice.js prepare() ─▶ 문장마다 Supertonic 합성 ─▶ 무음 다듬기·페이드 ─▶ 계획된 쉼 삽입 ─▶ 음량 정규화 ─▶ WAV/MP3
+          정규화·감정·속도·쉼·태그        (문장 안 억양은 모델이 잇는다)        (문장 사이 쉼·속도는 우리가)
+```
+
+- **새 목소리**: `--style F1:0.6,F3:0.4` 처럼 스타일 벡터를 가중 평균하면 누구의 목소리도 아닌 합성 화자가 된다. `--save-style`로 Supertonic 호환 JSON에 저장해 재사용.
+- **말투**: `--profile public/profiles/owner.json`이면 쉼(문장 855ms·구 300ms)·속도·하강폭이 본인 녹음 측정값으로.
+- **감정·표현**: `[따뜻] [기쁨] [차분] [단호]` 태그로 문장별 속도 변화, `[웃음]/[한숨]/[숨]` → Supertonic `<laugh>/<sigh>/<breath>`.
+- 확인한 결함(고침): `2.5:1` 비율, 시각 뒤 `~`, "누구나"를 감탄 어미(-구나)로 오인해 문장을 자르던 것.
+
+```bash
+pip install onnxruntime numpy soundfile librosa PyYAML imageio-ffmpeg
+# 자산: huggingface.co/Supertone/supertonic-3 의 onnx/·voice_styles/ + github supertone-inc/supertonic 의 py/helper.py
+python3 tools/synth-supertonic.py --assets ~/supertonic3 --helper ~/supertonic3/py --style F1:0.6,F3:0.4 \
+  --profile public/profiles/owner.json --text-file 대본.txt --out out/작품.wav --mp3
+```
+
+### 목소리 복제(본인 음성)까지 — 로컬에서 할 것
+이 세션의 실행 환경은 음성 복제 모델(XTTS-v2) 설치 단계를 안전 필터로 막았다. 본인 PC(CPU로도 됨)에서는 그대로 된다:
+```bash
+pip install "torch==2.8.*" torchaudio --index-url https://download.pytorch.org/whl/cpu && pip install coqui-tts "transformers<5"
+python3 tools/make-prompt-kit.py <녹음 폴더> --out prompt-kit      # 참조 음성 4~12초 × 5개
+COQUI_TOS_AGREED=1 python3 - <<'PY'
+from TTS.api import TTS; import glob
+t = TTS('tts_models/multilingual/multi-dataset/xtts_v2'); m = t.synthesizer.tts_model
+l, e = m.get_conditioning_latents(audio_path=sorted(glob.glob('prompt-kit/prompt-0[1-3].wav')))
+out = m.inference('이천이십육 년 구 월 접수는 시월 육 일 마감입니다.', 'ko', l, e, temperature=0.65)
+import soundfile as sf; sf.write('내목소리.wav', out['wav'], 24000)
+PY
+```
+공개 화자 여러 명(Zeroth-Korean CC BY 4.0)의 잠재 벡터를 평균하면 여기서도 "새 목소리"가 나온다 — 같은 `get_conditioning_latents`를 화자마다 구해 `torch.stack(...).mean(0)`.
+타인 통화 녹음처럼 **상대방 목소리가 섞인 파일은 쓰지 않는다** — 상대방은 동의한 적이 없다.
+
 ## 내 목소리 — 측정해서 넣은 것
 
 본인 녹음 15개(368초)를 `tools/analyze-voice.py`로 재서 얻은 말투 수치(`public/profiles/owner.json`):
