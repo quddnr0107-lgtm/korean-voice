@@ -5,7 +5,7 @@
   "description": "한국어 음성 자연화 — 텍스트 정규화·운율 계획·신경망 음성(Cloudflare Workers AI)·브라우저 폴백. 파일·저장소 없는 Worker 하나.",
   "scripts": {
     "check": "node --check public/ko-voice.js && node --check public/lab.js && node --check worker.mjs",
-    "test": "node --test",
+    "test": "node --test && python3 server/voice_shape.py --selftest",
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "dry-run": "wrangler deploy --dry-run"
