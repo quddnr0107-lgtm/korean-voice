@@ -20,7 +20,8 @@
 import re, sys
 import numpy as np
 
-RECIPE_TAG = 'u4'   # 🔴 조합이 바뀌면 올려라 — worker.mjs 의 RECIPE_TAG 와 글자까지 같아야 한다(test/tts.test.mjs 가 잰다)
+RECIPE_TAG = 'u4a'   # 🔴 조합이 바뀌면 올려라 — lib/tts-key.mjs 의 RECIPE_TAG 와 글자까지 같아야 한다(test/tts-key.test.mjs 가 잰다)
+#   u4 → u4a (2026-09-03): 워커가 컨테이너보다 먼저 새 판이 되어 옛 소리가 u4 키로 R2 에 들어갈 수 있던 창을 버린다
 RECIPE = {
     'style': 'F4:0.6,F2:0.4',
     'contrast': (1.06, 0.92), 'beat_ms': 250,

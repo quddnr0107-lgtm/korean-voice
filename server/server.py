@@ -261,6 +261,7 @@ class H(BaseHTTPRequestHandler):
         self.send_response(status); self._cors()
         self.send_header('Content-Type', 'audio/mpeg'); self.send_header('Accept-Ranges', 'bytes')
         self.send_header('Cache-Control', 'public, max-age=31536000, immutable')
+        self.send_header('X-TTS-Recipe', VS.RECIPE_TAG)   # 워커가 이 값이 자기 표식과 같을 때만 R2 에 넣는다(컨테이너가 옛 이미지면 캐시를 더럽히지 않는다)
         if status == 206:
             self.send_header('Content-Range', f'bytes {start}-{end}/{size}')
         self.send_header('Content-Length', str(end - start + 1)); self.end_headers()

@@ -10,7 +10,7 @@
 // UMD 파일: 번들러/Node에선 module.exports(default import), 브라우저에선 window.KoVoice.
 import { Container, getContainer } from '@cloudflare/containers';
 import { handleTts, json } from './lib/melotts.mjs';
-import { cacheKey, parseR } from './lib/tts-key.mjs';
+import { cacheKey, parseR, RECIPE_TAG } from './lib/tts-key.mjs';
 export { handleTts, MODEL, LANGS, MAX_CHARS, _reset } from './lib/melotts.mjs';
 
 // 컨테이너 = server/server.py (포트 8790). 3분 요청이 없으면 잠든다(비용 0). 첫 요청이 깨우며 모델 로드 약 2초.
@@ -83,11 +83,15 @@ async function handleLiveTts(request, env, ctx) {
     return json({ ok: false, error: 'synthesis_failed', status: res.status, reason: body.slice(0, 300) }, 502, CORS);
   }
   const bytes = new Uint8Array(await res.arrayBuffer());
-  if (env.TTS_CACHE) {
+  // 🔴 컨테이너의 다듬기 표식이 워커의 것과 같을 때만 R2 에 넣는다. Workers Builds 는 워커와 컨테이너 이미지를 따로 올리므로
+  //    잠깐 워커만 새 판인 창이 생긴다 — 그때 옛 소리를 새 키로 넣으면 영영 안 지워진다(2026-09-03 에 실제로 그 창이 열렸다).
+  const recipe = res.headers.get('X-TTS-Recipe') || '';
+  const cacheable = recipe === RECIPE_TAG;
+  if (env.TTS_CACHE && cacheable) {
     const put = env.TTS_CACHE.put(key, bytes, { httpMetadata: { contentType: 'audio/mpeg', cacheControl: 'public, max-age=31536000, immutable' } }).catch(() => {});
     if (ctx && ctx.waitUntil) ctx.waitUntil(put); else await put;
   }
-  return audioResponse(bytes, bytes.length, 200, { 'X-TTS-Cache': 'miss' });
+  return audioResponse(bytes, bytes.length, 200, cacheable ? { 'X-TTS-Cache': 'miss' } : { 'X-TTS-Cache': 'miss-nocache', 'X-TTS-Recipe-Mismatch': `${recipe || 'none'}!=${RECIPE_TAG}`, 'Cache-Control': 'no-store' });
 }
 async function handleWarm(request, env) {
   let body = {};
@@ -122,7 +126,7 @@ async function handleHealth(request, env) {
     const r = await c.fetch(new Request(target.toString(), { method: 'GET' }));
     const raw = await r.text().catch(() => '');
     let j = {}; try { j = JSON.parse(raw); } catch (_) { j = {}; }
-    return json({ ...j, ok: !!j.ok, available: !!j.ok, cache: env.TTS_CACHE ? 'r2' : 'none', ...(j.ok ? {} : { container_status: r.status, container_body: raw.slice(0, 200) }) }, 200, CORS);
+    return json({ ...j, ok: !!j.ok, available: !!j.ok, cache: env.TTS_CACHE ? 'r2' : 'none', recipe_worker: RECIPE_TAG, recipe_match: j.recipe === RECIPE_TAG, ...(j.ok ? {} : { container_status: r.status, container_body: raw.slice(0, 200) }) }, 200, CORS);
   } catch (e) {
     return json({ ok: false, available: false, reason: String((e && e.message) || e).slice(0, 300) }, 200, CORS);
   }

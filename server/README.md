@@ -37,6 +37,8 @@ Docker 없이: `pip install onnxruntime numpy soundfile librosa PyYAML imageio-f
   합성 뒤 **다듬기**가 붙는다: trim(앞여유 50ms) → 첫 음절 보강 → Praat PSOLA 억양(문장 끝 +6반음 · 물음 +8 · 위로만 1.8배 · +1반음).
   문장 끝(hard)은 글자로 판정한다(`is_sentence_end` — 문장부호·「다/요/까」로 끝나면 끝, 쉼표·낱말로 끝나면 중간). 조합을 바꾸면 `RECIPE_TAG` 를 올려라 — 캐시 키가 갈린다.
   `python3 server/voice_shape.py --selftest` · `node --test test/tts-key.test.mjs`(워커·서버 키가 같은가).
+  🔴 서버는 `X-TTS-Recipe` 헤더로 자기 표식을 보내고, 워커는 **그 값이 자기 표식과 같을 때만** R2 에 넣는다 — Workers Builds 가 워커와
+  컨테이너 이미지를 따로 올려 워커만 새 판인 창이 생기기 때문(그때 옛 소리를 새 키로 넣으면 영영 안 지워진다). 워커 `/health` 의 `recipe_match` 로 본다.
 
 ## 왜 굽기 대신 이것인가
 전체 강의(예비군 사이트 기준 240만 자 ≈ 음성 117시간)를 두 목소리로 미리 구우면 CPU 160시간이 든다.

@@ -12,6 +12,12 @@ test('조합 표식 — voice_shape.py 의 RECIPE_TAG 와 글자까지 같다', 
   assert.strictEqual(m[1], RECIPE_TAG);
 });
 
+test('표식 대조 — 서버는 X-TTS-Recipe 를 보내고 워커는 그 값이 같을 때만 R2 에 넣는다', () => {
+  assert.ok(/send_header\('X-TTS-Recipe', VS\.RECIPE_TAG\)/.test(py('server.py')), 'server.py 가 X-TTS-Recipe 를 안 보낸다');
+  const w = fs.readFileSync(new URL('../worker.mjs', import.meta.url), 'utf8');
+  assert.ok(/const cacheable = recipe === RECIPE_TAG;/.test(w) && /if \(env\.TTS_CACHE && cacheable\)/.test(w), 'worker.mjs 가 표식이 다를 때도 R2 에 넣는다');
+});
+
 test('속도 배수 r — 범위·반올림이 server.py 의 parse_r 과 같다', () => {
   const m = py('server.py').match(/^R_MIN, R_MAX = ([\d.]+), ([\d.]+)/m);
   assert.ok(m, 'server.py 에 R_MIN, R_MAX 가 없다');
