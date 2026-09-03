@@ -60,6 +60,20 @@ def f0_autocorr(fr, fmin=60.0, fmax=400.0):
     return out
 
 
+def f0_track(x, n_frames):
+    """프레임(10ms)별 F0. librosa가 있으면 pYIN(64ms 창, 옥타브 오류에 강함), 없으면 자기상관.
+    25ms 자기상관은 낮은 남성 목소리(100Hz대)에서 한 옥타브 위를 잡는 편향이 있었다(2026-09-03 발견)."""
+    try:
+        import librosa
+        f0, _, _ = librosa.pyin(x, fmin=65, fmax=400, sr=SR, frame_length=1024, hop_length=HOP, center=False)
+        f0 = np.nan_to_num(f0, nan=0.0)
+        out = np.zeros(n_frames)
+        n = min(n_frames, len(f0)); out[:n] = f0[:n]
+        return out
+    except ImportError:
+        return f0_autocorr(frames(x))
+
+
 def runs(mask):
     """True 구간 [(start, end)) 목록(프레임 단위)."""
     res, start = [], None
@@ -89,7 +103,7 @@ def analyze(x):
         if e - s < 8:
             speech[s:e] = False
 
-    f0 = f0_autocorr(fr)
+    f0 = f0_track(x, len(fr))
     f0[~speech] = 0
     # 옥타브 오류 억제: 중앙값의 0.5배 미만·2배 초과는 버린다
     v = f0[f0 > 0]

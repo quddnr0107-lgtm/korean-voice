@@ -53,9 +53,9 @@ def units_from_plan(p):
         for c in s['chunks']:
             if not c['text']:
                 if buf:
-                    out.append({'text': ' '.join(buf), 'pause_ms': c['pause'], 'rate': float(np.mean(rate_acc)), 'emph': emph}); buf, rate_acc, emph = [], [], False
+                    out.append({'text': ' '.join(buf), 'pause_ms': c['pause'], 'rate': float(np.mean(rate_acc)), 'emph': emph, 'hard': True}); buf, rate_acc, emph = [], [], False
                 elif out:
-                    out[-1]['pause_ms'] += c['pause']
+                    out[-1]['pause_ms'] = max(out[-1]['pause_ms'], c['pause']); out[-1]['hard'] = True
                 continue
             buf.append(c['text']); rate_acc.append(c['rate']); emph = emph or c.get('emph', False)
         if buf:
@@ -65,6 +65,24 @@ def units_from_plan(p):
         t = u['text'].replace('⌁laugh', '<laugh>').replace('⌁sigh', '<sigh>').replace('⌁breath', '<breath>')
         u['text'] = ' '.join(t.split())
     return [u for u in out if u['text'].strip(' ,.')]
+
+
+def group_units(units, max_chars=90):
+    """짧은 문장들을 호흡 묶음으로 합친다 — 문장마다 따로 합성하면 '자! / 집중. / 오늘…'처럼 뚝뚝 끊긴다.
+    묶음 안의 문장 사이 쉼은 모델이 문장부호를 보고 자연스럽게 내고, 묶음 사이 쉼만 우리가 넣는다.
+    긴 쉼(<break>·문단, 600ms 이상)이나 글자 수 초과에서만 끊는다."""
+    out = []
+    for u in units:
+        if out and not out[-1].get('hard') and len(out[-1]['text']) + len(u['text']) + 1 <= max_chars and out[-1]['pause_ms'] < 600:
+            prev = out[-1]
+            prev['text'] = prev['text'].rstrip() + ' ' + u['text']
+            prev['pause_ms'] = u['pause_ms']
+            prev['rate'] = (prev['rate'] + u['rate']) / 2
+            prev['emph'] = prev['emph'] or u['emph']
+            prev['hard'] = u.get('hard', False)
+        else:
+            out.append(dict(u))
+    return out
 
 
 def load_blend(helper, styles_dir, spec):
@@ -132,8 +150,10 @@ def main():
     ap.add_argument('--rate', type=float, default=1.0); ap.add_argument('--base-speed', type=float, default=1.05)
     ap.add_argument('--steps', type=int, default=8); ap.add_argument('--out', default='out/synth.wav'); ap.add_argument('--mp3', action='store_true')
     ap.add_argument('--gain-db', type=float, default=-1.0, help='피크 정규화 목표(dBFS)')
+    ap.add_argument('--group-chars', type=int, default=90, help='짧은 문장을 이 글자 수까지 한 호흡으로 합쳐 합성 (0=문장마다)')
     ap.add_argument('--bright-db', type=float, default=0.0, help='3kHz 위 고역을 올려 밝게 (예 4)')
     ap.add_argument('--punch', type=float, default=0.0, help='0~1. 소프트 압축으로 또렷·강하게 (예 0.5)')
+    ap.add_argument('--pitch-st', type=float, default=0.0, help='반음 단위 미세 음정 조정 (−2~+2 권장; 크게 주면 인위적)')
     a = ap.parse_args()
     text = a.text or open(a.text_file, encoding='utf-8').read()
     sys.path.insert(0, a.helper)
@@ -144,9 +164,20 @@ def main():
     if a.save_style:
         save_style(style, a.save_style, parts)
     profile = json.load(open(a.profile, encoding='utf-8')) if (a.profile and not a.no_profile and os.path.exists(a.profile)) else None
-    p = plan(text, a.emotion, profile, a.rate)
-    units = units_from_plan(p)
-    print(f'감정 {p["emotion"]} · 문장 {len(units)}개 · 목소리 {parts}', flush=True)
+    # 문단(줄) 단위로 계획: 문단 경계는 항상 호흡을 끊는다. 태그 없는 문단은 앞 문단의 감정을 잇는다.
+    units, emotions, last_emotion = [], [], a.emotion
+    for par in [l for l in text.split('\n') if l.strip()]:
+        p = plan(par, a.emotion or (None if '[' in par else last_emotion), profile, a.rate)
+        last_emotion = p['emotion']; emotions.append(p['emotion'])
+        us = units_from_plan(p)
+        if us:
+            us[-1]['hard'] = True; us[-1]['pause_ms'] = max(us[-1]['pause_ms'], 600)
+        units += us
+    p = {'emotion': '→'.join(emotions)}
+    n_sent = len(units)
+    if a.group_chars > 0:
+        units = group_units(units, a.group_chars)
+    print(f'감정 {p["emotion"]} · 문장 {n_sent}개 → 호흡 묶음 {len(units)}개 · 목소리 {parts}', flush=True)
     pieces, t0 = [], time.time()
     for i, u in enumerate(units, 1):
         speed = a.base_speed * u['rate'] * (0.95 if u['emph'] else 1.0)
@@ -156,6 +187,9 @@ def main():
         pieces.append(np.zeros(int(sr * u['pause_ms'] / 1000), dtype=np.float32))
         print(f'  [{i}/{len(units)}] {len(w)/sr:4.1f}s  속도 {speed:.2f}  쉼 {u["pause_ms"]}ms  {u["text"][:38]}', flush=True)
     out = np.concatenate(pieces)
+    if a.pitch_st:
+        import librosa
+        out = librosa.effects.pitch_shift(out, sr=sr, n_steps=float(np.clip(a.pitch_st, -3, 3)), bins_per_octave=12).astype(np.float32)
     if a.bright_db:
         # 고역 선반(high-shelf): 3kHz 1차 저역통과를 빼서 고역 성분을 뽑고 더한다
         alpha = float(np.exp(-2 * np.pi * 3000 / sr)); lp = np.empty_like(out); acc = 0.0
