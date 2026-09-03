@@ -1,9 +1,9 @@
 {
   "source": "본인 녹음 37개, 총 2248초 (원본은 저장소에 없음)",
   "f0_hz": {
-    "median": 219.2,
-    "p10": 150.9,
-    "p90": 307.7
+    "median": 195.9,
+    "p10": 136.9,
+    "p90": 280.3
   },
   "syllables_per_s": 4.91,
   "pause_ms": {
@@ -12,230 +12,230 @@
     "sentence_median": 890,
     "per_minute": 27.7
   },
-  "declination_pct": -3.7,
-  "final_fall_ratio": 0.43,
-  "final_rise_ratio": 0.52,
+  "declination_pct": -10.2,
+  "final_fall_ratio": 0.5,
+  "final_rise_ratio": 0.4,
   "files": [
     {
       "file": "0113e463",
       "duration_s": 66.7,
-      "f0_median": 242.4,
+      "f0_median": 204.0,
       "syl_per_s": 5.26
     },
     {
       "file": "0836e3a8",
       "duration_s": 62.9,
-      "f0_median": 192.8,
+      "f0_median": 181.7,
       "syl_per_s": 4.55
     },
     {
       "file": "0fca2a0e",
       "duration_s": 54.4,
-      "f0_median": 210.5,
+      "f0_median": 201.6,
       "syl_per_s": 5.38
     },
     {
       "file": "2afa709b",
       "duration_s": 63.6,
-      "f0_median": 202.5,
+      "f0_median": 188.1,
       "syl_per_s": 5.07
     },
     {
       "file": "321e3788",
       "duration_s": 59.8,
-      "f0_median": 200.0,
+      "f0_median": 184.9,
       "syl_per_s": 4.25
     },
     {
       "file": "327e4ff1",
       "duration_s": 30.8,
-      "f0_median": 222.2,
+      "f0_median": 206.4,
       "syl_per_s": 5.24
     },
     {
       "file": "33f078a9",
       "duration_s": 73.5,
-      "f0_median": 183.9,
+      "f0_median": 170.5,
       "syl_per_s": 5.34
     },
     {
       "file": "341fb947",
       "duration_s": 64.3,
-      "f0_median": 170.2,
+      "f0_median": 141.8,
       "syl_per_s": 5.44
     },
     {
       "file": "377460a5",
       "duration_s": 18.6,
-      "f0_median": 210.5,
+      "f0_median": 171.5,
       "syl_per_s": 4.61
     },
     {
       "file": "448520b3",
       "duration_s": 59.8,
-      "f0_median": 205.1,
+      "f0_median": 186.0,
       "syl_per_s": 4.65
     },
     {
       "file": "53600320",
       "duration_s": 28.4,
-      "f0_median": 205.1,
+      "f0_median": 186.0,
       "syl_per_s": 5.42
     },
     {
       "file": "53a995cf",
       "duration_s": 18.3,
-      "f0_median": 231.9,
+      "f0_median": 226.3,
       "syl_per_s": 5.13
     },
     {
       "file": "5a745f4e",
       "duration_s": 42.7,
-      "f0_median": 219.2,
+      "f0_median": 208.2,
       "syl_per_s": 4.32
     },
     {
       "file": "65055e1b",
       "duration_s": 110.6,
-      "f0_median": 186.0,
+      "f0_median": 175.5,
       "syl_per_s": 5.57
     },
     {
       "file": "73123e3d",
       "duration_s": 6.7,
-      "f0_median": 231.9,
+      "f0_median": 223.1,
       "syl_per_s": 4.49
     },
     {
       "file": "743520cb",
       "duration_s": 13.7,
-      "f0_median": 197.5,
+      "f0_median": 195.9,
       "syl_per_s": 6.42
     },
     {
       "file": "7854ec59",
       "duration_s": 135.2,
-      "f0_median": 210.5,
+      "f0_median": 176.6,
       "syl_per_s": 4.49
     },
     {
       "file": "87403267",
       "duration_s": 93.2,
-      "f0_median": 266.7,
+      "f0_median": 222.5,
       "syl_per_s": 6.94
     },
     {
       "file": "93e235ae",
       "duration_s": 159.8,
-      "f0_median": 222.2,
+      "f0_median": 139.3,
       "syl_per_s": 5.54
     },
     {
       "file": "96361703",
       "duration_s": 5.8,
-      "f0_median": 285.7,
+      "f0_median": 281.9,
       "syl_per_s": 4.95
     },
     {
       "file": "969e764a",
       "duration_s": 72.3,
-      "f0_median": 235.3,
+      "f0_median": 221.2,
       "syl_per_s": 6.61
     },
     {
       "file": "9a861296",
       "duration_s": 100.5,
-      "f0_median": 195.1,
+      "f0_median": 143.4,
       "syl_per_s": 4.24
     },
     {
       "file": "9f0356cb",
       "duration_s": 63.7,
-      "f0_median": 231.9,
+      "f0_median": 195.9,
       "syl_per_s": 4.77
     },
     {
       "file": "a7373a36",
       "duration_s": 29.1,
-      "f0_median": 285.7,
+      "f0_median": 285.2,
       "syl_per_s": 5.16
     },
     {
       "file": "aeed066b",
       "duration_s": 98.9,
-      "f0_median": 207.8,
+      "f0_median": 193.7,
       "syl_per_s": 4.9
     },
     {
       "file": "b244abdb",
       "duration_s": 28.6,
-      "f0_median": 242.4,
+      "f0_median": 230.3,
       "syl_per_s": 5.91
     },
     {
       "file": "b4012967",
       "duration_s": 9.5,
-      "f0_median": 200.0,
+      "f0_median": 183.8,
       "syl_per_s": 4.91
     },
     {
       "file": "ba9d66bc",
       "duration_s": 39.6,
-      "f0_median": 225.4,
+      "f0_median": 166.7,
       "syl_per_s": 4.69
     },
     {
       "file": "c71faf39",
       "duration_s": 115.6,
-      "f0_median": 228.6,
+      "f0_median": 207.6,
       "syl_per_s": 4.45
     },
     {
       "file": "cf5daa77",
       "duration_s": 21.5,
-      "f0_median": 222.2,
+      "f0_median": 194.8,
       "syl_per_s": 4.41
     },
     {
       "file": "d23a6e43",
       "duration_s": 143.7,
-      "f0_median": 228.6,
+      "f0_median": 218.6,
       "syl_per_s": 5.61
     },
     {
       "file": "e9d991f1",
       "duration_s": 49.9,
-      "f0_median": 231.9,
+      "f0_median": 213.6,
       "syl_per_s": 4.9
     },
     {
       "file": "ea958099",
       "duration_s": 38.5,
-      "f0_median": 192.8,
+      "f0_median": 171.5,
       "syl_per_s": 4.5
     },
     {
       "file": "ebdcf7cb",
       "duration_s": 81.2,
-      "f0_median": 238.8,
+      "f0_median": 212.4,
       "syl_per_s": 5.13
     },
     {
       "file": "f1c9a5dc",
       "duration_s": 89.1,
-      "f0_median": 290.9,
+      "f0_median": 267.6,
       "syl_per_s": 4.73
     },
     {
       "file": "f39b827d",
       "duration_s": 12.6,
-      "f0_median": 216.2,
+      "f0_median": 207.0,
       "syl_per_s": 4.06
     },
     {
       "file": "f5536cfb",
       "duration_s": 84.5,
-      "f0_median": 200.0,
+      "f0_median": 186.0,
       "syl_per_s": 4.88
     }
   ],
@@ -247,7 +247,7 @@
       "conj": 272,
       "weak": 160
     },
-    "declination": 0.037,
+    "declination": 0.102,
     "questionRise": 1.08
   }
 }
