@@ -99,8 +99,8 @@
   const UNIT_ALIASES = { km: '킬로미터', kg: '킬로그램', cm: '센티미터', mm: '밀리미터', ml: '밀리리터', kcal: '킬로칼로리', m: '미터', g: '그램', l: '리터', '%': '퍼센트', '℃': '도', '°': '도' };
   const ALL_UNITS = Array.from(new Set(NATIVE_UNITS.concat(SINO_UNITS))).sort((a, b) => b.length - a.length);
   const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const UNIT_RE = new RegExp('(\\d[\\d,]*(?:\\.\\d+)?)\\s*(' + ALL_UNITS.map(esc).join('|') + ')(?![A-Za-z])', 'g');
-  const BIG_RE = /(\d[\d,]*(?:\.\d+)?)\s*(만|억|조)(?=\s*(?:원|명|개|건|회|배|달러|톤|km|kg|m|점|%|\s|$|[^가-힣]))/g;
+  const UNIT_RE = new RegExp('(\\d+(?:,\\d{3})*(?:\\.\\d+)?)\\s*(' + ALL_UNITS.map(esc).join('|') + ')(?![A-Za-z])', 'g');
+  const BIG_RE = /(\d+(?:,\d{3})*(?:\.\d+)?)\s*(만|억|조)(?=\s*(?:원|명|개|건|회|배|달러|톤|km|kg|m|점|%|\s|$|[^가-힣]))/g;
 
   function readWithUnit(numStr, unit) {
     const raw = numStr.replace(/,/g, '');
@@ -191,7 +191,7 @@
     // 제6회 → 제육 회
     t = t.replace(/제\s*(\d+)\s*(회|차|기|장|조|항|절|편|대)/g, (m, n, u) => '제' + readSino(n) + ' ' + u);
     // 범위: 18~21개월 → 18개월에서 21개월
-    t = t.replace(/(\d[\d,]*(?:\.\d+)?)\s*[~∼～]\s*(\d[\d,]*(?:\.\d+)?)\s*([가-힣%a-z℃°]{1,4})?/g, (m, a, b, u) => u ? a + u + '에서 ' + b + u : a + '에서 ' + b);
+    t = t.replace(/(\d+(?:,\d{3})*(?:\.\d+)?)\s*[~∼～]\s*(\d+(?:,\d{3})*(?:\.\d+)?)\s*([가-힣%a-z℃°]{1,4})?/g, (m, a, b, u) => u ? a + u + '에서 ' + b + u : a + '에서 ' + b);
     // 150만원 · 3억 → 숫자로 환산 후 읽기
     t = t.replace(BIG_RE, (m, n, big) => {
       const mult = { 만: 1e4, 억: 1e8, 조: 1e12 }[big];
@@ -200,7 +200,7 @@
     // 숫자 + 단위
     t = t.replace(UNIT_RE, (m, n, u) => readWithUnit(n, u));
     // 남은 숫자(단위 없음): 소수·콤마 포함
-    t = t.replace(/\d[\d,]*(?:\.\d+)?/g, (m) => readNumber(m));
+    t = t.replace(/\d+(?:,\d{3})*(?:\.\d+)?/g, (m) => readNumber(m));
     // 영문 약어·단어
     t = t.replace(/[A-Za-z][A-Za-z0-9]*/g, (w) => {
       if (ABBR[w]) return ABBR[w];
