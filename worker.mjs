@@ -10,6 +10,7 @@
 // UMD 파일: 번들러/Node에선 module.exports(default import), 브라우저에선 window.KoVoice.
 import { Container, getContainer } from '@cloudflare/containers';
 import { handleTts, json } from './lib/melotts.mjs';
+import { cacheKey, parseR, RECIPE_TAG } from './lib/tts-key.mjs';
 export { handleTts, MODEL, LANGS, MAX_CHARS, _reset } from './lib/melotts.mjs';
 
 // 컨테이너 = server/server.py (포트 8790). 3분 요청이 없으면 잠든다(비용 0). 첫 요청이 깨우며 모델 로드 약 2초.
@@ -26,18 +27,15 @@ const SECURITY = {
 };
 
 /* ── 즉시 합성 서버(컨테이너) — server/server.py 가 Supertonic 3 를 돌린다 ─────────────────────────
-   GET  /tts?v=female|male&t=문장[&s=16]  → R2 캐시(korean-voice-tts) 적중이면 바로, 아니면 컨테이너가 합성 → R2 저장
-   POST /warm {v, texts:[…]}              → 컨테이너 대기열(앞서 굽기)
+   GET  /tts?v=female|male&t=문장[&s=16][&r=1.0]  → R2 캐시(korean-voice-tts) 적중이면 바로, 아니면 컨테이너가 합성 → R2 저장
+   POST /warm {v, texts:[…][, r]}         → 컨테이너 대기열(앞서 굽기)
    GET  /health                           → 컨테이너 상태(잠들어 있으면 깨운다)
-   캐시 키는 server.py 의 cache_key 와 같다: sha1("voice|steps|text") · text 는 공백 정리·400자. */
+   캐시 키는 server.py 의 cache_key 와 같다(lib/tts-key.mjs): sha1("voice|steps|r|조합표식|text") · text 는 공백 정리·400자.
+   🔴 r(합성 속도 배수)과 조합표식(voice_shape.RECIPE_TAG)이 키에 들어간다 — 다듬기 조합이 바뀌면 옛 R2 캐시는 자연히 안 맞는다. */
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, OPTIONS', 'Access-Control-Allow-Headers': 'Range, Content-Type', 'Access-Control-Expose-Headers': 'Content-Length, Content-Range, Accept-Ranges' };
 const VOICES = ['female', 'male'];
 const DEFAULT_STEPS = 16;
 const cleanText = (t) => String(t == null ? '' : t).replace(/\s+/g, ' ').trim().slice(0, 400);
-async function sha1(s) {
-  const d = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(s));
-  return Array.from(new Uint8Array(d)).map((b) => b.toString(16).padStart(2, '0')).join('');
-}
 function container(env) {
   if (!env.TTS_CONTAINER) return null;
   return getContainer(env.TTS_CONTAINER, 'main');   // 인스턴스 하나가 캐시·대기열을 공유한다
@@ -50,9 +48,10 @@ async function handleLiveTts(request, env, ctx) {
   const v = url.searchParams.get('v') || 'female';
   const t = cleanText(url.searchParams.get('t'));
   const s = Math.max(4, Math.min(32, parseInt(url.searchParams.get('s') || DEFAULT_STEPS, 10) || DEFAULT_STEPS));
+  const r = parseR(url.searchParams.get('r') || 1);
   if (!VOICES.includes(v)) return json({ ok: false, error: 'bad_voice' }, 400, CORS);
   if (!t) return json({ ok: false, error: 'empty_text' }, 400, CORS);
-  const key = `tts/${v}/${await sha1(`${v}|${s}|${t}`)}.mp3`;
+  const key = await cacheKey(v, s, r, t);
   // 1) R2 캐시
   if (env.TTS_CACHE) {
     try {
@@ -74,7 +73,7 @@ async function handleLiveTts(request, env, ctx) {
   let res;
   try {
     const target = new URL(request.url); target.pathname = '/tts';
-    target.search = '?v=' + encodeURIComponent(v) + '&t=' + encodeURIComponent(t) + '&s=' + s;
+    target.search = '?v=' + encodeURIComponent(v) + '&t=' + encodeURIComponent(t) + '&s=' + s + '&r=' + r;
     res = await c.fetch(new Request(target.toString(), { method: 'GET' }));
   } catch (e) {
     return json({ ok: false, error: 'container_failed', reason: String((e && e.message) || e).slice(0, 300) }, 502, CORS);
@@ -84,11 +83,15 @@ async function handleLiveTts(request, env, ctx) {
     return json({ ok: false, error: 'synthesis_failed', status: res.status, reason: body.slice(0, 300) }, 502, CORS);
   }
   const bytes = new Uint8Array(await res.arrayBuffer());
-  if (env.TTS_CACHE) {
+  // 🔴 컨테이너의 다듬기 표식이 워커의 것과 같을 때만 R2 에 넣는다. Workers Builds 는 워커와 컨테이너 이미지를 따로 올리므로
+  //    잠깐 워커만 새 판인 창이 생긴다 — 그때 옛 소리를 새 키로 넣으면 영영 안 지워진다(2026-09-03 에 실제로 그 창이 열렸다).
+  const recipe = res.headers.get('X-TTS-Recipe') || '';
+  const cacheable = recipe === RECIPE_TAG;
+  if (env.TTS_CACHE && cacheable) {
     const put = env.TTS_CACHE.put(key, bytes, { httpMetadata: { contentType: 'audio/mpeg', cacheControl: 'public, max-age=31536000, immutable' } }).catch(() => {});
     if (ctx && ctx.waitUntil) ctx.waitUntil(put); else await put;
   }
-  return audioResponse(bytes, bytes.length, 200, { 'X-TTS-Cache': 'miss' });
+  return audioResponse(bytes, bytes.length, 200, cacheable ? { 'X-TTS-Cache': 'miss' } : { 'X-TTS-Cache': 'miss-nocache', 'X-TTS-Recipe-Mismatch': `${recipe || 'none'}!=${RECIPE_TAG}`, 'Cache-Control': 'no-store' });
 }
 async function handleWarm(request, env) {
   let body = {};
@@ -97,18 +100,19 @@ async function handleWarm(request, env) {
   if (!VOICES.includes(v)) return json({ ok: false, error: 'bad_voice' }, 400, CORS);
   const texts = Array.isArray(body.texts) ? body.texts.map(cleanText).filter(Boolean).slice(0, 400) : [];
   const s = Math.max(4, Math.min(32, parseInt(body.s || DEFAULT_STEPS, 10) || DEFAULT_STEPS));
+  const r = parseR(body.r == null ? 1 : body.r);
   // R2 에 이미 있는 것은 뺀다(컨테이너 대기열을 아낀다)
   const todo = [];
   if (env.TTS_CACHE) {
-    for (const t of texts) { const key = `tts/${v}/${await sha1(`${v}|${s}|${t}`)}.mp3`; if (!(await env.TTS_CACHE.head(key).catch(() => null))) todo.push(t); }
+    for (const t of texts) { const key = await cacheKey(v, s, r, t); if (!(await env.TTS_CACHE.head(key).catch(() => null))) todo.push(t); }
   } else todo.push(...texts);
   if (!todo.length) return json({ ok: true, queued: 0, cached: texts.length }, 200, CORS);
   const c = container(env);
   if (!c) return json({ ok: false, error: 'tts_unavailable' }, 503, CORS);
   try {
     const target = new URL(request.url); target.pathname = '/warm'; target.search = '';
-    const r = await c.fetch(new Request(target.toString(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ v, s, texts: todo }) }));
-    const j = await r.json().catch(() => ({}));
+    const res = await c.fetch(new Request(target.toString(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ v, s, r, texts: todo }) }));
+    const j = await res.json().catch(() => ({}));
     return json({ ok: true, ...j, skipped: texts.length - todo.length }, 200, CORS);
   } catch (e) {
     return json({ ok: false, error: 'container_failed', reason: String((e && e.message) || e).slice(0, 300) }, 502, CORS);
@@ -122,7 +126,7 @@ async function handleHealth(request, env) {
     const r = await c.fetch(new Request(target.toString(), { method: 'GET' }));
     const raw = await r.text().catch(() => '');
     let j = {}; try { j = JSON.parse(raw); } catch (_) { j = {}; }
-    return json({ ...j, ok: !!j.ok, available: !!j.ok, cache: env.TTS_CACHE ? 'r2' : 'none', ...(j.ok ? {} : { container_status: r.status, container_body: raw.slice(0, 200) }) }, 200, CORS);
+    return json({ ...j, ok: !!j.ok, available: !!j.ok, cache: env.TTS_CACHE ? 'r2' : 'none', recipe_worker: RECIPE_TAG, recipe_match: j.recipe === RECIPE_TAG, ...(j.ok ? {} : { container_status: r.status, container_body: raw.slice(0, 200) }) }, 200, CORS);
   } catch (e) {
     return json({ ok: false, available: false, reason: String((e && e.message) || e).slice(0, 300) }, 200, CORS);
   }
