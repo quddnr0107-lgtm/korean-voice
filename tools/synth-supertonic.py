@@ -126,7 +126,9 @@ def main():
     ap.add_argument('--text'); ap.add_argument('--text-file')
     ap.add_argument('--style', default='F1', help='F1 또는 F1:0.6,F3:0.4 (스타일 섞기) 또는 저장한 json 경로')
     ap.add_argument('--save-style', help='섞은 스타일을 Supertonic 호환 json으로 저장')
-    ap.add_argument('--emotion'); ap.add_argument('--profile', help='화자 프로필 json (쉼·속도 측정값)')
+    ap.add_argument('--emotion')
+    ap.add_argument('--profile', default=os.path.join(HERE, '..', 'public', 'profiles', 'owner.json'), help='화자 프로필 json (쉼·속도 측정값). 기본: public/profiles/owner.json')
+    ap.add_argument('--no-profile', action='store_true', help='프로필 없이 엔진 기본 쉼·속도')
     ap.add_argument('--rate', type=float, default=1.0); ap.add_argument('--base-speed', type=float, default=1.05)
     ap.add_argument('--steps', type=int, default=8); ap.add_argument('--out', default='out/synth.wav'); ap.add_argument('--mp3', action='store_true')
     ap.add_argument('--gain-db', type=float, default=-1.0, help='피크 정규화 목표(dBFS)')
@@ -139,7 +141,7 @@ def main():
     style, parts = load_blend(helper, os.path.join(a.assets, 'voice_styles'), a.style)
     if a.save_style:
         save_style(style, a.save_style, parts)
-    profile = json.load(open(a.profile, encoding='utf-8')) if a.profile else None
+    profile = json.load(open(a.profile, encoding='utf-8')) if (a.profile and not a.no_profile and os.path.exists(a.profile)) else None
     p = plan(text, a.emotion, profile, a.rate)
     units = units_from_plan(p)
     print(f'감정 {p["emotion"]} · 문장 {len(units)}개 · 목소리 {parts}', flush=True)
