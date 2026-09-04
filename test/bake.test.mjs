@@ -93,3 +93,13 @@ test('같은 조각을 다시 보내면 대기열에 두 번 안 들어간다(�
   await h.baker.tick(); await h.baker.tick();
   assert.strictEqual([...h.storage._map.keys()].filter((k) => k.startsWith('k:')).length, 0, '다 구우면 키 색인도 비운다');
 });
+
+test('recount 가 색인 없는 옛 항목의 k: 를 되채워 재실행이 멱등해진다', async () => {
+  const h = harness();
+  await h.baker.enqueue({ items: [{ t: '하나.' }, { t: '둘.' }] });
+  for (const k of [...h.storage._map.keys()]) if (k.startsWith('k:')) h.storage._map.delete(k);   // 색인이 생기기 전 판 흉내
+  const st = await h.baker.recount();
+  assert.strictEqual(st.backfilled, 2);
+  const b = await h.baker.enqueue({ items: [{ t: '하나.' }, { t: '둘.' }] });
+  assert.deepStrictEqual([b.queued, b.skipped], [0, 2]);
+});
