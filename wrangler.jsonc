@@ -19,7 +19,8 @@
       "class_name": "TtsContainer",
       "image": "./server/Dockerfile",
       "instance_type": "standard-3",
-      "max_instances": 1
+      // 1 = 학생 청취(main) · 나머지 = 굽기 샤드(bake-0…4 · lib/bake.mjs SHARDS). 계정 한도(메모리 40GiB·standard-3 8GiB)면 5개까지
+      "max_instances": 6
     }
   ],
   "durable_objects": {

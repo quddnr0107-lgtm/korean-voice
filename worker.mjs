@@ -32,7 +32,8 @@ export class BakeQueue extends DurableObject {
     super(ctx, env);
     this.baker = makeBaker({
       storage: ctx.storage, r2: env.TTS_CACHE, recipeTag: RECIPE_TAG,
-      fetchContainer: (path, init) => { const c = getContainer(env.TTS_CONTAINER, 'main'); return c.fetch(new Request('http://container' + path, init)); },
+      // 샤드 i → 컨테이너 'bake-i' (학생 청취는 'main' 이 받는다 · wrangler.jsonc max_instances 가 샤드 수 + 1 이상이어야 한다)
+      fetchContainer: (path, init, shard) => { const c = getContainer(env.TTS_CONTAINER, shard == null ? 'main' : 'bake-' + shard); return c.fetch(new Request('http://container' + path, init)); },
       setAlarm: (at) => ctx.storage.setAlarm(at),
     });
   }
