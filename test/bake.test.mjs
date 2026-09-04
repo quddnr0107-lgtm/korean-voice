@@ -81,3 +81,15 @@ test('stop 은 알람을 멈추고 resume 은 다시 건다 · clear 는 대기�
   assert.strictEqual((await h.baker.status()).pending, 0);
   assert.strictEqual((await h.baker.tick()).idle, true);
 });
+
+test('같은 조각을 다시 보내면 대기열에 두 번 안 들어간다(재실행이 멱등) · recount 가 pending 을 저장소에서 다시 센다', async () => {
+  const h = harness();
+  const a = await h.baker.enqueue({ items: [{ t: '하나.' }, { t: '둘.' }] });
+  const b = await h.baker.enqueue({ items: [{ t: '하나.' }, { t: '셋.' }] });
+  assert.deepStrictEqual([a.queued, b.queued, b.skipped], [2, 1, 1]);
+  await h.storage.put('stat', { ...(await h.storage.get('stat')), pending: 99 });   // 집계가 어긋난 척
+  const st = await h.baker.recount();
+  assert.strictEqual(st.pending, 3);
+  await h.baker.tick(); await h.baker.tick();
+  assert.strictEqual([...h.storage._map.keys()].filter((k) => k.startsWith('k:')).length, 0, '다 구우면 키 색인도 비운다');
+});
