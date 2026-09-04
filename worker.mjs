@@ -13,6 +13,7 @@ import { DurableObject } from 'cloudflare:workers';
 import { handleTts, json } from './lib/melotts.mjs';
 import { cacheKey, parseR, RECIPE_TAG } from './lib/tts-key.mjs';
 import { makeBaker } from './lib/bake.mjs';
+import { verifyGithubOidc } from './lib/oidc.mjs';
 export { handleTts, MODEL, LANGS, MAX_CHARS, _reset } from './lib/melotts.mjs';
 
 // 컨테이너 = server/server.py (포트 8790). 3분 요청이 없으면 잠든다(비용 0). 첫 요청이 깨우며 모델 로드 약 2초.
@@ -44,6 +45,42 @@ export class BakeQueue extends DurableObject {
   async resume() { return this.baker.resume(); }
   async clear() { return this.baker.clear(); }
   async recount() { return this.baker.recount(); }
+}
+/* ── 공개 러너가 구운 조각을 올린다 — PUT /bake/put?v&s&r&t  본문 = mp3 · Authorization: Bearer <GitHub OIDC JWT> ──
+   비밀값이 없다: GitHub 이 서명한 토큰을 GitHub 공개키(JWKS)로 검증하고 「저장소 BAKE_OIDC_REPO 의 main」만 받는다(lib/oidc.mjs).
+   키는 워커가 (v,s,r,t)로 다시 만든다(러너가 준 키를 믿지 않는다) · 표식(X-TTS-Recipe)이 워커 표식과 같아야 한다. */
+const BAKE_OIDC = { aud: 'korean-voice-bake', repository: 'quddnr0107-lgtm/korean-voice-bake', ref: 'refs/heads/main' };
+async function handleBakePut(request, env) {
+  if (!env.TTS_CACHE) return json({ ok: false, error: 'no_r2' }, 503, CORS);
+  const tok = (request.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+  const v = await verifyGithubOidc(tok, BAKE_OIDC);
+  if (!v.claims) return json({ ok: false, error: 'oidc_' + v.error }, 401, CORS);
+  const url = new URL(request.url);
+  const voice = url.searchParams.get('v') || 'female';
+  const t = cleanText(url.searchParams.get('t'));
+  const s = Math.max(4, Math.min(32, parseInt(url.searchParams.get('s') || DEFAULT_STEPS, 10) || DEFAULT_STEPS));
+  const r = parseR(url.searchParams.get('r') || 1);
+  if (!VOICES.includes(voice) || !t) return json({ ok: false, error: 'bad_input' }, 400, CORS);
+  if ((request.headers.get('X-TTS-Recipe') || '') !== RECIPE_TAG) return json({ ok: false, error: 'recipe_mismatch', want: RECIPE_TAG }, 409, CORS);
+  if (!(request.headers.get('Content-Type') || '').startsWith('audio/')) return json({ ok: false, error: 'not_audio' }, 400, CORS);
+  const bytes = new Uint8Array(await request.arrayBuffer());
+  if (bytes.length < 500 || bytes.length > 5_000_000) return json({ ok: false, error: 'bad_size', size: bytes.length }, 400, CORS);
+  const key = await cacheKey(voice, s, r, t);
+  await env.TTS_CACHE.put(key, bytes, { httpMetadata: { contentType: 'audio/mpeg', cacheControl: 'public, max-age=31536000, immutable' } });
+  return json({ ok: true, key, size: bytes.length }, 200, CORS);
+}
+/* GET /bake/has?v&s&r&t… — 러너가 이미 있는 조각을 건너뛴다(열려 있다 · head 뿐) */
+async function handleBakeHas(request, env) {
+  let body = {}; try { body = await request.json(); } catch (_) { body = {}; }
+  const items = Array.isArray(body.items) ? body.items.slice(0, 400) : [];
+  const v = body.v || 'female', s = Math.max(4, Math.min(32, parseInt(body.s || DEFAULT_STEPS, 10) || DEFAULT_STEPS));
+  const out = [];
+  for (let i = 0; i < items.length; i += 50) {
+    const part = items.slice(i, i + 50);
+    const res = await Promise.all(part.map(async (it) => { const t = cleanText(it && it.t); if (!t) return false; const key = await cacheKey(v, s, parseR(it.r == null ? 1 : it.r), t); return !!(env.TTS_CACHE && await env.TTS_CACHE.head(key).catch(() => null)); }));
+    out.push(...res);
+  }
+  return json({ ok: true, has: out }, 200, CORS);
 }
 async function handleBake(request, env) {
   if (!env.BAKE) return json({ ok: false, error: 'bake_unavailable', reason: 'BAKE 바인딩 없음' }, 503, CORS);
@@ -191,6 +228,8 @@ export default {
     if (url.pathname === '/tts') return handleLiveTts(request, env, ctx);
     if (url.pathname === '/warm' && request.method === 'POST') return handleWarm(request, env);
     if (url.pathname === '/bake' && (request.method === 'GET' || request.method === 'POST')) return handleBake(request, env);
+    if (url.pathname === '/bake/put' && request.method === 'PUT') return handleBakePut(request, env);
+    if (url.pathname === '/bake/has' && request.method === 'POST') return handleBakeHas(request, env);
     if (url.pathname === '/health') return handleHealth(request, env);
     if (url.pathname === '/api/tts') return handleTts(request, env, ctx);
     const res = await env.ASSETS.fetch(request);
