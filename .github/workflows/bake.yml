@@ -15,6 +15,9 @@ on:
       start:
         description: '목록의 이 번호부터(시험용 · 앞쪽은 컨테이너가 이미 구웠을 수 있다)'
         default: '0'
+      kind:
+        description: '갈래 — all · exam(출제핵심강의) · easy(개념강의)'
+        default: 'all'
 
 permissions:
   id-token: write   # OIDC — 워커가 이 토큰으로 「이 저장소의 main」임을 확인한다
@@ -77,4 +80,4 @@ jobs:
         env:
           SUPERTONIC_DIR: ${{ github.workspace }}/supertonic3
           PYTHONPATH: ${{ github.workspace }}/supertonic3/py
-        run: python3 tools/bake.py --chunks chunks.json --shard ${{ matrix.shard }} --shards ${{ inputs.shards }} --limit ${{ inputs.limit }} --start ${{ inputs.start }}
+        run: python3 tools/bake.py --chunks chunks.json --shard ${{ matrix.shard }} --shards ${{ inputs.shards }} --limit ${{ inputs.limit }} --start ${{ inputs.start }} --kind ${{ inputs.kind || 'all' }}

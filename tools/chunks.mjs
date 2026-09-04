@@ -31,13 +31,15 @@ const [liveSrc, koSrc, epSrc, eeSrc] = await Promise.all([get('/live-tts.js'), g
 const seg = 조각기(liveSrc, koSrc);
 const 글들 = [];
 const ep = JSON.parse(epSrc);
-for (const period of Object.keys(ep)) for (const it of (ep[period] || [])) { const t = 출제핵심글(it); if (t) 글들.push(t); }
+// 갈래 k — exam(출제핵심강의) · easy(개념강의). 굽는 범위를 갈래로 고른다(2026-09-04 사용자 「출제핵심강의 우선」 · 개념강의는 다시 쓴다)
+for (const period of Object.keys(ep)) for (const it of (ep[period] || [])) { const t = 출제핵심글(it); if (t) 글들.push({ k: 'exam', t }); }
 const ee = JSON.parse(eeSrc);
-for (const period of Object.keys(ee)) { if (period.startsWith('_')) continue; for (const law of Object.keys(ee[period] || {})) { if (law.startsWith('_')) continue; for (const a of Object.keys(ee[period][law] || {})) { const t = 개념글(ee[period][law][a] && ee[period][law][a].content); if (t) 글들.push(t); } } }
+for (const period of Object.keys(ee)) { if (period.startsWith('_')) continue; for (const law of Object.keys(ee[period] || {})) { if (law.startsWith('_')) continue; for (const a of Object.keys(ee[period][law] || {})) { const t = 개념글(ee[period][law][a] && ee[period][law][a].content); if (t) 글들.push({ k: 'easy', t }); } } }
 const st = ee._standalone || {};
-for (const period of Object.keys(st)) for (const law of Object.keys(st[period] || {})) for (const type of Object.keys(st[period][law] || {})) for (const a of Object.keys(st[period][law][type] || {})) { const t = 개념글(st[period][law][type][a] && st[period][law][type][a].content); if (t) 글들.push(t); }
+for (const period of Object.keys(st)) for (const law of Object.keys(st[period] || {})) for (const type of Object.keys(st[period][law] || {})) for (const a of Object.keys(st[period][law][type] || {})) { const t = 개념글(st[period][law][type][a] && st[period][law][type][a].content); if (t) 글들.push({ k: 'easy', t }); }
 const map = new Map();
-for (const 글 of 글들) for (const c of seg(글)) { const r = Math.round((c.r || 1) * 100) / 100; const k = c.text + '|' + r.toFixed(2); if (!map.has(k)) map.set(k, { t: c.text, r }); }
+for (const { k: 갈래, t: 글 } of 글들) for (const c of seg(글)) { const r = Math.round((c.r || 1) * 100) / 100; const k = c.text + '|' + r.toFixed(2); if (!map.has(k)) map.set(k, { t: c.text, r, k: 갈래 }); }
 const 목록 = [...map.values()];
 fs.writeFileSync(OUT, JSON.stringify(목록));
-console.log(`원고 ${글들.length}편 · 고유 조각 ${목록.length}개 · ${목록.reduce((a, c) => a + c.t.length, 0).toLocaleString()}자 → ${OUT}`);
+const 세기 = (갈래) => 목록.filter((c) => c.k === 갈래).length;
+console.log(`원고 ${글들.length}편 · 고유 조각 ${목록.length}개(exam ${세기('exam')} · easy ${세기('easy')}) · ${목록.reduce((a, c) => a + c.t.length, 0).toLocaleString()}자 → ${OUT}`);

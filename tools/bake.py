@@ -17,6 +17,7 @@ ap.add_argument('--chunks', required=True); ap.add_argument('--shard', type=int,
 ap.add_argument('--base', default='https://korean-voice.quddnr0107.workers.dev'); ap.add_argument('--voice', default='female'); ap.add_argument('--steps', type=int, default=16)
 ap.add_argument('--batch', type=int, default=8); ap.add_argument('--limit', type=int, default=0); ap.add_argument('--no-upload', action='store_true')
 ap.add_argument('--start', type=int, default=0, help='목록의 이 번호부터(시험용 · 앞쪽은 컨테이너 대기열이 이미 구웠을 수 있다)')
+ap.add_argument('--kind', default='all', choices=['all', 'exam', 'easy'], help='갈래 — exam 출제핵심강의 · easy 개념강의 · all (조각의 k 필드)')
 a = ap.parse_args()
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -28,6 +29,12 @@ import helper  # noqa: E402
 VS = server.VS
 
 items = json.load(open(a.chunks, encoding='utf-8'))
+if a.kind != 'all':
+    # 갈래로 거른 뒤 샤드를 나눈다. k 가 없는 옛 목록이면 거르지 않고 소리 낸다(조용히 전부 굽지 않게)
+    if items and 'k' not in items[0]:
+        print('🔴 조각 목록에 k(갈래)가 없다 — chunks.mjs 가 옛 판이다. --kind 를 못 지킨다', flush=True); sys.exit(2)
+    n0 = len(items); items = [it for it in items if it.get('k') == a.kind]
+    print(f'갈래 {a.kind}: {len(items)}/{n0}', flush=True)
 mine = [it for i, it in enumerate(items) if i >= a.start and (i - a.start) % a.shards == a.shard]
 if a.limit: mine = mine[:a.limit]
 print(f'조각 전체 {len(items)} · 내 몫(shard {a.shard}/{a.shards}) {len(mine)}', flush=True)
