@@ -9,8 +9,10 @@
 // 브라우저 음성(Web Speech)으로 폴백한다.
 // UMD 파일: 번들러/Node에선 module.exports(default import), 브라우저에선 window.KoVoice.
 import { Container, getContainer } from '@cloudflare/containers';
+import { DurableObject } from 'cloudflare:workers';
 import { handleTts, json } from './lib/melotts.mjs';
 import { cacheKey, parseR, RECIPE_TAG } from './lib/tts-key.mjs';
+import { makeBaker } from './lib/bake.mjs';
 export { handleTts, MODEL, LANGS, MAX_CHARS, _reset } from './lib/melotts.mjs';
 
 // 컨테이너 = server/server.py (포트 8790). 3분 요청이 없으면 잠든다(비용 0). 첫 요청이 깨우며 모델 로드 약 2초.
@@ -18,6 +20,48 @@ export class TtsContainer extends Container {
   defaultPort = 8790;
   sleepAfter = '3m';   // 유휴 3분이면 잠든다(비용 0). 깨우는 데 수 초 · 캐시(R2)는 잠들어도 즉시 답한다
   envVars = { STEPS: '16', ALLOW_ORIGIN: '*', CACHE_DIR: '/app/cache' };
+}
+
+/* ── 굽기 대기열(Durable Object) — 전편을 컨테이너가 스스로 굽고 R2 에 넣는다(lib/bake.mjs · 2026-09-04) ──
+   POST /bake {action:'enqueue', v, s, items:[{t, r}…]}   ≤400개 · Authorization: Bearer <BAKE_TOKEN>
+   POST /bake {action:'stop'|'resume'|'clear'}             같은 토큰
+   GET  /bake                                              상태(열려 있다 · 읽기만)
+   🔴 BAKE_TOKEN(비밀값)이 안 심겨 있으면 POST 는 503 — 아무나 컨테이너 시간을 못 태운다. */
+export class BakeQueue extends DurableObject {
+  constructor(ctx, env) {
+    super(ctx, env);
+    this.baker = makeBaker({
+      storage: ctx.storage, r2: env.TTS_CACHE, recipeTag: RECIPE_TAG,
+      fetchContainer: (path, init) => { const c = getContainer(env.TTS_CONTAINER, 'main'); return c.fetch(new Request('http://container' + path, init)); },
+      setAlarm: (at) => ctx.storage.setAlarm(at),
+    });
+  }
+  async alarm() { await this.baker.tick(); }
+  async enqueue(body) { return this.baker.enqueue(body); }
+  async status() { return this.baker.status(); }
+  async stop() { return this.baker.stop(); }
+  async resume() { return this.baker.resume(); }
+  async clear() { return this.baker.clear(); }
+}
+async function handleBake(request, env) {
+  if (!env.BAKE) return json({ ok: false, error: 'bake_unavailable', reason: 'BAKE 바인딩 없음' }, 503, CORS);
+  const stub = env.BAKE.get(env.BAKE.idFromName('main'));
+  if (request.method === 'GET') return json({ ok: true, ...(await stub.status()) }, 200, CORS);
+  if (!env.BAKE_TOKEN) return json({ ok: false, error: 'bake_token_unset', reason: 'wrangler secret put BAKE_TOKEN 이 먼저다' }, 503, CORS);
+  if ((request.headers.get('Authorization') || '') !== 'Bearer ' + env.BAKE_TOKEN) return json({ ok: false, error: 'unauthorized' }, 401, CORS);
+  let body = {}; try { body = await request.json(); } catch (_) { body = {}; }
+  const action = body.action || 'enqueue';
+  if (action === 'enqueue') {
+    const v = body.v || 'female';
+    if (!VOICES.includes(v)) return json({ ok: false, error: 'bad_voice' }, 400, CORS);
+    const s = Math.max(4, Math.min(32, parseInt(body.s || DEFAULT_STEPS, 10) || DEFAULT_STEPS));
+    const items = Array.isArray(body.items) ? body.items.slice(0, 400) : [];
+    return json({ ok: true, ...(await stub.enqueue({ v, s, items })) }, 200, CORS);
+  }
+  if (action === 'stop') return json({ ok: true, ...(await stub.stop()) }, 200, CORS);
+  if (action === 'resume') return json({ ok: true, ...(await stub.resume()) }, 200, CORS);
+  if (action === 'clear') return json({ ok: true, ...(await stub.clear()) }, 200, CORS);
+  return json({ ok: false, error: 'bad_action' }, 400, CORS);
 }
 
 const SECURITY = {
@@ -135,9 +179,10 @@ async function handleHealth(request, env) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    if (request.method === 'OPTIONS' && ['/tts', '/warm', '/health', '/api/tts'].includes(url.pathname)) return new Response(null, { status: 204, headers: { ...CORS, 'Access-Control-Max-Age': '86400' } });
+    if (request.method === 'OPTIONS' && ['/tts', '/warm', '/health', '/api/tts', '/bake'].includes(url.pathname)) return new Response(null, { status: 204, headers: { ...CORS, 'Access-Control-Max-Age': '86400', 'Access-Control-Allow-Headers': 'Range, Content-Type, Authorization' } });
     if (url.pathname === '/tts') return handleLiveTts(request, env, ctx);
     if (url.pathname === '/warm' && request.method === 'POST') return handleWarm(request, env);
+    if (url.pathname === '/bake' && (request.method === 'GET' || request.method === 'POST')) return handleBake(request, env);
     if (url.pathname === '/health') return handleHealth(request, env);
     if (url.pathname === '/api/tts') return handleTts(request, env, ctx);
     const res = await env.ASSETS.fetch(request);

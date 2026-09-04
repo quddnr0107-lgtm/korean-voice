@@ -32,7 +32,10 @@ Docker 없이: `pip install onnxruntime numpy soundfile librosa PyYAML imageio-f
 - `GET /health` → `{ok, voices, cached, steps, recipe, queue, stats}`
 - `GET /tts?v=female|male&t=<문장>[&s=단계][&r=속도배수]` → `audio/mpeg` · `Cache-Control: immutable` · CORS `*` · `Range` 지원(iOS)
   · `r` = 합성 속도 배수(0.7~1.6 · 조각별 완급 · 기본 1.0). 캐시 키 = `sha1(voice|steps|r|조합표식|text)` (`lib/tts-key.mjs` · 워커와 같다)
-- `POST /warm` `{v, texts:[…][, r]}` → 대기열에 넣고 바로 `{queued}`; 백그라운드가 순서대로 굽는다
+- `POST /warm` `{v, texts:[…][, r]}` → 대기열에 넣고 바로 `{queued}`; 백그라운드가 순서대로 굽는다(컨테이너 **디스크**에만 남는다 — 잠들면 사라진다)
+- **전편 미리 굽기 `/bake`**(워커 · `lib/bake.mjs` · Durable Object `BakeQueue`) — 조각을 R2 에 **영구히** 넣는다. 바깥 드라이버 없이 DO 알람이 조각 4개씩 `/tts` 로 받아 R2 에 넣고 다음 알람을 건다(그 요청이 곧 컨테이너를 깨워 둔다). 표식(`X-TTS-Recipe`)이 다르면 넣지 않고 60초 뒤 다시 본다.
+  `GET /bake` 상태(열려 있다) · `POST /bake {action:'enqueue', v, items:[{t, r}…≤400]}` · `{action:'stop'|'resume'|'clear'}` — POST 는 `Authorization: Bearer <BAKE_TOKEN>`.
+  🔴 비밀값이 먼저다: `npx wrangler secret put BAKE_TOKEN` (없으면 POST 가 503). 보내는 쪽은 yebijun `.github/scripts/bake-live-tts.mjs --보내기`(화면과 같은 조각을 만든다 · `check-bake-list-live` 가 같은지 잰다).
 - 목소리·다듬기는 `voice_shape.py` 가 정본이다(여성 F4:0.6+F2:0.4 = 사람이 표본을 듣고 정한 「U4」 · 남성 M1:0.7+M3:0.3).
   합성 뒤 **다듬기**가 붙는다: trim(앞여유 50ms) → 첫 음절 보강 → Praat PSOLA 억양(문장 끝 +6반음 · 물음 +8 · 위로만 1.8배 · +1반음).
   문장 끝(hard)은 글자로 판정한다(`is_sentence_end` — 문장부호·「다/요/까」로 끝나면 끝, 쉼표·낱말로 끝나면 중간). 조합을 바꾸면 `RECIPE_TAG` 를 올려라 — 캐시 키가 갈린다.
