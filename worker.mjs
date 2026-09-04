@@ -52,18 +52,23 @@ async function handleBake(request, env) {
   if ((request.headers.get('Authorization') || '') !== 'Bearer ' + env.BAKE_TOKEN) return json({ ok: false, error: 'unauthorized' }, 401, CORS);
   let body = {}; try { body = await request.json(); } catch (_) { body = {}; }
   const action = body.action || 'enqueue';
-  if (action === 'enqueue') {
-    const v = body.v || 'female';
-    if (!VOICES.includes(v)) return json({ ok: false, error: 'bad_voice' }, 400, CORS);
-    const s = Math.max(4, Math.min(32, parseInt(body.s || DEFAULT_STEPS, 10) || DEFAULT_STEPS));
-    const items = Array.isArray(body.items) ? body.items.slice(0, 400) : [];
-    return json({ ok: true, ...(await stub.enqueue({ v, s, items })) }, 200, CORS);
+  // 🔴 DO 안의 예외를 삼키지 않는다 — 500 {} 로 나가면 보내는 쪽이 원인을 못 본다(4회차 실측). 이유를 본문에 실어 준다.
+  try {
+    if (action === 'enqueue') {
+      const v = body.v || 'female';
+      if (!VOICES.includes(v)) return json({ ok: false, error: 'bad_voice' }, 400, CORS);
+      const s = Math.max(4, Math.min(32, parseInt(body.s || DEFAULT_STEPS, 10) || DEFAULT_STEPS));
+      const items = Array.isArray(body.items) ? body.items.slice(0, 400) : [];
+      return json({ ok: true, ...(await stub.enqueue({ v, s, items })) }, 200, CORS);
+    }
+    if (action === 'stop') return json({ ok: true, ...(await stub.stop()) }, 200, CORS);
+    if (action === 'resume') return json({ ok: true, ...(await stub.resume()) }, 200, CORS);
+    if (action === 'clear') return json({ ok: true, ...(await stub.clear()) }, 200, CORS);
+    if (action === 'recount') return json({ ok: true, ...(await stub.recount()) }, 200, CORS);
+    return json({ ok: false, error: 'bad_action' }, 400, CORS);
+  } catch (e) {
+    return json({ ok: false, error: 'bake_failed', action, reason: String((e && e.stack) || (e && e.message) || e).slice(0, 600) }, 500, CORS);
   }
-  if (action === 'stop') return json({ ok: true, ...(await stub.stop()) }, 200, CORS);
-  if (action === 'resume') return json({ ok: true, ...(await stub.resume()) }, 200, CORS);
-  if (action === 'clear') return json({ ok: true, ...(await stub.clear()) }, 200, CORS);
-  if (action === 'recount') return json({ ok: true, ...(await stub.recount()) }, 200, CORS);
-  return json({ ok: false, error: 'bad_action' }, 400, CORS);
 }
 
 const SECURITY = {
