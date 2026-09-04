@@ -24,11 +24,15 @@
   ],
   "durable_objects": {
     "bindings": [
-      { "name": "TTS_CONTAINER", "class_name": "TtsContainer" }
+      { "name": "TTS_CONTAINER", "class_name": "TtsContainer" },
+      // 굽기 대기열 — 전편을 컨테이너가 스스로 굽고 R2 에 넣는다(lib/bake.mjs). POST /bake 는 비밀값 BAKE_TOKEN 이 있어야 한다:
+      //   npx wrangler secret put BAKE_TOKEN   (아무 긴 문자열 · yebijun 의 bake-live-tts.mjs 가 같은 값을 보낸다)
+      { "name": "BAKE", "class_name": "BakeQueue" }
     ]
   },
   "migrations": [
-    { "tag": "v1", "new_sqlite_classes": ["TtsContainer"] }
+    { "tag": "v1", "new_sqlite_classes": ["TtsContainer"] },
+    { "tag": "v2", "new_sqlite_classes": ["BakeQueue"] }
   ],
   "r2_buckets": [
     { "binding": "TTS_CACHE", "bucket_name": "korean-voice-tts" }
