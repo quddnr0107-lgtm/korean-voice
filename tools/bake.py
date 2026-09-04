@@ -18,6 +18,7 @@ ap.add_argument('--base', default='https://korean-voice.quddnr0107.workers.dev')
 ap.add_argument('--batch', type=int, default=8); ap.add_argument('--limit', type=int, default=0); ap.add_argument('--no-upload', action='store_true')
 ap.add_argument('--start', type=int, default=0, help='목록의 이 번호부터(시험용 · 앞쪽은 컨테이너 대기열이 이미 구웠을 수 있다)')
 ap.add_argument('--kind', default='all', choices=['all', 'exam', 'easy'], help='갈래 — exam 출제핵심강의 · easy 개념강의 · all (조각의 k 필드)')
+ap.add_argument('--force', action='store_true', help='R2 에 이미 있어도 다시 굽어 덮어쓴다(배치 패딩 우웅 재굽기 · L280)')
 a = ap.parse_args()
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -55,7 +56,7 @@ for i in range(0, len(mine), 400):
         has = j.get('has') or [False] * len(part)
     except Exception as e:
         print('has 실패(전부 굽는다):', str(e)[:100]); has = [False] * len(part)
-    todo += [it for it, h in zip(part, has) if not h]
+    todo += [it for it, h in zip(part, has) if a.force or not h]
 print(f'이미 R2 에 있음 {len(mine) - len(todo)} · 구울 것 {len(todo)}', flush=True)
 
 _tok = {'v': None, 'at': 0}
@@ -95,7 +96,7 @@ for it in todo:
     hard = VS.is_sentence_end(it['t']); r = server.parse_r(it['r'])
     speed = float(np.clip(server.VOICES[a.voice]['speed'] * r * VS.unit_speed_mult(0, hard), server.R_MIN, server.R_MAX))
     groups.setdefault((round(speed, 3), hard), []).append(it)
-done = fail = 0; t0 = time.time()
+done = fail = redo = hum_left = 0; t0 = time.time()
 for (speed, hard), lst in groups.items():
     lst.sort(key=lambda it: len(it['t']))
     for i in range(0, len(lst), a.batch):
@@ -103,11 +104,20 @@ for (speed, hard), lst in groups.items():
         texts = [server.clean_text(it['t']) for it in part]
         st = helper.Style(np.repeat(style.ttl, len(texts), axis=0), np.repeat(style.dp, len(texts), axis=0))
         with server._lock:
-            wavs, _ = server._tts._infer(texts, ['ko'] * len(texts), st, a.steps, speed)
-        wavs = np.asarray(wavs, dtype=np.float32)
-        for it, t, w in zip(part, texts, wavs):
+            wavs, durs = server._tts._infer(texts, ['ko'] * len(texts), st, a.steps, speed)
+        wavs = np.asarray(wavs, dtype=np.float32); durs = np.asarray(durs, dtype=np.float64).reshape(-1)
+        assert len(durs) == len(texts), f'dur {len(durs)} ≠ texts {len(texts)}'
+        for it, t, w, d in zip(part, texts, wavs, durs):
             try:
-                y = server.shape(w.reshape(-1), sr, t, hard)
+                # 🔴 배치 합성은 가장 긴 항목 길이로 패딩되고, 그 패딩 자리에서 모델이 낮은 순음(「우웅」 · ~120Hz · 수백 ms)을 낸다(L280).
+                #    각 항목을 **자기 예측 길이(dur · 이미 speed 로 나눈 값)** 로 먼저 자른다. 그래도 잡히면 단건으로 다시 굽는다(패딩 없음).
+                w = w.reshape(-1)[:int(d * sr)]
+                y = server.shape(w, sr, t, hard)
+                if VS.hum_tail(y, sr) is True:
+                    with server._lock:
+                        w1, d1 = server._tts._infer([t], ['ko'], style, a.steps, speed)
+                    y = server.shape(np.asarray(w1, dtype=np.float32).reshape(-1)[:int(float(np.asarray(d1).reshape(-1)[0]) * sr)], sr, t, hard); redo += 1
+                    if VS.hum_tail(y, sr) is True: print('🔴 우웅 남음(단건 재굽기 뒤에도):', t[:30], flush=True); hum_left += 1
                 tmp = os.path.join(os.environ['CACHE_DIR'], f'b{a.shard}.tmp.wav'); os.makedirs(os.environ['CACHE_DIR'], exist_ok=True)
                 sf.write(tmp, y, sr)
                 mp3 = subprocess.run([ff, '-v', 'error', '-i', tmp, '-ar', '24000', '-codec:a', 'libmp3lame', '-b:a', '48k', '-f', 'mp3', 'pipe:1'], check=True, capture_output=True).stdout
@@ -118,5 +128,5 @@ for (speed, hard), lst in groups.items():
         n = done + fail
         if n % 40 < len(part):
             el = time.time() - t0; print(f'[{n}/{len(todo)}] 구움 {done} · 실패 {fail} · 조각당 {el / max(1, n):.2f}s · 남은 약 {(len(todo) - n) * el / max(1, n) / 60:.0f}분', flush=True)
-print(f'끝 — 구움 {done} · 실패 {fail} · {(time.time() - t0) / 60:.1f}분', flush=True)
+print(f'끝 — 구움 {done} · 실패 {fail} · 우웅으로 단건 재굽기 {redo} · 그래도 남음 {hum_left} · {(time.time() - t0) / 60:.1f}분', flush=True)
 sys.exit(1 if fail and not done else 0)

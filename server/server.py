@@ -102,8 +102,9 @@ def synthesize(voice, text, steps, r=1.0):
     hard = VS.is_sentence_end(text)
     speed = float(np.clip(VOICES[voice]['speed'] * r * VS.unit_speed_mult(0, hard), R_MIN, R_MAX))   # 완급: 문장 끝 ×0.92 · 중간 ×1.06(U4)
     with _lock:
-        wav, _ = _tts._infer([text], ['ko'], _styles[voice], steps, speed)
-    w = shape(wav, _tts.sample_rate, text, hard)
+        wav, dur = _tts._infer([text], ['ko'], _styles[voice], steps, speed)
+    w = np.asarray(wav, dtype=np.float32).reshape(-1)[:int(float(np.asarray(dur).reshape(-1)[0]) * _tts.sample_rate)]   # 예측 길이로 자른다(배치 패딩 우웅 · L280 · 러너 bake.py 와 같은 자)
+    w = shape(w, _tts.sample_rate, text, hard)
     key = cache_key(voice, text, steps, r)
     tmp = os.path.join(CACHE, voice, key + '.tmp.wav'); out = os.path.join(CACHE, voice, key + '.mp3')
     sf.write(tmp, w, _tts.sample_rate)

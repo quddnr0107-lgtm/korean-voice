@@ -95,6 +95,28 @@ def praat_shape(w, sr, text, hard, r=RECIPE):
 def unit_speed_mult(idx_in_sentence, hard, r=RECIPE):
     a, b = r['contrast']; return b if hard else a
 
+def hum_tail(w, sr):
+    """끝 「우웅」 검출 — 배치 합성의 패딩 자리에서 모델이 낮은 순음(~120Hz · HNR 높음 · 400Hz 아래 에너지)을 수백 ms 낸다(L280).
+    마지막 유성 구간이 200ms 를 넘고 그 끝 0.3초가 HNR 12dB 초과 · 저역비 0.5 초과이면 True. 실측(라이브 조각 · 사용자 판정):
+    우웅 O → 725ms · HNR 18.5 · 저역 0.71 / 우웅 X → 40~70ms · HNR 3~8 · 저역 0.06~0.13. parselmouth 가 없으면 None(못 잰 것을 통과로 세지 않는다 · R139)."""
+    try:
+        import parselmouth
+    except ImportError:
+        return None
+    w = np.asarray(w, dtype=np.float64).reshape(-1)
+    if len(w) < sr // 2: return False
+    snd = parselmouth.Sound(w, sampling_frequency=sr); p = snd.to_pitch(time_step=0.005, pitch_floor=75, pitch_ceiling=600)
+    f0 = p.selected_array['frequency']; t = p.xs(); v = f0 > 0
+    if v.sum() < 10: return False
+    vi = np.where(v)[0]; runs = np.split(vi, np.where(np.diff(vi) > 1)[0] + 1); last_run_ms = len(runs[-1]) * 5
+    if last_run_ms <= 200: return False
+    last = t[v][-1]; a, b = int(max(0, last - 0.3) * sr), int(last * sr)
+    x = w[a:b]
+    if len(x) < sr // 20: return False
+    sp = np.abs(np.fft.rfft(x * np.hanning(len(x)))) ** 2; fq = np.fft.rfftfreq(len(x), 1 / sr); low = float(sp[fq < 400].sum() / (sp.sum() or 1))
+    hnr = parselmouth.praat.call(parselmouth.praat.call(snd.extract_part(max(0, last - 0.3), last), "To Harmonicity (cc)", 0.01, 75, 0.1, 1.0), "Get mean", 0, 0)
+    return bool(hnr > 12 and low > 0.5)
+
 def selftest():
     ok = 0; bad = 0
     def t(name, cond):
@@ -127,6 +149,12 @@ def selftest():
         sr = 24000; x = (0.3 * np.sin(2 * np.pi * 200 * np.arange(sr) / sr)).astype(np.float32)
         y = praat_shape(x, sr, '테스트입니다.', True)
         t('Praat PSOLA — 길이가 유지되고(±10%) 소리가 있다', 0.9 < len(y) / len(x) < 1.1 and np.abs(y).max() > 0.05)
+        # 끝 우웅 검출 — 「말소리(200Hz 에 잡음 섞임) 1초」 뒤에 「120Hz 순음 0.5초」를 붙이면 잡히고, 말소리만이면 안 잡힌다
+        rng = np.random.default_rng(3); tt = np.arange(sr) / sr
+        speech = (0.4 * np.sin(2 * np.pi * 200 * tt) * (1 + 0.3 * np.sin(2 * np.pi * 3 * tt)) + 0.15 * rng.standard_normal(sr)).astype(np.float32)
+        hum = (0.1 * np.sin(2 * np.pi * 120 * np.arange(sr // 2) / sr)).astype(np.float32)
+        t('[양성] 끝 우웅 검출 — 낮은 순음 꼬리 0.5초가 붙으면 True', hum_tail(np.concatenate([speech, np.zeros(sr // 20, dtype=np.float32), hum]), sr) is True)
+        t('[음성] 끝 우웅 검출 — 말소리만이면 False', hum_tail(speech, sr) is False)
     except ImportError:
         print('  ⚠️ parselmouth 없음 — PSOLA 자는 건너뛴다(굽는 워크플로엔 있다 · 이 환경만)')
     print(f"{'✅' if not bad else '🔴'} 강의 음성 다듬기 자 {ok}/{ok + bad}")

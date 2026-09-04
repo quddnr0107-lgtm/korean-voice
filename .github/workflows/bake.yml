@@ -18,6 +18,9 @@ on:
       kind:
         description: '갈래 — all · exam(출제핵심강의) · easy(개념강의)'
         default: 'all'
+      force:
+        description: 'R2 에 있어도 다시 굽어 덮어쓴다(true/false)'
+        default: 'false'
 
 permissions:
   id-token: write   # OIDC — 워커가 이 토큰으로 「이 저장소의 main」임을 확인한다
@@ -80,4 +83,4 @@ jobs:
         env:
           SUPERTONIC_DIR: ${{ github.workspace }}/supertonic3
           PYTHONPATH: ${{ github.workspace }}/supertonic3/py
-        run: python3 tools/bake.py --chunks chunks.json --shard ${{ matrix.shard }} --shards ${{ inputs.shards }} --limit ${{ inputs.limit }} --start ${{ inputs.start }} --kind ${{ inputs.kind || 'all' }}
+        run: python3 tools/bake.py --chunks chunks.json --shard ${{ matrix.shard }} --shards ${{ inputs.shards }} --limit ${{ inputs.limit }} --start ${{ inputs.start }} --kind ${{ inputs.kind || 'all' }} ${{ inputs.force == 'true' && '--force' || '' }}
