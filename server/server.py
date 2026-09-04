@@ -93,6 +93,7 @@ def shape(w, sr, text, hard):
         ramp = np.linspace(0, 1, k, dtype=np.float32); w[:k] *= ramp; w[-k:] *= ramp[::-1]
     w = VS.onset_boost(w, sr)
     w = VS.praat_shape(w, sr, text, hard)
+    w = VS.tail_cut(w, sr)   # 마지막 말소리 뒤 웅웅 꼬리(u4b · L279)
     return w / (np.abs(w).max() or 1.0) * 0.89
 
 
