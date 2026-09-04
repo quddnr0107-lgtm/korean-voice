@@ -16,6 +16,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument('--chunks', required=True); ap.add_argument('--shard', type=int, default=0); ap.add_argument('--shards', type=int, default=1)
 ap.add_argument('--base', default='https://korean-voice.quddnr0107.workers.dev'); ap.add_argument('--voice', default='female'); ap.add_argument('--steps', type=int, default=16)
 ap.add_argument('--batch', type=int, default=8); ap.add_argument('--limit', type=int, default=0); ap.add_argument('--no-upload', action='store_true')
+ap.add_argument('--start', type=int, default=0, help='목록의 이 번호부터(시험용 · 앞쪽은 컨테이너 대기열이 이미 구웠을 수 있다)')
 a = ap.parse_args()
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -27,7 +28,7 @@ import helper  # noqa: E402
 VS = server.VS
 
 items = json.load(open(a.chunks, encoding='utf-8'))
-mine = [it for i, it in enumerate(items) if i % a.shards == a.shard]
+mine = [it for i, it in enumerate(items) if i >= a.start and (i - a.start) % a.shards == a.shard]
 if a.limit: mine = mine[:a.limit]
 print(f'조각 전체 {len(items)} · 내 몫(shard {a.shard}/{a.shards}) {len(mine)}', flush=True)
 

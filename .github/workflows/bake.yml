@@ -12,6 +12,9 @@ on:
       limit:
         description: '러너당 조각 상한(0 = 전부 · 시험용)'
         default: '0'
+      start:
+        description: '목록의 이 번호부터(시험용 · 앞쪽은 컨테이너가 이미 구웠을 수 있다)'
+        default: '0'
 
 permissions:
   id-token: write   # OIDC — 워커가 이 토큰으로 「이 저장소의 main」임을 확인한다
@@ -74,4 +77,4 @@ jobs:
         env:
           SUPERTONIC_DIR: ${{ github.workspace }}/supertonic3
           PYTHONPATH: ${{ github.workspace }}/supertonic3/py
-        run: python3 tools/bake.py --chunks chunks.json --shard ${{ matrix.shard }} --shards ${{ inputs.shards }} --limit ${{ inputs.limit }}
+        run: python3 tools/bake.py --chunks chunks.json --shard ${{ matrix.shard }} --shards ${{ inputs.shards }} --limit ${{ inputs.limit }} --start ${{ inputs.start }}
