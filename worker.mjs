@@ -42,6 +42,7 @@ export class BakeQueue extends DurableObject {
   async stop() { return this.baker.stop(); }
   async resume() { return this.baker.resume(); }
   async clear() { return this.baker.clear(); }
+  async recount() { return this.baker.recount(); }
 }
 async function handleBake(request, env) {
   if (!env.BAKE) return json({ ok: false, error: 'bake_unavailable', reason: 'BAKE 바인딩 없음' }, 503, CORS);
@@ -61,6 +62,7 @@ async function handleBake(request, env) {
   if (action === 'stop') return json({ ok: true, ...(await stub.stop()) }, 200, CORS);
   if (action === 'resume') return json({ ok: true, ...(await stub.resume()) }, 200, CORS);
   if (action === 'clear') return json({ ok: true, ...(await stub.clear()) }, 200, CORS);
+  if (action === 'recount') return json({ ok: true, ...(await stub.recount()) }, 200, CORS);
   return json({ ok: false, error: 'bad_action' }, 400, CORS);
 }
 
