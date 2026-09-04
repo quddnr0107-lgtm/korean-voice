@@ -9,7 +9,7 @@
 - 이미 R2 에 있는 조각은 /bake/has 로 물어 건너뛴다. 올리기는 PUT /bake/put?v&s&r&t (본문 mp3 · X-TTS-Recipe).
 - OIDC 토큰은 ACTIONS_ID_TOKEN_REQUEST_URL 에서 audience=korean-voice-bake 로 받고 4분마다 새로 받는다.
 """
-import argparse, io, json, os, subprocess, sys, time, urllib.request, urllib.parse
+import argparse, io, json, os, subprocess, sys, time, urllib.request, urllib.parse, urllib.error
 import numpy as np, soundfile as sf
 
 ap = argparse.ArgumentParser()
@@ -31,8 +31,9 @@ mine = [it for i, it in enumerate(items) if i % a.shards == a.shard]
 if a.limit: mine = mine[:a.limit]
 print(f'조각 전체 {len(items)} · 내 몫(shard {a.shard}/{a.shards}) {len(mine)}', flush=True)
 
+UA = 'korean-voice-bake/1 (+https://github.com/quddnr0107-lgtm/korean-voice)'   # 🔴 기본 Python-urllib UA 는 Cloudflare 엣지가 403 으로 막는다(1회차 실측)
 def http(method, path, body=None, headers=None, raw=False):
-    req = urllib.request.Request(a.base + path, data=body, method=method, headers=headers or {})
+    req = urllib.request.Request(a.base + path, data=body, method=method, headers={'User-Agent': UA, **(headers or {})})
     with urllib.request.urlopen(req, timeout=120) as res:
         data = res.read()
         return data if raw else json.loads(data.decode('utf-8') or '{}')
@@ -67,6 +68,8 @@ def upload(it, mp3):
             if j.get('ok'): return True
             print('put 거절:', json.dumps(j, ensure_ascii=False)[:200])
             if j.get('error', '').startswith('oidc_') or j.get('error') == 'recipe_mismatch': return False
+        except urllib.error.HTTPError as e:
+            print('put 실패:', e.code, (e.read() or b'')[:200].decode('utf-8', 'replace'))
         except Exception as e:
             print('put 실패:', str(e)[:120])
         time.sleep(5 * (k + 1))

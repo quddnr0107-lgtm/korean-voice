@@ -228,7 +228,7 @@ export default {
     if (url.pathname === '/tts') return handleLiveTts(request, env, ctx);
     if (url.pathname === '/warm' && request.method === 'POST') return handleWarm(request, env);
     if (url.pathname === '/bake' && (request.method === 'GET' || request.method === 'POST')) return handleBake(request, env);
-    if (url.pathname === '/bake/put' && request.method === 'PUT') return handleBakePut(request, env);
+    if (url.pathname === '/bake/put' && (request.method === 'PUT' || request.method === 'POST')) return handleBakePut(request, env);   // PUT 이 엣지에서 403 이 난 적이 있어 POST 도 받는다
     if (url.pathname === '/bake/has' && request.method === 'POST') return handleBakeHas(request, env);
     if (url.pathname === '/health') return handleHealth(request, env);
     if (url.pathname === '/api/tts') return handleTts(request, env, ctx);
