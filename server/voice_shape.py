@@ -20,17 +20,14 @@
 import re, sys
 import numpy as np
 
-RECIPE_TAG = 'u4b'   # 🔴 조합이 바뀌면 올려라 — lib/tts-key.mjs 의 RECIPE_TAG 와 글자까지 같아야 한다(test/tts-key.test.mjs 가 잰다)
+RECIPE_TAG = 'u4a'   # 🔴 조합이 바뀌면 올려라 — lib/tts-key.mjs 의 RECIPE_TAG 와 글자까지 같아야 한다(test/tts-key.test.mjs 가 잰다)
 #   u4 → u4a (2026-09-03): 워커가 컨테이너보다 먼저 새 판이 되어 옛 소리가 u4 키로 R2 에 들어갈 수 있던 창을 버린다
-#   u4a → u4b (2026-09-04): 꼬리 자르기 — Supertonic 이 마지막 말소리 뒤에 목소리 높이(~300Hz)의 웅웅 꼬리(-30~-55dB · 80~600ms)를 낸다.
-#            사용자 제보 「끝에 우웅 · 긴 글은 더 길다 · 짧은 글에도」(L278·L279). 재생 배속을 고친 뒤에도 남아 파일에서 자른다.
 RECIPE = {
     'style': 'F4:0.6,F2:0.4',
     'contrast': (1.06, 0.92), 'beat_ms': 250,
     'onset_boost': 2.0, 'lead_pad_ms': 50,
     'world': (1.8, 1.0), 'up_only': True, 'hat': (0.3, -0.5),
     'end_rise': 6.0, 'q_rise': 8.0, 'rise_ms': 200,
-    'tail_db': -30.0, 'tail_keep_ms': 60, 'tail_fade_ms': 60,   # 마지막 힘 있는 소리(최대치 대비 -30dB) 뒤 60ms 만 남기고 그 60ms 를 페이드(남는 꼬리가 전부 페이드 안)
 }
 FRAME_S = 0.005   # Praat/WORLD 프레임
 Q_END = re.compile(r'(까|가요|나요|죠|습니까)[?.!]*\s*$')
@@ -98,22 +95,6 @@ def praat_shape(w, sr, text, hard, r=RECIPE):
 def unit_speed_mult(idx_in_sentence, hard, r=RECIPE):
     a, b = r['contrast']; return b if hard else a
 
-def tail_cut(w, sr, r=RECIPE):
-    """마지막 힘 있는 소리 뒤의 웅웅 꼬리를 자른다 — 10ms 프레임 RMS 가 최대치 대비 tail_db 를 넘는 마지막 프레임 뒤 tail_keep_ms 만 남기고 tail_fade_ms 페이드.
-    🔴 trim()의 -45dB 로는 안 잡힌다 — 꼬리가 그보다 크다(-30~-55dB). 다듬기 맨 끝(PSOLA 뒤·정규화 앞)에서 부른다."""
-    w = np.asarray(w, dtype=np.float32).reshape(-1)
-    frame = int(sr * 0.01); n = len(w) // frame
-    if n < 3: return w
-    rms = np.sqrt((w[:n * frame].reshape(n, frame) ** 2).mean(axis=1) + 1e-12)
-    peak = float(rms.max())
-    if peak <= 0: return w
-    idx = np.where(20 * np.log10(rms / peak + 1e-9) > float(r['tail_db']))[0]
-    if not len(idx): return w
-    end = min(len(w), (int(idx[-1]) + 1) * frame + int(sr * r['tail_keep_ms'] / 1000))
-    w = w[:end].copy(); k = min(len(w), int(sr * r['tail_fade_ms'] / 1000))
-    if k > 0: w[-k:] *= np.linspace(1.0, 0.0, k, dtype=np.float32)
-    return w
-
 def selftest():
     ok = 0; bad = 0
     def t(name, cond):
@@ -141,16 +122,6 @@ def selftest():
     t('조합 표식이 있다(캐시 키에 들어간다)', isinstance(RECIPE_TAG, str) and re.fullmatch(r'[a-z0-9]+', RECIPE_TAG) is not None)
     w = np.ones(24000, dtype=np.float32); b = onset_boost(w, 24000)
     t('첫 음절 보강 — 첫 샘플 2.0배 · 150ms 뒤엔 1.0', abs(b[0] - 2.0) < 1e-3 and abs(b[4000] - 1.0) < 1e-3)
-    # 꼬리 자르기 — 말소리 1초 + 웅웅 꼬리 0.5초(-40dB · 300Hz) 를 만들어 댄다
-    sr = 24000; tt = np.arange(sr) / sr
-    speech = (0.5 * np.sin(2 * np.pi * 200 * tt)).astype(np.float32); hum = (0.005 * np.sin(2 * np.pi * 300 * np.arange(sr // 2) / sr)).astype(np.float32)
-    cut = tail_cut(np.concatenate([speech, hum]), sr)
-    t('[양성] 꼬리 자르기 — -40dB 웅웅 꼬리 0.5초가 잘려 남는 꼬리가 100ms 안쪽', sr * 1.0 <= len(cut) <= sr * 1.0 + int(sr * 0.1))
-    t('[양성] 꼬리 자르기 — 끝이 페이드로 0 에 닿는다', abs(float(cut[-1])) < 1e-4)
-    decay = (0.5 * np.sin(2 * np.pi * 200 * tt) * np.linspace(1.0, 0.0, sr)).astype(np.float32)   # 자연 감쇠(1초에 걸쳐 0 으로)
-    kept = tail_cut(np.concatenate([speech, decay]), sr)
-    t('[음성] 자연 감쇠(-30dB 까지 서서히)는 -30dB 넘는 구간까지 남긴다(뚝 안 끊는다)', len(kept) >= sr + int(sr * 0.9))
-    t('[음성] 꼬리 없는 소리는 길이가 거의 그대로(80ms 여유 안)', len(tail_cut(speech, sr)) >= sr - int(sr * 0.02))
     try:
         import parselmouth  # noqa: F401
         sr = 24000; x = (0.3 * np.sin(2 * np.pi * 200 * np.arange(sr) / sr)).astype(np.float32)
