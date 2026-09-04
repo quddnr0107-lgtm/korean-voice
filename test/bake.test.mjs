@@ -8,12 +8,13 @@ function fakeR2(initial = []) {
   const m = new Map(initial.map((k) => [k, true]));
   return { m, async head(k) { return m.has(k) ? { key: k } : null; }, async put(k, bytes) { m.set(k, bytes); } };
 }
-function fakeContainer({ recipe = RECIPE_TAG, fail = () => false } = {}) {
+function fakeContainer({ recipe = RECIPE_TAG, fail = () => false, down = () => false } = {}) {
   const calls = [];
   return {
     calls,
-    async fetch(path, init) {
-      calls.push({ path, init });
+    async fetch(path, init, shard) {
+      calls.push({ path, init, shard });
+      if (down(shard)) throw new Error('container unreachable');
       if (path === '/warm') return new Response('{"ok":true}', { status: 200 });
       const t = decodeURIComponent(new URL('http://x' + path).searchParams.get('t'));
       if (fail(t)) return new Response('boom', { status: 502 });
@@ -24,7 +25,7 @@ function fakeContainer({ recipe = RECIPE_TAG, fail = () => false } = {}) {
 function harness(opts = {}) {
   const storage = memoryStorage(); const r2 = fakeR2(opts.r2 || []); const c = fakeContainer(opts);
   let t = 1000; const alarms = [];
-  const baker = makeBaker({ storage, r2, fetchContainer: (p, i) => c.fetch(p, i), recipeTag: RECIPE_TAG, now: () => t, setAlarm: async (at) => { alarms.push(at); }, batch: 2, warmAhead: 3 });
+  const baker = makeBaker({ storage, r2, fetchContainer: (p, i, sh) => c.fetch(p, i, sh), recipeTag: RECIPE_TAG, now: () => t, setAlarm: async (at) => { alarms.push(at); }, batch: 2, warmAhead: 3, shards: opts.shards || 1 });
   return { storage, r2, c, baker, alarms, tick: (ms) => { t += ms; } };
 }
 
@@ -102,4 +103,26 @@ test('recount 가 색인 없는 옛 항목의 k: 를 되채워 재실행이 멱�
   assert.strictEqual(st.backfilled, 2);
   const b = await h.baker.enqueue({ items: [{ t: '하나.' }, { t: '둘.' }] });
   assert.deepStrictEqual([b.queued, b.skipped], [0, 2]);
+});
+
+test('샤드 — 조각을 컨테이너 여럿에 나눠 동시에 굽고 · 다른 길이 먼저 넣은 조각은 안 굽는다', async () => {
+  const h = harness({ shards: 3 });
+  const items = Array.from({ length: 9 }, (_, i) => ({ t: `조각 ${i}.` }));
+  await h.baker.enqueue({ items });
+  const already = await cacheKey('female', 16, 1, '조각 1.'); h.r2.m.set(already, true);   // 학생이 먼저 들은 조각
+  const r = await h.baker.tick();
+  const shardsUsed = new Set(h.c.calls.filter((c) => c.path.startsWith('/tts')).map((c) => c.shard));
+  assert.deepStrictEqual([...shardsUsed].sort(), [0, 1, 2], '세 샤드가 다 일한다');
+  assert.strictEqual(r.done + r.skipped, 6, '샤드 3 × batch 2');
+  assert.strictEqual(r.skipped, 1);
+  assert.ok(!h.c.calls.some((c) => c.path.startsWith('/tts') && decodeURIComponent(c.path).includes('조각 1.')), '이미 있는 조각은 컨테이너에 안 묻는다');
+  assert.strictEqual((await h.baker.status()).pending, 3);
+});
+
+test('못 뜨는 샤드 — 조각의 tries 를 안 올리고 다음 알람에 다른 샤드가 굽는다', async () => {
+  const h = harness({ shards: 2, down: (sh) => sh === 1 });
+  await h.baker.enqueue({ items: [{ t: '가.' }, { t: '나.' }, { t: '다.' }, { t: '라.' }] });
+  for (let i = 0; i < 6; i++) { await h.baker.tick(); h.tick(1000); }
+  const st = await h.baker.status();
+  assert.deepStrictEqual([st.done, st.error, st.pending], [4, 0, 0], '죽은 샤드 때문에 e: 로 가는 조각이 없어야 한다');
 });
