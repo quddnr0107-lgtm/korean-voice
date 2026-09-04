@@ -1,0 +1,77 @@
+# 강의 음성 전편 굽기 — 공개 러너(4코어) 20개가 동시에 굽고 GitHub OIDC 로 R2 에 올린다(worker.mjs /bake/put). 비밀값 없음 · 비용 0.
+#   이 저장소가 공개(2026-09-04)라 Actions 가 무료·무제한이다. 조각 목록은 사이트가 공개로 내주는 파일에서 만든다(tools/chunks.mjs).
+#   🔴 lib/oidc.mjs 가 「이 저장소의 main」 토큰만 받는다 — 브랜치에서 돌리면 워커가 401 을 준다.
+name: Bake voice (전편 굽기)
+
+on:
+  workflow_dispatch:
+    inputs:
+      shards:
+        description: '동시 러너 수'
+        default: '20'
+      limit:
+        description: '러너당 조각 상한(0 = 전부 · 시험용)'
+        default: '0'
+
+permissions:
+  id-token: write   # OIDC — 워커가 이 토큰으로 「이 저장소의 main」임을 확인한다
+  contents: read
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.m.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: 조각 목록 (사이트 공개 파일에서)
+        run: node tools/chunks.mjs --out chunks.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: chunks
+          path: chunks.json
+      - id: m
+        run: |
+          N=${{ inputs.shards }}
+          echo "matrix=$(node -e "console.log(JSON.stringify([...Array($N).keys()]))")" >> "$GITHUB_OUTPUT"
+
+  bake:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ${{ fromJson(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: chunks
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: 의존
+        run: pip install --quiet onnxruntime numpy soundfile PyYAML imageio-ffmpeg praat-parselmouth
+      - name: Supertonic 3 자산 (캐시)
+        id: assets
+        uses: actions/cache@v4
+        with:
+          path: supertonic3
+          key: supertonic3-v1
+      - name: Supertonic 3 자산 받기
+        if: steps.assets.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p supertonic3/onnx supertonic3/voice_styles supertonic3/py
+          B=https://huggingface.co/Supertone/supertonic-3/resolve/main
+          for f in config.json onnx/duration_predictor.onnx onnx/text_encoder.onnx onnx/tts.json onnx/unicode_indexer.json onnx/vector_estimator.onnx onnx/vocoder.onnx; do curl -sL -o supertonic3/$f "$B/$f"; done
+          for s in F1 F2 F3 F4 F5 M1 M2 M3 M4 M5; do curl -sL -o supertonic3/voice_styles/$s.json "$B/voice_styles/$s.json"; done
+          for f in helper.py example_onnx.py; do curl -sL -o supertonic3/py/$f https://raw.githubusercontent.com/supertone-inc/supertonic/main/py/$f; done
+      - name: 굽기 (shard ${{ matrix.shard }})
+        env:
+          SUPERTONIC_DIR: ${{ github.workspace }}/supertonic3
+          PYTHONPATH: ${{ github.workspace }}/supertonic3/py
+        run: python3 tools/bake.py --chunks chunks.json --shard ${{ matrix.shard }} --shards ${{ inputs.shards }} --limit ${{ inputs.limit }}

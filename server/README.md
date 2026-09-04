@@ -36,6 +36,7 @@ Docker 없이: `pip install onnxruntime numpy soundfile librosa PyYAML imageio-f
 - **전편 미리 굽기 `/bake`**(워커 · `lib/bake.mjs` · Durable Object `BakeQueue`) — 조각을 R2 에 **영구히** 넣는다. 바깥 드라이버 없이 DO 알람이 조각 4개씩 `/tts` 로 받아 R2 에 넣고 다음 알람을 건다(그 요청이 곧 컨테이너를 깨워 둔다). 표식(`X-TTS-Recipe`)이 다르면 넣지 않고 60초 뒤 다시 본다.
   `GET /bake` 상태(열려 있다) · `POST /bake {action:'enqueue', v, items:[{t, r}…≤400]}` · `{action:'stop'|'resume'|'clear'}` — POST 는 `Authorization: Bearer <BAKE_TOKEN>`.
   🔴 비밀값이 먼저다: `npx wrangler secret put BAKE_TOKEN` (없으면 POST 가 503). 보내는 쪽은 yebijun `.github/scripts/bake-live-tts.mjs --보내기`(화면과 같은 조각을 만든다 · `check-bake-list-live` 가 같은지 잰다).
+- **공개 러너 굽기 `.github/workflows/bake.yml`**(2026-09-04 · 저장소가 공개라 Actions 무료·무제한) — 러너 20개가 `tools/chunks.mjs`(사이트 공개 파일에서 목록) → `tools/bake.py`(배치 8 · server.py 그대로) → `PUT /bake/put`(GitHub OIDC · `lib/oidc.mjs` 가 이 저장소 main 만 믿는다 · 비밀값 없음). 약 2시간 · $0. 컨테이너 샤드와 같이 돌아도 된다(서로 R2 를 보고 건너뛴다).
 - 목소리·다듬기는 `voice_shape.py` 가 정본이다(여성 F4:0.6+F2:0.4 = 사람이 표본을 듣고 정한 「U4」 · 남성 M1:0.7+M3:0.3).
   합성 뒤 **다듬기**가 붙는다: trim(앞여유 50ms) → 첫 음절 보강 → Praat PSOLA 억양(문장 끝 +6반음 · 물음 +8 · 위로만 1.8배 · +1반음).
   문장 끝(hard)은 글자로 판정한다(`is_sentence_end` — 문장부호·「다/요/까」로 끝나면 끝, 쉼표·낱말로 끝나면 중간). 조합을 바꾸면 `RECIPE_TAG` 를 올려라 — 캐시 키가 갈린다.

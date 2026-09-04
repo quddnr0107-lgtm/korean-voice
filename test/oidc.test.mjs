@@ -16,8 +16,8 @@ async function makeSigner() {
   return { keys, sign };
 }
 const NOW = 1_800_000_000_000;
-const allow = { aud: 'korean-voice-bake', repository: 'quddnr0107-lgtm/korean-voice-bake', ref: 'refs/heads/main' };
-const good = () => ({ iss: GITHUB_ISS, aud: 'korean-voice-bake', exp: NOW / 1000 + 300, nbf: NOW / 1000 - 10, repository: 'quddnr0107-lgtm/korean-voice-bake', ref: 'refs/heads/main', job_workflow_ref: 'x' });
+const allow = { aud: 'korean-voice-bake', repository: 'quddnr0107-lgtm/korean-voice', ref: 'refs/heads/main' };
+const good = () => ({ iss: GITHUB_ISS, aud: 'korean-voice-bake', exp: NOW / 1000 + 300, nbf: NOW / 1000 - 10, repository: 'quddnr0107-lgtm/korean-voice', ref: 'refs/heads/main', job_workflow_ref: 'x' });
 
 test('[양성] 제대로 서명된 우리 저장소 main 토큰은 통과한다', async () => {
   const { keys, sign } = await makeSigner();

@@ -49,7 +49,7 @@ export class BakeQueue extends DurableObject {
 /* ── 공개 러너가 구운 조각을 올린다 — PUT /bake/put?v&s&r&t  본문 = mp3 · Authorization: Bearer <GitHub OIDC JWT> ──
    비밀값이 없다: GitHub 이 서명한 토큰을 GitHub 공개키(JWKS)로 검증하고 「저장소 BAKE_OIDC_REPO 의 main」만 받는다(lib/oidc.mjs).
    키는 워커가 (v,s,r,t)로 다시 만든다(러너가 준 키를 믿지 않는다) · 표식(X-TTS-Recipe)이 워커 표식과 같아야 한다. */
-const BAKE_OIDC = { aud: 'korean-voice-bake', repository: 'quddnr0107-lgtm/korean-voice-bake', ref: 'refs/heads/main' };
+const BAKE_OIDC = { aud: 'korean-voice-bake', repository: 'quddnr0107-lgtm/korean-voice', ref: 'refs/heads/main' };   // 이 저장소(공개 · 2026-09-04)의 main 워크플로만
 async function handleBakePut(request, env) {
   if (!env.TTS_CACHE) return json({ ok: false, error: 'no_r2' }, 503, CORS);
   const tok = (request.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');

@@ -1,0 +1,43 @@
+#!/usr/bin/env node
+/* 굽을 조각 목록 — 사이트가 공개로 내주는 파일 넷(live-tts.js · ko-voice.js · exam_prep.json · easy_explain.json)에서 만든다.
+   🔴 여기서 새로 나누지 않는다 — 화면이 쓰는 그 함수(LiveTTS.segment)를 vm 으로 꺼내 쓴다. 원고 규칙은 yebijun app.js 의 둘을 베낀 것
+   (출제핵심 (lectureScript||bodyText).trim() · 개념강의 빈 줄→문장→`**` 제거→' ' 이음 + _standalone).
+   yebijun 의 .github/scripts/bake-live-tts.mjs 와 같은 논리다 — 그쪽 check-bake-list-live 가 화면과 같은지 잰다.
+   사용: node chunks.mjs --site https://yebijun.drillstudy.com --out chunks.json */
+import fs from 'node:fs';
+import vm from 'node:vm';
+const 인자 = process.argv.slice(2);
+const 값 = (k, d) => { const i = 인자.indexOf(k); return i >= 0 && 인자[i + 1] ? 인자[i + 1] : d; };
+const SITE = 값('--site', 'https://yebijun.drillstudy.com').replace(/\/$/, '');
+const OUT = 값('--out', 'chunks.json');
+const get = async (p) => { const r = await fetch(SITE + p + '?nocache=' + Date.now(), { headers: { 'Cache-Control': 'no-cache' } }); if (!r.ok) throw new Error(p + ' ' + r.status); return r.text(); };
+
+function require서로(src) { const m = { exports: {} }; const g = { module: m, exports: m.exports, window: undefined, console }; vm.createContext(g); vm.runInContext(src, g); return m.exports; }
+function 조각기(liveSrc, koSrc) {
+  const K = require서로(koSrc);
+  const g = { window: { KoVoice: K }, document: { addEventListener() {} }, fetch: () => {}, Audio: function () {}, setTimeout, clearTimeout, console };
+  g.window.window = g.window; g.self = g.window;
+  vm.createContext(g); vm.runInContext(liveSrc, g);
+  const L = g.window.LiveTTS; if (!L || typeof L.segment !== 'function') throw new Error('LiveTTS.segment 를 못 꺼냈다');
+  return L.segment;
+}
+const 출제핵심글 = (item) => String(item.lectureScript || item.bodyText || '').trim();
+function 개념글(content) {
+  const paragraphs = String(content || '').split(/\n{2,}/).map((p) => p.trim()).filter(Boolean); const parts = [];
+  for (const para of paragraphs) for (const s of para.split(/(?<=[\.\!\?。])\s+|(?<=[\.\!\?。])\n|(?<=다\.)(?=\s)|(?<=요\.)(?=\s)|\n+/).filter((s) => s.trim())) { const txt = s.replace(/\*\*/g, '').trim(); if (txt) parts.push(txt); }
+  return parts.join(' ');
+}
+const [liveSrc, koSrc, epSrc, eeSrc] = await Promise.all([get('/live-tts.js'), get('/ko-voice.js'), get('/exam_prep.json'), get('/easy_explain.json')]);
+const seg = 조각기(liveSrc, koSrc);
+const 글들 = [];
+const ep = JSON.parse(epSrc);
+for (const period of Object.keys(ep)) for (const it of (ep[period] || [])) { const t = 출제핵심글(it); if (t) 글들.push(t); }
+const ee = JSON.parse(eeSrc);
+for (const period of Object.keys(ee)) { if (period.startsWith('_')) continue; for (const law of Object.keys(ee[period] || {})) { if (law.startsWith('_')) continue; for (const a of Object.keys(ee[period][law] || {})) { const t = 개념글(ee[period][law][a] && ee[period][law][a].content); if (t) 글들.push(t); } } }
+const st = ee._standalone || {};
+for (const period of Object.keys(st)) for (const law of Object.keys(st[period] || {})) for (const type of Object.keys(st[period][law] || {})) for (const a of Object.keys(st[period][law][type] || {})) { const t = 개념글(st[period][law][type][a] && st[period][law][type][a].content); if (t) 글들.push(t); }
+const map = new Map();
+for (const 글 of 글들) for (const c of seg(글)) { const r = Math.round((c.r || 1) * 100) / 100; const k = c.text + '|' + r.toFixed(2); if (!map.has(k)) map.set(k, { t: c.text, r }); }
+const 목록 = [...map.values()];
+fs.writeFileSync(OUT, JSON.stringify(목록));
+console.log(`원고 ${글들.length}편 · 고유 조각 ${목록.length}개 · ${목록.reduce((a, c) => a + c.t.length, 0).toLocaleString()}자 → ${OUT}`);
