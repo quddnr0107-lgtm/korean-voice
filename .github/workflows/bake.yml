@@ -16,7 +16,7 @@ on:
         description: '목록의 이 번호부터(시험용 · 앞쪽은 컨테이너가 이미 구웠을 수 있다)'
         default: '0'
       kind:
-        description: '갈래 — all · exam(출제핵심강의) · easy(개념강의)'
+        description: '갈래 — all · exam(출제핵심강의) · easy(개념강의) · study(따라읽기 · 원문회독·눈회독·타이핑 줄)'
         default: 'all'
       force:
         description: 'R2 에 있어도 다시 굽어 덮어쓴다(true/false)'
