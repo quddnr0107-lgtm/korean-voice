@@ -7,8 +7,8 @@ on:
   workflow_dispatch:
     inputs:
       shards:
-        description: '동시 러너 수'
-        default: '20'
+        description: '동시 러너 수 (Pro 표준 러너 동시 상한 40 · 공개 저장소라 분은 안 깎인다)'
+        default: '40'
       limit:
         description: '러너당 조각 상한(0 = 전부 · 시험용)'
         default: '0'
