@@ -21,6 +21,9 @@ on:
       force:
         description: 'R2 에 있어도 다시 굽어 덮어쓴다(true/false)'
         default: 'false'
+      prune:
+        description: '굽기가 끝난 뒤 지금 목록에 없는 옛 조각을 R2 에서 지운다(true/false · 마른 실행 뒤 실제 삭제 · tools/prune.mjs)'
+        default: 'false'
 
 permissions:
   id-token: write   # OIDC — 워커가 이 토큰으로 「이 저장소의 main」임을 확인한다
@@ -84,3 +87,20 @@ jobs:
           SUPERTONIC_DIR: ${{ github.workspace }}/supertonic3
           PYTHONPATH: ${{ github.workspace }}/supertonic3/py
         run: python3 tools/bake.py --chunks chunks.json --shard ${{ matrix.shard }} --shards ${{ inputs.shards }} --limit ${{ inputs.limit }} --start ${{ inputs.start }} --kind ${{ inputs.kind || 'all' }} ${{ inputs.force == 'true' && '--force' || '' }}
+
+  # 옛 조각 폐기 — 모든 샤드가 끝난 뒤, 지금 조각 목록(plan 의 chunks.json)에 없는 R2 조각을 지운다(2026-09-05 yebijun 사용자 「이전 꺼 다 폐기해」).
+  # 🔴 kind 가 all 이 아니어도 목록은 all 이다(chunks.mjs 가 전 갈래를 만든다) — 다른 갈래 조각이 지워지지 않는다.
+  prune:
+    needs: [plan, bake]
+    if: ${{ inputs.prune == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          name: chunks
+      - name: 폐기 (마른 실행 → 실제)
+        run: node tools/prune.mjs --chunks chunks.json
