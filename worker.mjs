@@ -13,6 +13,7 @@ import { DurableObject } from 'cloudflare:workers';
 import { handleTts, json } from './lib/melotts.mjs';
 import { cacheKey, parseR, RECIPE_TAG } from './lib/tts-key.mjs';
 import { makeBaker } from './lib/bake.mjs';
+import { prune } from './lib/prune.mjs';
 import { verifyGithubOidc } from './lib/oidc.mjs';
 export { handleTts, MODEL, LANGS, MAX_CHARS, _reset } from './lib/melotts.mjs';
 
@@ -81,6 +82,24 @@ async function handleBakeHas(request, env) {
     out.push(...res);
   }
   return json({ ok: true, has: out }, 200, CORS);
+}
+/* POST /bake/prune {items:[{t,r}…], s?, dry?, force?} — 옛 조각 폐기 (2026-09-05 yebijun 사용자 「이전 꺼 다 폐기해」)
+   지금 조각 목록으로 목소리 전부의 키를 만들고, R2 tts/ 아래에서 그 집합에 없는 것을 지운다(lib/prune.mjs). 인증은 /bake/put 과 같은 GitHub OIDC(main).
+   🔴 dry 가 기본 — 지우려면 dry:false 를 명시한다. 목록이 1,000키 미만이면 거부한다(빈 목록으로 전부 지우는 사고 차단). */
+async function handleBakePrune(request, env) {
+  if (!env.TTS_CACHE) return json({ ok: false, error: 'no_r2' }, 503, CORS);
+  const tok = (request.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+  const v = await verifyGithubOidc(tok, BAKE_OIDC);
+  if (!v.claims) return json({ ok: false, error: 'oidc_' + v.error }, 401, CORS);
+  let body = {}; try { body = await request.json(); } catch (_) { body = {}; }
+  const items = Array.isArray(body.items) ? body.items : [];
+  const s = Math.max(4, Math.min(32, parseInt(body.s || DEFAULT_STEPS, 10) || DEFAULT_STEPS));
+  const keep = new Set();
+  for (const it of items) { const t = cleanText(it && it.t); if (!t) continue; const r = parseR(it.r == null ? 1 : it.r); for (const voice of VOICES) keep.add(await cacheKey(voice, s, r, t)); }
+  try {
+    const out = await prune({ r2: env.TTS_CACHE, keep, dry: body.dry !== false, force: body.force === true });
+    return json(out, out.ok ? 200 : 400, CORS);
+  } catch (e) { return json({ ok: false, error: 'prune_failed', reason: String((e && e.message) || e).slice(0, 400) }, 500, CORS); }
 }
 async function handleBake(request, env) {
   if (!env.BAKE) return json({ ok: false, error: 'bake_unavailable', reason: 'BAKE 바인딩 없음' }, 503, CORS);
@@ -230,6 +249,7 @@ export default {
     if (url.pathname === '/bake' && (request.method === 'GET' || request.method === 'POST')) return handleBake(request, env);
     if (url.pathname === '/bake/put' && (request.method === 'PUT' || request.method === 'POST')) return handleBakePut(request, env);   // PUT 이 엣지에서 403 이 난 적이 있어 POST 도 받는다
     if (url.pathname === '/bake/has' && request.method === 'POST') return handleBakeHas(request, env);
+    if (url.pathname === '/bake/prune' && request.method === 'POST') return handleBakePrune(request, env);
     if (url.pathname === '/health') return handleHealth(request, env);
     if (url.pathname === '/api/tts') return handleTts(request, env, ctx);
     const res = await env.ASSETS.fetch(request);
