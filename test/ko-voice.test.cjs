@@ -143,15 +143,47 @@ test('억양 궤적 — 실측 5점 곡선이 조각마다 실리고, 프로필�
   K.applyProfile(prof);
   const s = K.prepare(t, { emotion: 'neutral' }).sentences[0];
   const cs = s.chunks.filter((c) => c.text);
-  assert.ok(cs.every((c) => Array.isArray(c.pitchPoints) && c.pitchPoints.length === 5), '조각마다 5점 궤적');
-  for (const c of cs) assert.ok(c.pitchPoints[0] > c.pitchPoints[4], '어절 안에서 내려간다: ' + c.pitchPoints.join(','));
+  // 어절 표가 실리면 격자가 촘촘해진다(5점 → 16점). 점 수가 아니라 '내려가는가'를 본다.
+  assert.ok(cs.every((c) => Array.isArray(c.pitchPoints) && c.pitchPoints.length >= 5), '조각마다 궤적');
+  for (const c of cs) {
+    const q = c.pitchPoints;
+    assert.ok(q[0] > q[q.length - 1], '조각 안에서 내려간다: ' + q.join(','));
+  }
   const first = cs[0].pitchPoints, last = cs[cs.length - 1].pitchPoints;
-  assert.ok(first[0] > last[4], '문장 전체로도 내려간다');
-  const fallSemi = 12 * Math.log2(first[0] / last[4]);
+  assert.ok(first[0] > last[last.length - 1], '문장 전체로도 내려간다');
+  const fallSemi = 12 * Math.log2(first[0] / last[last.length - 1]);
   assert.ok(fallSemi > 3, '실측 하강은 직선 declination 보다 크다 (실측 6.47반음): ' + fallSemi.toFixed(2));
 
   assert.strictEqual(K.endingOf('보겠습니다.'), '다');
   assert.strictEqual(K.endingOf('가능할까요?'), '까');
   assert.strictEqual(K.endingOf('돼요.'), '요');
   K.applyProfile(null);
+});
+
+test('어절 층 — 첫 자음과 어미가 어절 높이를 가른다(실측 5.2만 어절)', () => {
+  const fs = require('fs'); const path = require('path');
+  const prof = JSON.parse(fs.readFileSync(path.join(__dirname, '../public/profiles/korean-corpus.json'), 'utf8'));
+
+  assert.strictEqual(K.onsetOf('카투사'), 'H_격음');
+  assert.strictEqual(K.onsetOf('나라'), 'L_비음유음');
+  assert.strictEqual(K.onsetOf('사람'), 'H_ㅅ');
+  assert.strictEqual(K.onsetOf('부대'), 'L_평음');
+  assert.strictEqual(K.tailOf('합니다'), '어미_다');   // 서버 분석과 같은 순서로 판정해야 표가 맞는다
+  assert.strictEqual(K.tailOf('지원은'), '조사_주격');
+  assert.strictEqual(K.tailOf('나라를'), '조사_목적');
+
+  K.applyProfile(prof);
+  assert.ok(K.getWord(), '프로필의 어절 표가 실린다');
+  // 같은 위치·같은 음절수인데 첫 자음만 다르면 높이가 달라야 한다
+  const g = K.wordGrid('카투사 나라를', 16);
+  assert.ok(g[0] > g[15], '격음으로 시작한 어절이 비음·유음 어절보다 높다: ' + g[0] + ' vs ' + g[15]);
+
+  const withWord = K.prepare('카투사 지원은 신중하게 결정해야 합니다.', {}).sentences[0].chunks[0].pitchPoints;
+  const p2 = JSON.parse(JSON.stringify(prof)); delete p2.engine.word;
+  K.applyProfile(p2);
+  const noWord = K.prepare('카투사 지원은 신중하게 결정해야 합니다.', {}).sentences[0].chunks[0].pitchPoints;
+  assert.strictEqual(noWord.length, 5, '어절 표를 빼면 옛 5점으로 돌아간다(호환)');
+  assert.strictEqual(withWord.length, 16, '어절 표가 있으면 16점 격자');
+  K.applyProfile(null);
+  assert.strictEqual(K.getWord(), null, '프로필을 벗기면 어절 표도 사라진다');
 });

@@ -289,6 +289,69 @@
     for (const [k, re] of ENDING_RE) if (re.test(w)) return k;
     return '기타';
   }
+  // ── 어절 층 ── 실측 어절 52,258개(Zeroth). 어절의 '높이'는 첫 자음과 끝 형태가 가른다.
+  // K-ToBI 가 말하던 것을 수치로 확인했다: 문두 격음 +4.14 vs 비음·유음 +1.43 반음.
+  // 문장 추세(rel)를 뺀 잔차만 담았다 — 추세와의 상관이 -0.0000 이라 문체표와 겹치지 않는다.
+  // 홀드아웃: 추세만 +10.5% → 추세+어절 +17.3% (평평하게 읽기 대비 RMSE).
+  let WORD = null;
+  const _CHO = 'ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ';
+  const _ASP = 'ㅊㅋㅌㅍㅎ', _TEN = 'ㄲㄸㅃㅆㅉ', _SON = 'ㄴㅁㄹㅇ';
+  function onsetOf(w) {                    // 어절 첫 음절의 초성 유형
+    for (const ch of w) {
+      const cc = ch.codePointAt(0);
+      if (cc >= 0xAC00 && cc <= 0xD7A3) {
+        const c = _CHO[Math.floor((cc - 0xAC00) / 588)];
+        if (_ASP.includes(c)) return 'H_격음';
+        if (_TEN.includes(c)) return 'H_경음';
+        if (c === 'ㅅ') return 'H_ㅅ';
+        if (_SON.includes(c)) return 'L_비음유음';
+        return 'L_평음';
+      }
+    }
+    return null;
+  }
+  const _TAIL = [['어미_다', /(습니다|ㅂ니다|다)$/], ['어미_요', /요$/], ['어미_까', /(까|나요|죠|가요)$/],
+                 ['연결_고', /(고|며|면서|는데|지만|어서|아서)$/],
+                 ['조사_주격', /(은|는|이|가)$/], ['조사_목적', /(을|를)$/],
+                 ['조사_부사', /(에|에서|으로|로|와|과|도|만|까지|부터)$/]];
+  function tailOf(w) {                     // 서버 분석과 같은 순서로 판정해야 표가 맞는다
+    for (const [k, re] of _TAIL) if (re.test(w)) return k;
+    return '무표지';
+  }
+  function sylOf(w) {
+    let n = 0;
+    for (const ch of w) { const c = ch.codePointAt(0); if (c >= 0xAC00 && c <= 0xD7A3) n++; }
+    return n;
+  }
+  /** 조각 안 어절들의 반음 편차를 음절 비례 위치에 놓고 n점 균일 격자로 샘플한다. */
+  function wordGrid(text, n) {
+    if (!WORD) return null;
+    const ws = String(text).replace(/[.,!?…·"'()\[\]]/g, ' ').trim().split(/\s+/).filter(Boolean);
+    if (!ws.length) return null;
+    const syl = ws.map((w) => Math.max(1, sylOf(w)));
+    const tot = syl.reduce((a, b) => a + b, 0);
+    if (!tot) return null;
+    const O = WORD.onset || {}, T = WORD.tail || {}, S = WORD.syl || {};
+    const off = ws.map((w, i) => {
+      const o = onsetOf(w);
+      return (o && O[o] || 0) + (T[tailOf(w)] || 0) + (S[String(Math.min(5, syl[i]))] || 0);
+    });
+    const edge = [0];
+    for (const k of syl) edge.push(edge[edge.length - 1] + k / tot);
+    const out = [];
+    for (let g = 0; g < n; g++) {
+      const u = n > 1 ? g / (n - 1) : 0;
+      let k = 0;
+      while (k < ws.length - 1 && u >= edge[k + 1]) k++;
+      out.push(off[k]);
+    }
+    return out;
+  }
+  const _sample5 = (p5, u) => {            // 5점 궤적을 임의 위치에서 읽는다
+    const x = Math.min(1, Math.max(0, u)) * (p5.length - 1);
+    const i = Math.min(p5.length - 2, Math.floor(x));
+    return p5[i] + (p5[i + 1] - p5[i]) * (x - i);
+  };
   let _rngState = 0;
   function _rand() {                       // 결정적 난수(seed 있을 때) — 캐시 키가 흔들리지 않게
     if (JITTER.seed == null) return Math.random();
@@ -318,7 +381,7 @@
   let PROFILE = null;
   function applyProfile(profile) {
     Object.assign(PAUSE, PAUSE_DEFAULT); TUNE.declination = 0.06; TUNE.rate = 1; TUNE.questionRise = 1.08; PROFILE = null;
-    JITTER.sigma = 0; JITTER.seed = null; CONTOUR = null;
+    JITTER.sigma = 0; JITTER.seed = null; CONTOUR = null; WORD = null;
     if (!profile) return { pause: Object.assign({}, PAUSE), tune: Object.assign({}, TUNE) };
     const e = profile.engine || profile;
     if (e.pause) for (const k of Object.keys(e.pause)) if (typeof e.pause[k] === 'number' && k in PAUSE) PAUSE[k] = Math.max(50, Math.min(1500, e.pause[k]));
@@ -326,6 +389,7 @@
     if (typeof e.rate === 'number') TUNE.rate = Math.max(0.6, Math.min(1.5, e.rate));
     if (typeof e.questionRise === 'number') TUNE.questionRise = Math.max(1, Math.min(1.3, e.questionRise));
     if (e.contour && e.contour.position) CONTOUR = e.contour;
+    WORD = (e.word && (e.word.onset || e.word.tail)) ? e.word : null;
     if (e.jitter) {
       if (typeof e.jitter.sigma === 'number') JITTER.sigma = Math.max(0, Math.min(1.2, e.jitter.sigma));
       if (typeof e.jitter.seed === 'number') seedJitter(e.jitter.seed);
@@ -426,6 +490,13 @@
         const pts = contourFor(n > 1 ? i / (n - 1) : 0, i === n - 1, endingOf(c.text));
         if (pts) {
           // 실측 궤적(반음)을 배수로 바꿔 이 조각의 음높이 곡선으로 싣는다. 평균은 c.pitch 에 반영해 옛 소비자도 동작한다.
+          // 어절 표가 있으면 격자를 촘촘히 깔고 어절 편차를 더한다(문체 추세 + 어절 고유값).
+          const wg = WORD ? wordGrid(c.text, 16) : null;
+          if (wg) {
+            const k = WORD.strength == null ? 1 : WORD.strength;
+            c.pitchPoints = wg.map((off, g) => +(basePitch * Math.pow(2,
+              (_sample5(pts, g / (wg.length - 1)) + off * k) / 12)).toFixed(3));
+          } else
           c.pitchPoints = pts.map((st) => +(basePitch * Math.pow(2, st / 12)).toFixed(3));
           pitch = c.pitchPoints.reduce((a, b) => a + b, 0) / c.pitchPoints.length;
         }
@@ -647,6 +718,7 @@
     splitSentences, phraseSentence, sentenceType, detectEmotion,
     readSino, readNative, readWithUnit, EMOTIONS, PAUSE, TUNE, JITTER, jitterPause, seedJitter, seedForText,
     contourFor, endingOf, getContour: () => CONTOUR,
+    onsetOf, tailOf, wordGrid, getWord: () => WORD,
     applyProfile, getProfile: () => PROFILE,
   };
 });
