@@ -51,17 +51,43 @@ def apply_points(y, sr, points, strength=1.0):
         return y
 
 
-def plan_with_contour(node_plan_json):
-    """ko-voice.js prepare() 결과에서 조각별 (text, pitchPoints, pause, rate) 를 뽑는다."""
+def _resample5(curve):
+    """여러 조각의 궤적을 이어붙인 곡선을 5점으로 다시 뽑는다 — 묶음 전체의 모양을 보존한다."""
+    a = np.asarray(curve, dtype=float)
+    if len(a) <= 1:
+        return [1.0] * 5
+    xs = np.linspace(0, 1, len(a))
+    return [float(np.interp(u, xs, a)) for u in np.linspace(0, 1, 5)]
+
+
+def plan_with_contour(node_plan_json, max_chars=90):
+    """ko-voice.js prepare() 결과를 **호흡 묶음**으로 만든다.
+    🔴 구 하나하나를 따로 합성하면 뚝뚝 끊긴다(이 저장소가 이미 겪은 함정). 한 호흡에 담을 만큼 합친다.
+    묶음의 궤적은 구성 조각들의 궤적을 이어붙여 5점으로 다시 뽑는다 — 묶음 전체가 내려가는 모양이 남는다."""
     p = json.loads(node_plan_json) if isinstance(node_plan_json, str) else node_plan_json
     out = []
     for s in p['sentences']:
-        for c in s['chunks']:
-            if not c.get('text'):
-                continue
-            out.append({'text': c['text'], 'pause_ms': int(c.get('pause') or 0),
-                        'rate': float(c.get('rate') or 1.0), 'emph': bool(c.get('emph')),
-                        'points': c.get('pitchPoints')})
+        cur = None
+        chunks = [c for c in s['chunks'] if c.get('text')]
+        for j, c in enumerate(chunks):
+            pts = c.get('pitchPoints') or []
+            if cur and len(cur['text']) + len(c['text']) + 1 <= max_chars:
+                cur['text'] += ' ' + c['text']
+                cur['curve'] += list(pts)
+                cur['rate'].append(float(c.get('rate') or 1.0))
+                cur['emph'] = cur['emph'] or bool(c.get('emph'))
+                cur['pause_ms'] = int(c.get('pause') or 0)
+            else:
+                if cur:
+                    out.append(cur)
+                cur = {'text': c['text'], 'curve': list(pts), 'rate': [float(c.get('rate') or 1.0)],
+                       'emph': bool(c.get('emph')), 'pause_ms': int(c.get('pause') or 0)}
+        if cur:
+            out.append(cur)
         if out:
             out[-1]['pause_ms'] = max(out[-1]['pause_ms'], 380)
+    for u in out:
+        u['points'] = _resample5(u['curve']) if u['curve'] else None
+        u['rate'] = float(np.mean(u['rate']))
+        u.pop('curve', None)
     return out
