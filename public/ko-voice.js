@@ -262,6 +262,33 @@
   // 기울기 +0.15~+0.41(백색에 가까움)로 나와 채택하지 않는다.
   // sigma 0 이면 흔들림 없음(기존 동작). seed 를 주면 같은 문장이 늘 같게 나온다.
   const JITTER = { sigma: 0, seed: null, min: 0.35, max: 2.4 };
+  // 억양 궤적 — 어절 안에서 음높이가 그리는 모양(화자 중앙값 대비 반음, 5점).
+  // 실측(Zeroth-Korean 어절 2,598개): 문장이 계단으로 내려가고 어절 안에서 또 내려간다.
+  // 직선 하강 하나로 뭉개면 밋밋해진다 — 실측 총 하강은 6.47반음(31%)으로 기존 declination(9.9%)의 3배다.
+  // null 이면 기존 직선 하강만 쓴다(호환).
+  let CONTOUR = null;
+  const _lerp5 = (a, b, u) => a.map((v, i) => v + (b[i] - v) * u);
+  /** 문장 안 위치(0~1)와 어말 형태로 그 조각의 5점 반음 궤적을 만든다. */
+  function contourFor(rel, isLast, ending) {
+    if (!CONTOUR) return null;
+    const P = CONTOUR.position || {};
+    if (isLast && P['C문말']) {
+      const e = (CONTOUR.ending || {})['C문말|' + ending];
+      return (e || P['C문말']).slice();
+    }
+    const head = P['A문두'], mid = P['B문중'];
+    if (!head || !mid) return null;
+    if (rel <= 0) return head.slice();
+    return _lerp5(head, mid, Math.min(1, rel * 1.6));   // 문두에서 문중으로 빠르게 수렴한다(실측 모양)
+  }
+  const ENDING_RE = [['다', /(습니다|ㅂ니다|다)[.!?]*$/],
+                     ['까', /(까요|까|나요|을까|ㄹ까|죠|지요|가요|는가|런가)[?.!]*$/], ['요', /요[.!?]*$/],
+                     ['고', /(고|며|면서|는데|지만|어서|아서)$/]];
+  function endingOf(t) {
+    const w = String(t).trim().split(/\s+/).pop() || '';
+    for (const [k, re] of ENDING_RE) if (re.test(w)) return k;
+    return '기타';
+  }
   let _rngState = 0;
   function _rand() {                       // 결정적 난수(seed 있을 때) — 캐시 키가 흔들리지 않게
     if (JITTER.seed == null) return Math.random();
@@ -281,16 +308,24 @@
     return Math.round(ms * Math.max(JITTER.min, Math.min(JITTER.max, f)));
   }
   function seedJitter(seed) { JITTER.seed = seed; _rngState = (seed >>> 0) || 1; }
+  function _hash(str) {                     // 문장마다 다른 흔들림, 같은 문장은 늘 같은 흔들림
+    let h = 2166136261;
+    for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return h >>> 0;
+  }
+  /** 문장 단위로 난수를 다시 심는다 — 씨앗을 문장 내용에서 뽑아 문단이 같은 패턴을 반복하지 않게 한다. */
+  function seedForText(text) { if (JITTER.seed != null) _rngState = ((JITTER.seed >>> 0) ^ _hash(String(text))) >>> 0 || 1; }
   let PROFILE = null;
   function applyProfile(profile) {
     Object.assign(PAUSE, PAUSE_DEFAULT); TUNE.declination = 0.06; TUNE.rate = 1; TUNE.questionRise = 1.08; PROFILE = null;
-    JITTER.sigma = 0; JITTER.seed = null;
+    JITTER.sigma = 0; JITTER.seed = null; CONTOUR = null;
     if (!profile) return { pause: Object.assign({}, PAUSE), tune: Object.assign({}, TUNE) };
     const e = profile.engine || profile;
     if (e.pause) for (const k of Object.keys(e.pause)) if (typeof e.pause[k] === 'number' && k in PAUSE) PAUSE[k] = Math.max(50, Math.min(1500, e.pause[k]));
     if (typeof e.declination === 'number') TUNE.declination = Math.max(0, Math.min(0.2, e.declination));
     if (typeof e.rate === 'number') TUNE.rate = Math.max(0.6, Math.min(1.5, e.rate));
     if (typeof e.questionRise === 'number') TUNE.questionRise = Math.max(1, Math.min(1.3, e.questionRise));
+    if (e.contour && e.contour.position) CONTOUR = e.contour;
     if (e.jitter) {
       if (typeof e.jitter.sigma === 'number') JITTER.sigma = Math.max(0, Math.min(1.2, e.jitter.sigma));
       if (typeof e.jitter.seed === 'number') seedJitter(e.jitter.seed);
@@ -373,6 +408,7 @@
 
     function buildSentence(s, E, baseRate, basePitch, baseVol, emo) {
       const type = sentenceType(s);
+      seedForText(s);                       // 문장마다 다른 흔들림(같은 문장은 재현된다)
       const chunks = opts.phrase === false ? [{ text: s, pause: 0, emph: false }] : phraseSentence(s, opts.maxChars);
       const n = chunks.length;
       chunks.forEach((c, i) => {
@@ -387,6 +423,12 @@
           c.pause = jitterPause(type === 'question' ? PAUSE.question : type === 'exclaim' ? PAUSE.exclaim : PAUSE.ip);
         }
         if (c.emph) { rate *= 0.9; pitch *= 1.04; }
+        const pts = contourFor(n > 1 ? i / (n - 1) : 0, i === n - 1, endingOf(c.text));
+        if (pts) {
+          // 실측 궤적(반음)을 배수로 바꿔 이 조각의 음높이 곡선으로 싣는다. 평균은 c.pitch 에 반영해 옛 소비자도 동작한다.
+          c.pitchPoints = pts.map((st) => +(basePitch * Math.pow(2, st / 12)).toFixed(3));
+          pitch = c.pitchPoints.reduce((a, b) => a + b, 0) / c.pitchPoints.length;
+        }
         c.rate = +Math.min(2, Math.max(0.5, rate)).toFixed(3);
         c.pitch = +Math.min(2, Math.max(0.5, pitch)).toFixed(3);
         c.volume = +Math.min(1, Math.max(0.2, volume)).toFixed(3);
@@ -603,7 +645,8 @@
     normalize, prepare, pronounce, toSSML, speak, stop, koVoices, parseTags,
     speakNeural, stopNeural, stopAll, speakAuto, neuralStatus,
     splitSentences, phraseSentence, sentenceType, detectEmotion,
-    readSino, readNative, readWithUnit, EMOTIONS, PAUSE, TUNE, JITTER, jitterPause, seedJitter,
+    readSino, readNative, readWithUnit, EMOTIONS, PAUSE, TUNE, JITTER, jitterPause, seedJitter, seedForText,
+    contourFor, endingOf, getContour: () => CONTOUR,
     applyProfile, getProfile: () => PROFILE,
   };
 });

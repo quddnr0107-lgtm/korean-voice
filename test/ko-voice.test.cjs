@@ -130,3 +130,28 @@ test('쉼 흔들림 — 실측 로그정규로 문장 끝 쉼이 매번 달라�
   K.applyProfile(null);
   assert.deepStrictEqual(ends(K.prepare(t, { emotion: 'neutral' })), flat);
 });
+
+test('억양 궤적 — 실측 5점 곡선이 조각마다 실리고, 프로필을 벗기면 사라진다', () => {
+  const fs = require('fs'); const path = require('path');
+  const prof = JSON.parse(fs.readFileSync(path.join(__dirname, '../public/profiles/korean-corpus.json'), 'utf8'));
+  const t = '오늘은 예비군 훈련 준비물을 정리해 보겠습니다.';
+
+  K.applyProfile(null);
+  const plain = K.prepare(t, { emotion: 'neutral' }).sentences[0].chunks;
+  assert.ok(plain.every((c) => c.pitchPoints === undefined), '프로필 없으면 궤적도 없다(옛 동작 유지)');
+
+  K.applyProfile(prof);
+  const s = K.prepare(t, { emotion: 'neutral' }).sentences[0];
+  const cs = s.chunks.filter((c) => c.text);
+  assert.ok(cs.every((c) => Array.isArray(c.pitchPoints) && c.pitchPoints.length === 5), '조각마다 5점 궤적');
+  for (const c of cs) assert.ok(c.pitchPoints[0] > c.pitchPoints[4], '어절 안에서 내려간다: ' + c.pitchPoints.join(','));
+  const first = cs[0].pitchPoints, last = cs[cs.length - 1].pitchPoints;
+  assert.ok(first[0] > last[4], '문장 전체로도 내려간다');
+  const fallSemi = 12 * Math.log2(first[0] / last[4]);
+  assert.ok(fallSemi > 3, '실측 하강은 직선 declination 보다 크다 (실측 6.47반음): ' + fallSemi.toFixed(2));
+
+  assert.strictEqual(K.endingOf('보겠습니다.'), '다');
+  assert.strictEqual(K.endingOf('가능할까요?'), '까');
+  assert.strictEqual(K.endingOf('돼요.'), '요');
+  K.applyProfile(null);
+});

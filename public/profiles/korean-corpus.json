@@ -3,20 +3,112 @@
   "source": "Zeroth-Korean (CC BY 4.0) · 발화 2,257건 · 쉼 표본 12,424개 · 2026-09-07 측정",
   "note": "공개 기증 코퍼스에서 운율만 측정했다. 음색은 재지도 쓰지도 않는다.",
   "measured": {
-    "syllablesPerSec": { "p10": 5.85, "p25": 6.25, "median": 6.71, "p75": 7.17, "p90": 7.58 },
-    "pauseMs": { "p10": 48, "p25": 64, "median": 80, "p75": 160, "p90": 352, "p99": 672 },
-    "pauseLognormal": { "mu": 4.651, "sigma": 0.735 },
+    "syllablesPerSec": {
+      "p10": 5.85,
+      "p25": 6.25,
+      "median": 6.71,
+      "p75": 7.17,
+      "p90": 7.58
+    },
+    "pauseMs": {
+      "p10": 48,
+      "p25": 64,
+      "median": 80,
+      "p75": 160,
+      "p90": 352,
+      "p99": 672
+    },
+    "pauseLognormal": {
+      "mu": 4.651,
+      "sigma": 0.735
+    },
     "pauseCV": 0.993,
     "f0MedianHz": 204.2,
     "finalDeclinationPct": -9.9,
-    "fluctuationSlope": { "pauseSeq": 0.149, "syllableIOI": 0.409, "note": "1/f 이면 -1. 백색에 가깝다 — 1/f 가설 폐기" }
+    "fluctuationSlope": {
+      "pauseSeq": 0.149,
+      "syllableIOI": 0.409,
+      "note": "1/f 이면 -1. 백색에 가깝다 — 1/f 가설 폐기"
+    },
+    "contourSemitones": {
+      "source": "Zeroth-Korean 어절 2,598개 · 화자 중앙값 대비 반음 · 5점",
+      "position": {
+        "A문두": [
+          2.29,
+          1.93,
+          1.37,
+          0.94,
+          0.65
+        ],
+        "B문중": [
+          0.55,
+          0.22,
+          0.05,
+          -0.12,
+          -0.31
+        ],
+        "C문말": [
+          -1.47,
+          -2.03,
+          -2.45,
+          -3.24,
+          -4.18
+        ]
+      },
+      "totalFallSemitones": 6.47,
+      "note": "문장이 계단으로 내려가고 어절 안에서 또 내려간다. 직선 declination(9.9%)은 실측(31%)의 3분의 1이었다."
+    }
   },
   "engine": {
     "rate": 1.0,
     "declination": 0.099,
     "questionRise": 1.08,
-    "pause": { "ip": 300, "question": 340, "exclaim": 280, "comma": 150, "conj": 130, "weak": 70, "emph": 90 },
-    "jitter": { "sigma": 0.55 }
+    "pause": {
+      "ip": 300,
+      "question": 340,
+      "exclaim": 280,
+      "comma": 150,
+      "conj": 130,
+      "weak": 70,
+      "emph": 90
+    },
+    "jitter": {
+      "sigma": 0.55
+    },
+    "contour": {
+      "position": {
+        "A문두": [
+          2.29,
+          1.93,
+          1.37,
+          0.94,
+          0.65
+        ],
+        "B문중": [
+          0.55,
+          0.22,
+          0.05,
+          -0.12,
+          -0.31
+        ],
+        "C문말": [
+          -1.47,
+          -2.03,
+          -2.45,
+          -3.24,
+          -4.18
+        ]
+      },
+      "ending": {
+        "C문말|다": [
+          -1.4,
+          -2.0,
+          -2.45,
+          -3.23,
+          -4.16
+        ]
+      }
+    }
   },
   "ranking2026_09_07": "실측분포+여유 > 실측분포 > 백색요동 > 1/f요동 > 고정480 (같은 문장 음성, 쉼만 다르게 한 통제 청취)"
 }
