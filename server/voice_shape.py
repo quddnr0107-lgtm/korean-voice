@@ -20,16 +20,86 @@
 import re, sys
 import numpy as np
 
-RECIPE_TAG = 'u4a'   # 🔴 조합이 바뀌면 올려라 — lib/tts-key.mjs 의 RECIPE_TAG 와 글자까지 같아야 한다(test/tts-key.test.mjs 가 잰다)
+RECIPE_TAG = 'k1'   # 🔴 조합이 바뀌면 올려라 — lib/tts-key.mjs 의 RECIPE_TAG 와 글자까지 같아야 한다(test/tts-key.test.mjs 가 잰다)
 #   u4 → u4a (2026-09-03): 워커가 컨테이너보다 먼저 새 판이 되어 옛 소리가 u4 키로 R2 에 들어갈 수 있던 창을 버린다
+#   u4a → k1 (2026-09-07): 두 가지가 바뀌었다.
+#     ① praat_shape(U4 다듬기)를 끈다 — 삑사리의 원인이었다(단계별 제거 실험 A~E, 사용자 판정).
+#     ② 그 자리에 한국인 실측 억양 궤적을 넣는다(Zeroth-Korean 어절 10,305개).
+#     목소리도 F4:0.6,F2:0.4 → F2:0.5,F3:0.5 로 바꿨다 — F4 가 중성음의 원인이었다(사용자 판정 W4).
 RECIPE = {
-    'style': 'F4:0.6,F2:0.4',
+    'style': 'F2:0.5,F3:0.5',
     'contrast': (1.06, 0.92), 'beat_ms': 250,
     'onset_boost': 2.0, 'lead_pad_ms': 50,
     'world': (1.8, 1.0), 'up_only': True, 'hat': (0.3, -0.5),
     'end_rise': 6.0, 'q_rise': 8.0, 'rise_ms': 200,
 }
 FRAME_S = 0.005   # Praat/WORLD 프레임
+
+# ── 한국인 실측 억양 궤적 (Zeroth-Korean CC BY 4.0 · 어절 10,305개 · 화자 중앙값 대비 반음) ────────
+# 문장이 계단으로 내려가고 어절 안에서 또 내려간다. 총 하강 6.42반음(31%) — 옛 직선 하강(9.9%)의 3배였다.
+KO_CONTOUR = {
+    'head': [2.42, 2.12, 1.47, 0.93, 0.46],    # 문두
+    'mid':  [0.69, 0.32, 0.00, -0.27, -0.48],  # 문중
+    'tail': [-1.63, -2.16, -2.57, -3.11, -4.00],  # 문말
+}
+CONTOUR_STRENGTH = 1.0    # 실측 궤적을 얼마나 따를지 (사용자 판정: 1.0 이 가장 좋았다)
+CONTOUR_MAX_SEMI = 6.5    # 보정 상한(반음). 낮으면 궤적이 상한에 눌려 평평해진다
+
+
+def contour_target(hard):
+    """이 조각이 그려야 할 5점 궤적(배수). 문장 끝 조각은 문두→문말 전체, 중간 조각은 문두→문중까지."""
+    C = KO_CONTOUR
+    seq = C['head'] + C['mid'] + (C['tail'] if hard else [])
+    a = np.asarray(seq, dtype=float)
+    xs = np.linspace(0, 1, len(a))
+    st = np.array([np.interp(u, xs, a) for u in np.linspace(0, 1, 5)])
+    return np.power(2.0, st / 12.0)
+
+
+def ko_contour_shape(w, sr, hard, strength=None, max_semi=None):
+    """실측 억양으로 F0 를 **부분 보정**한다. 곱하면 안 된다 — 합성음이 이미 자기 하강을 갖고 있어
+    겹치면 삑사리가 난다. (목표 모양 ÷ 이 조각의 실제 추세) 만큼만, 상한 안에서 옮긴다."""
+    strength = CONTOUR_STRENGTH if strength is None else strength
+    max_semi = CONTOUR_MAX_SEMI if max_semi is None else max_semi
+    try:
+        import parselmouth
+        from parselmouth.praat import call
+    except Exception:
+        return np.asarray(w, dtype=np.float32)
+    try:
+        snd = parselmouth.Sound(np.asarray(w, dtype=np.float64), sampling_frequency=sr)
+        manip = call(snd, 'To Manipulation', FRAME_S, 70, 500)
+        pt = call(manip, 'Extract pitch tier'); n = call(pt, 'Get number of points')
+        if n < 6:
+            return np.asarray(w, dtype=np.float32)
+        ts = np.array([call(pt, 'Get time from index', k + 1) for k in range(n)])
+        fs = np.array([call(pt, 'Get value at index', k + 1) for k in range(n)])
+        ok = fs > 0
+        if ok.sum() < 6:
+            return np.asarray(w, dtype=np.float32)
+        u = np.clip((ts - snd.xmin) / max(1e-6, snd.duration), 0, 1)
+        lv = np.log(np.where(ok, fs, np.nan))
+        edges = np.linspace(0, 1, 6)
+        own = np.array([np.nanmean(lv[(u >= a) & (u < b)]) if ((u >= a) & (u < b) & ok).any() else np.nan
+                        for a, b in zip(edges[:-1], edges[1:])])
+        if np.isnan(own).all():
+            return np.asarray(w, dtype=np.float32)
+        if np.isnan(own).any():
+            good = ~np.isnan(own)
+            own = np.interp(np.arange(5), np.flatnonzero(good), own[good])
+        own -= own.mean()
+        tgt = np.log(contour_target(hard)); tgt -= tgt.mean()
+        cap = np.log(2 ** (max_semi / 12.0))
+        corr = np.clip((tgt - own) * strength, -cap, cap)
+        factor = np.exp(np.interp(u, np.linspace(0, 1, 5), corr))
+        new = call('Create PitchTier', 'p', 0, snd.duration)
+        for t, f, g, good in zip(ts, fs, factor, ok):
+            if good:
+                call(new, 'Add point', float(t), float(np.clip(f * g, 70.0, 500.0)))
+        call([manip, new], 'Replace pitch tier')
+        return call(manip, 'Get resynthesis (overlap-add)').values[0].astype(np.float32)
+    except Exception:
+        return np.asarray(w, dtype=np.float32)
 Q_END = re.compile(r'(까|가요|나요|죠|습니까)[?.!]*\s*$')
 
 def split_lists(par):

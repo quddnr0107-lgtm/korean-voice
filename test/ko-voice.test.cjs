@@ -103,3 +103,55 @@ test('화자 프로필 — 쉼·하강·속도가 측정값으로 바뀌고 되�
   assert.strictEqual(back[back.length - 1].pause, K.PAUSE.ip);
   assert.strictEqual(back[0].rate, before[0].rate);
 });
+
+test('쉼 흔들림 — 실측 로그정규로 문장 끝 쉼이 매번 달라지고, 기본값은 그대로다', () => {
+  const fs = require('fs'); const path = require('path');
+  const prof = JSON.parse(fs.readFileSync(path.join(__dirname, '../public/profiles/korean-corpus.json'), 'utf8'));
+  const t = '첫 문장입니다. 둘째 문장입니다. 셋째 문장입니다. 넷째 문장입니다. 다섯째 문장입니다.';
+  const ends = (p) => p.sentences.map((s) => s.chunks[s.chunks.length - 1].pause);
+
+  // 흔들림 없이(기본) 문장 끝 쉼은 전부 같다 — 이 평평함이 기계처럼 들리는 원인이었다
+  K.applyProfile(null);
+  const flat = ends(K.prepare(t, { emotion: 'neutral' }));
+  assert.ok(new Set(flat).size === 1, '기본값은 고정: ' + flat.join(','));
+
+  // 실측 프로필을 걸면 흔들린다
+  K.applyProfile(prof);
+  K.seedJitter(7);
+  const varied = ends(K.prepare(t, { emotion: 'neutral' }));
+  assert.ok(new Set(varied).size > 1, '실측 분포로 흔들려야 한다: ' + varied.join(','));
+  for (const v of varied) assert.ok(v >= 50 && v <= 900, '쉼이 상식 범위 안: ' + v);
+
+  // 같은 씨앗이면 같은 결과 — 캐시 키가 흔들리지 않는다
+  K.seedJitter(7);
+  assert.deepStrictEqual(ends(K.prepare(t, { emotion: 'neutral' })), varied, '씨앗이 같으면 재현된다');
+
+  // 프로필을 벗기면 다시 고정으로 돌아간다
+  K.applyProfile(null);
+  assert.deepStrictEqual(ends(K.prepare(t, { emotion: 'neutral' })), flat);
+});
+
+test('억양 궤적 — 실측 5점 곡선이 조각마다 실리고, 프로필을 벗기면 사라진다', () => {
+  const fs = require('fs'); const path = require('path');
+  const prof = JSON.parse(fs.readFileSync(path.join(__dirname, '../public/profiles/korean-corpus.json'), 'utf8'));
+  const t = '오늘은 예비군 훈련 준비물을 정리해 보겠습니다.';
+
+  K.applyProfile(null);
+  const plain = K.prepare(t, { emotion: 'neutral' }).sentences[0].chunks;
+  assert.ok(plain.every((c) => c.pitchPoints === undefined), '프로필 없으면 궤적도 없다(옛 동작 유지)');
+
+  K.applyProfile(prof);
+  const s = K.prepare(t, { emotion: 'neutral' }).sentences[0];
+  const cs = s.chunks.filter((c) => c.text);
+  assert.ok(cs.every((c) => Array.isArray(c.pitchPoints) && c.pitchPoints.length === 5), '조각마다 5점 궤적');
+  for (const c of cs) assert.ok(c.pitchPoints[0] > c.pitchPoints[4], '어절 안에서 내려간다: ' + c.pitchPoints.join(','));
+  const first = cs[0].pitchPoints, last = cs[cs.length - 1].pitchPoints;
+  assert.ok(first[0] > last[4], '문장 전체로도 내려간다');
+  const fallSemi = 12 * Math.log2(first[0] / last[4]);
+  assert.ok(fallSemi > 3, '실측 하강은 직선 declination 보다 크다 (실측 6.47반음): ' + fallSemi.toFixed(2));
+
+  assert.strictEqual(K.endingOf('보겠습니다.'), '다');
+  assert.strictEqual(K.endingOf('가능할까요?'), '까');
+  assert.strictEqual(K.endingOf('돼요.'), '요');
+  K.applyProfile(null);
+});

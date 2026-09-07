@@ -92,7 +92,9 @@ def shape(w, sr, text, hard):
     if k > 0:
         ramp = np.linspace(0, 1, k, dtype=np.float32); w[:k] *= ramp; w[-k:] *= ramp[::-1]
     w = VS.onset_boost(w, sr)
-    w = VS.praat_shape(w, sr, text, hard)
+    # 🔴 praat_shape(U4 다듬기)는 삑사리의 원인이었다 — 단계별 제거 실험(A~E)에서 이것만 빼면 깨끗했다.
+    #    그 자리에 한국인 실측 억양 궤적을 넣는다(Zeroth-Korean 어절 10,305개). RECIPE_TAG k1.
+    w = VS.ko_contour_shape(w, sr, hard)
     return w / (np.abs(w).max() or 1.0) * 0.89
 
 

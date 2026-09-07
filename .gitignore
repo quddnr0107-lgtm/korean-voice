@@ -2,4 +2,9 @@ node_modules/
 .wrangler/
 .dev.vars
 prompt-kit/
+out/
+st3/
+corpus/
+models/
+*.parquet
 __pycache__/
