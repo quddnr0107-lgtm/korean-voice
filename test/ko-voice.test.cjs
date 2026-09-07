@@ -103,3 +103,30 @@ test('화자 프로필 — 쉼·하강·속도가 측정값으로 바뀌고 되�
   assert.strictEqual(back[back.length - 1].pause, K.PAUSE.ip);
   assert.strictEqual(back[0].rate, before[0].rate);
 });
+
+test('쉼 흔들림 — 실측 로그정규로 문장 끝 쉼이 매번 달라지고, 기본값은 그대로다', () => {
+  const fs = require('fs'); const path = require('path');
+  const prof = JSON.parse(fs.readFileSync(path.join(__dirname, '../public/profiles/korean-corpus.json'), 'utf8'));
+  const t = '첫 문장입니다. 둘째 문장입니다. 셋째 문장입니다. 넷째 문장입니다. 다섯째 문장입니다.';
+  const ends = (p) => p.sentences.map((s) => s.chunks[s.chunks.length - 1].pause);
+
+  // 흔들림 없이(기본) 문장 끝 쉼은 전부 같다 — 이 평평함이 기계처럼 들리는 원인이었다
+  K.applyProfile(null);
+  const flat = ends(K.prepare(t, { emotion: 'neutral' }));
+  assert.ok(new Set(flat).size === 1, '기본값은 고정: ' + flat.join(','));
+
+  // 실측 프로필을 걸면 흔들린다
+  K.applyProfile(prof);
+  K.seedJitter(7);
+  const varied = ends(K.prepare(t, { emotion: 'neutral' }));
+  assert.ok(new Set(varied).size > 1, '실측 분포로 흔들려야 한다: ' + varied.join(','));
+  for (const v of varied) assert.ok(v >= 50 && v <= 900, '쉼이 상식 범위 안: ' + v);
+
+  // 같은 씨앗이면 같은 결과 — 캐시 키가 흔들리지 않는다
+  K.seedJitter(7);
+  assert.deepStrictEqual(ends(K.prepare(t, { emotion: 'neutral' })), varied, '씨앗이 같으면 재현된다');
+
+  // 프로필을 벗기면 다시 고정으로 돌아간다
+  K.applyProfile(null);
+  assert.deepStrictEqual(ends(K.prepare(t, { emotion: 'neutral' })), flat);
+});

@@ -256,17 +256,47 @@
   const PAUSE_DEFAULT = Object.assign({}, PAUSE);
   // 하강조 폭·기본 속도·의문문 상승은 화자 프로필(tools/analyze-voice.py 산출)로 바꿀 수 있다.
   const TUNE = { declination: 0.06, rate: 1, questionRise: 1.08 };
+  // 쉼 흔들림 — 고정값은 기계처럼 들린다. 실제 한국인 발화의 쉼은 로그정규 롱테일이다
+  // (Zeroth-Korean 12,424 표본: mu 4.651 · sigma 0.735 · 변동계수 0.993).
+  // 청취 순위(2026-09-07): 실측분포 > 백색요동 > 1/f요동 > 고정. 1/f 는 코퍼스 측정에서도
+  // 기울기 +0.15~+0.41(백색에 가까움)로 나와 채택하지 않는다.
+  // sigma 0 이면 흔들림 없음(기존 동작). seed 를 주면 같은 문장이 늘 같게 나온다.
+  const JITTER = { sigma: 0, seed: null, min: 0.35, max: 2.4 };
+  let _rngState = 0;
+  function _rand() {                       // 결정적 난수(seed 있을 때) — 캐시 키가 흔들리지 않게
+    if (JITTER.seed == null) return Math.random();
+    _rngState = (_rngState * 1664525 + 1013904223) >>> 0;
+    return _rngState / 4294967296;
+  }
+  function _normal() {                      // Box-Muller
+    let u = 0, v = 0;
+    while (u === 0) u = _rand();
+    while (v === 0) v = _rand();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  }
+  /** 계획된 쉼에 실측 로그정규 흔들림을 입힌다. 중심은 그대로 두고 산포만 준다. */
+  function jitterPause(ms) {
+    if (!(JITTER.sigma > 0) || !(ms > 0)) return ms;
+    const f = Math.exp(_normal() * JITTER.sigma - JITTER.sigma * JITTER.sigma / 2);
+    return Math.round(ms * Math.max(JITTER.min, Math.min(JITTER.max, f)));
+  }
+  function seedJitter(seed) { JITTER.seed = seed; _rngState = (seed >>> 0) || 1; }
   let PROFILE = null;
   function applyProfile(profile) {
     Object.assign(PAUSE, PAUSE_DEFAULT); TUNE.declination = 0.06; TUNE.rate = 1; TUNE.questionRise = 1.08; PROFILE = null;
+    JITTER.sigma = 0; JITTER.seed = null;
     if (!profile) return { pause: Object.assign({}, PAUSE), tune: Object.assign({}, TUNE) };
     const e = profile.engine || profile;
     if (e.pause) for (const k of Object.keys(e.pause)) if (typeof e.pause[k] === 'number' && k in PAUSE) PAUSE[k] = Math.max(50, Math.min(1500, e.pause[k]));
     if (typeof e.declination === 'number') TUNE.declination = Math.max(0, Math.min(0.2, e.declination));
     if (typeof e.rate === 'number') TUNE.rate = Math.max(0.6, Math.min(1.5, e.rate));
     if (typeof e.questionRise === 'number') TUNE.questionRise = Math.max(1, Math.min(1.3, e.questionRise));
+    if (e.jitter) {
+      if (typeof e.jitter.sigma === 'number') JITTER.sigma = Math.max(0, Math.min(1.2, e.jitter.sigma));
+      if (typeof e.jitter.seed === 'number') seedJitter(e.jitter.seed);
+    }
     PROFILE = profile;
-    return { pause: Object.assign({}, PAUSE), tune: Object.assign({}, TUNE) };
+    return { pause: Object.assign({}, PAUSE), tune: Object.assign({}, TUNE), jitter: Object.assign({}, JITTER) };
   }
 
   // 문장 하나 → 구(chunk) 배열. 각 구는 {text, pause(ms, 뒤에 둘 쉼), emph}
@@ -354,7 +384,7 @@
           if (type === 'question') pitch = basePitch * TUNE.questionRise; // 상승 경계성조(H%)
           else if (type === 'exclaim') { pitch = basePitch * 1.05; volume = Math.min(1, baseVol * 1.05); }
           else if (type === 'request') rate *= 0.98;
-          c.pause = type === 'question' ? PAUSE.question : type === 'exclaim' ? PAUSE.exclaim : PAUSE.ip;
+          c.pause = jitterPause(type === 'question' ? PAUSE.question : type === 'exclaim' ? PAUSE.exclaim : PAUSE.ip);
         }
         if (c.emph) { rate *= 0.9; pitch *= 1.04; }
         c.rate = +Math.min(2, Math.max(0.5, rate)).toFixed(3);
@@ -573,6 +603,7 @@
     normalize, prepare, pronounce, toSSML, speak, stop, koVoices, parseTags,
     speakNeural, stopNeural, stopAll, speakAuto, neuralStatus,
     splitSentences, phraseSentence, sentenceType, detectEmotion,
-    readSino, readNative, readWithUnit, EMOTIONS, PAUSE, TUNE, applyProfile, getProfile: () => PROFILE,
+    readSino, readNative, readWithUnit, EMOTIONS, PAUSE, TUNE, JITTER, jitterPause, seedJitter,
+    applyProfile, getProfile: () => PROFILE,
   };
 });
