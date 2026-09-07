@@ -5,7 +5,7 @@
 
 ```
 브라우저(yebijun)                        서버(이 폴더)
-  ko-voice.js  정규화·문장 나누기·쉼   →  GET /tts?v=female&t=문장   → Supertonic 3 (CPU) → mp3 → 디스크 캐시 → CDN 캐시
+  ko-voice.js  정규화·문장 나누기·쉼   →  GET /tts?v=female&t=문장[&r=속도배수]   → Supertonic 3 (CPU) → 다듬기(voice_shape.py) → mp3 → 디스크 캐시 → CDN 캐시
   live-tts.js  조각 이어 재생·미리받기 →  POST /warm {texts:[…]}     → 나머지 문장 백그라운드 합성
 ```
 
@@ -25,14 +25,24 @@
 5. 사이트: `_deploy/index.html` 의 `window.LIVE_TTS_BASE = 'https://tts.yebijun.drillstudy.com'` 로 바꿔 배포.
    비어 있으면 기능이 잠겨 있어 아무 영향이 없다.
 
-Docker 없이: `pip install onnxruntime numpy soundfile librosa PyYAML imageio-ffmpeg` 후 Supertonic 자산을 받아
+Docker 없이: `pip install onnxruntime numpy soundfile librosa PyYAML imageio-ffmpeg praat-parselmouth` 후 Supertonic 자산을 받아
 `SUPERTONIC_DIR=… PORT=8790 python3 server.py` (systemd 로 상시 실행).
 
 ## API
-- `GET /health` → `{ok, voices, cached, steps, queue, stats}`
-- `GET /tts?v=female|male&t=<문장>[&s=단계]` → `audio/mpeg` · `Cache-Control: immutable` · CORS `*` · `Range` 지원(iOS)
-- `POST /warm` `{v, texts:[…]}` → 대기열에 넣고 바로 `{queued}`; 백그라운드가 순서대로 굽는다
-- 목소리는 `VOICES` (여성 F2:0.6+F3:0.4 · 남성 M1:0.7+M3:0.3). 바꾸면 캐시 키가 달라지지 않으니 **캐시를 비워라**.
+- `GET /health` → `{ok, voices, cached, steps, recipe, queue, stats}`
+- `GET /tts?v=female|male&t=<문장>[&s=단계][&r=속도배수]` → `audio/mpeg` · `Cache-Control: immutable` · CORS `*` · `Range` 지원(iOS)
+  · `r` = 합성 속도 배수(0.7~1.6 · 조각별 완급 · 기본 1.0). 캐시 키 = `sha1(voice|steps|r|조합표식|text)` (`lib/tts-key.mjs` · 워커와 같다)
+- `POST /warm` `{v, texts:[…][, r]}` → 대기열에 넣고 바로 `{queued}`; 백그라운드가 순서대로 굽는다(컨테이너 **디스크**에만 남는다 — 잠들면 사라진다)
+- **전편 미리 굽기 `/bake`**(워커 · `lib/bake.mjs` · Durable Object `BakeQueue`) — 조각을 R2 에 **영구히** 넣는다. 바깥 드라이버 없이 DO 알람이 조각 4개씩 `/tts` 로 받아 R2 에 넣고 다음 알람을 건다(그 요청이 곧 컨테이너를 깨워 둔다). 표식(`X-TTS-Recipe`)이 다르면 넣지 않고 60초 뒤 다시 본다.
+  `GET /bake` 상태(열려 있다) · `POST /bake {action:'enqueue', v, items:[{t, r}…≤400]}` · `{action:'stop'|'resume'|'clear'}` — POST 는 `Authorization: Bearer <BAKE_TOKEN>`.
+  🔴 비밀값이 먼저다: `npx wrangler secret put BAKE_TOKEN` (없으면 POST 가 503). 보내는 쪽은 yebijun `.github/scripts/bake-live-tts.mjs --보내기`(화면과 같은 조각을 만든다 · `check-bake-list-live` 가 같은지 잰다).
+- **공개 러너 굽기 `.github/workflows/bake.yml`**(2026-09-04 · 저장소가 공개라 Actions 무료·무제한) — 러너 20개가 `tools/chunks.mjs`(사이트 공개 파일에서 목록) → `tools/bake.py`(배치 8 · server.py 그대로) → `PUT /bake/put`(GitHub OIDC · `lib/oidc.mjs` 가 이 저장소 main 만 믿는다 · 비밀값 없음). 약 2시간 · $0. 컨테이너 샤드와 같이 돌아도 된다(서로 R2 를 보고 건너뛴다).
+- 목소리·다듬기는 `voice_shape.py` 가 정본이다(여성 F4:0.6+F2:0.4 = 사람이 표본을 듣고 정한 「U4」 · 남성 M1:0.7+M3:0.3).
+  합성 뒤 **다듬기**가 붙는다: trim(앞여유 50ms) → 첫 음절 보강 → Praat PSOLA 억양(문장 끝 +6반음 · 물음 +8 · 위로만 1.8배 · +1반음).
+  문장 끝(hard)은 글자로 판정한다(`is_sentence_end` — 문장부호·「다/요/까」로 끝나면 끝, 쉼표·낱말로 끝나면 중간). 조합을 바꾸면 `RECIPE_TAG` 를 올려라 — 캐시 키가 갈린다.
+  `python3 server/voice_shape.py --selftest` · `node --test test/tts-key.test.mjs`(워커·서버 키가 같은가).
+  🔴 서버는 `X-TTS-Recipe` 헤더로 자기 표식을 보내고, 워커는 **그 값이 자기 표식과 같을 때만** R2 에 넣는다 — Workers Builds 가 워커와
+  컨테이너 이미지를 따로 올려 워커만 새 판인 창이 생기기 때문(그때 옛 소리를 새 키로 넣으면 영영 안 지워진다). 워커 `/health` 의 `recipe_match` 로 본다.
 
 ## 왜 굽기 대신 이것인가
 전체 강의(예비군 사이트 기준 240만 자 ≈ 음성 117시간)를 두 목소리로 미리 구우면 CPU 160시간이 든다.

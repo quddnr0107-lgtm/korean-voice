@@ -7,3 +7,4 @@ st3/
 corpus/
 models/
 *.parquet
+__pycache__/
