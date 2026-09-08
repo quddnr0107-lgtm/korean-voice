@@ -246,20 +246,30 @@ async function handleWarm(request, env) {
     return json({ ok: false, error: 'container_failed', reason: String((e && e.message) || e).slice(0, 300) }, 502, CORS);
   }
 }
+/* 🔴 컨테이너가 죽어 있어도 **빨리** 답한다(2026-09-08 실측 8.6초 · 사용자 스샷 「시스템 음성 · 즉시 합성 불가」).
+   조각은 R2 에 전량 구워져 있어 컨테이너 없이도 /tts 는 답한다. 그런데 /health 가 죽은 컨테이너를 깨우느라
+   8초를 끌면 폰에서 그 요청이 끊기고, 사이트는 그걸 「즉시 합성 죽음」으로 읽어 60초 동안 시스템 음성으로 떨어졌다.
+   그래서 컨테이너 물어보기에 시간을 재고(HEALTH_PROBE_MS), 넘으면 그것 없이 답한다.
+   사이트에 필요한 것(무엇을 고를 수 있나·표식·R2 있나)은 전부 워커가 아는 값이라 컨테이너와 무관하다. */
+const HEALTH_PROBE_MS = 1200;
 async function handleHealth(request, env) {
+  const voice_sets = Object.entries(TAGS).map(([tag, v]) => ({ id: `${tag}.${v.rev}`, tag, label: v.label, steps: v.steps }));
+  const 바탕 = { cache: env.TTS_CACHE ? 'r2' : 'none', recipe_worker: RECIPE_TAG, voice_sets, worker_ok: true };
   const c = container(env);
-  if (!c) return json({ ok: false, available: false, reason: '컨테이너 바인딩 없음' }, 200, CORS);
+  if (!c) return json({ ...바탕, ok: false, available: false, reason: '컨테이너 바인딩 없음' }, 200, CORS);
   try {
     const target = new URL(request.url); target.pathname = '/health'; target.search = '';
-    const r = await c.fetch(new Request(target.toString(), { method: 'GET' }));
-    const raw = await r.text().catch(() => '');
+    const 물어봄 = (async () => {
+      const r = await c.fetch(new Request(target.toString(), { method: 'GET' }));
+      return { r, raw: await r.text().catch(() => '') };
+    })();
+    const res = await Promise.race([물어봄, new Promise((ok) => setTimeout(() => ok(null), HEALTH_PROBE_MS))]);
+    if (!res) return json({ ...바탕, ok: false, available: false, recipe_match: false, container_status: 0, container_body: `컨테이너 응답이 ${HEALTH_PROBE_MS}ms 안에 안 왔다(자는 중이거나 죽음) — 구운 조각은 R2 에서 나온다` }, 200, CORS);
+    const { r, raw } = res;
     let j = {}; try { j = JSON.parse(raw); } catch (_) { j = {}; }
-    /* 🔴 고를 수 있는 목소리 목록의 **단일 출처**다 — 사이트가 이 목록으로 마이페이지 고르개를 그린다.
-     이름·번호를 사이트에도 박으면 두 저장소가 갈라진다(이미 겪었다 · stat-labels 사고). */
-    const voice_sets = Object.entries(TAGS).map(([tag, v]) => ({ id: `${tag}.${v.rev}`, tag, label: v.label, steps: v.steps }));
-    return json({ ...j, ok: !!j.ok, available: !!j.ok, cache: env.TTS_CACHE ? 'r2' : 'none', recipe_worker: RECIPE_TAG, recipe_match: j.recipe === RECIPE_TAG, voice_sets, ...(j.ok ? {} : { container_status: r.status, container_body: raw.slice(0, 200) }) }, 200, CORS);
+    return json({ ...j, ...바탕, ok: !!j.ok, available: !!j.ok, recipe_match: j.recipe === RECIPE_TAG, ...(j.ok ? {} : { container_status: r.status, container_body: raw.slice(0, 200) }) }, 200, CORS);
   } catch (e) {
-    return json({ ok: false, available: false, reason: String((e && e.message) || e).slice(0, 300) }, 200, CORS);
+    return json({ ...바탕, ok: false, available: false, reason: String((e && e.message) || e).slice(0, 300) }, 200, CORS);
   }
 }
 
