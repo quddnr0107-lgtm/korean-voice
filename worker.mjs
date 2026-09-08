@@ -11,7 +11,7 @@
 import { Container, getContainer } from '@cloudflare/containers';
 import { DurableObject } from 'cloudflare:workers';
 import { handleTts, json } from './lib/melotts.mjs';
-import { cacheKey, parseR, RECIPE_TAG } from './lib/tts-key.mjs';
+import { cacheKey, parseR, RECIPE_TAG, FALLBACK } from './lib/tts-key.mjs';
 import { makeBaker } from './lib/bake.mjs';
 import { prune } from './lib/prune.mjs';
 import { verifyGithubOidc } from './lib/oidc.mjs';
@@ -21,7 +21,7 @@ export { handleTts, MODEL, LANGS, MAX_CHARS, _reset } from './lib/melotts.mjs';
 export class TtsContainer extends Container {
   defaultPort = 8790;
   sleepAfter = '3m';   // 유휴 3분이면 잠든다(비용 0). 깨우는 데 수 초 · 캐시(R2)는 잠들어도 즉시 답한다
-  envVars = { STEPS: '16', ALLOW_ORIGIN: '*', CACHE_DIR: '/app/cache' };
+  envVars = { STEPS: '8', ALLOW_ORIGIN: '*', CACHE_DIR: '/app/cache' };
 }
 
 /* ── 굽기 대기열(Durable Object) — 전편을 컨테이너가 스스로 굽고 R2 에 넣는다(lib/bake.mjs · 2026-09-04) ──
@@ -142,7 +142,11 @@ const SECURITY = {
    🔴 r(합성 속도 배수)과 조합표식(voice_shape.RECIPE_TAG)이 키에 들어간다 — 다듬기 조합이 바뀌면 옛 R2 캐시는 자연히 안 맞는다. */
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, OPTIONS', 'Access-Control-Allow-Headers': 'Range, Content-Type', 'Access-Control-Expose-Headers': 'Content-Length, Content-Range, Accept-Ranges' };
 const VOICES = ['female', 'male'];
-const DEFAULT_STEPS = 16;
+/* 🔴 스텝은 캐시 키(v|s|r|표식|글)에 들어간다 — 바꾸면 구운 것이 전부 무효가 되고 전량 재굽기다.
+   16 → 8 (2026-09-08): 실측으로 품질이 안 떨어지는 것을 확인하고 내렸다.
+     조각당 5.31s → 2.97s (절반) · HNR 15.46 → 15.55 (오히려 미세 상승) · 사용자 청취 「소리는 똑같아」
+   더 내리면(4) HNR 14.38 로 떨어지기 시작한다 — 8 이 무너지기 직전의 값이 아니라 여유가 있는 값이다. */
+const DEFAULT_STEPS = 8;
 const cleanText = (t) => String(t == null ? '' : t).replace(/\s+/g, ' ').trim().slice(0, 400);
 function container(env) {
   if (!env.TTS_CONTAINER) return null;
@@ -160,20 +164,29 @@ async function handleLiveTts(request, env, ctx) {
   if (!VOICES.includes(v)) return json({ ok: false, error: 'bad_voice' }, 400, CORS);
   if (!t) return json({ ok: false, error: 'empty_text' }, 400, CORS);
   const key = await cacheKey(v, s, r, t);
+  /* 🔴 갈아타는 동안은 두 벌을 본다 — 새 표식(굽는 중) 먼저, 없으면 옛 표식(전량 구워져 있다)으로 즉시 답한다.
+     이렇게 하지 않으면 표식을 올린 순간 5만8천 조각이 한꺼번에 안 잡혀 전부 컨테이너 합성이 된다(= 대기 폭발).
+     옛 키는 그때의 스텝(FALLBACK.steps)으로 찾아야 한다 — steps 가 키에 들어가기 때문이다.
+     굽기가 끝나면 lib/tts-key.mjs 의 FALLBACK 을 지우고 옛 조각을 폐기한다. */
+  const keys = [[key, RECIPE_TAG]];
+  if (FALLBACK && FALLBACK.tag !== RECIPE_TAG) keys.push([await cacheKey(v, FALLBACK.steps, r, t, FALLBACK.tag), FALLBACK.tag]);
   // 1) R2 캐시
   if (env.TTS_CACHE) {
+    for (const [k, tag] of keys) {
     try {
       const range = request.headers.get('Range');
-      const obj = await env.TTS_CACHE.get(key, range ? { range: request.headers } : undefined);
+      const obj = await env.TTS_CACHE.get(k, range ? { range: request.headers } : undefined);
       if (obj) {
-        if (request.method === 'HEAD') return audioResponse(null, obj.size, 200, { 'X-TTS-Cache': 'r2' });
+        const 표 = { 'X-TTS-Cache': 'r2', 'X-TTS-Recipe': tag };
+        if (request.method === 'HEAD') return audioResponse(null, obj.size, 200, 표);
         if (range && obj.range) {
           const start = obj.range.offset || 0; const len = obj.range.length != null ? obj.range.length : obj.size - start;
-          return audioResponse(obj.body, len, 206, { 'Content-Range': `bytes ${start}-${start + len - 1}/${obj.size}`, 'X-TTS-Cache': 'r2' });
+          return audioResponse(obj.body, len, 206, { 'Content-Range': `bytes ${start}-${start + len - 1}/${obj.size}`, ...표 });
         }
-        return audioResponse(obj.body, obj.size, 200, { 'X-TTS-Cache': 'r2' });
+        return audioResponse(obj.body, obj.size, 200, 표);
       }
-    } catch (_) { /* 캐시 실패는 합성으로 */ }
+    } catch (_) { /* 캐시 실패는 다음 표식·합성으로 */ }
+    }
   }
   // 2) 컨테이너 합성
   const c = container(env);

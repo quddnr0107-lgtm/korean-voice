@@ -14,10 +14,11 @@ import numpy as np, soundfile as sf
 
 ap = argparse.ArgumentParser()
 ap.add_argument('--chunks', required=True); ap.add_argument('--shard', type=int, default=0); ap.add_argument('--shards', type=int, default=1)
-ap.add_argument('--base', default='https://korean-voice.quddnr0107.workers.dev'); ap.add_argument('--voice', default='female'); ap.add_argument('--steps', type=int, default=16); ap.add_argument('--best', type=int, default=3); ap.add_argument('--hnr-floor', type=float, default=12.5)
+ap.add_argument('--base', default='https://korean-voice.quddnr0107.workers.dev'); ap.add_argument('--voice', default='female'); ap.add_argument('--steps', type=int, default=8); ap.add_argument('--best', type=int, default=3); ap.add_argument('--hnr-floor', type=float, default=12.5)
 ap.add_argument('--batch', type=int, default=16); ap.add_argument('--limit', type=int, default=0); ap.add_argument('--no-upload', action='store_true')
 ap.add_argument('--start', type=int, default=0, help='목록의 이 번호부터(시험용 · 앞쪽은 컨테이너 대기열이 이미 구웠을 수 있다)')
 ap.add_argument('--kind', default='all', choices=['all', 'exam', 'easy', 'study'], help='갈래 — exam 출제핵심강의 · easy 개념강의 · study 따라읽기(원문회독·눈회독·타이핑 줄) · all (조각의 k 필드)')
+ap.add_argument('--law', default='all', help="과목(조각의 w 필드) — 통합방위법·예비군법·훈령·병역법·기타·all. 뭉탱이(갈래×과목) 단위로 굽고 갈아타기 위한 것")
 ap.add_argument('--force', action='store_true', help='R2 에 이미 있어도 다시 굽어 덮어쓴다(배치 패딩 우웅 재굽기 · L280)')
 a = ap.parse_args()
 
@@ -36,6 +37,12 @@ if a.kind != 'all':
         print('🔴 조각 목록에 k(갈래)가 없다 — chunks.mjs 가 옛 판이다. --kind 를 못 지킨다', flush=True); sys.exit(2)
     n0 = len(items); items = [it for it in items if it.get('k') == a.kind]
     print(f'갈래 {a.kind}: {len(items)}/{n0}', flush=True)
+if a.law != 'all':
+    # 과목(뭉탱이)으로 한 번 더 거른다 — 굽기를 갈래×과목 단위로 끊어 그 뭉탱이만 새 목소리로 갈아탄다
+    if items and 'w' not in items[0]:
+        print('🔴 조각 목록에 w(과목)가 없다 — chunks.mjs 가 옛 판이다. --law 를 못 지킨다', flush=True); sys.exit(2)
+    n0 = len(items); items = [it for it in items if it.get('w') == a.law]
+    print(f'과목 {a.law}: {len(items)}/{n0}', flush=True)
 mine = [it for i, it in enumerate(items) if i >= a.start and (i - a.start) % a.shards == a.shard]
 if a.limit: mine = mine[:a.limit]
 print(f'조각 전체 {len(items)} · 내 몫(shard {a.shard}/{a.shards}) {len(mine)}', flush=True)

@@ -99,9 +99,10 @@ def shape(w, sr, text, hard):
     if k > 0:
         ramp = np.linspace(0, 1, k, dtype=np.float32); w[:k] *= ramp; w[-k:] *= ramp[::-1]
     w = VS.onset_boost(w, sr)
-    # 🔴 praat_shape(U4 다듬기)는 삑사리의 원인이었다 — 단계별 제거 실험(A~E)에서 이것만 빼면 깨끗했다.
-    #    그 자리에 한국인 실측 억양 궤적을 넣는다(Zeroth-Korean 어절 10,305개). RECIPE_TAG k1.
-    w = VS.ko_contour_shape(w, sr, hard, text)
+    # 🔴 사용자가 옛 u4a 소리를 골랐다(2026-09-08) — 궤적 다듬기(k1·k2)를 걷고 u4a 의 Praat PSOLA 로 되돌린다.
+    #    「praat_shape 이 기계음의 원인」이라던 앞선 기록은 이번에 재보니 HNR 로 재현되지 않았다(15.35 vs 15.47 · 회차 편차 0.8dB).
+    w = VS.praat_shape(w, sr, text, hard)
+    w = VS.tail_trim(w, sr)          # 말 끝난 뒤 죽은 공백 잘라내기(제보: 「한 어절이 묵음」)
     return w / (np.abs(w).max() or 1.0) * 0.89
 
 

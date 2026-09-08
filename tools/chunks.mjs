@@ -22,6 +22,10 @@ function 조각기(liveSrc, koSrc) {
   const L = g.window.LiveTTS; if (!L || typeof L.segment !== 'function') throw new Error('LiveTTS.segment 를 못 꺼냈다');
   return L.segment;
 }
+/* 과목(법) — 뭉탱이 단위로 굽고 갈아타기 위해 조각마다 적는다(bake.py --law 가 이 값으로 거른다).
+   _standalone 의 키는 「병역법|시행령|139」 꼴이라 첫 마디만 쓴다. 넷 중 하나가 아니면 '기타'. */
+const 법들 = ['통합방위법', '예비군법', '훈령', '병역법'];
+const 법정규 = (x) => { const h = String(x || '').split('|')[0].trim(); return 법들.includes(h) ? h : '기타'; };
 const 출제핵심글 = (item) => String(item.lectureScript || item.bodyText || '').trim();
 function 개념글(content) {
   const paragraphs = String(content || '').split(/\n{2,}/).map((p) => p.trim()).filter(Boolean); const parts = [];
@@ -33,17 +37,18 @@ const seg = 조각기(liveSrc, koSrc);
 const 읽기용 = (() => { const S = require서로(stSrc); if (!S || typeof S.읽기용 !== 'function') throw new Error('SpeechText.읽기용 을 못 꺼냈다'); return S.읽기용; })();
 const 글들 = [];
 const ep = JSON.parse(epSrc);
-for (const period of Object.keys(ep)) for (const it of (ep[period] || [])) { const t = 출제핵심글(it); if (t) 글들.push({ k: 'exam', t }); }
+for (const period of Object.keys(ep)) for (const it of (ep[period] || [])) { const t = 출제핵심글(it); if (t) 글들.push({ k: 'exam', t, w: 법정규(it.law) }); }
 const ee = JSON.parse(eeSrc);
-for (const period of Object.keys(ee)) { if (period.startsWith('_')) continue; for (const law of Object.keys(ee[period] || {})) { if (law.startsWith('_')) continue; for (const a of Object.keys(ee[period][law] || {})) { const t = 개념글(ee[period][law][a] && ee[period][law][a].content); if (t) 글들.push({ k: 'easy', t }); } } }
+for (const period of Object.keys(ee)) { if (period.startsWith('_')) continue; for (const law of Object.keys(ee[period] || {})) { if (law.startsWith('_')) continue; for (const a of Object.keys(ee[period][law] || {})) { const t = 개념글(ee[period][law][a] && ee[period][law][a].content); if (t) 글들.push({ k: 'easy', t, w: 법정규(law) }); } } }
 const st = ee._standalone || {};
-for (const period of Object.keys(st)) for (const law of Object.keys(st[period] || {})) for (const type of Object.keys(st[period][law] || {})) for (const a of Object.keys(st[period][law][type] || {})) { const t = 개념글(st[period][law][type][a] && st[period][law][type][a].content); if (t) 글들.push({ k: 'easy', t }); }
+for (const period of Object.keys(st)) for (const law of Object.keys(st[period] || {})) for (const type of Object.keys(st[period][law] || {})) for (const a of Object.keys(st[period][law][type] || {})) { const t = 개념글(st[period][law][type][a] && st[period][law][type][a].content); if (t) 글들.push({ k: 'easy', t, w: 법정규(law) }); }
 /* 따라읽기 — 줄 original(머리줄 포함 · 2자 이상)을 읽기용에 통과시킨 것. original 은 안 건드린다(yebijun bake-live-tts.mjs 회독줄들 과 같다) */
 const sd = JSON.parse(sdSrc); const 본줄 = new Set();
-for (const b of (sd.blanks || [])) { const t = String(b.original || '').trim(); if (t.length < 2 || 본줄.has(t)) continue; 본줄.add(t); 글들.push({ k: 'study', t: 읽기용(t) || t }); }
+for (const b of (sd.blanks || [])) { const t = String(b.original || '').trim(); if (t.length < 2 || 본줄.has(t)) continue; 본줄.add(t); 글들.push({ k: 'study', t: 읽기용(t) || t, w: 법정규(b.law) }); }
 const map = new Map();
-for (const { k: 갈래, t: 글 } of 글들) for (const c of seg(글)) { const r = Math.round((c.r || 1) * 100) / 100; const k = c.text + '|' + r.toFixed(2); if (!map.has(k)) map.set(k, { t: c.text, r, k: 갈래 }); }
+for (const { k: 갈래, t: 글, w: 법 } of 글들) for (const c of seg(글)) { const r = Math.round((c.r || 1) * 100) / 100; const k = c.text + '|' + r.toFixed(2); if (!map.has(k)) map.set(k, { t: c.text, r, k: 갈래, w: 법 }); }
 const 목록 = [...map.values()];
 fs.writeFileSync(OUT, JSON.stringify(목록));
 const 세기 = (갈래) => 목록.filter((c) => c.k === 갈래).length;
-console.log(`원고 ${글들.length}편 · 고유 조각 ${목록.length}개(exam ${세기('exam')} · easy ${세기('easy')} · study ${세기('study')}) · ${목록.reduce((a, c) => a + c.t.length, 0).toLocaleString()}자 → ${OUT}`);
+const 법세기 = 법들.concat('기타').map((l) => `${l} ${목록.filter((c) => c.w === l).length}`).join(' · ');
+console.log(`원고 ${글들.length}편 · 고유 조각 ${목록.length}개(exam ${세기('exam')} · easy ${세기('easy')} · study ${세기('study')} | ${법세기}) · ${목록.reduce((a, c) => a + c.t.length, 0).toLocaleString()}자 → ${OUT}`);
