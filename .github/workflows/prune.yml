@@ -1,0 +1,34 @@
+# 옛 조각만 폐기 — 굽기를 다시 돌리지 않고 R2 청소만 한다.
+#   왜 따로 두나: bake.yml 의 prune 은 `needs: bake` 라 청소만 하려 해도 전편을 다시 구워야 한다.
+#   🔴 RECIPE_TAG 를 올리면(k1 → k2) R2 의 옛 조각이 **전부** 목록 밖이 된다 — prune.mjs 의
+#      「절반 넘으면 멈춤」 안전장치에 걸려 거부된다. 그럴 때 ratio 를 올려서 푼다.
+#      옛 태그 조각은 키가 달라 이미 아무도 안 읽는다 — 지워도 지금 소리에 영향이 없다.
+#   🔴 lib/oidc.mjs 가 「이 저장소의 main」 토큰만 받는다 — 브랜치에서 돌리면 워커가 401 을 준다.
+name: Prune voice (옛 조각 폐기)
+
+on:
+  workflow_dispatch:
+    inputs:
+      ratio:
+        description: '지울 수가 전체의 이 비율을 넘으면 멈춘다(0~1 · 태그를 올린 직후엔 0.95 처럼 올려야 지워진다)'
+        default: '0.5'
+      dry:
+        description: '마른 실행만 — 지우지 않고 몇 개가 지워질지만 본다(true/false)'
+        default: 'true'
+
+permissions:
+  id-token: write   # OIDC — 워커가 이 토큰으로 「이 저장소의 main」임을 확인한다
+  contents: read
+
+jobs:
+  prune:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: 조각 목록 (사이트 공개 파일에서)
+        run: node tools/chunks.mjs --out chunks.json
+      - name: 폐기
+        run: node tools/prune.mjs --chunks chunks.json --max-drop-ratio ${{ inputs.ratio }} ${{ inputs.dry == 'true' && '--dry' || '' }}
