@@ -254,7 +254,10 @@ async function handleHealth(request, env) {
     const r = await c.fetch(new Request(target.toString(), { method: 'GET' }));
     const raw = await r.text().catch(() => '');
     let j = {}; try { j = JSON.parse(raw); } catch (_) { j = {}; }
-    return json({ ...j, ok: !!j.ok, available: !!j.ok, cache: env.TTS_CACHE ? 'r2' : 'none', recipe_worker: RECIPE_TAG, recipe_match: j.recipe === RECIPE_TAG, ...(j.ok ? {} : { container_status: r.status, container_body: raw.slice(0, 200) }) }, 200, CORS);
+    /* 🔴 고를 수 있는 목소리 목록의 **단일 출처**다 — 사이트가 이 목록으로 마이페이지 고르개를 그린다.
+     이름·번호를 사이트에도 박으면 두 저장소가 갈라진다(이미 겪었다 · stat-labels 사고). */
+    const voice_sets = Object.entries(TAGS).map(([tag, v]) => ({ id: `${tag}.${v.rev}`, tag, label: v.label, steps: v.steps }));
+    return json({ ...j, ok: !!j.ok, available: !!j.ok, cache: env.TTS_CACHE ? 'r2' : 'none', recipe_worker: RECIPE_TAG, recipe_match: j.recipe === RECIPE_TAG, voice_sets, ...(j.ok ? {} : { container_status: r.status, container_body: raw.slice(0, 200) }) }, 200, CORS);
   } catch (e) {
     return json({ ok: false, available: false, reason: String((e && e.message) || e).slice(0, 300) }, 200, CORS);
   }
