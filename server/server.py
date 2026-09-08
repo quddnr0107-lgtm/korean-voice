@@ -31,11 +31,16 @@ STEPS = int(os.environ.get('STEPS', '16'))
 ORIGIN = os.environ.get('ALLOW_ORIGIN', '*')
 MAX_CHARS = int(os.environ.get('MAX_CHARS', '400'))
 sys.path.insert(0, ROOT)
-import voice_shape as VS  # noqa: E402  — 다듬기 조합의 정본(같은 디렉터리)
+import voice_shape as VS  # noqa: E402  — 지금 조합(기본)
+import recipes as RC       # noqa: E402  — 조합 등록부: 목소리 두 벌을 동시에 내준다(2026-09-08)
 VOICES = {
-    'female': {'style': VS.RECIPE['style'], 'label': '여성', 'speed': 1.05},   # 사람이 표본을 듣고 정했다(U4)
+    'female': {'style': None, 'label': '여성', 'speed': 1.05},   # None = 그 조합이 정한 목소리(조합마다 다르다)
     'male': {'style': 'M1:0.7,M3:0.3', 'label': '남성', 'speed': 1.05},
 }
+
+
+def style_spec(voice, tag):
+    return VOICES[voice]['style'] or RC.get(tag).RECIPE['style']
 R_MIN, R_MAX = 0.7, 1.6   # 합성 속도 배수 r 의 범위(모델이 받는 speed 의 안전 범위)
 
 sys.path.insert(0, os.path.join(ST_DIR, 'py'))
@@ -50,12 +55,14 @@ _stats = {'synth': 0, 'hit': 0, 'synth_s': 0.0}
 def load():
     global _tts
     _tts = helper.load_text_to_speech(os.path.join(ST_DIR, 'onnx'), False)
-    for name, v in VOICES.items():
+    for tag in RC.TAGS:
+     for name, v in VOICES.items():
         ttl = dp = None
+        spec = style_spec(name, tag)
         # 🔴 「F2」처럼 가중치가 없는 이름도 받는다 — 없으면 1.0. 이게 없어서 순수 목소리로 바꾸자마자
         #    load() 가 ValueError 로 죽었다(2026-09-08 · 굽기 전 실제 경로 점검에서 잡음).
         parts = []
-        for item in v['style'].split(','):
+        for item in spec.split(','):
             n, _, ws = item.partition(':')
             parts.append((n.strip(), float(ws) if ws.strip() else 1.0))
         total = sum(w for _, w in parts) or 1.0
@@ -64,7 +71,7 @@ def load():
             st = helper.load_voice_style([os.path.join(ST_DIR, 'voice_styles', n + '.json')])
             ttl = st.ttl * w if ttl is None else ttl + st.ttl * w
             dp = st.dp * w if dp is None else dp + st.dp * w
-        _styles[name] = helper.Style(ttl.astype(np.float32), dp.astype(np.float32))
+        _styles[(tag, name)] = helper.Style(ttl.astype(np.float32), dp.astype(np.float32))
     os.makedirs(CACHE, exist_ok=True)
     for v in VOICES:
         d = os.path.join(CACHE, v); os.makedirs(d, exist_ok=True)
@@ -92,7 +99,11 @@ def trim(wav, sr, thresh_db=-45.0, pad_ms=30):
     return wav[max(0, idx[0] * frame - pad):min(len(wav), (idx[-1] + 1) * frame + pad)]
 
 
-def shape(w, sr, text, hard):
+def shape(w, sr, text, hard, tag=None):
+    return RC.get(tag).shape(w, sr, text, hard)
+
+
+def _shape_옛(w, sr, text, hard):
     """합성 뒤 다듬기 — 굽는 자와 같은 순서: trim(앞여유 50ms) → 페이드 → 첫 음절 보강 → Praat PSOLA 억양(문장 끝 올림)."""
     w = trim(np.asarray(w, dtype=np.float32).reshape(-1), sr, pad_ms=VS.RECIPE['lead_pad_ms'])
     k = min(len(w) // 2, int(sr * 0.01))
@@ -106,16 +117,17 @@ def shape(w, sr, text, hard):
     return w / (np.abs(w).max() or 1.0) * 0.89
 
 
-def synthesize(voice, text, steps, r=1.0):
+def synthesize(voice, text, steps, r=1.0, tag=None):
     import subprocess
     t0 = time.time()
-    hard = VS.is_sentence_end(text)
-    speed = float(np.clip(VOICES[voice]['speed'] * r * VS.unit_speed_mult(0, hard), R_MIN, R_MAX))   # 완급: 문장 끝 ×0.92 · 중간 ×1.06(U4)
+    M = RC.get(tag); tag = M.RECIPE_TAG
+    hard = M.is_sentence_end(text)
+    speed = float(np.clip(VOICES[voice]['speed'] * r * M.unit_speed_mult(0, hard), R_MIN, R_MAX))   # 완급: 문장 끝 ×0.92 · 중간 ×1.06(U4)
     with _lock:
-        wav, dur = _tts._infer([text], ['ko'], _styles[voice], steps, speed)
+        wav, dur = _tts._infer([text], ['ko'], _styles[(tag, voice)], steps, speed)
     w = np.asarray(wav, dtype=np.float32).reshape(-1)[:int(float(np.asarray(dur).reshape(-1)[0]) * _tts.sample_rate)]   # 예측 길이로 자른다(배치 패딩 우웅 · L280 · 러너 bake.py 와 같은 자)
-    w = shape(w, _tts.sample_rate, text, hard)
-    key = cache_key(voice, text, steps, r)
+    w = M.shape(w, _tts.sample_rate, text, hard)
+    key = cache_key(voice, text, steps, r, tag)
     tmp = os.path.join(CACHE, voice, key + '.tmp.wav'); out = os.path.join(CACHE, voice, key + '.mp3')
     sf.write(tmp, w, _tts.sample_rate)
     subprocess.run([ffmpeg(), '-v', 'error', '-y', '-i', tmp, '-ar', '24000', '-codec:a', 'libmp3lame', '-b:a', '48k', '-f', 'mp3', out + '.part'], check=True)
@@ -132,32 +144,33 @@ _warm_set = set()
 
 def _warm_worker():
     while True:
-        voice, text, steps, r = _warm_q.get()
+        voice, text, steps, r, tag = _warm_q.get()
         try:
-            path = os.path.join(CACHE, voice, cache_key(voice, text, steps, r) + '.mp3')
+            path = os.path.join(CACHE, voice, cache_key(voice, text, steps, r, tag) + '.mp3')
             if not os.path.exists(path):
-                synthesize(voice, text, steps, r)
+                synthesize(voice, text, steps, r, tag)
         except Exception as e:
             sys.stderr.write('warm 실패: %s\n' % str(e)[:200])
         finally:
-            _warm_set.discard((voice, text, steps, r)); _warm_q.task_done()
+            _warm_set.discard((voice, text, steps, r, tag)); _warm_q.task_done()
 
 
-def warm(voice, texts, steps, r=1.0):
+def warm(voice, texts, steps, r=1.0, tag=None):
     n = 0
+    tag = RC.get(tag).RECIPE_TAG
     for t in texts:
         t = clean_text(t)
         if not t: continue
-        k = (voice, t, steps, r)
+        k = (voice, t, steps, r, tag)
         if k in _warm_set: continue
-        if os.path.exists(os.path.join(CACHE, voice, cache_key(voice, t, steps, r) + '.mp3')): continue
+        if os.path.exists(os.path.join(CACHE, voice, cache_key(voice, t, steps, r, tag) + '.mp3')): continue
         _warm_set.add(k); _warm_q.put(k); n += 1
     return n
 
 
-def cache_key(voice, text, steps, r=1.0):
+def cache_key(voice, text, steps, r=1.0, tag=None):
     # 🔴 worker.mjs 의 키와 같은 꼴(sha1("voice|steps|r|tag|text")) — r 은 소수 둘째 자리까지
-    return hashlib.sha1(f'{voice}|{steps}|{fmt_r(r)}|{VS.RECIPE_TAG}|{text}'.encode('utf-8')).hexdigest()
+    return hashlib.sha1(f'{voice}|{steps}|{fmt_r(r)}|{RC.get(tag).RECIPE_TAG}|{text}'.encode('utf-8')).hexdigest()
 
 
 def fmt_r(r):
@@ -222,7 +235,8 @@ class H(BaseHTTPRequestHandler):
         if not isinstance(texts, list):
             return self._json({'ok': False, 'error': 'bad_texts'}, 400)
         r = parse_r(body.get('r', 1.0))
-        return self._json({'ok': True, 'queued': warm(voice, texts[:400], steps, r), 'queue': _warm_q.qsize()})
+        tag = RC.get(body.get('k')).RECIPE_TAG
+        return self._json({'ok': True, 'queued': warm(voice, texts[:400], steps, r, tag), 'queue': _warm_q.qsize()})
 
     def do_HEAD(self):
         self.do_GET()
@@ -231,7 +245,7 @@ class H(BaseHTTPRequestHandler):
         u = urllib.parse.urlsplit(self.path); q = urllib.parse.parse_qs(u.query)
         if u.path == '/health':
             cached = sum(len([f for f in os.listdir(os.path.join(CACHE, v)) if f.endswith('.mp3')]) for v in VOICES)
-            return self._json({'ok': True, 'voices': list(VOICES), 'cached': cached, 'steps': STEPS, 'recipe': VS.RECIPE_TAG, 'queue': _warm_q.qsize(), 'stats': _stats})
+            return self._json({'ok': True, 'voices': list(VOICES), 'cached': cached, 'steps': STEPS, 'recipe': RC.DEFAULT, 'recipes': {t: {'steps': v['steps'], 'style': v['mod'].RECIPE['style']} for t, v in RC.TAGS.items()}, 'queue': _warm_q.qsize(), 'stats': _stats})
         if u.path == '/voices':
             return self._json({k: {'label': v['label']} for k, v in VOICES.items()})
         if u.path != '/tts':
@@ -243,21 +257,24 @@ class H(BaseHTTPRequestHandler):
         except ValueError:
             steps = STEPS
         r = parse_r((q.get('r') or ['1'])[0])
+        tag = RC.get((q.get('k') or [''])[0]).RECIPE_TAG
+        if not (q.get('s') or [''])[0]:
+            steps = RC.steps_for(tag)   # 🔴 벌마다 스텝이 다르다 — 안 맞추면 그 벌을 통째로 못 찾는다
         if voice not in VOICES:
             return self._json({'ok': False, 'error': 'bad_voice'}, 400)
         if not text:
             return self._json({'ok': False, 'error': 'empty_text'}, 400)
-        path = os.path.join(CACHE, voice, cache_key(voice, text, steps, r) + '.mp3')
+        path = os.path.join(CACHE, voice, cache_key(voice, text, steps, r, tag) + '.mp3')
         if os.path.exists(path):
             _stats['hit'] += 1
         else:
             try:
-                path = synthesize(voice, text, steps, r)
+                path = synthesize(voice, text, steps, r, tag)
             except Exception as e:
                 return self._json({'ok': False, 'error': 'synthesis_failed', 'reason': str(e)[:300]}, 502)
-        self._send_file(path)
+        self._send_file(path, tag)
 
-    def _send_file(self, path):
+    def _send_file(self, path, tag=None):
         size = os.path.getsize(path)
         rng = self.headers.get('Range')
         start, end = 0, size - 1
@@ -272,7 +289,7 @@ class H(BaseHTTPRequestHandler):
         self.send_response(status); self._cors()
         self.send_header('Content-Type', 'audio/mpeg'); self.send_header('Accept-Ranges', 'bytes')
         self.send_header('Cache-Control', 'public, max-age=31536000, immutable')
-        self.send_header('X-TTS-Recipe', VS.RECIPE_TAG)   # 워커가 이 값이 자기 표식과 같을 때만 R2 에 넣는다(컨테이너가 옛 이미지면 캐시를 더럽히지 않는다)
+        self.send_header('X-TTS-Recipe', RC.get(tag).RECIPE_TAG)   # 워커가 이 값이 자기 표식과 같을 때만 R2 에 넣는다(컨테이너가 옛 이미지면 캐시를 더럽히지 않는다)
         if status == 206:
             self.send_header('Content-Range', f'bytes {start}-{end}/{size}')
         self.send_header('Content-Length', str(end - start + 1)); self.end_headers()

@@ -118,6 +118,31 @@ def hum_tail(w, sr):
     hnr = parselmouth.praat.call(parselmouth.praat.call(snd.extract_part(max(0, last - 0.3), last), "To Harmonicity (cc)", 0.01, 75, 0.1, 1.0), "Get mean", 0, 0)
     return bool(hnr > 12 and low > 0.5)
 
+
+def _trim(wav, sr, thresh_db=-45.0, pad_ms=30):
+    frame = int(sr * 0.01); n = len(wav) // frame
+    if n < 3:
+        return wav
+    rms = np.sqrt((wav[:n * frame].reshape(n, frame) ** 2).mean(axis=1) + 1e-12)
+    db = 20 * np.log10(rms + 1e-9); idx = np.where(db > db.max() + thresh_db)[0]
+    if not len(idx):
+        return wav
+    pad = int(sr * pad_ms / 1000)
+    return wav[max(0, idx[0] * frame - pad):min(len(wav), (idx[-1] + 1) * frame + pad)]
+
+
+def shape(w, sr, text, hard):
+    """이 조합의 다듬기 전부 — trim(앞여유 50ms) → 페이드 → 첫 음절 보강 → Praat PSOLA 억양 → 말끝 공백 → 크기 맞춤.
+       🔴 조합마다 다듬기 차례가 다르므로 각 조합 파일이 제 것을 갖는다(server.py 는 고르기만 한다)."""
+    w = _trim(np.asarray(w, dtype=np.float32).reshape(-1), sr, pad_ms=RECIPE['lead_pad_ms'])
+    k = min(len(w) // 2, int(sr * 0.01))
+    if k > 0:
+        ramp = np.linspace(0, 1, k, dtype=np.float32); w[:k] *= ramp; w[-k:] *= ramp[::-1]
+    w = onset_boost(w, sr)
+    w = praat_shape(w, sr, text, hard)
+    w = tail_trim(w, sr)          # 말 끝난 뒤 죽은 공백 잘라내기(제보: 「한 어절이 묵음」)
+    return w / (np.abs(w).max() or 1.0) * 0.89
+
 def selftest():
     ok = 0; bad = 0
     def t(name, cond):

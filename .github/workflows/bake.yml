@@ -24,6 +24,9 @@ on:
       per:
         description: '한 러너가 맡을 조각 수(뭉탱이별 러너 수를 이걸로 정한다 · 잡 총수는 240 이하로 자동 조정)'
         default: '300'
+      tag:
+        description: '구울 벌(조합) — 비우면 지금 벌. 옛 벌을 다시 구울 때 k2 를 넣는다(server/recipes.py 의 이름)'
+        default: ''
       force:
         description: 'R2 에 있어도 다시 굽어 덮어쓴다(true/false)'
         default: 'false'
@@ -104,7 +107,7 @@ jobs:
         env:
           SUPERTONIC_DIR: ${{ github.workspace }}/supertonic3
           PYTHONPATH: ${{ github.workspace }}/supertonic3/py
-        run: python3 tools/bake.py --chunks chunks.json --shard ${{ matrix.job.shard }} --shards ${{ matrix.job.shards }} --limit ${{ inputs.limit }} --start ${{ inputs.start }} --kind ${{ matrix.job.k }} --law ${{ matrix.job.w }} ${{ inputs.force == 'true' && '--force' || '' }}
+        run: python3 tools/bake.py --chunks chunks.json --shard ${{ matrix.job.shard }} --shards ${{ matrix.job.shards }} --limit ${{ inputs.limit }} --start ${{ inputs.start }} --kind ${{ matrix.job.k }} --law ${{ matrix.job.w }} ${{ inputs.tag && format('--tag {0}', inputs.tag) || '' }} ${{ inputs.force == 'true' && '--force' || '' }}
 
   # 옛 조각 폐기 — 모든 샤드가 끝난 뒤, 지금 조각 목록(plan 의 chunks.json)에 없는 R2 조각을 지운다(2026-09-05 yebijun 사용자 「이전 꺼 다 폐기해」).
   # 🔴 kind 가 all 이 아니어도 목록은 all 이다(chunks.mjs 가 전 갈래를 만든다) — 다른 갈래 조각이 지워지지 않는다.
