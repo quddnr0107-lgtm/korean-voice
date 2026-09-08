@@ -52,8 +52,15 @@ def load():
     _tts = helper.load_text_to_speech(os.path.join(ST_DIR, 'onnx'), False)
     for name, v in VOICES.items():
         ttl = dp = None
+        # 🔴 「F2」처럼 가중치가 없는 이름도 받는다 — 없으면 1.0. 이게 없어서 순수 목소리로 바꾸자마자
+        #    load() 가 ValueError 로 죽었다(2026-09-08 · 굽기 전 실제 경로 점검에서 잡음).
+        parts = []
         for item in v['style'].split(','):
-            n, w = item.split(':'); w = float(w)
+            n, _, ws = item.partition(':')
+            parts.append((n.strip(), float(ws) if ws.strip() else 1.0))
+        total = sum(w for _, w in parts) or 1.0
+        for n, w in parts:
+            w = w / total                                  # 가중치 합을 1 로 정규화(load_blend 와 같다)
             st = helper.load_voice_style([os.path.join(ST_DIR, 'voice_styles', n + '.json')])
             ttl = st.ttl * w if ttl is None else ttl + st.ttl * w
             dp = st.dp * w if dp is None else dp + st.dp * w
@@ -94,7 +101,7 @@ def shape(w, sr, text, hard):
     w = VS.onset_boost(w, sr)
     # 🔴 praat_shape(U4 다듬기)는 삑사리의 원인이었다 — 단계별 제거 실험(A~E)에서 이것만 빼면 깨끗했다.
     #    그 자리에 한국인 실측 억양 궤적을 넣는다(Zeroth-Korean 어절 10,305개). RECIPE_TAG k1.
-    w = VS.ko_contour_shape(w, sr, hard)
+    w = VS.ko_contour_shape(w, sr, hard, text)
     return w / (np.abs(w).max() or 1.0) * 0.89
 
 

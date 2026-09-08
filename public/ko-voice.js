@@ -273,13 +273,23 @@
     if (!CONTOUR) return null;
     const P = CONTOUR.position || {};
     if (isLast && P['C문말']) {
-      const e = (CONTOUR.ending || {})['C문말|' + ending];
+      // 🔴 표의 어미 이름은 코퍼스 분석기 것이라 엔진 이름과 다르다('다' vs '다/습니다').
+      //    이 별칭이 없어서 가장 흔한 -다 어미가 표를 못 찾고 문말 평균으로 떨어지고 있었다.
+      const E = CONTOUR.ending || {};
+      const alias = { '다': '다/습니다', '까': '까/의문', '고': '고/연결', '요': '요', '기타': '기타' };
+      const e = E['C문말|' + ending] || E['C문말|' + (alias[ending] || ending)];
       return (e || P['C문말']).slice();
     }
     const head = P['A문두'], mid = P['B문중'];
     if (!head || !mid) return null;
-    if (rel <= 0) return head.slice();
-    return _lerp5(head, mid, Math.min(1, rel * 1.6));   // 문두에서 문중으로 빠르게 수렴한다(실측 모양)
+    // 🔴 표의 하강은 「그 구간 어절들의 평균 모양」이다. 조각마다 통째로 다시 적용하면
+    //    조각 안에서 또 떨어지고 조각끼리도 떨어져 두 번 센다 — 실제로 한 조각이 1.9반음 급락했다.
+    //    조각 안은 눌러 평평하게 하고, 문장 하강은 조각의 '높이'가 나르게 한다.
+    const raw = rel <= 0 ? head.slice() : _lerp5(head, mid, Math.min(1, rel * 1.6));
+    const d = CONTOUR.innerDamp == null ? 1 : CONTOUR.innerDamp;
+    if (d >= 1) return raw;
+    const m = raw.reduce((a, b) => a + b, 0) / raw.length;
+    return raw.map((v) => m + (v - m) * d);
   }
   const ENDING_RE = [['다', /(습니다|ㅂ니다|다)[.!?]*$/],
                      ['까', /(까요|까|나요|을까|ㄹ까|죠|지요|가요|는가|런가)[?.!]*$/], ['요', /요[.!?]*$/],
@@ -323,7 +333,21 @@
     for (const ch of w) { const c = ch.codePointAt(0); if (c >= 0xAC00 && c <= 0xD7A3) n++; }
     return n;
   }
-  /** 조각 안 어절들의 반음 편차를 음절 비례 위치에 놓고 n점 균일 격자로 샘플한다. */
+  /** 계단을 미끄럼틀로 — 어절 경계에서 F0 가 순간 이동하면 「갑자기 뚝」 하고 들린다(사용자 판정).
+   *  실제 성대는 연속이라 경계를 넘을 때 미끄러진다. 창 폭은 어절 하나의 2/3쯤. */
+  function _smoothGrid(a, win) {
+    const w = Math.max(3, win | 1), h = (w - 1) / 2, k = [];
+    let sum = 0;
+    for (let i = 0; i < w; i++) { const v = 0.5 - 0.5 * Math.cos((2 * Math.PI * i) / (w - 1)); k.push(v); sum += v; }
+    return a.map((_, i) => {
+      let acc = 0;
+      for (let j = 0; j < w; j++) acc += k[j] * a[Math.min(a.length - 1, Math.max(0, i + j - h))];
+      return acc / sum;
+    });
+  }
+  /** 조각 안 어절들의 반음 편차를 음절 비례 위치에 놓고 n점 균일 격자로 샘플한다.
+   *  n 을 주지 않으면 **어절 수에 비례해** 깐다 — 16점 고정은 14어절 조각에서 어절당 1.1점이라
+   *  편차가 엉뚱한 곳에 찍혔다(앨리어싱). */
   function wordGrid(text, n) {
     if (!WORD) return null;
     const ws = String(text).replace(/[.,!?…·"'()\[\]]/g, ' ').trim().split(/\s+/).filter(Boolean);
@@ -334,18 +358,29 @@
     const O = WORD.onset || {}, T = WORD.tail || {}, S = WORD.syl || {};
     const off = ws.map((w, i) => {
       const o = onsetOf(w);
-      return (o && O[o] || 0) + (T[tailOf(w)] || 0) + (S[String(Math.min(5, syl[i]))] || 0);
+      // 1음절 어절은 초성 효과가 약하다(평음 -0.08 vs 다음절 -0.38) — 「쓸·수·둘」이 튀던 원인.
+      const b = syl[i] === 1 ? '1|' : 'N|';
+      const oo = o ? (O[b + o] != null ? O[b + o] : (O[o] || 0)) : 0;
+      return oo + (T[tailOf(w)] || 0) + (S[String(Math.min(5, syl[i]))] || 0);
     });
+    // 🔴 인접 어절끼리 1반음 넘게 뛰면 「갑자기 뚝」 하고 들린다(사용자 판정: 「때에도 → 정해진」).
+    //    통계는 각 어절의 평균이라 이웃 관계를 모른다. 사람 성대가 못 하는 도약을 상한으로 막는다.
+    const step = WORD.maxStep == null ? 0.7 : WORD.maxStep;
+    for (let i = 1; i < off.length; i++) {
+      const d = off[i] - off[i - 1];
+      if (Math.abs(d) > step) off[i] = off[i - 1] + Math.sign(d) * step;
+    }
     const edge = [0];
     for (const k of syl) edge.push(edge[edge.length - 1] + k / tot);
+    const N = n || Math.min(240, Math.max(24, 8 * ws.length));
     const out = [];
-    for (let g = 0; g < n; g++) {
-      const u = n > 1 ? g / (n - 1) : 0;
+    for (let g = 0; g < N; g++) {
+      const u = N > 1 ? g / (N - 1) : 0;
       let k = 0;
       while (k < ws.length - 1 && u >= edge[k + 1]) k++;
       out.push(off[k]);
     }
-    return out;
+    return _smoothGrid(out, Math.round((N / ws.length) * 0.8) | 1);
   }
   const _sample5 = (p5, u) => {            // 5점 궤적을 임의 위치에서 읽는다
     const x = Math.min(1, Math.max(0, u)) * (p5.length - 1);
@@ -491,7 +526,7 @@
         if (pts) {
           // 실측 궤적(반음)을 배수로 바꿔 이 조각의 음높이 곡선으로 싣는다. 평균은 c.pitch 에 반영해 옛 소비자도 동작한다.
           // 어절 표가 있으면 격자를 촘촘히 깔고 어절 편차를 더한다(문체 추세 + 어절 고유값).
-          const wg = WORD ? wordGrid(c.text, 16) : null;
+          const wg = WORD ? wordGrid(c.text) : null;   // 격자는 어절 수가 정한다
           if (wg) {
             const k = WORD.strength == null ? 1 : WORD.strength;
             c.pitchPoints = wg.map((off, g) => +(basePitch * Math.pow(2,

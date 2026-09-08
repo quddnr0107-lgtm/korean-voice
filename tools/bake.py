@@ -14,7 +14,7 @@ import numpy as np, soundfile as sf
 
 ap = argparse.ArgumentParser()
 ap.add_argument('--chunks', required=True); ap.add_argument('--shard', type=int, default=0); ap.add_argument('--shards', type=int, default=1)
-ap.add_argument('--base', default='https://korean-voice.quddnr0107.workers.dev'); ap.add_argument('--voice', default='female'); ap.add_argument('--steps', type=int, default=16)
+ap.add_argument('--base', default='https://korean-voice.quddnr0107.workers.dev'); ap.add_argument('--voice', default='female'); ap.add_argument('--steps', type=int, default=16); ap.add_argument('--best', type=int, default=4)
 ap.add_argument('--batch', type=int, default=8); ap.add_argument('--limit', type=int, default=0); ap.add_argument('--no-upload', action='store_true')
 ap.add_argument('--start', type=int, default=0, help='목록의 이 번호부터(시험용 · 앞쪽은 컨테이너 대기열이 이미 구웠을 수 있다)')
 ap.add_argument('--kind', default='all', choices=['all', 'exam', 'easy', 'study'], help='갈래 — exam 출제핵심강의 · easy 개념강의 · study 따라읽기(원문회독·눈회독·타이핑 줄) · all (조각의 k 필드)')
@@ -103,10 +103,28 @@ for (speed, hard), lst in groups.items():
         part = lst[i:i + a.batch]
         texts = [server.clean_text(it['t']) for it in part]
         st = helper.Style(np.repeat(style.ttl, len(texts), axis=0), np.repeat(style.dp, len(texts), axis=0))
-        with server._lock:
-            wavs, durs = server._tts._infer(texts, ['ko'] * len(texts), st, a.steps, speed)
-        wavs = np.asarray(wavs, dtype=np.float32); durs = np.asarray(durs, dtype=np.float64).reshape(-1)
-        assert len(durs) == len(texts), f'dur {len(durs)} ≠ texts {len(texts)}'
+        # 🔴 합성은 뽑기다 — 같은 입력을 여섯 번 돌리면 HNR 이 10.7~15.1dB 로 갈린다(실측).
+        #    스텝을 올려도 평균은 안 오른다. 그래서 --best 번 뽑아 조각마다 가장 깨끗한 것을 고른다.
+        best_w = best_d = None; best_h = None
+        for _take in range(max(1, a.best)):
+            with server._lock:
+                ws_, ds_ = server._tts._infer(texts, ['ko'] * len(texts), st, a.steps, speed)
+            ws_ = np.asarray(ws_, dtype=np.float32); ds_ = np.asarray(ds_, dtype=np.float64).reshape(-1)
+            assert len(ds_) == len(texts), f'dur {len(ds_)} ≠ texts {len(texts)}'
+            if best_w is None:
+                best_w, best_d = ws_, ds_
+                best_h = [VS.hnr(ws_[j].reshape(-1)[:int(ds_[j] * sr)], sr) for j in range(len(texts))]
+                continue
+            for j in range(len(texts)):
+                h = VS.hnr(ws_[j].reshape(-1)[:int(ds_[j] * sr)], sr)
+                if h > best_h[j]:
+                    best_h[j] = h
+                    n_ = min(best_w.shape[-1], ws_.shape[-1])
+                    best_w[j, ..., :n_] = ws_[j, ..., :n_]
+                    if n_ < best_w.shape[-1]:
+                        best_w[j, ..., n_:] = 0.0
+                    best_d[j] = ds_[j]
+        wavs, durs = best_w, best_d
         for it, t, w, d in zip(part, texts, wavs, durs):
             try:
                 # 🔴 배치 합성은 가장 긴 항목 길이로 패딩되고, 그 패딩 자리에서 모델이 낮은 순음(「우웅」 · ~120Hz · 수백 ms)을 낸다(L280).
