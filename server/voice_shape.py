@@ -20,14 +20,20 @@
 import re, sys
 import numpy as np
 
-RECIPE_TAG = 'k1'   # 🔴 조합이 바뀌면 올려라 — lib/tts-key.mjs 의 RECIPE_TAG 와 글자까지 같아야 한다(test/tts-key.test.mjs 가 잰다)
+RECIPE_TAG = 'k2'   # 🔴 조합이 바뀌면 올려라 — lib/tts-key.mjs 의 RECIPE_TAG 와 글자까지 같아야 한다(test/tts-key.test.mjs 가 잰다)
 #   u4 → u4a (2026-09-03): 워커가 컨테이너보다 먼저 새 판이 되어 옛 소리가 u4 키로 R2 에 들어갈 수 있던 창을 버린다
 #   u4a → k1 (2026-09-07): 두 가지가 바뀌었다.
 #     ① praat_shape(U4 다듬기)를 끈다 — 삑사리의 원인이었다(단계별 제거 실험 A~E, 사용자 판정).
 #     ② 그 자리에 한국인 실측 억양 궤적을 넣는다(Zeroth-Korean 어절 10,305개).
 #     목소리도 F4:0.6,F2:0.4 → F2:0.5,F3:0.5 로 바꿨다 — F4 가 중성음의 원인이었다(사용자 판정 W4).
+#   k1 → k2 (2026-09-08): 사용자 청취로 넷이 바뀌었다.
+#     ① 목소리 F2:0.5,F3:0.5 → F2 순수 (외삽 F2:1.4,F3:-0.4 는 만들어 보고 뺐다 — 기계음)
+#     ② 궤적을 낭독 → **유튜브 화자**로 (문말 -4.31 → -0.76반음 · YODAS CC-BY 실측)
+#     ③ 어절 층 추가 — 초성·어미가 어절 높이를 가른다(어절 5.2만개 · 홀드아웃 +17.7%)
+#     ④ 조각 안 하강 감쇠 0.7 · 어절 간 도약 상한 0.7반음 (없을 때 한 조각이 1.9반음 급락 —
+#        사용자 판정 「갑자기 호러처럼」)
 RECIPE = {
-    'style': 'F2:0.5,F3:0.5',
+    'style': 'F2',
     'contrast': (1.06, 0.92), 'beat_ms': 250,
     'onset_boost': 2.0, 'lead_pad_ms': 50,
     'world': (1.8, 1.0), 'up_only': True, 'hat': (0.3, -0.5),
@@ -37,26 +43,138 @@ FRAME_S = 0.005   # Praat/WORLD 프레임
 
 # ── 한국인 실측 억양 궤적 (Zeroth-Korean CC BY 4.0 · 어절 10,305개 · 화자 중앙값 대비 반음) ────────
 # 문장이 계단으로 내려가고 어절 안에서 또 내려간다. 총 하강 6.42반음(31%) — 옛 직선 하강(9.9%)의 3배였다.
+# 2026-09-08: 낭독 코퍼스(Zeroth) → **유튜브 화자**(YODAS CC BY 3.0) 표로 교체. 사용자 선택.
+# 문체마다 억양 체계가 다르다 — 문말 하강 낭독 -4.31 · 대화 -1.53 · 유튜브 -0.76반음(실측).
+# 강의 음성은 읽는 소리가 아니라 말하는 소리다.
 KO_CONTOUR = {
-    'head': [2.42, 2.12, 1.47, 0.93, 0.46],    # 문두
-    'mid':  [0.69, 0.32, 0.00, -0.27, -0.48],  # 문중
-    'tail': [-1.63, -2.16, -2.57, -3.11, -4.00],  # 문말
+    'head': [0.766, 0.83, 0.68, 0.276, -0.139],    # 문두
+    'mid':  [0.492, 0.223, -0.112, -0.467, -0.964],    # 문중
+    'tail': [0.002, -0.19, -0.622, -0.759, -0.757],    # 문말
 }
-CONTOUR_STRENGTH = 1.0    # 실측 궤적을 얼마나 따를지 (사용자 판정: 1.0 이 가장 좋았다)
-CONTOUR_MAX_SEMI = 6.5    # 보정 상한(반음). 낮으면 궤적이 상한에 눌려 평평해진다
+# 🔴 표의 하강은 「그 구간 어절들의 평균 모양」이다. 조각마다 통째로 다시 적용하면 조각 안에서 또
+#    떨어지고 조각끼리도 떨어져 두 번 센다(한 조각이 1.9반음 급락했다). 조각 안은 눌러 평평하게 한다.
+INNER_DAMP = 0.7
+CONTOUR_STRENGTH = 0.7    # 실측 궤적을 얼마나 따를지 (사용자 청취로 0.7 채택)
+CONTOUR_MAX_SEMI = 5.0    # 보정 상한(반음). 낮으면 궤적이 상한에 눌려 평평해진다
+
+# ── 어절 층 ── 어절 5.2만개 실측(Zeroth). 어절의 '높이'는 첫 자음과 끝 형태가 가른다.
+#   문장 추세(위치)를 뺀 잔차만 담았다 — 추세와의 상관 -0.0000 이라 위 표와 겹치지 않는다.
+#   홀드아웃: 추세만 +10.7%% → 추세+어절 +17.7%% (평평하게 읽기 대비 RMSE).
+#   1음절 어절은 초성 효과가 약하다(평음 -0.08 vs 다음절 -0.38) — 따로 잰 표를 쓴다.
+WORD_ONSET = {"N|L_비음유음": -0.65, "N|L_평음": -0.378, "1|L_비음유음": 0.046, "N|H_격음": 1.19, "N|H_ㅅ": 1.11, "1|H_격음": 1.349, "1|L_평음": -0.083, "1|H_경음": 0.408, "N|H_경음": 0.67, "1|H_ㅅ": 0.893}
+WORD_TAIL = {"조사_목적": 0.319, "조사_주격": -0.129, "조사_부사": 0.146, "무표지": 0.114, "어미_다": -0.867, "연결_고": -0.251, "어미_요": -0.84}
+WORD_STRENGTH = 1.0
+WORD_MAX_STEP = 0.7       # 인접 어절 사이 최대 도약(반음). 사람 성대가 못 하는 점프를 막는다
+WORD_PPW = 8              # 어절당 격자 점 수 — 고정 점수는 긴 조각에서 어절을 뭉갠다(앨리어싱)
+
+_CHO = 'ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ'
+_ASP, _TEN, _SON = 'ㅊㅋㅌㅍㅎ', 'ㄲㄸㅃㅆㅉ', 'ㄴㅁㄹㅇ'
+_TAIL_RE = [('어미_다', r'(습니다|ㅂ니다|다)$'), ('어미_요', r'요$'), ('어미_까', r'(까|나요|죠|가요)$'),
+            ('연결_고', r'(고|며|면서|는데|지만|어서|아서)$'),
+            ('조사_주격', r'(은|는|이|가)$'), ('조사_목적', r'(을|를)$'),
+            ('조사_부사', r'(에|에서|으로|로|와|과|도|만|까지|부터)$')]
 
 
-def contour_target(hard):
-    """이 조각이 그려야 할 5점 궤적(배수). 문장 끝 조각은 문두→문말 전체, 중간 조각은 문두→문중까지."""
+def onset_class(w):
+    """어절 첫 음절의 초성 유형 — K-ToBI 가 톤 시작을 가른다고 말하는 그 자질."""
+    for ch in w:
+        c = ord(ch)
+        if 0xAC00 <= c <= 0xD7A3:
+            j = _CHO[(c - 0xAC00) // 588]
+            if j in _ASP:
+                return 'H_격음'
+            if j in _TEN:
+                return 'H_경음'
+            if j == 'ㅅ':
+                return 'H_ㅅ'
+            if j in _SON:
+                return 'L_비음유음'
+            return 'L_평음'
+    return None
+
+
+def tail_class(w):
+    for n, pat in _TAIL_RE:
+        if re.search(pat, w):
+            return n
+    return '무표지'
+
+
+def _syl(w):
+    return sum(1 for ch in w if 0xAC00 <= ord(ch) <= 0xD7A3)
+
+
+def word_offsets(text, n=None):
+    """조각 안 어절들의 반음 편차를 음절 비례 위치에 놓고 n점 균일 격자로 낸다.
+
+    ko-voice.js 의 wordGrid 와 같은 계산이다 — 화면(브라우저)과 구운 소리가 갈리면 안 된다.
+    계단으로 두면 어절 경계에서 F0 가 순간 이동해 「갑자기 뚝」 하고 들린다. 평활해서 미끄러뜨린다.
+    """
+    ws = [w for w in re.sub(r'[.,!?…·"\'()\[\]]', ' ', str(text)).split() if w]
+    if not ws:
+        return None
+    syl = [max(1, _syl(w)) for w in ws]
+    tot = sum(syl)
+    off = []
+    for w, sn in zip(ws, syl):
+        o = onset_class(w)
+        b = '1|' if sn == 1 else 'N|'
+        oo = WORD_ONSET.get(b + o, WORD_ONSET.get(o, 0.0)) if o else 0.0
+        off.append(oo + WORD_TAIL.get(tail_class(w), 0.0))
+    for i in range(1, len(off)):                      # 어절 간 도약 상한
+        d = off[i] - off[i - 1]
+        if abs(d) > WORD_MAX_STEP:
+            off[i] = off[i - 1] + (WORD_MAX_STEP if d > 0 else -WORD_MAX_STEP)
+    N = n or min(240, max(24, WORD_PPW * len(ws)))
+    edge = np.cumsum([0] + syl) / tot
+    grid = np.empty(N)
+    for g in range(N):
+        u = g / (N - 1) if N > 1 else 0.0
+        k = int(np.searchsorted(edge, u, side='right') - 1)
+        grid[g] = off[min(max(k, 0), len(off) - 1)]
+    win = max(3, int(round(N / len(ws) * 0.8)) | 1)   # 어절 0.8 폭 Hann
+    ker = np.hanning(win + 2)[1:-1]
+    ker = ker / ker.sum()
+    pad = win // 2
+    return np.convolve(np.pad(grid, pad, mode='edge'), ker, mode='valid')[:N]
+
+
+def contour_target(hard, text=None):
+    """이 조각이 그려야 할 궤적(배수). 문장 끝 조각은 문두→문말 전체, 중간 조각은 문두→문중까지.
+
+    text 를 주면 어절 층을 얹어 촘촘한 격자로 낸다(어절 수 × 8점). 안 주면 옛 5점 그대로다.
+    """
     C = KO_CONTOUR
     seq = C['head'] + C['mid'] + (C['tail'] if hard else [])
     a = np.asarray(seq, dtype=float)
     xs = np.linspace(0, 1, len(a))
-    st = np.array([np.interp(u, xs, a) for u in np.linspace(0, 1, 5)])
+    wg = word_offsets(text) if text else None
+    n = len(wg) if wg is not None else 5
+    st = np.array([np.interp(u, xs, a) for u in np.linspace(0, 1, n)])
+    st = st.mean() + (st - st.mean()) * INNER_DAMP        # 조각 안 하강을 눌러 이중 계산을 없앤다
+    if wg is not None:
+        st = st + wg * WORD_STRENGTH
     return np.power(2.0, st / 12.0)
 
 
-def ko_contour_shape(w, sr, hard, strength=None, max_semi=None):
+def hnr(y, sr):
+    """조화 대 잡음비(dB) — 높을수록 깨끗하다. 거친 뽑기를 걸러내는 자.
+
+    🔴 합성은 뽑기다: 같은 문장·같은 설정으로 여섯 번 돌리면 10.7~15.1dB 로 갈린다(실측 2026-09-08).
+       스텝을 28→56 으로 올려도 평균은 그대로였다(12.58 → 12.69). 여러 번 뽑아 고르는 편이 낫다.
+    """
+    try:
+        import parselmouth
+        from parselmouth.praat import call
+        snd = parselmouth.Sound(np.asarray(y, dtype=np.float64), sampling_frequency=sr)
+        v = np.asarray(call(snd, 'To Harmonicity (cc)', 0.01, 70, 0.1, 1.0).values).reshape(-1)
+        v = v[v > -100]
+        return float(np.mean(v)) if len(v) else -1e9
+    except Exception:
+        return 0.0
+
+
+def ko_contour_shape(w, sr, hard, text=None, strength=None, max_semi=None):
     """실측 억양으로 F0 를 **부분 보정**한다. 곱하면 안 된다 — 합성음이 이미 자기 하강을 갖고 있어
     겹치면 삑사리가 난다. (목표 모양 ÷ 이 조각의 실제 추세) 만큼만, 상한 안에서 옮긴다."""
     strength = CONTOUR_STRENGTH if strength is None else strength
@@ -79,19 +197,23 @@ def ko_contour_shape(w, sr, hard, strength=None, max_semi=None):
             return np.asarray(w, dtype=np.float32)
         u = np.clip((ts - snd.xmin) / max(1e-6, snd.duration), 0, 1)
         lv = np.log(np.where(ok, fs, np.nan))
+        # 🔴 자기 추세(own)는 5칸으로 성기게 잡는다. 목표와 같은 해상도로 잡으면 (목표-자기)가 F0 를
+        #    통째로 덮어써 미세 요동이 사라진다 — 그게 기계음이다. 큰 흐름만 빼고 어절 구조는 얹는다.
         edges = np.linspace(0, 1, 6)
-        own = np.array([np.nanmean(lv[(u >= a) & (u < b)]) if ((u >= a) & (u < b) & ok).any() else np.nan
-                        for a, b in zip(edges[:-1], edges[1:])])
-        if np.isnan(own).all():
+        own5 = np.array([np.nanmean(lv[(u >= a) & (u < b)]) if ((u >= a) & (u < b) & ok).any() else np.nan
+                         for a, b in zip(edges[:-1], edges[1:])])
+        if np.isnan(own5).all():
             return np.asarray(w, dtype=np.float32)
-        if np.isnan(own).any():
-            good = ~np.isnan(own)
-            own = np.interp(np.arange(5), np.flatnonzero(good), own[good])
+        if np.isnan(own5).any():
+            good = ~np.isnan(own5)
+            own5 = np.interp(np.arange(5), np.flatnonzero(good), own5[good])
+        tgt = np.log(contour_target(hard, text)); tgt -= tgt.mean()
+        m = len(tgt)
+        own = np.interp(np.linspace(0, 1, m), np.linspace(0, 1, 5), own5)
         own -= own.mean()
-        tgt = np.log(contour_target(hard)); tgt -= tgt.mean()
         cap = np.log(2 ** (max_semi / 12.0))
         corr = np.clip((tgt - own) * strength, -cap, cap)
-        factor = np.exp(np.interp(u, np.linspace(0, 1, 5), corr))
+        factor = np.exp(np.interp(u, np.linspace(0, 1, m), corr))
         new = call('Create PitchTier', 'p', 0, snd.duration)
         for t, f, g, good in zip(ts, fs, factor, ok):
             if good:

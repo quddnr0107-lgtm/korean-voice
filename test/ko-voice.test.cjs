@@ -143,15 +143,67 @@ test('억양 궤적 — 실측 5점 곡선이 조각마다 실리고, 프로필�
   K.applyProfile(prof);
   const s = K.prepare(t, { emotion: 'neutral' }).sentences[0];
   const cs = s.chunks.filter((c) => c.text);
-  assert.ok(cs.every((c) => Array.isArray(c.pitchPoints) && c.pitchPoints.length === 5), '조각마다 5점 궤적');
-  for (const c of cs) assert.ok(c.pitchPoints[0] > c.pitchPoints[4], '어절 안에서 내려간다: ' + c.pitchPoints.join(','));
+  // 어절 표가 실리면 격자가 촘촘해진다(5점 → 16점). 점 수가 아니라 '내려가는가'를 본다.
+  assert.ok(cs.every((c) => Array.isArray(c.pitchPoints) && c.pitchPoints.length >= 5), '조각마다 궤적');
+  // 조각 안이 반드시 내려가야 하는 건 낭독체 얘기다. 유튜브·대화체는 거의 평평하고,
+  // 조각 안 하강을 통째로 반복하면 한 조각이 1.9반음 급락한다(사용자 판정 「갑자기 호러처럼」).
+  // 그래서 여기서는 조각 안이 아니라 **문장 전체가** 내려가는지만 본다.
   const first = cs[0].pitchPoints, last = cs[cs.length - 1].pitchPoints;
-  assert.ok(first[0] > last[4], '문장 전체로도 내려간다');
-  const fallSemi = 12 * Math.log2(first[0] / last[4]);
-  assert.ok(fallSemi > 3, '실측 하강은 직선 declination 보다 크다 (실측 6.47반음): ' + fallSemi.toFixed(2));
+  assert.ok(first[0] > last[last.length - 1], '문장 전체로도 내려간다');
+  // 하강 폭은 **문체가 정한다** — 낭독 -4.31 · 대화 -1.53 · 유튜브 -0.76반음(실측).
+  // 프로필이 유튜브 문체를 쓰면 1~2반음이 정상이고, 3반음을 요구하면 낭독을 강요하는 테스트가 된다.
+  const fallSemi = 12 * Math.log2(first[0] / last[last.length - 1]);
+  assert.ok(fallSemi > 0.5, '문장 전체로는 내려간다: ' + fallSemi.toFixed(2));
 
   assert.strictEqual(K.endingOf('보겠습니다.'), '다');
   assert.strictEqual(K.endingOf('가능할까요?'), '까');
   assert.strictEqual(K.endingOf('돼요.'), '요');
+  K.applyProfile(null);
+});
+
+test('어절 층 — 첫 자음과 어미가 어절 높이를 가른다(실측 5.2만 어절)', () => {
+  const fs = require('fs'); const path = require('path');
+  const prof = JSON.parse(fs.readFileSync(path.join(__dirname, '../public/profiles/korean-corpus.json'), 'utf8'));
+
+  assert.strictEqual(K.onsetOf('카투사'), 'H_격음');
+  assert.strictEqual(K.onsetOf('나라'), 'L_비음유음');
+  assert.strictEqual(K.onsetOf('사람'), 'H_ㅅ');
+  assert.strictEqual(K.onsetOf('부대'), 'L_평음');
+  assert.strictEqual(K.tailOf('합니다'), '어미_다');   // 서버 분석과 같은 순서로 판정해야 표가 맞는다
+  assert.strictEqual(K.tailOf('지원은'), '조사_주격');
+  assert.strictEqual(K.tailOf('나라를'), '조사_목적');
+
+  K.applyProfile(prof);
+  assert.ok(K.getWord(), '프로필의 어절 표가 실린다');
+  // 같은 위치·같은 음절수인데 첫 자음만 다르면 높이가 달라야 한다
+  const g = K.wordGrid('카투사 나라를');
+  assert.ok(g[0] > g[g.length - 1], '격음으로 시작한 어절이 비음·유음 어절보다 높다: ' + g[0] + ' vs ' + g[g.length - 1]);
+  // 경계에서 순간 도약하면 「갑자기 뚝」 하고 들린다 — 평활 뒤에는 인접 점 도약이 작아야 한다
+  let jump = 0;
+  for (let i = 1; i < g.length; i++) jump = Math.max(jump, Math.abs(g[i] - g[i - 1]));
+  assert.ok(jump < 0.5, '어절 경계가 미끄럽다(계단 아님): 최대 도약 ' + jump.toFixed(3));
+
+  const withWord = K.prepare('카투사 지원은 신중하게 결정해야 합니다.', {}).sentences[0].chunks[0].pitchPoints;
+  const p2 = JSON.parse(JSON.stringify(prof)); delete p2.engine.word;
+  K.applyProfile(p2);
+  const noWord = K.prepare('카투사 지원은 신중하게 결정해야 합니다.', {}).sentences[0].chunks[0].pitchPoints;
+  assert.strictEqual(noWord.length, 5, '어절 표를 빼면 옛 5점으로 돌아간다(호환)');
+  assert.ok(withWord.length >= 16 && withWord.length % 8 === 0,
+    '격자는 어절 수에 비례한다(16점 고정은 긴 조각에서 앨리어싱): ' + withWord.length);
+  K.applyProfile(null);
+  assert.strictEqual(K.getWord(), null, '프로필을 벗기면 어절 표도 사라진다');
+});
+
+test('어절 간 도약 상한 — 사람 성대가 못 하는 점프를 막는다', () => {
+  const fs = require('fs'); const path = require('path');
+  const prof = JSON.parse(fs.readFileSync(path.join(__dirname, '../public/profiles/korean-corpus.json'), 'utf8'));
+  K.applyProfile(prof);
+  // 「때에도」(경음+부사 +0.82) 다음에 「정해진」(평음+무표지 -0.26) 이 오면 1.08반음이 쉼을 건너 떨어졌다.
+  const g = K.wordGrid('때에도 정해진 날수만큼');
+  let jump = 0;
+  for (let i = 1; i < g.length; i++) jump = Math.max(jump, Math.abs(g[i] - g[i - 1]));
+  const span = Math.max(...g) - Math.min(...g);
+  assert.ok(span <= (prof.engine.word.maxStep || 0.7) * 3 + 0.01, '어절 간 총 변화가 상한 안에 든다: ' + span.toFixed(3));
+  assert.ok(jump < 0.4, '격자 위에서도 미끄럽다: ' + jump.toFixed(3));
   K.applyProfile(null);
 });
