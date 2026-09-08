@@ -14,10 +14,11 @@ import numpy as np, soundfile as sf
 
 ap = argparse.ArgumentParser()
 ap.add_argument('--chunks', required=True); ap.add_argument('--shard', type=int, default=0); ap.add_argument('--shards', type=int, default=1)
-ap.add_argument('--base', default='https://korean-voice.quddnr0107.workers.dev'); ap.add_argument('--voice', default='female'); ap.add_argument('--steps', type=int, default=8); ap.add_argument('--best', type=int, default=3); ap.add_argument('--hnr-floor', type=float, default=12.5)
+ap.add_argument('--base', default='https://korean-voice.quddnr0107.workers.dev'); ap.add_argument('--voice', default='female'); ap.add_argument('--steps', type=int, default=0, help='0 = 그 벌의 스텝(server/recipes.py)'); ap.add_argument('--best', type=int, default=3); ap.add_argument('--hnr-floor', type=float, default=12.5)
 ap.add_argument('--batch', type=int, default=16); ap.add_argument('--limit', type=int, default=0); ap.add_argument('--no-upload', action='store_true')
 ap.add_argument('--start', type=int, default=0, help='목록의 이 번호부터(시험용 · 앞쪽은 컨테이너 대기열이 이미 구웠을 수 있다)')
 ap.add_argument('--kind', default='all', choices=['all', 'exam', 'easy', 'study'], help='갈래 — exam 출제핵심강의 · easy 개념강의 · study 따라읽기(원문회독·눈회독·타이핑 줄) · all (조각의 k 필드)')
+ap.add_argument('--tag', default='', help='구울 조합(벌) — 비우면 기본 벌. 벌마다 스텝이 다르므로 --steps 를 안 주면 그 벌의 스텝을 쓴다')
 ap.add_argument('--law', default='all', help="과목(조각의 w 필드) — 통합방위법·예비군법·훈령·병역법·기타·all. 뭉탱이(갈래×과목) 단위로 굽고 갈아타기 위한 것")
 ap.add_argument('--force', action='store_true', help='R2 에 이미 있어도 다시 굽어 덮어쓴다(배치 패딩 우웅 재굽기 · L280)')
 a = ap.parse_args()
@@ -28,7 +29,11 @@ os.environ.setdefault('CACHE_DIR', os.path.join(HERE, '..', 'cache'))
 sys.path.insert(0, os.path.join(HERE, '..', 'server'))
 import server  # noqa: E402  (server/server.py · voice_shape.py 는 같은 디렉터리)
 import helper  # noqa: E402
-VS = server.VS
+TAG = server.RC.get(a.tag or None).RECIPE_TAG      # 구울 벌(조합) — 기본은 지금 벌
+VS = server.RC.get(TAG)                            # 그 벌의 다듬기·억양 자
+if not a.steps:
+    a.steps = server.RC.steps_for(TAG)             # 🔴 벌마다 스텝이 다르다 — 안 맞추면 그 벌의 키가 안 된다
+_HNR = server.VS.hnr                               # 거칠기 자는 재는 도구일 뿐이라 벌과 무관하다
 
 items = json.load(open(a.chunks, encoding='utf-8'))
 if a.kind != 'all':
@@ -59,7 +64,7 @@ todo = []
 for i in range(0, len(mine), 400):
     part = mine[i:i + 400]
     try:
-        j = http('POST', '/bake/has', json.dumps({'v': a.voice, 's': a.steps, 'items': part}).encode(), {'Content-Type': 'application/json'})
+        j = http('POST', '/bake/has', json.dumps({'v': a.voice, 's': a.steps, 'k': TAG, 'items': part}).encode(), {'Content-Type': 'application/json'})
         has = j.get('has') or [False] * len(part)
     except Exception as e:
         print('has 실패(전부 굽는다):', str(e)[:100]); has = [False] * len(part)
@@ -80,7 +85,7 @@ def upload(it, mp3):
     q = urllib.parse.urlencode({'v': a.voice, 's': a.steps, 'r': server.fmt_r(it['r']), 't': it['t']})
     for k in range(4):
         try:
-            j = http('PUT', '/bake/put?' + q, mp3, {'Authorization': 'Bearer ' + oidc(), 'Content-Type': 'audio/mpeg', 'X-TTS-Recipe': VS.RECIPE_TAG})
+            j = http('PUT', '/bake/put?' + q, mp3, {'Authorization': 'Bearer ' + oidc(), 'Content-Type': 'audio/mpeg', 'X-TTS-Recipe': TAG})
             if j.get('ok'): return True
             print('put 거절:', json.dumps(j, ensure_ascii=False)[:200])
             if j.get('error', '').startswith('oidc_') or j.get('error') == 'recipe_mismatch': return False
@@ -94,7 +99,7 @@ def upload(it, mp3):
 if not todo:
     print('할 것이 없다'); sys.exit(0)
 t0 = time.time(); server.load(); print(f'모델 로드 {time.time() - t0:.1f}s', flush=True)
-sr = server._tts.sample_rate; style = server._styles[a.voice]
+sr = server._tts.sample_rate; style = server._styles[(TAG, a.voice)]
 ff = server.ffmpeg()
 
 # 같은 속도끼리 묶는다: speed = 1.05 * r * 완급(hard)
@@ -132,7 +137,7 @@ for (speed, hard), lst in groups.items():
         takes += len(idx); items_n += len(idx)
         wavs, durs = _take(idx)
         keep = [np.asarray(wavs[j]).reshape(-1)[:int(durs[j] * sr)] for j in idx]
-        hs = [VS.hnr(keep[j], sr) for j in idx]
+        hs = [_HNR(keep[j], sr) for j in idx]
         rough = [j for j in idx if hs[j] < a.hnr_floor]
         for _round in range(max(0, a.best - 1)):
             if not rough:
@@ -142,7 +147,7 @@ for (speed, hard), lst in groups.items():
             nxt = []
             for k, j in enumerate(rough):
                 cand = np.asarray(ws_[k]).reshape(-1)[:int(ds_[k] * sr)]
-                h = VS.hnr(cand, sr)
+                h = _HNR(cand, sr)
                 if h > hs[j]:
                     hs[j] = h; keep[j] = cand
                 if hs[j] < a.hnr_floor:
@@ -153,11 +158,11 @@ for (speed, hard), lst in groups.items():
             try:
                 # 🔴 배치 합성은 가장 긴 항목 길이로 패딩되고, 그 패딩 자리에서 모델이 낮은 순음(「우웅」 · ~120Hz · 수백 ms)을 낸다(L280).
                 #    각 항목은 위에서 **자기 예측 길이(dur · 이미 speed 로 나눈 값)** 로 이미 잘랐다. 그래도 잡히면 단건으로 다시 굽는다(패딩 없음).
-                y = server.shape(w, sr, t, hard)
+                y = VS.shape(w, sr, t, hard)
                 if VS.hum_tail(y, sr) is True:
                     with server._lock:
                         w1, d1 = server._tts._infer([t], ['ko'], style, a.steps, speed)
-                    y = server.shape(np.asarray(w1, dtype=np.float32).reshape(-1)[:int(float(np.asarray(d1).reshape(-1)[0]) * sr)], sr, t, hard); redo += 1
+                    y = VS.shape(np.asarray(w1, dtype=np.float32).reshape(-1)[:int(float(np.asarray(d1).reshape(-1)[0]) * sr)], sr, t, hard); redo += 1
                     if VS.hum_tail(y, sr) is True: print('🔴 우웅 남음(단건 재굽기 뒤에도):', t[:30], flush=True); hum_left += 1
                 tmp = os.path.join(os.environ['CACHE_DIR'], f'b{a.shard}.tmp.wav'); os.makedirs(os.environ['CACHE_DIR'], exist_ok=True)
                 sf.write(tmp, y, sr)

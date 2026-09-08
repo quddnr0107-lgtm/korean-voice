@@ -11,7 +11,7 @@
 import { Container, getContainer } from '@cloudflare/containers';
 import { DurableObject } from 'cloudflare:workers';
 import { handleTts, json } from './lib/melotts.mjs';
-import { cacheKey, parseR, RECIPE_TAG, FALLBACK } from './lib/tts-key.mjs';
+import { cacheKey, parseR, RECIPE_TAG, FALLBACK, TAGS, tagOf } from './lib/tts-key.mjs';
 import { makeBaker } from './lib/bake.mjs';
 import { prune } from './lib/prune.mjs';
 import { verifyGithubOidc } from './lib/oidc.mjs';
@@ -62,11 +62,13 @@ async function handleBakePut(request, env) {
   const s = Math.max(4, Math.min(32, parseInt(url.searchParams.get('s') || DEFAULT_STEPS, 10) || DEFAULT_STEPS));
   const r = parseR(url.searchParams.get('r') || 1);
   if (!VOICES.includes(voice) || !t) return json({ ok: false, error: 'bad_input' }, 400, CORS);
-  if ((request.headers.get('X-TTS-Recipe') || '') !== RECIPE_TAG) return json({ ok: false, error: 'recipe_mismatch', want: RECIPE_TAG }, 409, CORS);
+  /* 벌(조합)은 허용목록 안이어야 한다 — 러너가 어느 벌을 구웠는지 이 머리로 말한다(목소리 두 벌 · 2026-09-08) */
+  const putTag = request.headers.get('X-TTS-Recipe') || '';
+  if (!Object.prototype.hasOwnProperty.call(TAGS, putTag)) return json({ ok: false, error: 'recipe_mismatch', want: Object.keys(TAGS) }, 409, CORS);
   if (!(request.headers.get('Content-Type') || '').startsWith('audio/')) return json({ ok: false, error: 'not_audio' }, 400, CORS);
   const bytes = new Uint8Array(await request.arrayBuffer());
   if (bytes.length < 500 || bytes.length > 5_000_000) return json({ ok: false, error: 'bad_size', size: bytes.length }, 400, CORS);
-  const key = await cacheKey(voice, s, r, t);
+  const key = await cacheKey(voice, s, r, t, putTag);
   await env.TTS_CACHE.put(key, bytes, { httpMetadata: { contentType: 'audio/mpeg', cacheControl: 'public, max-age=31536000, immutable' } });
   return json({ ok: true, key, size: bytes.length }, 200, CORS);
 }
@@ -75,10 +77,11 @@ async function handleBakeHas(request, env) {
   let body = {}; try { body = await request.json(); } catch (_) { body = {}; }
   const items = Array.isArray(body.items) ? body.items.slice(0, 400) : [];
   const v = body.v || 'female', s = Math.max(4, Math.min(32, parseInt(body.s || DEFAULT_STEPS, 10) || DEFAULT_STEPS));
+  const hTag = tagOf(body.k);   // 🔴 벌을 안 받으면 옛 벌 재굽기 때 「전부 없다」로 오판해 이미 있는 걸 다시 굽는다
   const out = [];
   for (let i = 0; i < items.length; i += 50) {
     const part = items.slice(i, i + 50);
-    const res = await Promise.all(part.map(async (it) => { const t = cleanText(it && it.t); if (!t) return false; const key = await cacheKey(v, s, parseR(it.r == null ? 1 : it.r), t); return !!(env.TTS_CACHE && await env.TTS_CACHE.head(key).catch(() => null)); }));
+    const res = await Promise.all(part.map(async (it) => { const t = cleanText(it && it.t); if (!t) return false; const key = await cacheKey(v, s, parseR(it.r == null ? 1 : it.r), t, hTag); return !!(env.TTS_CACHE && await env.TTS_CACHE.head(key).catch(() => null)); }));
     out.push(...res);
   }
   return json({ ok: true, has: out }, 200, CORS);
@@ -163,13 +166,17 @@ async function handleLiveTts(request, env, ctx) {
   const r = parseR(url.searchParams.get('r') || 1);
   if (!VOICES.includes(v)) return json({ ok: false, error: 'bad_voice' }, 400, CORS);
   if (!t) return json({ ok: false, error: 'empty_text' }, 400, CORS);
-  const key = await cacheKey(v, s, r, t);
-  /* 🔴 갈아타는 동안은 두 벌을 본다 — 새 표식(굽는 중) 먼저, 없으면 옛 표식(전량 구워져 있다)으로 즉시 답한다.
+  /* 🔴 학생이 고른 벌(k) — 벌마다 스텝이 다르므로 스텝도 그 벌 것으로 쓴다(주소의 s 가 있으면 그게 이긴다).
+     k 는 밖에서 온 값이라 허용목록(TAGS) 밖이면 기본 벌로 떨어진다. */
+  const tag = tagOf(url.searchParams.get('k'));
+  const steps = url.searchParams.get('s') ? s : TAGS[tag].steps;
+  const key = await cacheKey(v, steps, r, t, tag);
+  /* 갈아타는 동안은 두 벌을 본다 — 고른 벌 먼저, 없으면 옛 벌로 즉시 답한다.
      이렇게 하지 않으면 표식을 올린 순간 5만8천 조각이 한꺼번에 안 잡혀 전부 컨테이너 합성이 된다(= 대기 폭발).
-     옛 키는 그때의 스텝(FALLBACK.steps)으로 찾아야 한다 — steps 가 키에 들어가기 때문이다.
-     굽기가 끝나면 lib/tts-key.mjs 의 FALLBACK 을 지우고 옛 조각을 폐기한다. */
-  const keys = [[key, RECIPE_TAG]];
-  if (FALLBACK && FALLBACK.tag !== RECIPE_TAG) keys.push([await cacheKey(v, FALLBACK.steps, r, t, FALLBACK.tag), FALLBACK.tag]);
+     🔴 학생이 옛 벌을 **직접 고른** 요청에는 폴백을 안 쓴다 — 고른 것과 다른 소리를 주면 안 된다.
+     u5 전량 굽기가 끝나면 lib/tts-key.mjs 의 FALLBACK 을 null 로 만든다. */
+  const keys = [[key, tag]];
+  if (FALLBACK && tag === RECIPE_TAG && FALLBACK.tag !== tag) keys.push([await cacheKey(v, FALLBACK.steps, r, t, FALLBACK.tag), FALLBACK.tag]);
   // 1) R2 캐시
   if (env.TTS_CACHE) {
     for (const [k, tag] of keys) {
@@ -194,7 +201,7 @@ async function handleLiveTts(request, env, ctx) {
   let res;
   try {
     const target = new URL(request.url); target.pathname = '/tts';
-    target.search = '?v=' + encodeURIComponent(v) + '&t=' + encodeURIComponent(t) + '&s=' + s + '&r=' + r;
+    target.search = '?v=' + encodeURIComponent(v) + '&t=' + encodeURIComponent(t) + '&s=' + steps + '&r=' + r + '&k=' + tag;
     res = await c.fetch(new Request(target.toString(), { method: 'GET' }));
   } catch (e) {
     return json({ ok: false, error: 'container_failed', reason: String((e && e.message) || e).slice(0, 300) }, 502, CORS);
@@ -207,7 +214,7 @@ async function handleLiveTts(request, env, ctx) {
   // 🔴 컨테이너의 다듬기 표식이 워커의 것과 같을 때만 R2 에 넣는다. Workers Builds 는 워커와 컨테이너 이미지를 따로 올리므로
   //    잠깐 워커만 새 판인 창이 생긴다 — 그때 옛 소리를 새 키로 넣으면 영영 안 지워진다(2026-09-03 에 실제로 그 창이 열렸다).
   const recipe = res.headers.get('X-TTS-Recipe') || '';
-  const cacheable = recipe === RECIPE_TAG;
+  const cacheable = recipe === tag;   // 컨테이너가 그 벌로 만들어 줬을 때만 넣는다(옛 이미지면 표식이 다르다)
   if (env.TTS_CACHE && cacheable) {
     const put = env.TTS_CACHE.put(key, bytes, { httpMetadata: { contentType: 'audio/mpeg', cacheControl: 'public, max-age=31536000, immutable' } }).catch(() => {});
     if (ctx && ctx.waitUntil) ctx.waitUntil(put); else await put;
