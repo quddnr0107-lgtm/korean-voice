@@ -18,6 +18,12 @@ on:
       kind:
         description: '갈래 — all · exam(출제핵심강의) · easy(개념강의) · study(따라읽기 · 원문회독·눈회독·타이핑 줄)'
         default: 'all'
+      order:
+        description: '뭉탱이 순서로 굽는다 — 개념→출제핵심→회독 × 통합방위법→예비군법→훈령→병역법 (true/false). 큐가 이 차례로 처리돼 끝난 뭉탱이부터 새 목소리가 나온다'
+        default: 'true'
+      per:
+        description: '한 러너가 맡을 조각 수(뭉탱이별 러너 수를 이걸로 정한다 · 잡 총수는 240 이하로 자동 조정)'
+        default: '300'
       force:
         description: 'R2 에 있어도 다시 굽어 덮어쓴다(true/false)'
         default: 'false'
@@ -46,9 +52,20 @@ jobs:
           name: chunks
           path: chunks.json
       - id: m
+        env:
+          ORDER: ${{ inputs.order || 'true' }}
+          KIND: ${{ inputs.kind || 'all' }}
+          SHARDS: ${{ inputs.shards }}
+          PER: ${{ inputs.per || '300' }}
         run: |
-          N=${{ inputs.shards }}
-          echo "matrix=$(node -e "console.log(JSON.stringify([...Array($N).keys()]))")" >> "$GITHUB_OUTPUT"
+          echo "matrix=$(node tools/plan.mjs chunks.json)" >> "$GITHUB_OUTPUT"
+      - name: 계획 사람말로
+        run: node tools/plan.mjs chunks.json --설명
+        env:
+          ORDER: ${{ inputs.order || 'true' }}
+          KIND: ${{ inputs.kind || 'all' }}
+          SHARDS: ${{ inputs.shards }}
+          PER: ${{ inputs.per || '300' }}
 
   bake:
     needs: plan
@@ -57,7 +74,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: ${{ fromJson(needs.plan.outputs.matrix) }}
+        job: ${{ fromJson(needs.plan.outputs.matrix) }}
+    name: ${{ matrix.job.k }}/${{ matrix.job.w }} ${{ matrix.job.shard }}/${{ matrix.job.shards }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
@@ -82,11 +100,11 @@ jobs:
           for f in config.json onnx/duration_predictor.onnx onnx/text_encoder.onnx onnx/tts.json onnx/unicode_indexer.json onnx/vector_estimator.onnx onnx/vocoder.onnx; do curl -sL -o supertonic3/$f "$B/$f"; done
           for s in F1 F2 F3 F4 F5 M1 M2 M3 M4 M5; do curl -sL -o supertonic3/voice_styles/$s.json "$B/voice_styles/$s.json"; done
           for f in helper.py example_onnx.py; do curl -sL -o supertonic3/py/$f https://raw.githubusercontent.com/supertone-inc/supertonic/main/py/$f; done
-      - name: 굽기 (shard ${{ matrix.shard }})
+      - name: 굽기
         env:
           SUPERTONIC_DIR: ${{ github.workspace }}/supertonic3
           PYTHONPATH: ${{ github.workspace }}/supertonic3/py
-        run: python3 tools/bake.py --chunks chunks.json --shard ${{ matrix.shard }} --shards ${{ inputs.shards }} --limit ${{ inputs.limit }} --start ${{ inputs.start }} --kind ${{ inputs.kind || 'all' }} ${{ inputs.force == 'true' && '--force' || '' }}
+        run: python3 tools/bake.py --chunks chunks.json --shard ${{ matrix.job.shard }} --shards ${{ matrix.job.shards }} --limit ${{ inputs.limit }} --start ${{ inputs.start }} --kind ${{ matrix.job.k }} --law ${{ matrix.job.w }} ${{ inputs.force == 'true' && '--force' || '' }}
 
   # 옛 조각 폐기 — 모든 샤드가 끝난 뒤, 지금 조각 목록(plan 의 chunks.json)에 없는 R2 조각을 지운다(2026-09-05 yebijun 사용자 「이전 꺼 다 폐기해」).
   # 🔴 kind 가 all 이 아니어도 목록은 all 이다(chunks.mjs 가 전 갈래를 만든다) — 다른 갈래 조각이 지워지지 않는다.
