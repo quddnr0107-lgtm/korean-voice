@@ -14,8 +14,8 @@ import numpy as np, soundfile as sf
 
 ap = argparse.ArgumentParser()
 ap.add_argument('--chunks', required=True); ap.add_argument('--shard', type=int, default=0); ap.add_argument('--shards', type=int, default=1)
-ap.add_argument('--base', default='https://korean-voice.quddnr0107.workers.dev'); ap.add_argument('--voice', default='female'); ap.add_argument('--steps', type=int, default=16); ap.add_argument('--best', type=int, default=4)
-ap.add_argument('--batch', type=int, default=8); ap.add_argument('--limit', type=int, default=0); ap.add_argument('--no-upload', action='store_true')
+ap.add_argument('--base', default='https://korean-voice.quddnr0107.workers.dev'); ap.add_argument('--voice', default='female'); ap.add_argument('--steps', type=int, default=16); ap.add_argument('--best', type=int, default=3); ap.add_argument('--hnr-floor', type=float, default=12.5)
+ap.add_argument('--batch', type=int, default=16); ap.add_argument('--limit', type=int, default=0); ap.add_argument('--no-upload', action='store_true')
 ap.add_argument('--start', type=int, default=0, help='목록의 이 번호부터(시험용 · 앞쪽은 컨테이너 대기열이 이미 구웠을 수 있다)')
 ap.add_argument('--kind', default='all', choices=['all', 'exam', 'easy', 'study'], help='갈래 — exam 출제핵심강의 · easy 개념강의 · study 따라읽기(원문회독·눈회독·타이핑 줄) · all (조각의 k 필드)')
 ap.add_argument('--force', action='store_true', help='R2 에 이미 있어도 다시 굽어 덮어쓴다(배치 패딩 우웅 재굽기 · L280)')
@@ -96,40 +96,56 @@ for it in todo:
     hard = VS.is_sentence_end(it['t']); r = server.parse_r(it['r'])
     speed = float(np.clip(server.VOICES[a.voice]['speed'] * r * VS.unit_speed_mult(0, hard), server.R_MIN, server.R_MAX))
     groups.setdefault((round(speed, 3), hard), []).append(it)
-done = fail = redo = hum_left = 0; t0 = time.time()
+done = fail = redo = hum_left = 0; takes = items_n = 0; hnr_all = []; t0 = time.time()
 for (speed, hard), lst in groups.items():
     lst.sort(key=lambda it: len(it['t']))
     for i in range(0, len(lst), a.batch):
         part = lst[i:i + a.batch]
         texts = [server.clean_text(it['t']) for it in part]
         st = helper.Style(np.repeat(style.ttl, len(texts), axis=0), np.repeat(style.dp, len(texts), axis=0))
-        # 🔴 합성은 뽑기다 — 같은 입력을 여섯 번 돌리면 HNR 이 10.7~15.1dB 로 갈린다(실측).
-        #    스텝을 올려도 평균은 안 오른다. 그래서 --best 번 뽑아 조각마다 가장 깨끗한 것을 고른다.
-        best_w = best_d = None; best_h = None
-        for _take in range(max(1, a.best)):
+        # 🔴 합성은 뽑기다 — 같은 입력을 여섯 번 돌리면 HNR 이 10.7~15.1dB 로 갈린다(실측 2026-09-08).
+        #    스텝을 올려도 평균은 안 오른다(28/40/56 전부 ~12.6). 거칠기는 적분 정밀도가 아니라 뽑힌 잡음이다.
+        #
+        #    🔴 그런데 **모두 --best 번 뽑는 건 낭비다.** 우리에게 필요한 건 「가장 좋은 뽑기」가 아니라
+        #    「나쁜 뽑기를 안 쓰는 것」이다(사용자 지적: 「기계음 들려 조금씩」 — 문제는 거친 소수였다).
+        #    그래서 한 번 뽑고 **바닥(--hnr-floor) 아래인 것만** 다시 뽑는다. 다시 뽑을 것들만 모아
+        #    한 배치로 돌리므로 추가 비용이 그 비율만큼만 든다 — 고정 4회의 4배가 아니라 1.2~1.5배다.
+        #    58,157 조각 기준으로 굽기가 몇 시간에서 몇십 분으로 내려온다.
+        def _take(idx):
+            """idx 자리들만 다시 뽑는다 — 남은 것끼리 한 배치로."""
+            tx = [texts[j] for j in idx]
+            st2 = helper.Style(np.repeat(style.ttl, len(tx), axis=0), np.repeat(style.dp, len(tx), axis=0))
             with server._lock:
-                ws_, ds_ = server._tts._infer(texts, ['ko'] * len(texts), st, a.steps, speed)
+                ws_, ds_ = server._tts._infer(tx, ['ko'] * len(tx), st2, a.steps, speed)
             ws_ = np.asarray(ws_, dtype=np.float32); ds_ = np.asarray(ds_, dtype=np.float64).reshape(-1)
-            assert len(ds_) == len(texts), f'dur {len(ds_)} ≠ texts {len(texts)}'
-            if best_w is None:
-                best_w, best_d = ws_, ds_
-                best_h = [VS.hnr(ws_[j].reshape(-1)[:int(ds_[j] * sr)], sr) for j in range(len(texts))]
-                continue
-            for j in range(len(texts)):
-                h = VS.hnr(ws_[j].reshape(-1)[:int(ds_[j] * sr)], sr)
-                if h > best_h[j]:
-                    best_h[j] = h
-                    n_ = min(best_w.shape[-1], ws_.shape[-1])
-                    best_w[j, ..., :n_] = ws_[j, ..., :n_]
-                    if n_ < best_w.shape[-1]:
-                        best_w[j, ..., n_:] = 0.0
-                    best_d[j] = ds_[j]
-        wavs, durs = best_w, best_d
-        for it, t, w, d in zip(part, texts, wavs, durs):
+            assert len(ds_) == len(tx), f'dur {len(ds_)} ≠ texts {len(tx)}'
+            return ws_, ds_
+
+        idx = list(range(len(texts)))
+        takes += len(idx); items_n += len(idx)
+        wavs, durs = _take(idx)
+        keep = [np.asarray(wavs[j]).reshape(-1)[:int(durs[j] * sr)] for j in idx]
+        hs = [VS.hnr(keep[j], sr) for j in idx]
+        rough = [j for j in idx if hs[j] < a.hnr_floor]
+        for _round in range(max(0, a.best - 1)):
+            if not rough:
+                break
+            takes += len(rough)
+            ws_, ds_ = _take(rough)
+            nxt = []
+            for k, j in enumerate(rough):
+                cand = np.asarray(ws_[k]).reshape(-1)[:int(ds_[k] * sr)]
+                h = VS.hnr(cand, sr)
+                if h > hs[j]:
+                    hs[j] = h; keep[j] = cand
+                if hs[j] < a.hnr_floor:
+                    nxt.append(j)
+            rough = nxt
+        hnr_all += hs
+        for it, t, w in zip(part, texts, keep):
             try:
                 # 🔴 배치 합성은 가장 긴 항목 길이로 패딩되고, 그 패딩 자리에서 모델이 낮은 순음(「우웅」 · ~120Hz · 수백 ms)을 낸다(L280).
-                #    각 항목을 **자기 예측 길이(dur · 이미 speed 로 나눈 값)** 로 먼저 자른다. 그래도 잡히면 단건으로 다시 굽는다(패딩 없음).
-                w = w.reshape(-1)[:int(d * sr)]
+                #    각 항목은 위에서 **자기 예측 길이(dur · 이미 speed 로 나눈 값)** 로 이미 잘랐다. 그래도 잡히면 단건으로 다시 굽는다(패딩 없음).
                 y = server.shape(w, sr, t, hard)
                 if VS.hum_tail(y, sr) is True:
                     with server._lock:
@@ -146,5 +162,9 @@ for (speed, hard), lst in groups.items():
         n = done + fail
         if n % 40 < len(part):
             el = time.time() - t0; print(f'[{n}/{len(todo)}] 구움 {done} · 실패 {fail} · 조각당 {el / max(1, n):.2f}s · 남은 약 {(len(todo) - n) * el / max(1, n) / 60:.0f}분', flush=True)
+if hnr_all:
+    q = np.percentile(hnr_all, [10, 50, 90])
+    print(f'뽑기 {takes} / 조각 {items_n} = 조각당 {takes / max(1, items_n):.2f}회 · '
+          f'HNR p10 {q[0]:.2f} 중앙 {q[1]:.2f} p90 {q[2]:.2f} · 바닥 {a.hnr_floor}', flush=True)
 print(f'끝 — 구움 {done} · 실패 {fail} · 우웅으로 단건 재굽기 {redo} · 그래도 남음 {hum_left} · {(time.time() - t0) / 60:.1f}분', flush=True)
 sys.exit(1 if fail and not done else 0)
