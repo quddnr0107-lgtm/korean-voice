@@ -1,17 +1,18 @@
 #!/usr/bin/env node
-/* 굽을 조각 목록 — 사이트가 공개로 내주는 파일 여섯(live-tts.js · ko-voice.js · speech-text.js · exam_prep.json · easy_explain.json · study_data.json)에서 만든다.
+/* 굽을 조각 목록 — 공개 스크립트 셋과 인증된 원고 셋(live-tts.js · ko-voice.js · speech-text.js · exam_prep.json · easy_explain.json · study_data.json)에서 만든다.
    🔴 여기서 새로 나누지 않는다 — 화면이 쓰는 그 함수(LiveTTS.segment)를 vm 으로 꺼내 쓴다. 원고 규칙은 yebijun app.js 의 셋을 베낀 것
    (출제핵심 (lectureScript||bodyText).trim() · 개념강의 빈 줄→문장→`**` 제거→' ' 이음 + _standalone · 따라읽기 SpeechText.읽기용(original)).
    yebijun 의 .github/scripts/bake-live-tts.mjs 와 같은 논리다 — 그쪽 check-bake-list-live · check-follow-live-tts-live 가 화면과 같은지 잰다.
    갈래 k — exam(출제핵심강의) · easy(개념강의) · study(따라읽기 · 원문회독·눈회독·타이핑 줄 · 2026-09-04). bake.py --kind 가 이 값으로 거른다.
    사용: node chunks.mjs --site https://yebijun.drillstudy.com --out chunks.json */
 import fs from 'node:fs';
+import { makeSourceReader } from './private-source.mjs';
 import vm from 'node:vm';
 const 인자 = process.argv.slice(2);
 const 값 = (k, d) => { const i = 인자.indexOf(k); return i >= 0 && 인자[i + 1] ? 인자[i + 1] : d; };
 const SITE = 값('--site', 'https://yebijun.drillstudy.com').replace(/\/$/, '');
 const OUT = 값('--out', 'chunks.json');
-const get = async (p) => { const r = await fetch(SITE + p + '?nocache=' + Date.now(), { headers: { 'Cache-Control': 'no-cache' } }); if (!r.ok) throw new Error(p + ' ' + r.status); return r.text(); };
+const get = makeSourceReader(SITE);
 
 function require서로(src) { const m = { exports: {} }; const g = { module: m, exports: m.exports, window: undefined, console }; vm.createContext(g); vm.runInContext(src, g); return m.exports; }
 function 조각기(liveSrc, koSrc) {
@@ -52,3 +53,4 @@ fs.writeFileSync(OUT, JSON.stringify(목록));
 const 세기 = (갈래) => 목록.filter((c) => c.k === 갈래).length;
 const 법세기 = 법들.concat('기타').map((l) => `${l} ${목록.filter((c) => c.w === l).length}`).join(' · ');
 console.log(`원고 ${글들.length}편 · 고유 조각 ${목록.length}개(exam ${세기('exam')} · easy ${세기('easy')} · study ${세기('study')} | ${법세기}) · ${목록.reduce((a, c) => a + c.t.length, 0).toLocaleString()}자 → ${OUT}`);
+

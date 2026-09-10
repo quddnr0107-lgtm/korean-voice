@@ -163,14 +163,14 @@ for (speed, hard), lst in groups.items():
                     with server._lock:
                         w1, d1 = server._tts._infer([t], ['ko'], style, a.steps, speed)
                     y = VS.shape(np.asarray(w1, dtype=np.float32).reshape(-1)[:int(float(np.asarray(d1).reshape(-1)[0]) * sr)], sr, t, hard); redo += 1
-                    if VS.hum_tail(y, sr) is True: print('🔴 우웅 남음(단건 재굽기 뒤에도):', t[:30], flush=True); hum_left += 1
+                    if VS.hum_tail(y, sr) is True: print('🔴 우웅 남음(단건 재굽기 뒤에도):', 'redacted', flush=True); hum_left += 1
                 tmp = os.path.join(os.environ['CACHE_DIR'], f'b{a.shard}.tmp.wav'); os.makedirs(os.environ['CACHE_DIR'], exist_ok=True)
                 sf.write(tmp, y, sr)
                 mp3 = subprocess.run([ff, '-v', 'error', '-i', tmp, '-ar', '24000', '-codec:a', 'libmp3lame', '-b:a', '48k', '-f', 'mp3', 'pipe:1'], check=True, capture_output=True).stdout
                 if a.no_upload or upload(it, mp3): done += 1
                 else: fail += 1
             except Exception as e:
-                fail += 1; print('조각 실패:', t[:30], str(e)[:120])
+                fail += 1; print('조각 실패:', 'redacted', type(e).__name__)
         n = done + fail
         if n % 40 < len(part):
             el = time.time() - t0; print(f'[{n}/{len(todo)}] 구움 {done} · 실패 {fail} · 조각당 {el / max(1, n):.2f}s · 남은 약 {(len(todo) - n) * el / max(1, n) / 60:.0f}분', flush=True)
@@ -180,3 +180,4 @@ if hnr_all:
           f'HNR p10 {q[0]:.2f} 중앙 {q[1]:.2f} p90 {q[2]:.2f} · 바닥 {a.hnr_floor}', flush=True)
 print(f'끝 — 구움 {done} · 실패 {fail} · 우웅으로 단건 재굽기 {redo} · 그래도 남음 {hum_left} · {(time.time() - t0) / 60:.1f}분', flush=True)
 sys.exit(1 if fail and not done else 0)
+

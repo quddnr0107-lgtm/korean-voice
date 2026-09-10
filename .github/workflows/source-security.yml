@@ -1,0 +1,28 @@
+name: Private source safety
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test test/private-source.test.mjs test/container-cost.test.mjs
+      - name: No private-text artifact or Container bulk queue
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          import assert from 'node:assert/strict';
+          const workflow = readFileSync('.github/workflows/bake.yml', 'utf8');
+          assert.ok(!workflow.includes('actions/upload-artifact') && !workflow.includes('actions/download-artifact'));
+          assert.ok(workflow.includes('EXPECTED_SOURCE_HASH'));
+          const worker = readFileSync('worker.mjs', 'utf8');
+          assert.ok(worker.includes('async alarm() { await this.baker.stop(); }'));
+          assert.ok(!worker.includes('await this.baker.tick()'));
+          NODE
+      - run: node --check tools/chunks.mjs && node --check worker.mjs

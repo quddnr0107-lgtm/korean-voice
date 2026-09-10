@@ -1,11 +1,15 @@
 # 강의 음성 전편 굽기 — 공개 러너(4코어) 20개가 동시에 굽고 GitHub OIDC 로 R2 에 올린다(worker.mjs /bake/put). 비밀값 없음 · 비용 0.
-#   이 저장소가 공개(2026-09-04)라 Actions 가 무료·무제한이다. 조각 목록은 사이트가 공개로 내주는 파일에서 만든다(tools/chunks.mjs).
+#   이 저장소가 공개(2026-09-04)라 Actions 가 무료·무제한이다. 조각 목록은 인증된 원고에서 만든다. 원고를 포함한 공개 Actions artifact는 만들지 않는다.
 #   🔴 lib/oidc.mjs 가 「이 저장소의 main」 토큰만 받는다 — 브랜치에서 돌리면 워커가 401 을 준다.
 name: Bake voice (전편 굽기)
 
 on:
   workflow_dispatch:
     inputs:
+      verify_only:
+        description: '원고 인증과 조각 계획만 확인합니다. 합성·업로드·삭제하지 않습니다.'
+        type: boolean
+        default: false
       shards:
         description: '동시 러너 수 (Pro 표준 러너 동시 상한 40 · 공개 저장소라 분은 안 깎인다)'
         default: '40'
@@ -43,17 +47,16 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.m.outputs.matrix }}
+      source_hash: ${{ steps.hash.outputs.sha }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: 조각 목록 (사이트 공개 파일에서)
+      - name: 조각 목록 (GitHub OIDC로 비공개 원고 받기)
         run: node tools/chunks.mjs --out chunks.json
-      - uses: actions/upload-artifact@v4
-        with:
-          name: chunks
-          path: chunks.json
+      - id: hash
+        run: echo "sha=$(sha256sum chunks.json | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
       - id: m
         env:
           ORDER: ${{ inputs.order || 'true' }}
@@ -71,6 +74,7 @@ jobs:
           PER: ${{ inputs.per || '300' }}
 
   bake:
+    if: inputs.verify_only != true
     needs: plan
     runs-on: ubuntu-latest
     timeout-minutes: 350
@@ -81,9 +85,15 @@ jobs:
     name: ${{ matrix.job.k }}/${{ matrix.job.w }} ${{ matrix.job.shard }}/${{ matrix.job.shards }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/setup-node@v4
         with:
-          name: chunks
+          node-version: '22'
+      - name: Rebuild private chunks inside this runner
+        run: node tools/chunks.mjs --out chunks.json
+      - name: Reject source changes since plan
+        env:
+          EXPECTED_SOURCE_HASH: ${{ needs.plan.outputs.source_hash }}
+        run: test "$(sha256sum chunks.json | cut -d' ' -f1)" = "$EXPECTED_SOURCE_HASH"
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
@@ -120,8 +130,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - uses: actions/download-artifact@v4
+      - uses: actions/setup-node@v4
         with:
-          name: chunks
+          node-version: '22'
+      - name: Rebuild private chunks inside this runner
+        run: node tools/chunks.mjs --out chunks.json
+      - name: Reject source changes since plan
+        env:
+          EXPECTED_SOURCE_HASH: ${{ needs.plan.outputs.source_hash }}
+        run: test "$(sha256sum chunks.json | cut -d' ' -f1)" = "$EXPECTED_SOURCE_HASH"
       - name: 폐기 (마른 실행 → 실제)
         run: node tools/prune.mjs --chunks chunks.json
+

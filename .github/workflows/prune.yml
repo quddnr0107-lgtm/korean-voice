@@ -28,7 +28,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: 조각 목록 (사이트 공개 파일에서)
+      - name: 조각 목록 (GitHub OIDC로 비공개 원고 받기)
         run: node tools/chunks.mjs --out chunks.json
       - name: 폐기
         run: node tools/prune.mjs --chunks chunks.json --max-drop-ratio ${{ inputs.ratio }} ${{ inputs.dry == 'true' && '--dry' || '' }}
+
