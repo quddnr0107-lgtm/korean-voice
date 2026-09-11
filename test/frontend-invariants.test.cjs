@@ -60,6 +60,12 @@ test('가지조문과 공포문 점 표기 날짜를 의미 경계대로 읽는�
   for (const [raw, expected] of cases) assert.strictEqual(K.normalize(raw), expected, raw);
 });
 
+test('날짜 범위는 수량 범위와 분리해부터·까지로 읽는다', () => {
+  assert.strictEqual(K.normalize('2026-09-11~2026-09-12'), '이천이십육 년 구 월 십일 일부터 이천이십육 년 구 월 십이 일까지');
+  assert.strictEqual(K.normalize('2026년 9월 11일~2026년 9월 12일'), '이천이십육 년 구 월 십일 일부터 이천이십육 년 구 월 십이 일까지');
+  assert.strictEqual(K.normalize('18~21개월'), '십팔 개월에서 이십일 개월');
+});
+
 test('시각 범위는 0분을 불필요하게 읽지 않고부터·까지 경계를 보존한다', () => {
   assert.strictEqual(K.normalize('09:00'), '아홉 시');
   assert.strictEqual(K.normalize('09:00~18:00'), '아홉 시부터 십팔 시까지');
