@@ -31,6 +31,7 @@ STEPS = int(os.environ.get('STEPS', '16'))
 ORIGIN = os.environ.get('ALLOW_ORIGIN', '*')
 MAX_CHARS = int(os.environ.get('MAX_CHARS', '400'))
 sys.path.insert(0, ROOT)
+from singleflight import KeyedSingleflight  # noqa: E402
 import voice_shape as VS  # noqa: E402  — 지금 조합(기본)
 import recipes as RC       # noqa: E402  — 조합 등록부: 목소리 두 벌을 동시에 내준다(2026-09-08)
 VOICES = {
@@ -49,7 +50,8 @@ import helper  # noqa: E402
 _lock = threading.Lock()
 _tts = None
 _styles = {}
-_stats = {'synth': 0, 'hit': 0, 'synth_s': 0.0}
+_stats = {'synth': 0, 'hit': 0, 'dedup': 0, 'synth_s': 0.0}
+_singleflight = KeyedSingleflight()
 
 
 def load():
@@ -146,9 +148,7 @@ def _warm_worker():
     while True:
         voice, text, steps, r, tag = _warm_q.get()
         try:
-            path = os.path.join(CACHE, voice, cache_key(voice, text, steps, r, tag) + '.mp3')
-            if not os.path.exists(path):
-                synthesize(voice, text, steps, r, tag)
+            cached_or_synthesize(voice, text, steps, r, tag)
         except Exception as e:
             sys.stderr.write('warm 실패: %s\n' % str(e)[:200])
         finally:
@@ -171,6 +171,26 @@ def warm(voice, texts, steps, r=1.0, tag=None):
 def cache_key(voice, text, steps, r=1.0, tag=None):
     # 🔴 worker.mjs 의 키와 같은 꼴(sha1("voice|steps|r|tag|text")) — r 은 소수 둘째 자리까지
     return hashlib.sha1(f'{voice}|{steps}|{fmt_r(r)}|{RC.get(tag).RECIPE_TAG}|{text}'.encode('utf-8')).hexdigest()
+
+
+def cached_or_synthesize(voice, text, steps, r=1.0, tag=None):
+    """Disk cache + keyed singleflight shared by live and warm requests."""
+    tag = RC.get(tag).RECIPE_TAG
+    key = cache_key(voice, text, steps, r, tag)
+    path = os.path.join(CACHE, voice, key + '.mp3')
+
+    def ready():
+        return path if os.path.exists(path) else None
+
+    def produce():
+        return synthesize(voice, text, steps, r, tag)
+
+    out, state = _singleflight.run(key, ready, produce)
+    if state != 'owner':
+        _stats['hit'] += 1
+    if state == 'waiter':
+        _stats['dedup'] += 1
+    return out
 
 
 def fmt_r(r):
@@ -264,14 +284,10 @@ class H(BaseHTTPRequestHandler):
             return self._json({'ok': False, 'error': 'bad_voice'}, 400)
         if not text:
             return self._json({'ok': False, 'error': 'empty_text'}, 400)
-        path = os.path.join(CACHE, voice, cache_key(voice, text, steps, r, tag) + '.mp3')
-        if os.path.exists(path):
-            _stats['hit'] += 1
-        else:
-            try:
-                path = synthesize(voice, text, steps, r, tag)
-            except Exception as e:
-                return self._json({'ok': False, 'error': 'synthesis_failed', 'reason': str(e)[:300]}, 502)
+        try:
+            path = cached_or_synthesize(voice, text, steps, r, tag)
+        except Exception as e:
+            return self._json({'ok': False, 'error': 'synthesis_failed', 'reason': str(e)[:300]}, 502)
         self._send_file(path, tag)
 
     def _send_file(self, path, tag=None):
