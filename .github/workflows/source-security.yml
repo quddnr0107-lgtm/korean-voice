@@ -12,7 +12,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: node --test test/private-source.test.mjs test/container-cost.test.mjs
+      - name: Security and Korean frontend regressions
+        run: node --test test/private-source.test.mjs test/container-cost.test.mjs test/ko-voice.test.cjs test/frontend-invariants.test.cjs
       - name: No private-text artifact or Container bulk queue
         run: |
           node --input-type=module <<'NODE'
@@ -38,4 +39,5 @@ jobs:
             echo "cache/ 가 커밋돼 있다:"; echo "$cached"; exit 1
           fi
           echo "음성 파일 0개 · cache/ 0개"
-      - run: node --check tools/chunks.mjs && node --check worker.mjs
+      - name: Syntax checks
+        run: node --check public/ko-voice.js && node --check tools/chunks.mjs && node --check worker.mjs
