@@ -17,6 +17,7 @@ const SYNTHETIC_CORPUS = [
   '제1조(목적) ① 이 법은 목적을 정한다. ② 국가는 지원하여야 한다.',
   '제1호가목. 교육 대상자 나. 훈련 장소',
   '문의는 1577-0000 또는 1588-1234로 연락하세요.',
+  'K2 전차와 K9 자주포를 운용한다.',
 ];
 
 test('normalize는 대표 한국어 TTS 입력에서 멱등적이다', () => {
@@ -111,6 +112,11 @@ test('대표번호는 일반 숫자·하이픈 규칙보다 먼저 전화번호�
   assert.strictEqual(K.normalize('1588-1234'), '일오팔팔 일이삼사');
   const normalized = K.normalize('문의는 1577-0000 또는 1588-1234로 연락하세요.');
   assert.ok(!normalized.includes('-') && !/\d/.test(normalized), normalized);
+});
+
+test('군 장비 모델명의 숫자를 일반 숫자 규칙으로 훼손하지 않는다', () => {
+  assert.strictEqual(K.normalize('K2 전차와 K9 자주포를 운용한다.'), '케이투 전차와 케이나인 자주포를 운용한다.');
+  assert.ok(!K.normalize('K2 전차').includes('케이이'));
 });
 
 test('production canonical은 중복 쉼표와 핵심 조사 뒤 오분절을 만들지 않는다', () => {
