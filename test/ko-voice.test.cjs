@@ -29,6 +29,14 @@ test('법령 원문 항 번호 기호도 음성용 제N항으로 보존한다', 
   assert.strictEqual(K.normalize('① 첫째 항목 ⑳ 스무 번째 항목'), '제일 항 첫째 항목 제이십 항 스무 번째 항목');
 });
 
+test('법령 목 표기의 점은 문장 끝으로 오인하지 않는다', () => {
+  assert.strictEqual(K.normalize('가. 교육 대상자 나. 훈련 장소 다. 소집 일자'),
+    '가목 교육 대상자 나목 훈련 장소 다목 소집 일자');
+  assert.strictEqual(K.normalize('제1호가목. 교육 대상자'), '제일 호 가목 교육 대상자');
+  const p = K.prepare('가. 교육 대상자 나. 훈련 장소', { emotion: 'neutral' });
+  assert.strictEqual(p.sentences.length, 1, '목 표지 때문에 가짜 문장을 만들지 않는다');
+});
+
 test('신경망 전달 문자열은 chunk 경계에서 문장부호를 중복하지 않는다', () => {
   const p = K.prepare('훈련을 받아야 하며, 훈련에 참석합니다.', { emotion: 'neutral' });
   const spoken = K.joinSpokenChunks(p.sentences[0].chunks);
