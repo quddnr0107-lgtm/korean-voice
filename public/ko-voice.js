@@ -100,6 +100,10 @@
   const ALL_UNITS = Array.from(new Set(NATIVE_UNITS.concat(SINO_UNITS))).sort((a, b) => b.length - a.length);
   const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const UNIT_RE = new RegExp('(\\d+(?:,\\d{3})*(?:\\.\\d+)?)\\s*(' + ALL_UNITS.map(esc).join('|') + ')(?![A-Za-z])', 'g');
+  // 어절 하나가 '단위(+조사)' 뿐인지 — 수량과 단위 사이를 끊지 않기 위해 쓴다.
+  const UNIT_ONLY_RE = new RegExp('^(?:' + ALL_UNITS.map(esc).join('|') + ')(?:이|가|은|는|을|를|으로|로|에|의|과|와|도|만|부터|까지)?$');
+  // 범위 뒤에 붙은 서술어 어미·조사는 단위가 아니다. 단위만 양쪽에 복제하고 꼬리는 뒤쪽에만 남긴다.
+  const RANGE_PREDICATE = /^(.+?)(이다|입니다|이에요|예요|이었다|였다|이며|이고|이지|이야|으로|로|이|가|은|는|을|를|에|의|과|와)$/;
   const BIG_RE = /(\d+(?:,\d{3})*(?:\.\d+)?)\s*(만|억|조)(?=\s*(?:원|명|개|건|회|배|달러|톤|km|kg|m|점|%|\s|$|[^가-힣]))/g;
 
   function readWithUnit(numStr, unit) {
@@ -188,7 +192,7 @@
     let t = String(text == null ? '' : text);
     // 마크다운·이모지·URL 등 소리로 낼 수 없는 것부터 제거
     t = t.replace(/https?:\/\/\S+/g, '링크').replace(/www\.\S+/g, '링크');
-    t = t.replace(/^[ \t]*(#{1,6}|[-*•]|(?!\d{4}\.\s+\d{1,2}\.)\d+[.)])\s+/gm, '');
+    t = t.replace(/^[ \t]*["'“”‘’/\\]*[ \t]*(#{1,6}|[-*•]|(?!\d{4}\.\s+\d{1,2}\.)\d+[.)])\s+/gm, '');
     t = t.replace(/~~/g, '').replace(/[*_`]{1,3}(?=\S)|(?<=\S)[*_`]{1,3}/g, '');
     t = t.replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu, '');
     // 법령 항 번호: ①·②처럼 숫자를 감싼 표기는 음성에서 제일 항·제이 항으로 보존한다.
@@ -242,7 +246,12 @@
         const right = (negB || /^-/.test(b)) ? '영하 ' : '';
         return p + '영하 ' + readNumber(a) + ' ' + unit + '에서 ' + right + readNumber(b.replace(/^-/, '')) + ' ' + unit;
       });
-    t = t.replace(/(\d+(?:,\d{3})*(?:\.\d+)?)\s*[~∼～]\s*(\d+(?:,\d{3})*(?:\.\d+)?)\s*([가-힣%a-z℃°]{1,4})?/g, (m, a, b, u) => u ? a + u + '에서 ' + b + u : a + '에서 ' + b);
+    t = t.replace(/(\d+(?:,\d{3})*(?:\.\d+)?)\s*[~∼～]\s*(\d+(?:,\d{3})*(?:\.\d+)?)\s*([가-힣%a-z℃°]{1,4})?/g, (m, a, b, u) => {
+      if (!u) return a + '에서 ' + b;
+      const k = RANGE_PREDICATE.exec(u);           // '18~21개월이다' 의 '이다'까지 단위로 먹으면 서술어가 복제된다
+      if (k && k[1]) return a + k[1] + '에서 ' + b + k[1] + k[2];
+      return a + u + '에서 ' + b + u;
+    });
     // 150만원 · 3억 → 숫자로 환산 후 읽기
     t = t.replace(BIG_RE, (m, n, big) => {
       const mult = { 만: 1e4, 억: 1e8, 조: 1e12 }[big];
@@ -276,6 +285,24 @@
   const PARTICLE = /(은|는|이|가|을|를|에서|에게|께서|부터|까지|으로|로|와|과|도|의|만|에)$/;
   // 긴 구의 자동 호흡은 주제·부사어 경계만 허용한다. 주격/목적격/관형격 뒤 쉼은 의미 단위를 깨기 쉽다.
   const WEAK_BREAK_PARTICLE = /(은|는|에서|에게|께서|부터|까지|으로|로|와|과|도|만|에)$/;
+  // 수량·기간 범위는 'A에서 B' 한 덩어리다. 그 사이에서 끊으면 "이천이십오 년에서 … 이천이십육 년"으로 들린다.
+  const RANGE_TAIL = /(에서|부터)$/;
+  // 다음 어절이 '수사 한 덩어리'일 때만 범위로 본다. 앞글자만 보면 '이미'·'일괄'까지 수사로 오인한다.
+  const NUM_WORD = /^(?:[영일이삼사오육칠팔구십백천만억조]+|한|두|세|네|다섯|여섯|일곱|여덟|아홉|열|스무|스물|서른|마흔|쉰|예순|일흔|여든|아흔)$/;
+  const NUM_HEAD = /^(?:[영일이삼사오육칠팔구십백천만억조]|한|두|세|네|다섯|여섯|일곱|여덟|아홉|열|스무|스물|서른|마흔|쉰|예순|일흔|여든|아흔)/;
+  // 왼쪽이 수사여야 범위로 본다 — 왼쪽을 확인하면 오른쪽은 느슨히 봐도 '세션에서 이미'를 범위로 오인하지 않는다.
+  const 수사꼬리 = (w) => String(w || '').replace(/[,.!?]+$/, '').replace(/^(?:[영일이삼사오육칠팔구십백천만억조]+|한|두|세|네|다섯|여섯|일곱|여덟|아홉|열|스무|스물|서른|마흔|쉰|예순|일흔|여든|아흔)/, '');
+  const oi = (a, b) => a.indexOf(b) === 0 || b.indexOf(a) === 0;
+  const 범위연결 = (bare, prev, next) => {
+    if (!RANGE_TAIL.test(bare)) return false;
+    const 왼 = bare.replace(RANGE_TAIL, ''), 오 = String(next || '').replace(/^[("']+/, '').replace(/[,.!?]+$/, '');
+    if (!NUM_HEAD.test(오)) return false;
+    // 오른쪽도 수사 한 덩어리이거나(이천이십육) 왼쪽과 같은 단위를 달고 있어야 한다(삼문장 / 육문장).
+    const 왼꼬리 = 수사꼬리(왼), 오꼬리 = 수사꼬리(오);   // '삼문장 / 육문장으로' 처럼 뒤쪽에 조사가 더 붙어도 같은 단위다
+    const 짝 = NUM_WORD.test(오) || (왼꼬리 !== '' && (오꼬리 === 왼꼬리 || oi(오꼬리, 왼꼬리)));
+    if (!짝) return false;
+    return NUM_WORD.test(왼) || NUM_WORD.test(String(prev || '').replace(/[,.!?]+$/, '')) || NUM_HEAD.test(왼);
+  };
   // 강조어: 앞에 짧은 쉼 + 조금 느리게 (한국어 초점은 AP 첫머리를 높이고 앞에 쉼을 둔다)
   const EMPH = /^(반드시|절대|꼭|주의|경고|마감|필수|중요|무조건|즉시|바로|특히|단,|단\s|다만|주의:|참고:)/;
 
@@ -505,10 +532,14 @@
       cur.push(w); syl += w.replace(/[^가-힣]/g, '').length;
       if (isLast) break;
       const bare = w.replace(/[,.!?]+$/, '');
+      // 'A에서 B' 범위 한가운데는 끊지 않는다('에서'는 연결어미 '서'로도 걸린다).
+      const 범위중간 = 범위연결(bare, words[i - 1], words[i + 1]);
       if (/,$/.test(w)) { flush(PAUSE.comma); continue; }
-      if (bare.length >= 2 && CONJ.some((c) => bare.endsWith(c))) { flush(PAUSE.conj); continue; }
+      if (bare.length >= 2 && !범위중간 && CONJ.some((c) => bare.endsWith(c))) { flush(PAUSE.conj); continue; }
       // 긴 구는 조사 뒤에서 살짝 쉰다(호흡 단위 ≈ 12음절)
-      if (syl >= 12 && WEAK_BREAK_PARTICLE.test(bare)) { flush(PAUSE.weak); continue; }
+      // 수량과 그 단위 사이는 끊지 않는다 — '오만 ⟂ 원'처럼 들린다.
+      const 단위앞 = UNIT_ONLY_RE.test(String(words[i + 1] || '').replace(/[,.!?]+$/, ''));
+      if (syl >= 12 && WEAK_BREAK_PARTICLE.test(bare) && !범위중간 && !단위앞) { flush(PAUSE.weak); continue; }
       if (cur.join(' ').length >= maxChars) { flush(PAUSE.weak); continue; }
     }
     flush(0);
