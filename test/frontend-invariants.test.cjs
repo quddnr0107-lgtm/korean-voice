@@ -49,6 +49,13 @@ test('가지조문과 공포문 점 표기 날짜를 의미 경계대로 읽는�
   for (const [raw, expected] of cases) assert.strictEqual(K.normalize(raw), expected, raw);
 });
 
+test('시각 범위는 0분을 불필요하게 읽지 않고부터·까지 경계를 보존한다', () => {
+  assert.strictEqual(K.normalize('09:00'), '아홉 시');
+  assert.strictEqual(K.normalize('09:00~18:00'), '아홉 시부터 십팔 시까지');
+  assert.strictEqual(K.normalize('09:30~12:00'), '아홉 시 삼십 분부터 열두 시까지');
+  assert.ok(!K.normalize('KATUSA 교육은 09:00~18:00입니다.').includes('영 분'));
+});
+
 test('법령 호 가지번호와 목·서식 경계를 보존한다', () => {
   const cases = [
     ['제1호의2', '제일 호의 이'],
