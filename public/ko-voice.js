@@ -117,6 +117,14 @@
     }
     return readSino(n) + ' ' + spoken;
   }
+  // 시각은 분·초가 0이면 읽지 않는다. 09:00을 "아홉 시 영 분"으로 읽으면
+  // 일정표·훈련시간 같은 행정 문장에서 기계적인 숫자 나열이 된다.
+  function readClock(hour, minute, second) {
+    const parts = [readWithUnit(hour, '시')];
+    if (+minute !== 0) parts.push(readSino(minute) + ' 분');
+    if (second != null && +second !== 0) parts.push(readSino(second) + ' 초');
+    return parts.join(' ');
+  }
 
   /* ───────────────────────── 3. 기호·영문 약어 ───────────────────────── */
   const ABBR = {
@@ -184,8 +192,12 @@
     t = t.replace(/\b(\d{4})\s*[.\-/]\s*(\d{1,2})\s*[.\-/]\s*(\d{1,2})\.?(?!\d)/g, (m, y, mo, d) => readSino(y) + ' 년 ' + readWithUnit(mo, '월') + ' ' + readSino(d) + ' 일');
     // 9/3 → 구 월 삼 일 (월·일 범위일 때만), 아니면 분수
     t = t.replace(/(?<![\d.])(\d{1,2})\/(\d{1,2})(?![\d/])/g, (m, a, b) => (+a >= 1 && +a <= 12 && +b >= 1 && +b <= 31) ? readWithUnit(a, '월') + ' ' + readSino(b) + ' 일' : readSino(b) + ' 분의 ' + readSino(a));
-    // 시각: 10:30 → 열 시 삼십 분
-    t = t.replace(/\b(\d{1,2}):(\d{2})(?::(\d{2}))?\b/g, (m, h, mi, s) => readWithUnit(h, '시') + ' ' + readSino(mi) + ' 분' + (s ? ' ' + readSino(s) + ' 초' : ''));
+    // 시각 범위: 09:00~18:00 → 아홉 시부터 십팔 시까지.
+    // standalone 시각보다 먼저 처리해야 물결표가 일반 범위로 바뀌지 않는다.
+    t = t.replace(/\b(\d{1,2}):(\d{2})(?::(\d{2}))?\s*[~∼～]\s*(\d{1,2}):(\d{2})(?::(\d{2}))?\b/g,
+      (m, h1, m1, s1, h2, m2, s2) => readClock(h1, m1, s1) + '부터 ' + readClock(h2, m2, s2) + '까지');
+    // 시각: 10:30 → 열 시 삼십 분, 09:00 → 아홉 시
+    t = t.replace(/\b(\d{1,2}):(\d{2})(?::(\d{2}))?\b/g, (m, h, mi, s) => readClock(h, mi, s));
     // 비율: 2.5:1 → 이 점 오 대 일 (시각 hh:mm은 위에서 이미 처리됨)
     t = t.replace(/(\d+(?:\.\d+)?)\s*:\s*(\d+(?:\.\d+)?)(?![\d:])/g, (m, a, b) => readNumber(a) + ' 대 ' + readNumber(b));
     // 영하: -3도
