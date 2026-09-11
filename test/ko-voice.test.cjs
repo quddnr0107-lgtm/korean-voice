@@ -37,6 +37,15 @@ test('법령 목 표기의 점은 문장 끝으로 오인하지 않는다', () =
   assert.strictEqual(p.sentences.length, 1, '목 표지 때문에 가짜 문장을 만들지 않는다');
 });
 
+test('군 장비명 K1·K2·K9는 일반 숫자 읽기와 분리한다', () => {
+  const cases = [
+    ['K1 전차', '케이원 전차'], ['K-1 전차', '케이원 전차'],
+    ['K2 전차', '케이투 전차'], ['K-2 전차', '케이투 전차'],
+    ['K9 자주포', '케이나인 자주포'], ['K-9 자주포', '케이나인 자주포'],
+  ];
+  for (const [input, expected] of cases) assert.strictEqual(K.normalize(input), expected, input);
+});
+
 test('신경망 전달 문자열은 chunk 경계에서 문장부호를 중복하지 않는다', () => {
   const p = K.prepare('훈련을 받아야 하며, 훈련에 참석합니다.', { emotion: 'neutral' });
   const spoken = K.joinSpokenChunks(p.sentences[0].chunks);
