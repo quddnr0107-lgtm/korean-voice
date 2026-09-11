@@ -39,11 +39,11 @@ export class BakeQueue extends DurableObject {
       setAlarm: (at) => ctx.storage.setAlarm(at),
     });
   }
-  async alarm() { await this.baker.tick(); }
-  async enqueue(body) { return this.baker.enqueue(body); }
+  async alarm() { await this.baker.stop(); } // Retired bulk queue: no automatic Container synthesis.
+  async enqueue() { throw new Error('container_bulk_bake_retired'); }
   async status() { return this.baker.status(); }
   async stop() { return this.baker.stop(); }
-  async resume() { return this.baker.resume(); }
+  async resume() { throw new Error('container_bulk_bake_retired'); }
   async clear() { return this.baker.clear(); }
   async recount() { return this.baker.recount(); }
 }
@@ -107,22 +107,15 @@ async function handleBakePrune(request, env) {
 async function handleBake(request, env) {
   if (!env.BAKE) return json({ ok: false, error: 'bake_unavailable', reason: 'BAKE 바인딩 없음' }, 503, CORS);
   const stub = env.BAKE.get(env.BAKE.idFromName('main'));
-  if (request.method === 'GET') return json({ ok: true, ...(await stub.status()) }, 200, CORS);
+  if (request.method === 'GET') return json({ ok: true, retired: true }, 200, CORS);
   if (!env.BAKE_TOKEN) return json({ ok: false, error: 'bake_token_unset', reason: 'wrangler secret put BAKE_TOKEN 이 먼저다' }, 503, CORS);
   if ((request.headers.get('Authorization') || '') !== 'Bearer ' + env.BAKE_TOKEN) return json({ ok: false, error: 'unauthorized' }, 401, CORS);
   let body = {}; try { body = await request.json(); } catch (_) { body = {}; }
   const action = body.action || 'enqueue';
   // 🔴 DO 안의 예외를 삼키지 않는다 — 500 {} 로 나가면 보내는 쪽이 원인을 못 본다(4회차 실측). 이유를 본문에 실어 준다.
   try {
-    if (action === 'enqueue') {
-      const v = body.v || 'female';
-      if (!VOICES.includes(v)) return json({ ok: false, error: 'bad_voice' }, 400, CORS);
-      const s = Math.max(4, Math.min(32, parseInt(body.s || DEFAULT_STEPS, 10) || DEFAULT_STEPS));
-      const items = Array.isArray(body.items) ? body.items.slice(0, 400) : [];
-      return json({ ok: true, ...(await stub.enqueue({ v, s, items })) }, 200, CORS);
-    }
     if (action === 'stop') return json({ ok: true, ...(await stub.stop()) }, 200, CORS);
-    if (action === 'resume') return json({ ok: true, ...(await stub.resume()) }, 200, CORS);
+    if (action === 'enqueue' || action === 'resume') return json({ ok: false, error: 'container_bulk_bake_retired' }, 410, CORS);
     if (action === 'clear') return json({ ok: true, ...(await stub.clear()) }, 200, CORS);
     if (action === 'recount') return json({ ok: true, ...(await stub.recount()) }, 200, CORS);
     return json({ ok: false, error: 'bad_action' }, 400, CORS);
@@ -159,6 +152,8 @@ function audioResponse(body, size, status, extra) {
   return new Response(body, { status, headers: { 'Content-Type': 'audio/mpeg', 'Accept-Ranges': 'bytes', 'Cache-Control': 'public, max-age=31536000, immutable', ...(size != null ? { 'Content-Length': String(size) } : {}), ...CORS, ...extra } });
 }
 async function handleLiveTts(request, env, ctx) {
+  if (!['GET', 'HEAD'].includes(request.method)) return json({ ok: false, error: 'method' }, 405, CORS);
+  if (!env.TTS_CACHE) return json({ ok: false, error: 'cache_unavailable' }, 503, CORS);
   const url = new URL(request.url);
   const v = url.searchParams.get('v') || 'female';
   const t = cleanText(url.searchParams.get('t'));
@@ -192,10 +187,11 @@ async function handleLiveTts(request, env, ctx) {
         }
         return audioResponse(obj.body, obj.size, 200, 표);
       }
-    } catch (_) { /* 캐시 실패는 다음 표식·합성으로 */ }
+    } catch (_) { return json({ ok: false, error: 'cache_unavailable' }, 503, CORS); }
     }
   }
-  // 2) 컨테이너 합성
+  if (request.method === 'HEAD') return json({ ok: false, error: 'cache_miss' }, 404, { ...CORS, 'Cache-Control': 'no-store' });
+  // 2) 확인된 R2 miss에만 컨테이너 합성
   const c = container(env);
   if (!c) return json({ ok: false, error: 'tts_unavailable', reason: '컨테이너 바인딩 없음' }, 503, CORS);
   let res;
@@ -231,9 +227,10 @@ async function handleWarm(request, env) {
   const r = parseR(body.r == null ? 1 : body.r);
   // R2 에 이미 있는 것은 뺀다(컨테이너 대기열을 아낀다)
   const todo = [];
-  if (env.TTS_CACHE) {
-    for (const t of texts) { const key = await cacheKey(v, s, r, t); if (!(await env.TTS_CACHE.head(key).catch(() => null))) todo.push(t); }
-  } else todo.push(...texts);
+  if (!env.TTS_CACHE) return json({ ok: false, error: 'cache_unavailable' }, 503, CORS);
+  try {
+    for (const t of texts) { const key = await cacheKey(v, s, r, t); if (!(await env.TTS_CACHE.head(key))) todo.push(t); }
+  } catch (_) { return json({ ok: false, error: 'cache_unavailable' }, 503, CORS); }
   if (!todo.length) return json({ ok: true, queued: 0, cached: texts.length }, 200, CORS);
   const c = container(env);
   if (!c) return json({ ok: false, error: 'tts_unavailable' }, 503, CORS);
@@ -291,3 +288,4 @@ export default {
     return out;
   },
 };
+

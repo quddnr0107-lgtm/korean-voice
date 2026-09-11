@@ -1,0 +1,40 @@
+name: Remove historical private-text artifacts
+on:
+  workflow_dispatch:
+    inputs:
+      delete:
+        description: '완료된 실행의 chunks 원고 산출물을 삭제합니다 (체크하지 않으면 목록만 확인)'
+        type: boolean
+        default: false
+permissions:
+  contents: read
+  actions: write
+jobs:
+  cleanup:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/github-script@v7
+        env:
+          DELETE_PRIVATE_ARTIFACTS: ${{ inputs.delete }}
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            if (`${owner}/${repo}` !== 'quddnr0107-lgtm/korean-voice') throw new Error('Unexpected repository');
+            const artifacts = await github.paginate(github.rest.actions.listArtifactsForRepo, { owner, repo, per_page: 100 });
+            const targets = artifacts.filter(a => a.name === 'chunks' && !a.expired);
+            let removed = 0, busy = 0;
+            for (const artifact of targets) {
+              const runId = artifact.workflow_run?.id;
+              if (!runId) throw new Error(`Artifact ${artifact.id}: run identity unavailable`);
+              const { data: run } = await github.rest.actions.getWorkflowRun({ owner, repo, run_id: runId });
+              if (run.status !== 'completed') { busy++; core.info(`Skip active run ${runId}`); continue; }
+              core.info(`Private chunks artifact ${artifact.id}, run ${runId}`);
+              if (process.env.DELETE_PRIVATE_ARTIFACTS === 'true') {
+                await github.rest.actions.deleteArtifact({ owner, repo, artifact_id: artifact.id });
+                removed++;
+              }
+            }
+            core.info(`Candidates ${targets.length}; deleted ${removed}; active runs skipped ${busy}`);
+            if (busy) core.warning('Active runs still have private-text artifacts; repeat after they finish.');
