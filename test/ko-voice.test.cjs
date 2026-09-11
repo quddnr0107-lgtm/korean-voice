@@ -46,6 +46,15 @@ test('군 장비명 K1·K2·K9는 일반 숫자 읽기와 분리한다', () => {
   for (const [input, expected] of cases) assert.strictEqual(K.normalize(input), expected, input);
 });
 
+test('군 장비명 K1A1·K2A1·K9A1은 기본 모델과 개량형을 분리한다', () => {
+  const cases = [
+    ['K1A1 전차', '케이원 에이원 전차'], ['K-1A1 전차', '케이원 에이원 전차'],
+    ['K2A1 전차', '케이투 에이원 전차'], ['K-2A1 전차', '케이투 에이원 전차'],
+    ['K9A1 자주포', '케이나인 에이원 자주포'], ['K-9A1 자주포', '케이나인 에이원 자주포'],
+  ];
+  for (const [input, expected] of cases) assert.strictEqual(K.normalize(input), expected, input);
+});
+
 test('신경망 전달 문자열은 chunk 경계에서 문장부호를 중복하지 않는다', () => {
   const p = K.prepare('훈련을 받아야 하며, 훈련에 참석합니다.', { emotion: 'neutral' });
   const spoken = K.joinSpokenChunks(p.sentences[0].chunks);
