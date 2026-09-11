@@ -1,63 +1,53 @@
 name: GPT one-shot ko-voice frontend fix
-
 on:
   push:
-    branches:
-      - gpt/ko-voice-frontfix-20260911
-
+    branches: [gpt/ko-voice-frontfix-20260911]
 permissions:
   contents: write
-
 jobs:
   patch-test-commit:
-    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
         with:
           ref: gpt/ko-voice-frontfix-20260911
           fetch-depth: 0
-
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
       - name: Apply minimal frontend fixes and regression tests
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
-
           js = Path('public/ko-voice.js')
           s = js.read_text()
-
           old = """    // 제6회 → 제육 회\n    t = t.replace(/제\\s*(\\d+)\\s*(회|차|기|장|조|항|절|편|대)/g, (m, n, u) => '제' + readSino(n) + ' ' + u);"""
           new = """    // 제6회 · 제3조제2항제1호 → 제육 회 · 제삼 조 제이 항 제일 호\n    t = t.replace(/제\\s*(\\d+)\\s*(회|차|기|장|조|항|호|절|편|대)/g, (m, n, u) => '제' + readSino(n) + ' ' + u);\n    // 연쇄 법령 표기에서 앞 단위와 다음 '제…' 사이 어절 경계를 보존한다.\n    t = t.replace(/(회|차|기|장|조|항|호|절|편|대)(?=제[가-힣])/g, '$1 ');"""
           assert old in s, 'legal-normalization target not found'
           s = s.replace(old, new, 1)
-
           old = """  const PARTICLE = /(은|는|이|가|을|를|에서|에게|께서|부터|까지|으로|로|와|과|도|의|만|에)$/;"""
           new = """  const PARTICLE = /(은|는|이|가|을|를|에서|에게|께서|부터|까지|으로|로|와|과|도|의|만|에)$/;\n  // 긴 구의 자동 호흡은 주제·부사어 경계만 허용한다. 주격/목적격/관형격 뒤 쉼은 의미 단위를 깨기 쉽다.\n  const WEAK_BREAK_PARTICLE = /(은|는|에서|에게|께서|부터|까지|으로|로|와|과|도|만|에)$/;"""
           assert old in s, 'particle target not found'
           s = s.replace(old, new, 1)
-
           old = """      if (syl >= 12 && PARTICLE.test(bare)) { flush(PAUSE.weak); continue; }"""
           new = """      if (syl >= 12 && WEAK_BREAK_PARTICLE.test(bare)) { flush(PAUSE.weak); continue; }"""
           assert old in s, 'weak-break target not found'
           s = s.replace(old, new, 1)
-
           old = """  // speakNeural(text, opts) — opts: emotion·rate·volume·onChunk·onEnd\n  async function speakNeural(text, opts) {"""
           new = """  // 신경망 서버에 넘길 문장: 이미 문장부호가 있는 chunk에는 구분 쉼표를 중복 삽입하지 않는다.\n  function joinSpokenChunks(chunks) {\n    return chunks.map((c) => c.text).filter(Boolean).reduce((out, text) => {\n      if (!out) return text;\n      return out + (/[,.!?]$/.test(out.trim()) ? ' ' : ', ') + text;\n    }, '');\n  }\n  // speakNeural(text, opts) — opts: emotion·rate·volume·onChunk·onEnd\n  async function speakNeural(text, opts) {"""
           assert old in s, 'join helper insertion target not found'
           s = s.replace(old, new, 1)
-
           old = """      const spoken = s.chunks.map((c) => c.text).filter(Boolean).join(', ');"""
           new = """      const spoken = joinSpokenChunks(s.chunks);"""
           assert old in s, 'spoken join target not found'
           s = s.replace(old, new, 1)
-
           old = """    splitSentences, phraseSentence, sentenceType, detectEmotion,"""
           new = """    splitSentences, phraseSentence, joinSpokenChunks, sentenceType, detectEmotion,"""
           assert old in s, 'export target not found'
           s = s.replace(old, new, 1)
           js.write_text(s)
-
           tf = Path('test/ko-voice.test.cjs')
           t = tf.read_text()
           marker = """test('기호·영문 약어 정규화', () => {"""
@@ -87,12 +77,10 @@ test('긴 구 자동 호흡은 주격·목적격·관형격 뒤에서 의미 단
           t = t.replace(marker, added + marker, 1)
           tf.write_text(t)
           PY
-
       - name: Syntax and focused regression tests
         run: |
           node --check public/ko-voice.js
           node --test test/ko-voice.test.cjs
-
       - name: Commit tested patch and remove one-shot workflow
         shell: bash
         run: |
@@ -100,5 +88,5 @@ test('긴 구 자동 호흡은 주격·목적격·관형격 뒤에서 의미 단
           git config user.name "GPT frontend maintainer"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add public/ko-voice.js test/ko-voice.test.cjs
-          git commit -m "fix: harden Korean frontend chunking and legal normalization"
+          git commit -m "fix: harden Korean frontend chunking and legal normalization [gpt-frontfix-done]"
           git push origin HEAD:gpt/ko-voice-frontfix-20260911
