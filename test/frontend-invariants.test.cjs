@@ -10,6 +10,7 @@ const SYNTHETIC_CORPUS = [
   '문의는 010-1234-5678로 해주세요.',
   '150만원과 12.5%를 비교합니다.',
   '제12조제3항제2호에 따른 대상자는 21명입니다.',
+  '제3조의2제1항제4호에 따라 2026. 9. 11.부터 시행한다.',
 ];
 
 test('normalize는 대표 한국어 TTS 입력에서 멱등적이다', () => {
@@ -32,6 +33,17 @@ test('지원하는 숫자·법령 형식은 canonical text에 아라비아 숫�
     const normalized = K.normalize(raw);
     assert.ok(!/\d/.test(normalized), `${raw} -> ${normalized}`);
   }
+});
+
+test('가지조문과 공포문 점 표기 날짜를 의미 경계대로 읽는다', () => {
+  const cases = [
+    ['제3조의2', '제삼 조의 이'],
+    ['제3조의2에 따라', '제삼 조의 이에 따라'],
+    ['제3조의2제1항제4호', '제삼 조의 이 제일 항 제사 호'],
+    ['2026. 9. 11.', '이천이십육 년 구 월 십일 일'],
+    ['2026 . 9 . 11', '이천이십육 년 구 월 십일 일'],
+  ];
+  for (const [raw, expected] of cases) assert.strictEqual(K.normalize(raw), expected, raw);
 });
 
 test('production canonical은 중복 쉼표와 핵심 조사 뒤 오분절을 만들지 않는다', () => {
