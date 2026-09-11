@@ -15,6 +15,7 @@ const SYNTHETIC_CORPUS = [
   '별표 1 제1호가목2)에 따른 가격을 적용한다.',
   '제3조의2(적용 범위)에 따라 대상자를 정한다.',
   '제1조(목적) ① 이 법은 목적을 정한다. ② 국가는 지원하여야 한다.',
+  '제1호가목. 교육 대상자 나. 훈련 장소',
 ];
 
 test('normalize는 대표 한국어 TTS 입력에서 멱등적이다', () => {
@@ -95,6 +96,13 @@ test('법령 원문의 항 번호 기호를 남기지 않고 canonical 항 경�
   const normalized = K.normalize('제1조(목적) ① 이 법은 목적을 정한다. ② 국가는 지원하여야 한다.');
   assert.strictEqual(normalized, '제일 조 목적 제일 항 이 법은 목적을 정한다. 제이 항 국가는 지원하여야 한다.');
   assert.ok(!/[①-⑳]/.test(normalized), normalized);
+});
+
+test('법령 목 표지의 점이 canonical 문장 분리를 오염시키지 않는다', () => {
+  const raw = '가. 교육 대상자 나. 훈련 장소 다. 소집 일자';
+  const normalized = K.normalize(raw);
+  assert.strictEqual(normalized, '가목 교육 대상자 나목 훈련 장소 다목 소집 일자');
+  assert.strictEqual(K.prepare(raw, { emotion: 'neutral' }).sentences.length, 1);
 });
 
 test('production canonical은 중복 쉼표와 핵심 조사 뒤 오분절을 만들지 않는다', () => {
