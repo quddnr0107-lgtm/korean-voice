@@ -17,6 +17,26 @@ test('숫자·단위 정규화 — 고유어/한자어·달·큰 수·시각·�
   for (const [i, e] of cases) assert.strictEqual(K.normalize(i), e, i);
 });
 
+test('법령 조·항·호 연쇄 표기는 어절 경계를 보존한다', () => {
+  assert.strictEqual(K.normalize('제3조제2항에 따라'), '제삼 조 제이 항에 따라');
+  assert.strictEqual(K.normalize('제12조제3항제2호'), '제십이 조 제삼 항 제이 호');
+});
+
+test('신경망 전달 문자열은 chunk 경계에서 문장부호를 중복하지 않는다', () => {
+  const p = K.prepare('훈련을 받아야 하며, 훈련에 참석합니다.', { emotion: 'neutral' });
+  const spoken = K.joinSpokenChunks(p.sentences[0].chunks);
+  assert.ok(!spoken.includes(',,'), spoken);
+  assert.ok(spoken.includes('하며, 훈련'), spoken);
+});
+
+test('긴 구 자동 호흡은 주격·목적격·관형격 뒤에서 의미 단위를 끊지 않는다', () => {
+  const text = '예비군 대원은 해마다 정해진 날수의 훈련을 받아야 하며, 훈련 소집 통지서를 받은 사람이 정당한 사유 없이 훈련에 참석하지 않으면 고발 대상이 될 수 있습니다. 다만 질병이나 재해처럼 불가피한 사정이 있으면 미리 연기를 신청할 수 있습니다.';
+  const p = K.prepare(text, { emotion: 'neutral' });
+  const spoken = p.sentences.map((s) => K.joinSpokenChunks(s.chunks)).join(' ');
+  assert.ok(!spoken.includes('날수의, 훈련을'), spoken);
+  assert.ok(!spoken.includes('사정이, 있으면'), spoken);
+});
+
 test('기호·영문 약어 정규화', () => {
   assert.strictEqual(K.normalize('KATUSA·ROTC'), '카투사, 알오티씨');
   assert.strictEqual(K.normalize('A/B'), '에이, 비');

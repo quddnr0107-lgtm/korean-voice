@@ -188,8 +188,10 @@
     t = t.replace(/(\d+(?:\.\d+)?)\s*:\s*(\d+(?:\.\d+)?)(?![\d:])/g, (m, a, b) => readNumber(a) + ' 대 ' + readNumber(b));
     // 영하: -3도
     t = t.replace(/(^|[\s(])-(\d+)\s*(도|℃)/g, (m, p, n) => p + '영하 ' + readSino(n) + ' 도');
-    // 제6회 → 제육 회
-    t = t.replace(/제\s*(\d+)\s*(회|차|기|장|조|항|절|편|대)/g, (m, n, u) => '제' + readSino(n) + ' ' + u);
+    // 제6회 · 제3조제2항제1호 → 제육 회 · 제삼 조 제이 항 제일 호
+    t = t.replace(/제\s*(\d+)\s*(회|차|기|장|조|항|호|절|편|대)/g, (m, n, u) => '제' + readSino(n) + ' ' + u);
+    // 연쇄 법령 표기에서 앞 단위와 다음 '제…' 사이 어절 경계를 보존한다.
+    t = t.replace(/(회|차|기|장|조|항|호|절|편|대)(?=제[가-힣])/g, '$1 ');
     // 범위: 18~21개월 → 18개월에서 21개월
     t = t.replace(/(\d+(?:,\d{3})*(?:\.\d+)?)\s*[~∼～]\s*(\d+(?:,\d{3})*(?:\.\d+)?)\s*([가-힣%a-z℃°]{1,4})?/g, (m, a, b, u) => u ? a + u + '에서 ' + b + u : a + '에서 ' + b);
     // 150만원 · 3억 → 숫자로 환산 후 읽기
@@ -223,6 +225,8 @@
   // 연결어미 → 중간 쉼
   const CONJ = ['자마자', '으니까', '으려고', '면서', '는데도', '는데', '지만', '거나', '든지', '니까', '라서', '려고', '도록', '다가', '어서', '아서', '해서', '으며', '으면', '더니', '길래', '고', '며', '면', '서'];
   const PARTICLE = /(은|는|이|가|을|를|에서|에게|께서|부터|까지|으로|로|와|과|도|의|만|에)$/;
+  // 긴 구의 자동 호흡은 주제·부사어 경계만 허용한다. 주격/목적격/관형격 뒤 쉼은 의미 단위를 깨기 쉽다.
+  const WEAK_BREAK_PARTICLE = /(은|는|에서|에게|께서|부터|까지|으로|로|와|과|도|만|에)$/;
   // 강조어: 앞에 짧은 쉼 + 조금 느리게 (한국어 초점은 AP 첫머리를 높이고 앞에 쉼을 둔다)
   const EMPH = /^(반드시|절대|꼭|주의|경고|마감|필수|중요|무조건|즉시|바로|특히|단,|단\s|다만|주의:|참고:)/;
 
@@ -455,7 +459,7 @@
       if (/,$/.test(w)) { flush(PAUSE.comma); continue; }
       if (bare.length >= 2 && CONJ.some((c) => bare.endsWith(c))) { flush(PAUSE.conj); continue; }
       // 긴 구는 조사 뒤에서 살짝 쉰다(호흡 단위 ≈ 12음절)
-      if (syl >= 12 && PARTICLE.test(bare)) { flush(PAUSE.weak); continue; }
+      if (syl >= 12 && WEAK_BREAK_PARTICLE.test(bare)) { flush(PAUSE.weak); continue; }
       if (cur.join(' ').length >= maxChars) { flush(PAUSE.weak); continue; }
     }
     flush(0);
@@ -701,6 +705,13 @@
       src.start();
     });
   }
+  // 신경망 서버에 넘길 문장: 이미 문장부호가 있는 chunk에는 구분 쉼표를 중복 삽입하지 않는다.
+  function joinSpokenChunks(chunks) {
+    return chunks.map((c) => c.text).filter(Boolean).reduce((out, text) => {
+      if (!out) return text;
+      return out + (/[,.!?]$/.test(out.trim()) ? ' ' : ', ') + text;
+    }, '');
+  }
   // speakNeural(text, opts) — opts: emotion·rate·volume·onChunk·onEnd
   async function speakNeural(text, opts) {
     opts = opts || {};
@@ -708,7 +719,7 @@
     const plan = prepare(text, opts);
     const items = plan.sentences.map((s) => {
       const last = s.chunks[s.chunks.length - 1] || { pause: 0, rate: 1, volume: 1 };
-      const spoken = s.chunks.map((c) => c.text).filter(Boolean).join(', ');
+      const spoken = joinSpokenChunks(s.chunks);
       const pause = s.chunks.reduce((a, c) => a + (c.text ? 0 : c.pause), 0) + (last.pause || 0);
       return { text: spoken, pause, rate: last.rate, volume: last.volume, type: s.type };
     }).filter((it) => it.text);
@@ -750,7 +761,7 @@
   return {
     normalize, prepare, pronounce, toSSML, speak, stop, koVoices, parseTags,
     speakNeural, stopNeural, stopAll, speakAuto, neuralStatus,
-    splitSentences, phraseSentence, sentenceType, detectEmotion,
+    splitSentences, phraseSentence, joinSpokenChunks, sentenceType, detectEmotion,
     readSino, readNative, readWithUnit, EMOTIONS, PAUSE, TUNE, JITTER, jitterPause, seedJitter, seedForText,
     contourFor, endingOf, getContour: () => CONTOUR,
     onsetOf, tailOf, wordGrid, getWord: () => WORD,
