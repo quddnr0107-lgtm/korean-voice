@@ -1,0 +1,33 @@
+name: GPT legal heading one-shot
+on:
+  push:
+    branches:
+      - 'gpt/legal-heading-accuracy-20260911'
+permissions:
+  contents: write
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Apply legal heading patch
+        run: python3 tools/gpt_legal_heading_patch.py
+      - name: Verify
+        run: |
+          node --check public/ko-voice.js
+          node --test test/private-source.test.mjs test/container-cost.test.mjs test/ko-voice.test.cjs test/frontend-invariants.test.cjs
+          python3 server/singleflight.py --selftest
+          python3 -m py_compile server/singleflight.py server/server.py
+          git diff --check
+      - name: Commit verified result
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/gpt-legal-heading-once.yml tools/gpt_legal_heading_patch.py
+          git add public/ko-voice.js test/frontend-invariants.test.cjs
+          git commit -m 'fix: normalize Korean legal article headings'
+          git push origin HEAD:gpt/legal-heading-accuracy-20260911
