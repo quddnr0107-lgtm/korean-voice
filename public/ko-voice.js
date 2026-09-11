@@ -173,13 +173,13 @@
     let t = String(text == null ? '' : text);
     // 마크다운·이모지·URL 등 소리로 낼 수 없는 것부터 제거
     t = t.replace(/https?:\/\/\S+/g, '링크').replace(/www\.\S+/g, '링크');
-    t = t.replace(/^[ \t]*(#{1,6}|[-*•]|\d+[.)])\s+/gm, '');
+    t = t.replace(/^[ \t]*(#{1,6}|[-*•]|(?!\d{4}\.\s+\d{1,2}\.)\d+[.)])\s+/gm, '');
     t = t.replace(/~~/g, '').replace(/[*_`]{1,3}(?=\S)|(?<=\S)[*_`]{1,3}/g, '');
     t = t.replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu, '');
     // 전화번호: 010-1234-5678 → 공일공 일이삼사 오육칠팔
     t = t.replace(/\b0\d{1,2}-\d{3,4}-\d{4}\b/g, (m) => m.split('-').map(readDigits).join(' '));
     // 날짜: 2026-09-03 · 2026.9.3 · 2026/9/3
-    t = t.replace(/\b(\d{4})[.\-/](\d{1,2})[.\-/](\d{1,2})\.?(?!\d)/g, (m, y, mo, d) => readSino(y) + ' 년 ' + readWithUnit(mo, '월') + ' ' + readSino(d) + ' 일');
+    t = t.replace(/\b(\d{4})\s*[.\-/]\s*(\d{1,2})\s*[.\-/]\s*(\d{1,2})\.?(?!\d)/g, (m, y, mo, d) => readSino(y) + ' 년 ' + readWithUnit(mo, '월') + ' ' + readSino(d) + ' 일');
     // 9/3 → 구 월 삼 일 (월·일 범위일 때만), 아니면 분수
     t = t.replace(/(?<![\d.])(\d{1,2})\/(\d{1,2})(?![\d/])/g, (m, a, b) => (+a >= 1 && +a <= 12 && +b >= 1 && +b <= 31) ? readWithUnit(a, '월') + ' ' + readSino(b) + ' 일' : readSino(b) + ' 분의 ' + readSino(a));
     // 시각: 10:30 → 열 시 삼십 분
@@ -188,6 +188,10 @@
     t = t.replace(/(\d+(?:\.\d+)?)\s*:\s*(\d+(?:\.\d+)?)(?![\d:])/g, (m, a, b) => readNumber(a) + ' 대 ' + readNumber(b));
     // 영하: -3도
     t = t.replace(/(^|[\s(])-(\d+)\s*(도|℃)/g, (m, p, n) => p + '영하 ' + readSino(n) + ' 도');
+    // 가지조문: 제3조의2 · 제3조의2제1항 → 제삼 조의 이 · 제삼 조의 이 제일 항
+    // 일반 제N조 처리보다 먼저 잡아 '의2'를 독립된 가지 번호로 읽는다.
+    t = t.replace(/제\s*(\d+)\s*조\s*의\s*(\d+)(?=\s*제\s*\d)/g, (m, n, sub) => '제' + readSino(n) + ' 조의 ' + readSino(sub) + ' ');
+    t = t.replace(/제\s*(\d+)\s*조\s*의\s*(\d+)/g, (m, n, sub) => '제' + readSino(n) + ' 조의 ' + readSino(sub));
     // 제6회 · 제3조제2항제1호 → 제육 회 · 제삼 조 제이 항 제일 호
     t = t.replace(/제\s*(\d+)\s*(회|차|기|장|조|항|호|절|편|대)/g, (m, n, u) => '제' + readSino(n) + ' ' + u);
     // 연쇄 법령 표기에서 앞 단위와 다음 '제…' 사이 어절 경계를 보존한다.
