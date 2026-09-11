@@ -8,3 +8,4 @@ corpus/
 models/
 *.parquet
 __pycache__/
+cache/

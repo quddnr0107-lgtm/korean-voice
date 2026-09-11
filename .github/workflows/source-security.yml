@@ -25,4 +25,17 @@ jobs:
           assert.ok(worker.includes('async alarm() { await this.baker.stop(); }'));
           assert.ok(!worker.includes('await this.baker.tick()'));
           NODE
+      - name: 저장소에 굽기 중간 산출물이 없다
+        run: |
+          # 이 저장소는 공개다. 굽는 중간에 생기는 음성 파일은 원고를 소리로 담고 있으므로
+          # 커밋되면 안 된다. 실제로 `cache/b0.tmp.wav` 한 개가 들어가 있었다.
+          found=$(git ls-files | grep -E '\.(wav|mp3|opus|ogg|m4a|flac)$' || true)
+          if [ -n "$found" ]; then
+            echo "음성 파일이 저장소에 있다:"; echo "$found"; exit 1
+          fi
+          cached=$(git ls-files | grep -E '^cache/' || true)
+          if [ -n "$cached" ]; then
+            echo "cache/ 가 커밋돼 있다:"; echo "$cached"; exit 1
+          fi
+          echo "음성 파일 0개 · cache/ 0개"
       - run: node --check tools/chunks.mjs && node --check worker.mjs
