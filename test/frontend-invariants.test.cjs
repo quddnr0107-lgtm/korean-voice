@@ -45,6 +45,8 @@ test('지원하는 숫자·법령 형식은 canonical text에 아라비아 숫�
 test('영하 접두어가 있는 음수 온도는 영하를 중복하지 않는다', () => {
   assert.strictEqual(K.normalize('영하 -3도'), '영하 삼 도');
   assert.strictEqual(K.normalize('최저 영하 -10℃'), '최저 영하 십 도');
+  assert.strictEqual(K.normalize('-3~3도'), '영하 삼 도에서 삼 도');
+  assert.strictEqual(K.normalize('영하 -3~-1도'), '영하 삼 도에서 영하 일 도');
 });
 
 test('가지조문과 공포문 점 표기 날짜를 의미 경계대로 읽는다', () => {
