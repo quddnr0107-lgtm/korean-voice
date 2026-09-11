@@ -23,6 +23,12 @@ test('법령 조·항·호 연쇄 표기는 어절 경계를 보존한다', () =
   assert.strictEqual(K.normalize('제12조제3항제2호'), '제십이 조 제삼 항 제이 호');
 });
 
+test('법령 원문 항 번호 기호도 음성용 제N항으로 보존한다', () => {
+  assert.strictEqual(K.normalize('제1조(목적) ① 이 법은 목적을 정한다. ② 국가는 지원하여야 한다.'),
+    '제일 조 목적 제일 항 이 법은 목적을 정한다. 제이 항 국가는 지원하여야 한다.');
+  assert.strictEqual(K.normalize('① 첫째 항목 ⑳ 스무 번째 항목'), '제일 항 첫째 항목 제이십 항 스무 번째 항목');
+});
+
 test('신경망 전달 문자열은 chunk 경계에서 문장부호를 중복하지 않는다', () => {
   const p = K.prepare('훈련을 받아야 하며, 훈련에 참석합니다.', { emotion: 'neutral' });
   const spoken = K.joinSpokenChunks(p.sentences[0].chunks);
