@@ -14,6 +14,8 @@ jobs:
           node-version: '22'
       - name: Security and Korean frontend regressions
         run: node --test test/private-source.test.mjs test/container-cost.test.mjs test/ko-voice.test.cjs test/frontend-invariants.test.cjs
+      - name: Container singleflight selftest
+        run: python3 server/singleflight.py --selftest && python3 -m py_compile server/singleflight.py server/server.py
       - name: No private-text artifact or Container bulk queue
         run: |
           node --input-type=module <<'NODE'
