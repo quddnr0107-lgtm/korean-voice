@@ -203,6 +203,11 @@
     t = t.replace(/\b0\d{1,2}-\d{3,4}-\d{4}\b/g, (m) => m.split('-').map(readDigits).join(' '));
     // 대표번호: 1577-0000 → 일오칠칠 공공공공 (일반 숫자·하이픈 처리보다 먼저 잡는다.)
     t = t.replace(/\b1\d{3}-\d{4}\b/g, (m) => m.split('-').map(readDigits).join(' '));
+    // 날짜 범위: 2026-09-11~2026-09-12 → ...부터 ...까지 (수량 범위의 '에서'와 분리)
+    t = t.replace(/\b(\d{4})\s*[.\-/]\s*(\d{1,2})\s*[.\-/]\s*(\d{1,2})\.?\s*[~∼～]\s*(\d{4})\s*[.\-/]\s*(\d{1,2})\s*[.\-/]\s*(\d{1,2})\.?(?!\d)/g,
+      (m, y1, mo1, d1, y2, mo2, d2) => readSino(y1) + ' 년 ' + readWithUnit(mo1, '월') + ' ' + readSino(d1) + ' 일부터 ' + readSino(y2) + ' 년 ' + readWithUnit(mo2, '월') + ' ' + readSino(d2) + ' 일까지');
+    t = t.replace(/\b(\d{4})\s*년\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일?\s*[~∼～]\s*(\d{4})\s*년\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일?(?!\d)/g,
+      (m, y1, mo1, d1, y2, mo2, d2) => readSino(y1) + ' 년 ' + readWithUnit(mo1, '월') + ' ' + readSino(d1) + ' 일부터 ' + readSino(y2) + ' 년 ' + readWithUnit(mo2, '월') + ' ' + readSino(d2) + ' 일까지');
     // 날짜: 2026-09-03 · 2026.9.3 · 2026/9/3
     t = t.replace(/\b(\d{4})\s*[.\-/]\s*(\d{1,2})\s*[.\-/]\s*(\d{1,2})\.?(?!\d)/g, (m, y, mo, d) => readSino(y) + ' 년 ' + readWithUnit(mo, '월') + ' ' + readSino(d) + ' 일');
     // 9/3 → 구 월 삼 일 (월·일 범위일 때만), 아니면 분수
