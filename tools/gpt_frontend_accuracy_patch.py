@@ -3,6 +3,12 @@ from pathlib import Path
 source = Path('public/ko-voice.js')
 s = source.read_text(encoding='utf-8')
 
+# `2026. 9. 11.` must not be mistaken for an ordered Markdown list item (`2026. `).
+old_markdown = r"t = t.replace(/^[ \t]*(#{1,6}|[-*•]|\d+[.)])\s+/gm, '');"
+new_markdown = r"t = t.replace(/^[ \t]*(#{1,6}|[-*•]|(?!\d{4}\.\s+\d{1,2}\.)\d+[.)])\s+/gm, '');"
+assert s.count(old_markdown) == 1, 'markdown normalization anchor changed'
+s = s.replace(old_markdown, new_markdown, 1)
+
 old_date = r"t = t.replace(/\b(\d{4})[.\-/](\d{1,2})[.\-/](\d{1,2})\.?(?!\d)/g,"
 new_date = r"t = t.replace(/\b(\d{4})\s*[.\-/]\s*(\d{1,2})\s*[.\-/]\s*(\d{1,2})\.?(?!\d)/g,"
 assert s.count(old_date) == 1, 'date normalization anchor changed'
