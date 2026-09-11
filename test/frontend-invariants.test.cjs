@@ -16,6 +16,7 @@ const SYNTHETIC_CORPUS = [
   '제3조의2(적용 범위)에 따라 대상자를 정한다.',
   '제1조(목적) ① 이 법은 목적을 정한다. ② 국가는 지원하여야 한다.',
   '제1호가목. 교육 대상자 나. 훈련 장소',
+  '문의는 1577-0000 또는 1588-1234로 연락하세요.',
 ];
 
 test('normalize는 대표 한국어 TTS 입력에서 멱등적이다', () => {
@@ -103,6 +104,13 @@ test('법령 목 표지의 점이 canonical 문장 분리를 오염시키지 않
   const normalized = K.normalize(raw);
   assert.strictEqual(normalized, '가목 교육 대상자 나목 훈련 장소 다목 소집 일자');
   assert.strictEqual(K.prepare(raw, { emotion: 'neutral' }).sentences.length, 1);
+});
+
+test('대표번호는 일반 숫자·하이픈 규칙보다 먼저 전화번호로 읽는다', () => {
+  assert.strictEqual(K.normalize('1577-0000'), '일오칠칠 공공공공');
+  assert.strictEqual(K.normalize('1588-1234'), '일오팔팔 일이삼사');
+  const normalized = K.normalize('문의는 1577-0000 또는 1588-1234로 연락하세요.');
+  assert.ok(!normalized.includes('-') && !/\d/.test(normalized), normalized);
 });
 
 test('production canonical은 중복 쉼표와 핵심 조사 뒤 오분절을 만들지 않는다', () => {
