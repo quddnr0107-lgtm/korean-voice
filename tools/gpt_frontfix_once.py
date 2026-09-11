@@ -1,0 +1,78 @@
+from pathlib import Path
+
+js = Path('public/ko-voice.js')
+s = js.read_text()
+
+old = """    // 제6회 → 제육 회
+    t = t.replace(/제\\s*(\\d+)\\s*(회|차|기|장|조|항|절|편|대)/g, (m, n, u) => '제' + readSino(n) + ' ' + u);"""
+new = """    // 제6회 · 제3조제2항제1호 → 제육 회 · 제삼 조 제이 항 제일 호
+    t = t.replace(/제\\s*(\\d+)\\s*(회|차|기|장|조|항|호|절|편|대)/g, (m, n, u) => '제' + readSino(n) + ' ' + u);
+    // 연쇄 법령 표기에서 앞 단위와 다음 '제…' 사이 어절 경계를 보존한다.
+    t = t.replace(/(회|차|기|장|조|항|호|절|편|대)(?=제[가-힣])/g, '$1 ');"""
+assert old in s, 'legal-normalization target not found'
+s = s.replace(old, new, 1)
+
+old = """  const PARTICLE = /(은|는|이|가|을|를|에서|에게|께서|부터|까지|으로|로|와|과|도|의|만|에)$/;"""
+new = """  const PARTICLE = /(은|는|이|가|을|를|에서|에게|께서|부터|까지|으로|로|와|과|도|의|만|에)$/;
+  // 긴 구의 자동 호흡은 주제·부사어 경계만 허용한다. 주격/목적격/관형격 뒤 쉼은 의미 단위를 깨기 쉽다.
+  const WEAK_BREAK_PARTICLE = /(은|는|에서|에게|께서|부터|까지|으로|로|와|과|도|만|에)$/;"""
+assert old in s, 'particle target not found'
+s = s.replace(old, new, 1)
+
+old = """      if (syl >= 12 && PARTICLE.test(bare)) { flush(PAUSE.weak); continue; }"""
+new = """      if (syl >= 12 && WEAK_BREAK_PARTICLE.test(bare)) { flush(PAUSE.weak); continue; }"""
+assert old in s, 'weak-break target not found'
+s = s.replace(old, new, 1)
+
+old = """  // speakNeural(text, opts) — opts: emotion·rate·volume·onChunk·onEnd
+  async function speakNeural(text, opts) {"""
+new = """  // 신경망 서버에 넘길 문장: 이미 문장부호가 있는 chunk에는 구분 쉼표를 중복 삽입하지 않는다.
+  function joinSpokenChunks(chunks) {
+    return chunks.map((c) => c.text).filter(Boolean).reduce((out, text) => {
+      if (!out) return text;
+      return out + (/[,.!?]$/.test(out.trim()) ? ' ' : ', ') + text;
+    }, '');
+  }
+  // speakNeural(text, opts) — opts: emotion·rate·volume·onChunk·onEnd
+  async function speakNeural(text, opts) {"""
+assert old in s, 'join helper insertion target not found'
+s = s.replace(old, new, 1)
+
+old = """      const spoken = s.chunks.map((c) => c.text).filter(Boolean).join(', ');"""
+new = """      const spoken = joinSpokenChunks(s.chunks);"""
+assert old in s, 'spoken join target not found'
+s = s.replace(old, new, 1)
+
+old = """    splitSentences, phraseSentence, sentenceType, detectEmotion,"""
+new = """    splitSentences, phraseSentence, joinSpokenChunks, sentenceType, detectEmotion,"""
+assert old in s, 'export target not found'
+s = s.replace(old, new, 1)
+js.write_text(s)
+
+tf = Path('test/ko-voice.test.cjs')
+t = tf.read_text()
+marker = "test('기호·영문 약어 정규화', () => {"
+assert marker in t, 'test insertion marker not found'
+added = """test('법령 조·항·호 연쇄 표기는 어절 경계를 보존한다', () => {
+  assert.strictEqual(K.normalize('제3조제2항에 따라'), '제삼 조 제이 항에 따라');
+  assert.strictEqual(K.normalize('제12조제3항제2호'), '제십이 조 제삼 항 제이 호');
+});
+
+test('신경망 전달 문자열은 chunk 경계에서 문장부호를 중복하지 않는다', () => {
+  const p = K.prepare('훈련을 받아야 하며, 훈련에 참석합니다.', { emotion: 'neutral' });
+  const spoken = K.joinSpokenChunks(p.sentences[0].chunks);
+  assert.ok(!spoken.includes(',,'), spoken);
+  assert.ok(spoken.includes('하며, 훈련'), spoken);
+});
+
+test('긴 구 자동 호흡은 주격·목적격·관형격 뒤에서 의미 단위를 끊지 않는다', () => {
+  const text = '예비군 대원은 해마다 정해진 날수의 훈련을 받아야 하며, 훈련 소집 통지서를 받은 사람이 정당한 사유 없이 훈련에 참석하지 않으면 고발 대상이 될 수 있습니다. 다만 질병이나 재해처럼 불가피한 사정이 있으면 미리 연기를 신청할 수 있습니다.';
+  const p = K.prepare(text, { emotion: 'neutral' });
+  const spoken = p.sentences.map((s) => K.joinSpokenChunks(s.chunks)).join(' ');
+  assert.ok(!spoken.includes('날수의, 훈련을'), spoken);
+  assert.ok(!spoken.includes('사정이, 있으면'), spoken);
+});
+
+"""
+t = t.replace(marker, added + marker, 1)
+tf.write_text(t)
