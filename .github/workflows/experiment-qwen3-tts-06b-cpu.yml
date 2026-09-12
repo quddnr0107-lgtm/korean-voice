@@ -1,0 +1,92 @@
+name: Experiment Qwen3 TTS 0.6B Sohee CPU smoke
+
+on:
+  push:
+    branches:
+      - experiment/qwen3-tts-06b-sohee-cpu-smoke-20260912
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      HF_HUB_DISABLE_TELEMETRY: '1'
+      TOKENIZERS_PARALLELISM: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Prepare one canonical Korean military sentence
+        run: |
+          mkdir -p /tmp/qwen-smoke
+          node - <<'NODE' > /tmp/qwen-smoke/text.txt
+          const K = require('./public/ko-voice.js');
+          process.stdout.write(K.normalize('K2 전차를 점검한다.') + '\n');
+          NODE
+          cat /tmp/qwen-smoke/text.txt
+      - name: Install CPU runtime
+        run: |
+          START=$(date +%s)
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch==2.7.0 torchaudio==2.7.0
+          python -m pip install qwen-tts==0.1.1
+          END=$(date +%s)
+          echo "install_seconds=$((END-START))" | tee /tmp/qwen-smoke/setup.txt
+          python - <<'PY' | tee -a /tmp/qwen-smoke/setup.txt
+          import os, torch
+          print('torch', torch.__version__)
+          print('cpu_threads_available', os.cpu_count())
+          PY
+      - name: Load 0.6B CustomVoice and synthesize Sohee on CPU
+        run: |
+          python - <<'PY' | tee /tmp/qwen-smoke/result.json
+          import json, os, time
+          import torch
+          import soundfile as sf
+          from qwen_tts import Qwen3TTSModel
+
+          text=open('/tmp/qwen-smoke/text.txt',encoding='utf-8').read().strip()
+          started=time.perf_counter()
+          model=Qwen3TTSModel.from_pretrained(
+              'Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice',
+              device_map='cpu',
+              dtype=torch.float32,
+              attn_implementation='sdpa',
+          )
+          load_seconds=time.perf_counter()-started
+          synth_started=time.perf_counter()
+          wavs,sr=model.generate_custom_voice(
+              text=text,
+              language='Korean',
+              speaker='Sohee',
+              do_sample=False,
+              max_new_tokens=128,
+          )
+          synth_seconds=time.perf_counter()-synth_started
+          wav=wavs[0]
+          path='/tmp/qwen-smoke/qwen-sohee-canonical.wav'
+          sf.write(path,wav,sr)
+          result={
+              'provider':'qwen3-tts-0.6b-customvoice-sohee',
+              'runner':'github-actions-ubuntu-cpu',
+              'text':text,
+              'load_seconds':round(load_seconds,3),
+              'synthesis_seconds':round(synth_seconds,3),
+              'sample_rate':int(sr),
+              'audio_seconds':round(len(wav)/sr,3),
+              'bytes':os.path.getsize(path),
+              'paid_tts_api_calls':0,
+              'cloudflare_calls':0,
+          }
+          print(json.dumps(result,ensure_ascii=False,indent=2))
+          PY
+      - name: Upload ephemeral smoke evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qwen3-tts-06b-sohee-cpu-smoke
+          path: /tmp/qwen-smoke/
+          retention-days: 1
