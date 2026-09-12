@@ -293,3 +293,20 @@ test('멱등성 — 앞머리 따옴표·주석기호가 붙어도 불릿은 한
     assert.ok(!/^[-*•]/.test(a), '불릿이 남지 않는다: ' + JSON.stringify(a));
   }
 });
+
+
+test('시각 범위 뒤 조사는 생성된 까지와 자연스럽게 합친다', () => {
+  assert.strictEqual(K.normalize('운영시간은 09:00~18:00에 한정한다.'), '운영시간은 아홉 시부터 십팔 시까지 한정한다.');
+  assert.strictEqual(K.normalize('09:00~18:00에는 출입할 수 있다.'), '아홉 시부터 십팔 시까지는 출입할 수 있다.');
+  assert.strictEqual(K.normalize('09:00~18:00에도 출입할 수 있다.'), '아홉 시부터 십팔 시까지도 출입할 수 있다.');
+  assert.strictEqual(K.normalize('09:00~18:00에만 출입할 수 있다.'), '아홉 시부터 십팔 시까지만 출입할 수 있다.');
+  assert.strictEqual(K.normalize('회의는 09:00~18:00까지 진행한다.'), '회의는 아홉 시부터 십팔 시까지 진행한다.');
+  assert.strictEqual(K.normalize('회의는 09:00~18:00까지는 진행한다.'), '회의는 아홉 시부터 십팔 시까지는 진행한다.');
+  assert.strictEqual(K.normalize('09:00~18:00 동안 운영한다.'), '아홉 시부터 십팔 시까지 동안 운영한다.');
+});
+
+test('시각 범위 조사 결합은 기존 시각·수량 범위에 새지 않는다', () => {
+  assert.strictEqual(K.normalize('09:00'), '아홉 시');
+  assert.strictEqual(K.normalize('09:30~12:00'), '아홉 시 삼십 분부터 열두 시까지');
+  assert.strictEqual(K.normalize('복무기간은 18~21개월에 해당한다.'), '복무기간은 십팔 개월에서 이십일 개월에 해당한다.');
+});
