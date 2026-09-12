@@ -1,0 +1,62 @@
+name: Experiment MOSS Nano ASR judge
+on:
+  push:
+    branches: [experiment/moss-nano-asr-20260912]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  judge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      HF_HUB_DISABLE_TELEMETRY: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Reuse prior public-test artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: moss-nano-korean-smoke
+          path: /tmp/moss-smoke
+          github-token: ${{ github.token }}
+          repository: quddnr0107-lgtm/korean-voice
+          run-id: 34673860101
+      - name: Install local ASR judge
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install faster-whisper
+      - name: Transcribe raw and canonical audio
+        run: |
+          python - <<'PY' | tee /tmp/moss-smoke/asr-result.json
+          import json, re
+          from faster_whisper import WhisperModel
+
+          def compact(s): return re.sub(r'[^가-힣0-9a-zA-Z]', '', s or '')
+          def cer(ref, hyp):
+              r,h=compact(ref),compact(hyp)
+              d=list(range(len(h)+1))
+              for i,rc in enumerate(r,1):
+                  prev,d[0]=d[0],i
+                  for j,hc in enumerate(h,1):
+                      cur=d[j]
+                      d[j]=min(d[j]+1,d[j-1]+1,prev+(rc!=hc)); prev=cur
+              return d[-1]/len(r) if r else (0 if not h else 1)
+
+          model=WhisperModel('small', device='cpu', compute_type='int8', cpu_threads=4)
+          targets={'raw':'케이투 전차를 점검한다','canonical':'케이투 전차를 점검한다'}
+          out={}
+          for name in ['raw','canonical']:
+              segs,info=model.transcribe(f'/tmp/moss-smoke/{name}.wav', language='ko', beam_size=5, vad_filter=True)
+              text=' '.join(s.text.strip() for s in segs).strip()
+              out[name]={'asr':text,'cer':round(cer(targets[name],text),4),'language_probability':round(info.language_probability,4)}
+          print(json.dumps(out,ensure_ascii=False,indent=2))
+          PY
+      - name: Upload ASR measurements only
+        uses: actions/upload-artifact@v4
+        with:
+          name: moss-nano-korean-asr-result
+          path: /tmp/moss-smoke/asr-result.json
+          retention-days: 1
