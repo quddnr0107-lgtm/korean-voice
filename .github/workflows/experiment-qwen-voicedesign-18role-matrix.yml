@@ -10,12 +10,17 @@ permissions:
 
 jobs:
   matrix:
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2]
     runs-on: ubuntu-24.04
-    timeout-minutes: 35
+    timeout-minutes: 25
     env:
       HF_HUB_DISABLE_TELEMETRY: '1'
       TOKENIZERS_PARALLELISM: 'false'
       OMP_NUM_THREADS: '4'
+      SHARD: ${{ matrix.shard }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -25,16 +30,17 @@ jobs:
         run: |
           python -m pip install --index-url https://download.pytorch.org/whl/cpu torch==2.7.0 torchaudio==2.7.0
           python -m pip install qwen-tts==0.1.1 faster-whisper soundfile
-      - name: Generate 9 occupations x 2 genders with one model load
+      - name: Generate shard of occupations x 2 genders
         run: |
           mkdir -p /tmp/qrole/audio
           python - <<'PY'
-          import json, resource, time, torch
+          import json, os, resource, time, torch
           import soundfile as sf
-          from pathlib import Path
           from qwen_tts import Qwen3TTSModel
 
+          shard=int(os.environ['SHARD'])
           roles=json.load(open('research/tts-arena/roles.json',encoding='utf-8'))['roles']
+          roles=[r for i,r in enumerate(roles) if i % 3 == shard]
           texts={
             'military-instructor':'케이투 전차와 케이에프 이십일의 점검 결과를 정확하게 보고한다.',
             'legal-instructor':'제육 조 제일 항 제삼 호 가목을 적용한다.',
@@ -48,13 +54,13 @@ jobs:
           }
           t0=time.perf_counter()
           model=Qwen3TTSModel.from_pretrained('Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign',device_map='cpu',dtype=torch.bfloat16,attn_implementation='sdpa')
-          out={'date':'2026-09-12','model':'Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign','dtype':'bfloat16','seed':7,'model_load_seconds':round(time.perf_counter()-t0,3),'jobs':[]}
+          out={'date':'2026-09-12','model':'Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign','dtype':'bfloat16','seed':7,'shard':shard,'model_load_seconds':round(time.perf_counter()-t0,3),'jobs':[]}
           for role in roles:
             rid=role['id']; text=texts[rid]
             for gender,prompt_key in [('female','female_prompt'),('male','male_prompt')]:
               torch.manual_seed(7)
               t=time.perf_counter()
-              wavs,sr=model.generate_voice_design(text=text,language='Korean',instruct=role[prompt_key],do_sample=True,max_new_tokens=192)
+              wavs,sr=model.generate_voice_design(text=text,language='Korean',instruct=role[prompt_key],do_sample=True,max_new_tokens=160)
               elapsed=time.perf_counter()-t
               w=wavs[0]
               key=f'{rid}--{gender}'
@@ -64,7 +70,7 @@ jobs:
           json.dump(out,open('/tmp/qrole/synth.json','w',encoding='utf-8'),ensure_ascii=False,indent=2)
           print(json.dumps(out,ensure_ascii=False,indent=2))
           PY
-      - name: Judge all 18 outputs with one Whisper-small model
+      - name: Judge shard with one Whisper-small model
         run: |
           python - <<'PY'
           import json, pathlib
@@ -81,7 +87,7 @@ jobs:
           json.dump(rows,open(root/'asr.json','w',encoding='utf-8'),ensure_ascii=False,indent=2)
           print(json.dumps(rows,ensure_ascii=False,indent=2))
           PY
-      - name: Compute canonical CER and role/gender summaries
+      - name: Compute canonical CER for shard
         run: |
           node - <<'NODE'
           const fs=require('fs'); const K=require('./public/ko-voice.js');
@@ -90,15 +96,13 @@ jobs:
           const compact=s=>String(s??'').replace(/[^가-힣0-9A-Za-z]/g,'');
           function cer(a,b){a=compact(a);b=compact(b);if(!a)return b?1:0;let d=Array.from({length:b.length+1},(_,i)=>i);for(let i=1;i<=a.length;i++){let prev=d[0];d[0]=i;for(let j=1;j<=b.length;j++){const cur=d[j];d[j]=Math.min(d[j]+1,d[j-1]+1,prev+(a[i-1]===b[j-1]?0:1));prev=cur;}}return d[b.length]/a.length;}
           const result=rows.map(r=>({...r,target_canonical:K.normalize(r.text),asr_canonical:K.normalize(r.asr),semantic_cer:+cer(K.normalize(r.text),K.normalize(r.asr)).toFixed(4)}));
-          const roleSummary=[...new Set(result.map(r=>r.role))].map(role=>{const x=result.filter(r=>r.role===role);return {role, female_cer:x.find(r=>r.gender==='female').semantic_cer,male_cer:x.find(r=>r.gender==='male').semantic_cer,best_gender:[...x].sort((a,b)=>a.semantic_cer-b.semantic_cer)[0].gender,best_cer:Math.min(...x.map(r=>r.semantic_cer))};});
-          const genderSummary=['female','male'].map(g=>{const x=result.filter(r=>r.gender===g);return {gender:g,mean_semantic_cer:+(x.reduce((a,r)=>a+r.semantic_cer,0)/x.length).toFixed(4),perfect_cases:x.filter(r=>r.semantic_cer===0).length,total_cases:x.length};});
-          const out={date:'2026-09-12',goal:'measure 9 occupation styles across female and male synthetic Korean voices',execution:{paid_tts_api_calls:0,cloudflare_r2_calls:0,cloudflare_do_calls:0,cloudflare_container_calls:0,audio_git_commit:0},model_load_seconds:synth.model_load_seconds,peak_rss_mb:synth.peak_rss_mb,results:result,role_summary:roleSummary,gender_summary:genderSummary};
+          const out={date:'2026-09-12',goal:'measure 9 occupation styles across female and male synthetic Korean voices',shard:synth.shard,execution:{paid_tts_api_calls:0,cloudflare_r2_calls:0,cloudflare_do_calls:0,cloudflare_container_calls:0,audio_git_commit:0},model_load_seconds:synth.model_load_seconds,peak_rss_mb:synth.peak_rss_mb,results:result};
           fs.writeFileSync('/tmp/qrole/final.json',JSON.stringify(out,null,2)); console.log(JSON.stringify(out,null,2));
           NODE
-      - name: Upload ephemeral matrix audio and evidence
+      - name: Upload ephemeral matrix shard
         uses: actions/upload-artifact@v4
         with:
-          name: qwen-voicedesign-18role-matrix
+          name: qwen-voicedesign-role-matrix-shard-${{ matrix.shard }}
           retention-days: 1
           path: |
             /tmp/qrole/synth.json
