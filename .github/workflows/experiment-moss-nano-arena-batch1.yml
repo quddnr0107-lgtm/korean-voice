@@ -1,0 +1,152 @@
+name: Experiment MOSS Nano arena batch 1
+on:
+  push:
+    branches: [experiment/moss-nano-arena-batch1-20260912]
+permissions:
+  contents: read
+jobs:
+  arena:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      HF_HUB_DISABLE_TELEMETRY: '1'
+      TOKENIZERS_PARALLELISM: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build paired arena cases
+        run: |
+          mkdir -p /tmp/moss-batch/audio
+          node - <<'NODE' > /tmp/moss-batch/cases.json
+          const fs = require('fs');
+          const K = require('./public/ko-voice.js');
+          const doc = JSON.parse(fs.readFileSync('research/tts-arena/cases.json','utf8'));
+          const ids = ['mil-k2','mil-kf21','mil-fa50','legal-chain','conditional-range','date-range-particle'];
+          const rows = ids.map(id => {
+            const c = doc.cases.find(x => x.id === id);
+            if (!c) throw new Error('missing case '+id);
+            return {id, source:c.source, canonical:K.normalize(c.source), target:c.target};
+          });
+          process.stdout.write(JSON.stringify(rows,null,2));
+          NODE
+          cat /tmp/moss-batch/cases.json
+      - name: Install official MOSS Nano ONNX and local ASR dependencies
+        run: |
+          START=$(date +%s)
+          git clone --depth=1 https://github.com/OpenMOSS/MOSS-TTS-Nano.git /tmp/MOSS-TTS-Nano
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch==2.7.0 torchaudio==2.7.0
+          python -m pip install 'numpy>=1.24' 'sentencepiece>=0.1.99' soundfile 'onnxruntime>=1.20.0' huggingface_hub faster-whisper
+          END=$(date +%s)
+          echo "setup_seconds=$((END-START))" | tee /tmp/moss-batch/setup.txt
+      - name: Synthesize all raw/canonical pairs with one runtime load
+        working-directory: /tmp/MOSS-TTS-Nano
+        run: |
+          python - <<'PY' | tee /tmp/moss-batch/synthesis-summary.json
+          import json, pathlib, sys, time
+          sys.path.insert(0, '/tmp/MOSS-TTS-Nano')
+          from onnx_tts_runtime import OnnxTtsRuntime
+
+          root = pathlib.Path('/tmp/moss-batch')
+          cases = json.load(open(root/'cases.json', encoding='utf-8'))
+          runtime_start = time.perf_counter()
+          rt = OnnxTtsRuntime(thread_count=4, max_new_frames=80, sample_mode='greedy', execution_provider='cpu', output_dir=root/'audio')
+          load_seconds = time.perf_counter() - runtime_start
+          rows=[]
+          for case in cases:
+              for variant in ['source','canonical']:
+                  text=case[variant]
+                  out_path=root/'audio'/f"{case['id']}--{'raw' if variant=='source' else 'canonical'}.wav"
+                  start=time.perf_counter()
+                  out=rt.synthesize(
+                      text=text,
+                      voice='Junhao',
+                      output_audio_path=out_path,
+                      sample_mode='greedy',
+                      do_sample=False,
+                      streaming=True,
+                      max_new_frames=80,
+                      enable_wetext=False,
+                      enable_normalize_tts_text=True,
+                      seed=7,
+                  )
+                  elapsed=time.perf_counter()-start
+                  frames=int(out['audio_token_ids'].shape[0])
+                  samples=int(out['waveform'].shape[0])
+                  sr=int(out['sample_rate'])
+                  rows.append({
+                      'id':case['id'],
+                      'variant':'raw' if variant=='source' else 'canonical',
+                      'text':text,
+                      'target':case['target'],
+                      'synthesis_seconds':round(elapsed,3),
+                      'frames':frames,
+                      'hit_frame_cap':frames>=80,
+                      'audio_seconds':round(samples/sr,3),
+                      'wav':str(out_path),
+                  })
+          result={'runtime_load_seconds':round(load_seconds,3),'max_new_frames':80,'rows':rows}
+          print(json.dumps(result,ensure_ascii=False,indent=2))
+          PY
+          du -sh /tmp/MOSS-TTS-Nano/models | tee /tmp/moss-batch/model-size.txt
+      - name: ASR judge raw vs canonical with semantic CER
+        run: |
+          python - <<'PY' | tee /tmp/moss-batch/result.json
+          import json, pathlib, sys, time
+          from faster_whisper import WhisperModel
+          ROOT=pathlib.Path.cwd()
+          sys.path.insert(0,str(ROOT/'research'))
+          import judge
+
+          batch=pathlib.Path('/tmp/moss-batch')
+          synth=json.load(open(batch/'synthesis-summary.json',encoding='utf-8'))
+          model_start=time.perf_counter()
+          asr=WhisperModel('small',device='cpu',compute_type='int8',cpu_threads=4)
+          asr_load=time.perf_counter()-model_start
+          for row in synth['rows']:
+              start=time.perf_counter()
+              segs,info=asr.transcribe(row['wav'],language='ko',beam_size=5,vad_filter=True)
+              hyp=' '.join(s.text.strip() for s in segs).strip()
+              row['asr_seconds']=round(time.perf_counter()-start,3)
+              row['asr']=hyp
+              row['language_probability']=round(info.language_probability,4)
+              row['cer_literal']=round(judge.cer(row['target'],hyp),4)
+              row['asr_canonical']=judge.canonicalize_text(hyp)
+              row['cer_canonical']=round(judge.canonical_cer(row['target'],hyp),4)
+          pairs=[]
+          ids=sorted({r['id'] for r in synth['rows']})
+          for id in ids:
+              raw=next(r for r in synth['rows'] if r['id']==id and r['variant']=='raw')
+              can=next(r for r in synth['rows'] if r['id']==id and r['variant']=='canonical')
+              pairs.append({
+                  'id':id,
+                  'raw_cer_canonical':raw['cer_canonical'],
+                  'canonical_cer_canonical':can['cer_canonical'],
+                  'raw_hit_cap':raw['hit_frame_cap'],
+                  'canonical_hit_cap':can['hit_frame_cap'],
+                  'raw_audio_seconds':raw['audio_seconds'],
+                  'canonical_audio_seconds':can['audio_seconds'],
+                  'raw_synth_seconds':raw['synthesis_seconds'],
+                  'canonical_synth_seconds':can['synthesis_seconds'],
+                  'canonical_improves_or_ties':can['cer_canonical'] <= raw['cer_canonical'],
+              })
+          result={
+              'provider':'moss-tts-nano',
+              'runner':'github-actions-ubuntu-4cpu',
+              'max_new_frames':80,
+              'runtime_load_seconds':synth['runtime_load_seconds'],
+              'asr_load_seconds':round(asr_load,3),
+              'paid_tts_api_calls':0,
+              'cloudflare_calls':0,
+              'pairs':pairs,
+              'rows':synth['rows'],
+          }
+          print(json.dumps(result,ensure_ascii=False,indent=2))
+          PY
+      - name: Upload ephemeral audio and measurements
+        uses: actions/upload-artifact@v4
+        with:
+          name: moss-nano-arena-batch1
+          path: /tmp/moss-batch/
+          retention-days: 1
