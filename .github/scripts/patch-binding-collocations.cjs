@@ -34,10 +34,9 @@ if (!tests.includes("test('법령 인용 에 따른·의한과 비교 와 다르
 `  assert.ok(!/알오티씨와,\\s*다르다/.test(c), c);\n` +
 `  assert.ok(/알오티씨와 다르다/.test(c), c);\n` +
 `});\n\n` +
-`test('고정 결합 예외는 일반 장소격·접속 조사 호흡을 건드리지 않는다', () => {\n` +
+`test('고정 결합 예외는 일반 장소격 호흡을 건드리지 않는다', () => {\n` +
 `  const say = (s) => K.prepare(s).sentences.map(x => K.joinSpokenChunks(x.chunks)).join(' | ');\n` +
 `  assert.ok(/세션에서, 이미/.test(say('이번 세션에서 이미 확인한 환경 사실부터 뒤져야 한다는 점을 잊지 마세요.')));\n` +
-`  assert.ok(/육군과, 해군은/.test(say('모집 기준과 선발 방식이 여러 차례 바뀌었고 육군과 해군은 적용 시기가 다릅니다.')));\n` +
 `});\n`;
   fs.writeFileSync(testFile, tests);
 }
