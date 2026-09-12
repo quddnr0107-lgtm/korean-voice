@@ -1,0 +1,24 @@
+name: One-shot military aircraft pronunciation
+on:
+  push:
+    branches: [gpt/military-aircraft-pronunciation-20260912]
+permissions:
+  contents: write
+jobs:
+  patch-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Reproduce, patch, and verify
+        run: node .github/scripts/patch-military-aircraft.cjs
+      - name: Commit verified patch and remove one-shot helpers
+        run: |
+          rm .github/scripts/patch-military-aircraft.cjs .github/workflows/one-shot-military-aircraft.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add public/ko-voice.js test/ko-voice.test.cjs .github/scripts/patch-military-aircraft.cjs .github/workflows/one-shot-military-aircraft.yml
+          git commit -m 'fix: normalize officially grounded Korean military aircraft names'
+          git push
