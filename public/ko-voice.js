@@ -192,7 +192,13 @@
     let t = String(text == null ? '' : text);
     // 마크다운·이모지·URL 등 소리로 낼 수 없는 것부터 제거
     t = t.replace(/https?:\/\/\S+/g, '링크').replace(/www\.\S+/g, '링크');
-    t = t.replace(/^[ \t]*["'“”‘’/\\]*[ \t]*(#{1,6}|[-*•]|(?!\d{4}\.\s+\d{1,2}\.)\d+[.)])\s+/gm, '');
+    const LEADING_MARKER_RE = /^[ \t]*["'“”‘’/\\]*[ \t]*(#{1,6}|[-*•]|(?!\d{4}\.\s+\d{1,2}\.)\d+[.)])\s+/gm;
+    // Markdown 변환물이 "* - 항목"처럼 중첩 표지를 남기는 경우도 한 번의 normalize로 안정화한다.
+    for (let i = 0; i < 4; i++) {
+      const before = t;
+      t = t.replace(LEADING_MARKER_RE, '');
+      if (t === before) break;
+    }
     t = t.replace(/~~/g, '').replace(/[*_`]{1,3}(?=\S)|(?<=\S)[*_`]{1,3}/g, '');
     t = t.replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu, '');
     // 법령 항 번호: ①·②처럼 숫자를 감싼 표기는 음성에서 제일 항·제이 항으로 보존한다.
