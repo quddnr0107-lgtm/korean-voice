@@ -1,0 +1,32 @@
+name: One-shot Qwen evidence validation
+
+on:
+  push:
+    branches:
+      - research/qwen3-tts-k2-evidence-20260912
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/qwen3-tts-k2-evidence-20260912
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Promote Qwen provider and validate all static gates
+        run: node .github/scripts/patch-qwen-evidence.cjs
+      - name: Remove one-shot helpers and commit verified evidence
+        run: |
+          rm -f .github/scripts/patch-qwen-evidence.cjs
+          rm -f .github/workflows/one-shot-qwen-evidence.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/tts-arena/providers.json research/tts-arena/results/qwen3-tts-06b-sohee-k2-20260912.json test/tts-arena.test.cjs .github
+          git commit -m 'research: lock Qwen3-TTS Sohee CPU evidence'
+          git push origin HEAD:research/qwen3-tts-k2-evidence-20260912
