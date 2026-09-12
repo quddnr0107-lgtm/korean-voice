@@ -404,3 +404,30 @@ test('고정 결합 예외는 일반 장소격 호흡을 건드리지 않는다'
   const say = (s) => K.prepare(s).sentences.map(x => K.joinSpokenChunks(x.chunks)).join(' | ');
   assert.ok(/세션에서, 이미/.test(say('이번 세션에서 이미 확인한 환경 사실부터 뒤져야 한다는 점을 잊지 마세요.')));
 });
+
+
+test('잔존 범위 표기 배치는 조건형·시월·근사치·사이 관계를 보존한다', () => {
+  const say = (s) => K.prepare(s).sentences.map(x => K.joinSpokenChunks(x.chunks)).join(' | ');
+  const a = K.normalize('신검에서 1~3급이면 가능');
+  assert.match(a, /일 급에서 삼 급이면/);
+  assert.doesNotMatch(a, /급이면에서/);
+  const b = say('연말 10~11월 경쟁률이 가장 낮습니다.');
+  assert.match(b, /시월에서 십일 월/);
+  assert.doesNotMatch(b, /시월에서,\s*십일 월/);
+  const c = K.normalize('합격선은 ~97점이다.');
+  assert.match(c, /약 구십칠 점이다/);
+  assert.doesNotMatch(c, /에서\s*구십칠 점/);
+  const d = K.normalize('점수를 0~120 사이로 입력해 주세요.');
+  assert.match(d, /영에서 백이십 사이로/);
+  assert.doesNotMatch(d, /영사이에서/);
+});
+
+test('잔존 범위 교정은 기존 날짜·시각·수량 범위와 장소격 에서를 보존한다', () => {
+  assert.match(K.normalize('2026-09-11~2026-09-12에 시행한다.'), /십일 일부터 .* 십이 일까지/);
+  assert.match(K.normalize('09:00~18:00에 운영한다.'), /아홉 시부터 십팔 시까지 운영한다/);
+  assert.match(K.normalize('18~21개월이다'), /십팔 개월에서 이십일 개월이다/);
+  const say = (s) => K.prepare(s).sentences.map(x => K.joinSpokenChunks(x.chunks)).join(' | ');
+  assert.match(say('이번 세션에서 이미 확인한 사실을 다시 봅니다.'), /세션에서, 이미/);
+  assert.match(say('9~10월에 시행한다.'), /구 월에서 시월에/);
+  assert.doesNotMatch(say('9~10월에 시행한다.'), /월에서,\s*시월/);
+});
