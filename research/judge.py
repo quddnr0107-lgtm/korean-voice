@@ -1,78 +1,144 @@
-"""자동 판정기 — 사람 귀 없이 음성을 채점한다. 이게 있어야 혼자 반복 실험이 된다.
+"""자동 판정기 — 합성 음성을 같은 기준으로 반복 채점한다.
 
-세 축으로 잰다:
-  ① 알아듣는가   : Whisper 로 되받아쓰기 → 원문과의 글자오류율(CER). 낮을수록 또렷.
-  ② 사람 같은가   : 실측 한국인 운율 분포와의 거리 (쉼 분포 · 음절속도 · 하강폭).
-  ③ 소리가 깨졌나 : 스펙트럼 이상 · 클리핑 · 무음 비율.
-CER 이 튀면 C(int8) 같은 파탄을 사람 없이도 즉시 잡아낸다.
+세 축:
+  ① 알아듣는가 : ASR 되받아쓰기 → 목표 발음과 CER
+  ② 사람 같은가 : 실측 한국인 운율 분포와의 거리
+  ③ 깨졌는가 : 클리핑·무음 비율
+
+사용법:
+  python research/judge.py jobs.json
+  python research/judge.py jobs.json --asr-model openai/whisper-small
+
+jobs.json은 다음 둘 중 하나를 받는다.
+  [["job-name", "/tmp/a.wav", "목표 발음"], ...]
+  [{"name":"job-name", "path":"/tmp/a.wav", "target":"목표 발음"}, ...]
+
+특정 에이전트/세션의 /tmp 경로를 코드에 넣지 않는다.
 """
-import sys, json, re
-import numpy as np, librosa, soundfile as sf
+import argparse
+import json
+import re
 
 # 실측 한국인 기준값 (Zeroth-Korean, CC BY 4.0)
 REF = {'pause_med': 80.0, 'pause_cv': 1.13, 'rate_med': 6.58, 'decl': -10.9}
 
+
 def cer(ref, hyp):
-    r = re.sub(r'[^가-힣0-9a-zA-Z]', '', ref); h = re.sub(r'[^가-힣0-9a-zA-Z]', '', hyp)
-    if not r: return 1.0
-    d = np.arange(len(h)+1)
+    """공백·문장부호를 제외한 문자 오류율. 외부 패키지 없이 계산한다."""
+    r = re.sub(r'[^가-힣0-9a-zA-Z]', '', str(ref or ''))
+    h = re.sub(r'[^가-힣0-9a-zA-Z]', '', str(hyp or ''))
+    if not r:
+        return 0.0 if not h else 1.0
+    d = list(range(len(h) + 1))
     for i, rc in enumerate(r, 1):
         prev, d[0] = d[0], i
         for j, hc in enumerate(h, 1):
             cur = d[j]
-            d[j] = min(d[j]+1, d[j-1]+1, prev + (rc != hc))
+            d[j] = min(d[j] + 1, d[j - 1] + 1, prev + (rc != hc))
             prev = cur
     return d[len(h)] / len(r)
 
+
 def prosody(y, sr, n_syl):
+    import numpy as np
+    import librosa
+
     iv = librosa.effects.split(y, top_db=25, frame_length=1024, hop_length=256)
-    gaps = [(iv[k+1][0]-iv[k][1])/sr*1000 for k in range(len(iv)-1)]
+    gaps = [(iv[k + 1][0] - iv[k][1]) / sr * 1000 for k in range(len(iv) - 1)]
     gaps = [g for g in gaps if 40 <= g <= 2000]
-    sp = sum(b-a for a, b in iv)/sr if len(iv) else 0
+    sp = sum(b - a for a, b in iv) / sr if len(iv) else 0
     f0, _, _ = librosa.pyin(y, fmin=60, fmax=400, sr=sr, frame_length=1024)
     v = f0[~np.isnan(f0)]
     dec = None
     if len(v) > 20:
-        h, t = v[:len(v)//3], v[-len(v)//3:]
-        dec = (np.median(t)/np.median(h)-1)*100
+        h, t = v[:len(v) // 3], v[-len(v) // 3:]
+        dec = (np.median(t) / np.median(h) - 1) * 100
     return {
         'pause_med': float(np.median(gaps)) if gaps else None,
-        'pause_cv': float(np.std(gaps)/np.mean(gaps)) if len(gaps) > 1 and np.mean(gaps) > 0 else None,
-        'rate': n_syl/sp if sp > 0 else None,
+        'pause_cv': float(np.std(gaps) / np.mean(gaps)) if len(gaps) > 1 and np.mean(gaps) > 0 else None,
+        'rate': n_syl / sp if sp > 0 else None,
         'decl': float(dec) if dec is not None else None,
         'f0': float(np.median(v)) if len(v) else None,
-        'silence_ratio': 1 - sp/(len(y)/sr),
+        'silence_ratio': 1 - sp / (len(y) / sr),
         'clip_ratio': float((np.abs(y) > 0.999).mean()),
     }
 
-def score(path, text, asr):
+
+def score(path, target, asr):
+    import numpy as np
+    import librosa
+
     y, sr = librosa.load(path, sr=16000)
     hyp = asr(path)
-    n_syl = sum(1 for c in text if '가' <= c <= '힣')
+    n_syl = sum(1 for c in str(target or '') if '가' <= c <= '힣')
     p = prosody(y, sr, n_syl)
-    c = cer(text, hyp)
-    # 운율 거리: 각 항목을 기준값 대비 상대오차로, 낮을수록 사람에 가깝다
+    c = cer(target, hyp) if target else None
     parts = []
-    for k, ref in REF.items():
-        v = p.get('rate' if k == 'rate_med' else k.replace('_med', '_med'), None)
-        if k == 'rate_med': v = p['rate']
-        elif k == 'pause_med': v = p['pause_med']
-        elif k == 'pause_cv': v = p['pause_cv']
-        elif k == 'decl': v = p['decl']
-        if v is not None and ref: parts.append(abs(v-ref)/abs(ref))
-    return {'CER': round(c, 4), '운율거리': round(float(np.mean(parts)), 3) if parts else None,
-            **{k: (round(v, 3) if isinstance(v, float) else v) for k, v in p.items()}, 'ASR': hyp[:60]}
+    for key, ref in REF.items():
+        if key == 'rate_med':
+            v = p['rate']
+        elif key == 'pause_med':
+            v = p['pause_med']
+        elif key == 'pause_cv':
+            v = p['pause_cv']
+        else:
+            v = p['decl']
+        if v is not None and ref:
+            parts.append(abs(v - ref) / abs(ref))
+    return {
+        'CER': round(c, 4) if c is not None else None,
+        '운율거리': round(float(np.mean(parts)), 3) if parts else None,
+        **{k: (round(v, 3) if isinstance(v, float) else v) for k, v in p.items()},
+        'ASR': hyp[:120],
+    }
+
+
+def load_jobs(path):
+    with open(path, encoding='utf-8') as f:
+        raw = json.load(f)
+    out = []
+    for i, item in enumerate(raw):
+        if isinstance(item, dict):
+            name = item.get('name') or item.get('id') or f'job-{i}'
+            audio_path = item.get('path')
+            target = item.get('target') or item.get('text')
+        else:
+            if len(item) < 3:
+                raise ValueError(f'job {i} needs [name,path,target]')
+            name, audio_path, target = item[:3]
+        if not audio_path:
+            raise ValueError(f'job {name} has no audio path')
+        out.append((str(name), str(audio_path), target))
+    return out
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument('jobs', help='JSON file containing audio jobs')
+    ap.add_argument('--asr-model', default='openai/whisper-small')
+    args = ap.parse_args()
+
+    from transformers import pipeline
+    import librosa
+
+    pipe = pipeline(
+        'automatic-speech-recognition',
+        model=args.asr_model,
+        device=-1,
+        generate_kwargs={'language': 'korean', 'task': 'transcribe'},
+    )
+
+    def asr(p):
+        y, _ = librosa.load(p, sr=16000)
+        return pipe({'raw': y, 'sampling_rate': 16000}, chunk_length_s=30)['text'].strip()
+
+    for name, audio_path, target in load_jobs(args.jobs):
+        try:
+            result = score(audio_path, target, asr)
+            print('JUDGE ' + name + ' ' + json.dumps(result, ensure_ascii=False), flush=True)
+        except Exception as e:
+            print(f'JUDGE {name} ERROR {e}', flush=True)
+
 
 if __name__ == '__main__':
-    from transformers import pipeline
-    name = sys.argv[1] if len(sys.argv) > 1 else 'openai/whisper-small'
-    pipe = pipeline('automatic-speech-recognition', model=name, device=-1,
-                    generate_kwargs={'language': 'korean', 'task': 'transcribe'})
-    def asr(p):
-        import librosa as _l
-        y, _ = _l.load(p, sr=16000)
-        return pipe({'raw': y, 'sampling_rate': 16000}, chunk_length_s=30)['text'].strip()
-    jobs = json.load(open('/tmp/claude-0/-home-user-militaryapplyhelper/3cdcc1ab-2560-5ce9-87a4-c23e74e7dd5a/judge_jobs.json', encoding='utf-8'))
-    for name, path, text in jobs:
-        try: print('JUDGE ' + name + ' ' + json.dumps(score(path, text, asr), ensure_ascii=False), flush=True)
-        except Exception as e: print(f'JUDGE {name} ERROR {e}', flush=True)
+    main()
