@@ -385,3 +385,16 @@ test('법령 고정 결합 다음과 같다·같이는 한 호흡으로 읽는�
   assert.ok(!/다음과,\s*같이/.test(b), b);
   assert.ok(/다음과 같이/.test(b), b);
 });
+
+
+test('범위 조건형 이면·이라면은 오른쪽 항에만 남긴다', () => {
+  assert.strictEqual(K.normalize('신검에서 1~3급이면 가능하다.'), '신검에서 일 급에서 삼 급이면 가능하다.');
+  assert.strictEqual(K.normalize('기준이 1~3급이라면 지원할 수 있다.'), '기준이 일 급에서 삼 급이라면 지원할 수 있다.');
+  assert.strictEqual(K.normalize('복무기간이 18~21개월이면 대상이다.'), '복무기간이 십팔 개월에서 이십일 개월이면 대상이다.');
+});
+
+test('조건형 범위 교정은 기존 범위 꼬리를 보존한다', () => {
+  assert.strictEqual(K.normalize('1~3급이다'), '일 급에서 삼 급이다');
+  assert.strictEqual(K.normalize('1~3급은'), '일 급에서 삼 급은');
+  assert.strictEqual(K.normalize('1~3급으로'), '일 급에서 삼 급으로');
+});
