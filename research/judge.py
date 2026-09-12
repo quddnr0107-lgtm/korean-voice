@@ -1,9 +1,14 @@
 """자동 판정기 — 합성 음성을 같은 기준으로 반복 채점한다.
 
-세 축:
-  ① 알아듣는가 : ASR 되받아쓰기 → 목표 발음과 CER
-  ② 사람 같은가 : 실측 한국인 운율 분포와의 거리
-  ③ 깨졌는가 : 클리핑·무음 비율
+네 축:
+  ① 표기가 같은가 : ASR 되받아쓰기 → 목표 발음과 literal CER
+  ② 의미상 같은가 : 목표와 ASR을 ko-voice로 정규화한 뒤 canonical CER
+  ③ 사람 같은가 : 실측 한국인 운율 분포와의 거리
+  ④ 깨졌는가 : 클리핑·무음 비율
+
+군사 약어에서는 Whisper가 실제 `케이투` 발화를 `K2`로 적을 수 있다. 이 경우 literal CER는
+높지만 발화 자체는 맞다. 따라서 quality gate는 두 CER를 함께 보고, 의미 정확도는 canonical
+CER를 우선한다.
 
 사용법:
   python research/judge.py jobs.json
@@ -17,10 +22,14 @@ jobs.json은 다음 둘 중 하나를 받는다.
 """
 import argparse
 import json
+import pathlib
 import re
+import subprocess
 
 # 실측 한국인 기준값 (Zeroth-Korean, CC BY 4.0)
 REF = {'pause_med': 80.0, 'pause_cv': 1.13, 'rate_med': 6.58, 'decl': -10.9}
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+KO_VOICE_JS = ROOT / 'public' / 'ko-voice.js'
 
 
 def cer(ref, hyp):
@@ -37,6 +46,29 @@ def cer(ref, hyp):
             d[j] = min(d[j] + 1, d[j - 1] + 1, prev + (rc != hc))
             prev = cur
     return d[len(h)] / len(r)
+
+
+def canonicalize_text(text):
+    """현재 저장소의 ko-voice normalize를 그대로 써 평가 표기 공간을 통일한다."""
+    if text is None:
+        return ''
+    script = (
+        "const fs=require('fs');"
+        "const K=require(" + json.dumps(str(KO_VOICE_JS)) + ");"
+        "process.stdout.write(K.normalize(fs.readFileSync(0,'utf8')));"
+    )
+    proc = subprocess.run(
+        ['node', '-e', script],
+        input=str(text),
+        text=True,
+        capture_output=True,
+        check=True,
+    )
+    return proc.stdout.strip()
+
+
+def canonical_cer(ref, hyp):
+    return cer(canonicalize_text(ref), canonicalize_text(hyp))
 
 
 def prosody(y, sr, n_syl):
@@ -72,7 +104,10 @@ def score(path, target, asr):
     hyp = asr(path)
     n_syl = sum(1 for c in str(target or '') if '가' <= c <= '힣')
     p = prosody(y, sr, n_syl)
-    c = cer(target, hyp) if target else None
+    literal = cer(target, hyp) if target else None
+    target_canonical = canonicalize_text(target) if target else None
+    asr_canonical = canonicalize_text(hyp) if target else None
+    semantic = cer(target_canonical, asr_canonical) if target else None
     parts = []
     for key, ref in REF.items():
         if key == 'rate_med':
@@ -86,7 +121,11 @@ def score(path, target, asr):
         if v is not None and ref:
             parts.append(abs(v - ref) / abs(ref))
     return {
-        'CER': round(c, 4) if c is not None else None,
+        # 기존 소비자 호환: CER는 literal을 유지한다. 새 gate는 CER_canonical을 사용한다.
+        'CER': round(literal, 4) if literal is not None else None,
+        'CER_literal': round(literal, 4) if literal is not None else None,
+        'CER_canonical': round(semantic, 4) if semantic is not None else None,
+        'ASR_canonical': asr_canonical[:120] if asr_canonical is not None else None,
         '운율거리': round(float(np.mean(parts)), 3) if parts else None,
         **{k: (round(v, 3) if isinstance(v, float) else v) for k, v in p.items()},
         'ASR': hyp[:120],
