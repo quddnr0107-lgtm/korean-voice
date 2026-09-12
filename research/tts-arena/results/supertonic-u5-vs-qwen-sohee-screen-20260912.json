@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-12",
+  "source": {
+    "run_id": 34682418463,
+    "artifact_id": 10294781045,
+    "head_sha": "a92e49834fa8c19eb186355d9ed9077082d0717f"
+  },
+  "policy": {
+    "input": "identical ko-voice canonical strings",
+    "delivery": "both backends encoded to 24 kHz 48 kbps MP3 before ASR",
+    "judge": "faster-whisper small, CPU int8, Korean, beam_size=5",
+    "qwen_sampling": true,
+    "qwen_seed": 7,
+    "supertonic_recipe": "u5",
+    "supertonic_style": "F4:0.6,F2:0.4",
+    "supertonic_steps": 8,
+    "supertonic_sentence_end_speed": 0.966
+  },
+  "execution": {
+    "paid_tts_api_calls": 0,
+    "cloudflare_r2_calls": 0,
+    "cloudflare_do_calls": 0,
+    "cloudflare_container_calls": 0,
+    "audio_git_commit": 0
+  },
+  "pairs": [
+    {
+      "id": "ordinary-short",
+      "canonical": "예비군 훈련은 해마다 받습니다.",
+      "supertonic": {"asr":"예비군 훈련은 해마다 봤습니다.","semantic_cer":0.0769,"synthesis_seconds":0.975,"audio_seconds":1.79},
+      "qwen": {"asr":"예비군 훈련은 해마다 봤습니다.","semantic_cer":0.0769,"synthesis_seconds":13.653,"audio_seconds":3.36}
+    },
+    {
+      "id": "ordinary-medium",
+      "canonical": "국방부장관은 전쟁이 없는 때에도 정해진 날수만큼 예비군을 불러 쓸 수 있습니다.",
+      "supertonic": {"asr":"국방부장과는 전쟁이 없는 때에도 정해진 날수만큼 예비군을 불렀을 수 있습니다.","semantic_cer":0.1212,"synthesis_seconds":1.769,"audio_seconds":5.62},
+      "qwen": {"asr":"국방부장관은 전쟁이 없는 때에도 정해진 날수만큼 예비군을 불러 쓸 수 있습니다.","semantic_cer":0,"synthesis_seconds":32.332,"audio_seconds":7.92}
+    },
+    {
+      "id": "legal-chain",
+      "canonical": "제육 조 제일 항 제삼 호 가목을 적용한다.",
+      "supertonic": {"asr":"제육조 제1항 제3호 가목을 적용한다.","semantic_cer":0,"synthesis_seconds":1.265,"audio_seconds":2.6},
+      "qwen": {"asr":"제육조 제1랑 제3호 감옥을 적용한다.","semantic_cer":0.1875,"synthesis_seconds":15.975,"audio_seconds":3.92}
+    },
+    {
+      "id": "date-range-particle",
+      "canonical": "이천이십육 년 구 월 십일 일부터 이천이십육 년 구 월 십이 일까지 시행한다.",
+      "supertonic": {"asr":"2026년 9월 11일부터 2026년 9월 12일까지 시행한다","semantic_cer":0,"synthesis_seconds":1.733,"audio_seconds":5.18},
+      "qwen": {"asr":"2026년 9월 11일부터 2026년 9월 12일까지 시행한다.","semantic_cer":0,"synthesis_seconds":26.038,"audio_seconds":6.4}
+    },
+    {
+      "id": "mil-k2",
+      "canonical": "케이투 전차를 점검한다.",
+      "supertonic": {"asr":"K2 전차를 점검한다","semantic_cer":0,"synthesis_seconds":1.042,"audio_seconds":1.5},
+      "qwen": {"asr":"케이트 전차를 점검한다","semantic_cer":0.1,"synthesis_seconds":10.605,"audio_seconds":2.64}
+    },
+    {
+      "id": "mil-kf21",
+      "canonical": "케이에프 이십일 비행시험을 실시한다.",
+      "supertonic": {"asr":"KF-21 비행시험을 실시한다.","semantic_cer":0,"synthesis_seconds":1.177,"audio_seconds":2.24},
+      "qwen": {"asr":"KF-21 비행시험을 실시한다.","semantic_cer":0,"synthesis_seconds":16.52,"audio_seconds":4.08}
+    }
+  ],
+  "summary": {
+    "supertonic": {
+      "mean_semantic_cer": 0.033,
+      "perfect_cases": 4,
+      "total_cases": 6,
+      "total_synthesis_seconds": 7.961,
+      "total_audio_seconds": 18.93,
+      "aggregate_rtf": 0.421,
+      "model_load_seconds": 0.644,
+      "peak_rss_mb": 578.8
+    },
+    "qwen": {
+      "mean_semantic_cer": 0.0607,
+      "perfect_cases": 3,
+      "total_cases": 6,
+      "total_synthesis_seconds": 115.123,
+      "total_audio_seconds": 28.32,
+      "aggregate_rtf": 4.065,
+      "model_load_seconds": 22.89,
+      "peak_rss_mb": 5709.8
+    },
+    "derived": {
+      "qwen_minus_supertonic_mean_cer": 0.0277,
+      "qwen_rtf_over_supertonic": 9.656,
+      "qwen_peak_rss_over_supertonic": 9.865,
+      "qwen_load_time_over_supertonic": 35.543,
+      "qwen_total_synthesis_over_supertonic": 14.461
+    },
+    "decision": {
+      "live_cpu": "keep-supertonic-u5",
+      "qwen_live_candidate": false,
+      "qwen_blind_bake_challenger": true,
+      "reason": "Qwen is objectively slower and slightly worse in mean semantic CER, but its CER delta (+0.0277) remains inside the predeclared +0.03 blind-listening gate. Run one small blind A/B only; do not integrate Qwen live on CPU."
+    }
+  }
+}

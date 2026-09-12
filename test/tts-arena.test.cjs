@@ -160,3 +160,23 @@ test('Qwen3-TTS mini-batch는 backend별 전처리 손익이 섞임을 보존한
   assert.equal(kf.raw.semantic_cer, 0);
   assert.equal(kf.canonical.semantic_cer, 0);
 });
+
+
+test('u5 대 Qwen 정면전은 CPU live champion을 유지한다', () => {
+  const r = JSON.parse(fs.readFileSync(path.join(ROOT, 'research/tts-arena/results/supertonic-u5-vs-qwen-sohee-screen-20260912.json'), 'utf8'));
+  assert.equal(r.execution.paid_tts_api_calls, 0);
+  assert.equal(r.execution.cloudflare_r2_calls, 0);
+  assert.equal(r.execution.cloudflare_do_calls, 0);
+  assert.equal(r.execution.cloudflare_container_calls, 0);
+  assert.equal(r.execution.audio_git_commit, 0);
+  assert.equal(r.pairs.length, 6);
+  assert.ok(r.summary.supertonic.mean_semantic_cer < r.summary.qwen.mean_semantic_cer);
+  assert.ok(r.summary.supertonic.aggregate_rtf < 1);
+  assert.ok(r.summary.qwen.aggregate_rtf > 4);
+  assert.ok(r.summary.derived.qwen_rtf_over_supertonic > 9);
+  assert.ok(r.summary.derived.qwen_peak_rss_over_supertonic > 9);
+  assert.equal(r.summary.decision.live_cpu, 'keep-supertonic-u5');
+  assert.equal(r.summary.decision.qwen_live_candidate, false);
+  assert.equal(r.summary.decision.qwen_blind_bake_challenger, true);
+  assert.ok(r.summary.derived.qwen_minus_supertonic_mean_cer <= 0.03);
+});

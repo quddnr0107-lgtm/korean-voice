@@ -31,7 +31,7 @@
       "repo": "https://github.com/QwenLM/Qwen3-TTS",
       "model": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
       "speaker": "Sohee",
-      "notes": "Official Korean support with native Sohee preset. Verified 2026-09-12 on a 4-core GitHub Ubuntu CPU runner. Sampling is required: do_sample=false produced near-silence at the token cap, while sampled inference produced normal Korean speech. K2 and KF-21 tied raw vs canonical; the tested date range improved with ko-voice, while the tested legal chain regressed. Do not assume global canonicalization improves Qwen; see results/qwen3-tts-06b-sohee-k2-20260912.json and results/qwen3-tts-06b-sohee-mini-batch1-20260912.json.",
+      "notes": "Official Korean support with native Sohee preset. Verified 2026-09-12 on a 4-core GitHub Ubuntu CPU runner. Sampling is required: greedy produced near-silence. Backend-aware preprocessing is required. In the 6-case production-u5 head-to-head, Qwen mean semantic CER was 0.0607 vs u5 0.0330, aggregate RTF 4.065 vs 0.421, and peak RSS 5709.8 MB vs 578.8 MB. Qwen is not a CPU live replacement; its +0.0277 CER delta only qualifies it for one small blind bake A/B. See results/supertonic-u5-vs-qwen-sohee-screen-20260912.json.",
       "cpu_verified": true,
       "required_generation_policy": "sampling"
     },
