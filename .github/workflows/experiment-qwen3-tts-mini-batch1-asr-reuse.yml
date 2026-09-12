@@ -1,0 +1,93 @@
+name: Experiment Qwen3 TTS mini batch 1 ASR reuse
+
+on:
+  push:
+    branches:
+      - experiment/qwen3-tts-06b-mini-batch1-20260912
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  judge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download prior synthesized artifact only
+        uses: actions/download-artifact@v4
+        with:
+          name: qwen3-tts-06b-mini-batch1
+          path: /tmp/qwen-mini
+          github-token: ${{ github.token }}
+          repository: quddnr0107-lgtm/korean-voice
+          run-id: 34681217379
+      - name: Verify six WAVs and install ASR only
+        run: |
+          test "$(find /tmp/qwen-mini/audio -name '*.wav' | wc -l)" -eq 6
+          python -m pip install faster-whisper
+      - name: Transcribe existing audio
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          from faster_whisper import WhisperModel
+          root=pathlib.Path('/tmp/qwen-mini')
+          jobs=json.load(open(root/'jobs.json',encoding='utf-8'))
+          model=WhisperModel('small',device='cpu',compute_type='int8',cpu_threads=4)
+          out=[]
+          for j in jobs:
+              p=root/'audio'/f"{j['id']}--{j['variant']}.wav"
+              segs,info=model.transcribe(str(p),language='ko',beam_size=5,vad_filter=True)
+              text=' '.join(s.text.strip() for s in segs).strip()
+              out.append({**j,'asr':text,'language_probability':round(info.language_probability,4)})
+          json.dump(out,open(root/'asr-reuse.json','w',encoding='utf-8'),ensure_ascii=False,indent=2)
+          print(json.dumps(out,ensure_ascii=False,indent=2))
+          PY
+      - name: Canonicalize ASR and compute semantic CER
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const K=require('./public/ko-voice.js');
+          const rows=JSON.parse(fs.readFileSync('/tmp/qwen-mini/asr-reuse.json','utf8'));
+          const compact=s=>String(s??'').replace(/[^가-힣0-9A-Za-z]/g,'');
+          function cer(a,b){
+            a=compact(a); b=compact(b);
+            if(!a) return b?1:0;
+            let d=Array.from({length:b.length+1},(_,i)=>i);
+            for(let i=1;i<=a.length;i++){
+              let prev=d[0]; d[0]=i;
+              for(let j=1;j<=b.length;j++){
+                const cur=d[j];
+                d[j]=Math.min(d[j]+1,d[j-1]+1,prev+(a[i-1]===b[j-1]?0:1));
+                prev=cur;
+              }
+            }
+            return d[b.length]/a.length;
+          }
+          const results=rows.map(r=>{
+            const targetCanonical=K.normalize(r.target);
+            const asrCanonical=K.normalize(r.asr);
+            return {...r,target_canonical:targetCanonical,asr_canonical:asrCanonical,cer_literal:+cer(r.target,r.asr).toFixed(4),cer_canonical:+cer(targetCanonical,asrCanonical).toFixed(4)};
+          });
+          const pairs={};
+          for(const r of results){(pairs[r.id]??={})[r.variant]=r;}
+          const summary={};
+          for(const [id,p] of Object.entries(pairs)){
+            summary[id]={raw:p.raw.cer_canonical,canonical:p.canonical.cer_canonical,delta:+(p.canonical.cer_canonical-p.raw.cer_canonical).toFixed(4)};
+          }
+          const out={source_run_id:34681217379,source_artifact_id:10293959343,tts_regenerated:false,paid_tts_api_calls:0,cloudflare_calls:0,results,summary};
+          fs.writeFileSync('/tmp/qwen-mini/final-reuse.json',JSON.stringify(out,null,2));
+          console.log(JSON.stringify(out,null,2));
+          NODE
+      - name: Upload judged evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: qwen3-tts-06b-mini-batch1-asr-reuse
+          path: |
+            /tmp/qwen-mini/asr-reuse.json
+            /tmp/qwen-mini/final-reuse.json
+          retention-days: 1
