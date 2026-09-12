@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "policy": {
+    "gender_variants_required": ["female", "male"],
+    "real_person_imitation": "deny",
+    "occupation_is_style_not_identity": true,
+    "promotion_requires": ["pronunciation_gate", "blind_listening", "fatigue_check"]
+  },
+  "roles": [
+    {
+      "id": "military-instructor",
+      "label_ko": "군사 교관",
+      "goal": "군사용어를 또렷하게 전달하면서 권위감과 집중도를 유지",
+      "weights": {"pronunciation": 35, "naturalness": 15, "authority": 25, "warmth": 5, "fatigue": 10, "pace_consistency": 10},
+      "female_prompt": "30~40대 한국인 여성 군사 교관. 단단하고 명료하며 자신감 있는 표준어, 군사용어와 숫자를 또박또박 발음하고 과장 없이 안정적으로 설명한다.",
+      "male_prompt": "40대 한국인 남성 군사 교관. 낮고 단단하지만 위압적이지 않은 표준어, 군사용어와 숫자를 또박또박 발음하고 안정적인 강의 속도를 유지한다."
+    },
+    {
+      "id": "legal-instructor",
+      "label_ko": "법률 강사",
+      "goal": "조·항·호·목과 법률 문장을 정확하게 구분해 전달",
+      "weights": {"pronunciation": 40, "naturalness": 15, "authority": 20, "warmth": 5, "fatigue": 10, "pace_consistency": 10},
+      "female_prompt": "30~40대 한국인 여성 법률 강사. 정확하고 차분한 표준어, 조·항·호·목과 조사·받침을 분명히 구분하며 이해하기 쉬운 강의 톤으로 읽는다.",
+      "male_prompt": "30~40대 한국인 남성 법률 강사. 정확하고 차분한 표준어, 조·항·호·목과 조사·받침을 분명히 구분하며 절제된 강의 톤으로 읽는다."
+    },
+    {
+      "id": "news-anchor",
+      "label_ko": "뉴스 아나운서",
+      "goal": "신뢰감 있는 표준 발음과 안정적인 정보 전달",
+      "weights": {"pronunciation": 30, "naturalness": 25, "authority": 15, "warmth": 5, "fatigue": 10, "pace_consistency": 15},
+      "female_prompt": "30대 한국인 여성 뉴스 아나운서. 맑고 신뢰감 있는 중저음, 정확한 표준어, 안정적 호흡과 절제된 뉴스 전달 톤.",
+      "male_prompt": "30~40대 한국인 남성 뉴스 아나운서. 깊이 있고 신뢰감 있는 중저음, 정확한 표준어, 일정한 속도와 절제된 뉴스 전달 톤."
+    },
+    {
+      "id": "teacher",
+      "label_ko": "교사·학습 강사",
+      "goal": "장시간 학습에서 피로가 적고 이해가 잘 되는 설명",
+      "weights": {"pronunciation": 25, "naturalness": 20, "authority": 10, "warmth": 20, "fatigue": 15, "pace_consistency": 10},
+      "female_prompt": "30대 한국인 여성 교사. 따뜻하고 친절하며 집중이 잘 되는 목소리, 또박또박한 표준어, 장시간 들어도 피로하지 않은 안정된 속도와 억양.",
+      "male_prompt": "30대 한국인 남성 교사. 친절하고 차분하며 집중이 잘 되는 목소리, 또박또박한 표준어, 장시간 들어도 피로하지 않은 안정된 속도와 억양."
+    },
+    {
+      "id": "civil-service-guide",
+      "label_ko": "민원·공공 안내",
+      "goal": "정확하면서도 딱딱하지 않은 공공서비스 안내",
+      "weights": {"pronunciation": 30, "naturalness": 20, "authority": 5, "warmth": 20, "fatigue": 10, "pace_consistency": 15},
+      "female_prompt": "30~40대 한국인 여성 공공기관 안내 담당자. 친절하고 신뢰감 있으며 과하게 밝지 않은 목소리, 숫자와 절차를 정확하고 천천히 안내한다.",
+      "male_prompt": "30~40대 한국인 남성 공공기관 안내 담당자. 친절하고 신뢰감 있으며 차분한 목소리, 숫자와 절차를 정확하고 천천히 안내한다."
+    },
+    {
+      "id": "counselor",
+      "label_ko": "상담·고객 지원",
+      "goal": "따뜻함과 명료함을 동시에 유지하는 대화형 안내",
+      "weights": {"pronunciation": 20, "naturalness": 25, "authority": 5, "warmth": 30, "fatigue": 10, "pace_consistency": 10},
+      "female_prompt": "30대 한국인 여성 상담사. 따뜻하고 안정적이며 공감이 느껴지지만 지나치게 감정적이지 않은 목소리, 분명한 표준어와 편안한 속도.",
+      "male_prompt": "30대 한국인 남성 상담사. 따뜻하고 안정적이며 차분한 목소리, 공감이 느껴지는 자연스러운 표준어와 편안한 속도."
+    },
+    {
+      "id": "navigation-system",
+      "label_ko": "내비·시스템 안내",
+      "goal": "짧은 문장을 즉시 이해할 수 있는 선명한 시스템 음성",
+      "weights": {"pronunciation": 35, "naturalness": 15, "authority": 5, "warmth": 5, "fatigue": 10, "pace_consistency": 30},
+      "female_prompt": "20~30대 한국인 여성 시스템 안내 음성. 짧고 명료하고 중립적이며 숫자와 방향을 즉시 알아들을 수 있게 일정한 속도로 발음한다.",
+      "male_prompt": "20~30대 한국인 남성 시스템 안내 음성. 짧고 명료하고 중립적이며 숫자와 방향을 즉시 알아들을 수 있게 일정한 속도로 발음한다."
+    },
+    {
+      "id": "study-narrator",
+      "label_ko": "장시간 학습 낭독",
+      "goal": "반복회독에서 피로가 적고 발음이 안정적인 장문 낭독",
+      "weights": {"pronunciation": 30, "naturalness": 20, "authority": 5, "warmth": 10, "fatigue": 25, "pace_consistency": 10},
+      "female_prompt": "30대 한국인 여성 학습 낭독자. 차분하고 중립적이며 귀에 피로가 적은 목소리, 정확한 표준어와 일정한 속도로 긴 문장을 자연스럽게 읽는다.",
+      "male_prompt": "30대 한국인 남성 학습 낭독자. 차분하고 중립적이며 귀에 피로가 적은 목소리, 정확한 표준어와 일정한 속도로 긴 문장을 자연스럽게 읽는다."
+    },
+    {
+      "id": "emergency-announcement",
+      "label_ko": "긴급·재난 안내",
+      "goal": "긴급 상황에서 빠르게 이해되지만 공포감을 과도하게 높이지 않는 전달",
+      "weights": {"pronunciation": 35, "naturalness": 10, "authority": 25, "warmth": 0, "fatigue": 5, "pace_consistency": 25},
+      "female_prompt": "30~40대 한국인 여성 긴급 안내 음성. 단호하고 명확하지만 공포감을 조장하지 않는 표준어, 핵심 지시와 숫자를 정확하게 전달한다.",
+      "male_prompt": "30~40대 한국인 남성 긴급 안내 음성. 단호하고 명확하지만 공포감을 조장하지 않는 표준어, 핵심 지시와 숫자를 정확하게 전달한다."
+    }
+  ]
+}
