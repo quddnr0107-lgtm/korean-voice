@@ -36,12 +36,12 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           src=Path('/tmp/CosyVoice/requirements.txt').read_text()
-          drop=('extra-index-url','deepspeed','onnxruntime-gpu','tensorrt','torch==','torchaudio==')
+          drop=('extra-index-url','deepspeed','onnxruntime-gpu','tensorrt','torch==','torchaudio==','openai-whisper')
           lines=[x for x in src.splitlines() if x.strip() and not any(k in x for k in drop)]
           Path('/tmp/cosy-requirements-cpu.txt').write_text('\n'.join(lines)+'\n')
           PY
           python -m pip install -r /tmp/cosy-requirements-cpu.txt
-          python -m pip install faster-whisper huggingface_hub
+          python -m pip install faster-whisper huggingface_hub onnxruntime
           END=$(date +%s)
           echo "install_seconds=$((END-START))" | tee /tmp/cosy-result/setup.txt
       - name: Download official CosyVoice3 model
