@@ -26,7 +26,9 @@
       "gender": "female",
       "native_language": "Chinese",
       "official_description": "bright slightly edgy young female",
-      "korean_status": "official-cross-language-pending-local-screen"
+      "korean_status": "cpu-screen-verified-challenger",
+      "screen_mean_semantic_cer": 0.0303,
+      "screen_rank": 2
     },
     {
       "id": "qwen06-serena",
@@ -36,7 +38,9 @@
       "gender": "female",
       "native_language": "Chinese",
       "official_description": "warm gentle young female",
-      "korean_status": "official-cross-language-pending-local-screen"
+      "korean_status": "cpu-screen-verified-research",
+      "screen_mean_semantic_cer": 0.0606,
+      "screen_rank": 4
     },
     {
       "id": "qwen06-uncle-fu",
@@ -46,7 +50,9 @@
       "gender": "male",
       "native_language": "Chinese",
       "official_description": "seasoned low mellow male",
-      "korean_status": "official-cross-language-pending-local-screen"
+      "korean_status": "cpu-screen-verified-research",
+      "screen_mean_semantic_cer": 0.0606,
+      "screen_rank": 7
     },
     {
       "id": "qwen06-dylan",
@@ -56,7 +62,9 @@
       "gender": "male",
       "native_language": "Chinese-Beijing",
       "official_description": "youthful clear natural male",
-      "korean_status": "official-cross-language-pending-local-screen"
+      "korean_status": "cpu-screen-verified-male-primary",
+      "screen_mean_semantic_cer": 0.0454,
+      "screen_rank": 3
     },
     {
       "id": "qwen06-eric",
@@ -66,7 +74,9 @@
       "gender": "male",
       "native_language": "Chinese-Sichuan",
       "official_description": "lively slightly husky bright male",
-      "korean_status": "official-cross-language-pending-local-screen"
+      "korean_status": "cpu-screen-verified-research",
+      "screen_mean_semantic_cer": 0.0757,
+      "screen_rank": 8
     },
     {
       "id": "qwen06-ryan",
@@ -76,7 +86,9 @@
       "gender": "male",
       "native_language": "English",
       "official_description": "dynamic rhythmic male",
-      "korean_status": "official-cross-language-pending-local-screen"
+      "korean_status": "cpu-screen-verified-male-secondary",
+      "screen_mean_semantic_cer": 0.0606,
+      "screen_rank": 5
     },
     {
       "id": "qwen06-aiden",
@@ -86,7 +98,10 @@
       "gender": "male",
       "native_language": "English",
       "official_description": "sunny clear-midrange male",
-      "korean_status": "official-cross-language-pending-local-screen"
+      "korean_status": "research-only-low-korean-accuracy",
+      "screen_mean_semantic_cer": 0.2303,
+      "screen_rank": 9,
+      "screen_warning": "K2 case semantic CER 0.4"
     },
     {
       "id": "qwen06-ono-anna",
@@ -96,7 +111,9 @@
       "gender": "female",
       "native_language": "Japanese",
       "official_description": "playful light nimble female",
-      "korean_status": "official-cross-language-pending-local-screen"
+      "korean_status": "cpu-screen-verified-research",
+      "screen_mean_semantic_cer": 0.0606,
+      "screen_rank": 6
     },
     {
       "id": "qwen06-sohee",
@@ -106,7 +123,9 @@
       "gender": "female",
       "native_language": "Korean",
       "official_description": "warm Korean female with rich emotion",
-      "korean_status": "official-and-cpu-verified",
+      "korean_status": "official-and-cpu-verified-female-primary",
+      "screen_mean_semantic_cer": 0.0,
+      "screen_rank": 1,
       "human_feedback": "preferred timbre over production-u5 in initial blind listening"
     },
     {
@@ -116,8 +135,11 @@
       "gender": "designable",
       "native_language": "synthetic-designed",
       "official_description": "free-form voice design by natural-language description",
-      "korean_status": "official-pending-cpu-screen",
-      "occupation_flexibility": "high"
+      "korean_status": "official-and-cpu-verified-role-design",
+      "occupation_flexibility": "high",
+      "pilot_perfect_semantic_cases": "2/3",
+      "pilot_peak_rss_mb": 5204.0,
+      "pilot_model_load_seconds": 33.885
     },
     {
       "id": "qwen17-sohee",
@@ -127,8 +149,10 @@
       "gender": "female",
       "native_language": "Korean",
       "official_description": "same official Sohee preset on larger CustomVoice model",
-      "korean_status": "official-pending-cpu-screen",
-      "research_reason": "official benchmark reports lower Korean WER for 1.7B than 0.6B"
+      "korean_status": "cpu-verified-mixed-case-legal-challenger",
+      "screen_mean_semantic_cer": 0.0869,
+      "research_reason": "official benchmark reports lower Korean WER for 1.7B than 0.6B; local three-case screen improved legal-chain but worsened K2 and ordinary-medium",
+      "universal_upgrade": false
     }
   ]
 }
