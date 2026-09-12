@@ -1,0 +1,156 @@
+name: Experiment champion u5 vs Qwen Sohee screen
+
+on:
+  push:
+    branches:
+      - experiment/champion-vs-qwen-screen-20260912
+
+permissions:
+  contents: read
+
+jobs:
+  screen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      HF_HUB_DISABLE_TELEMETRY: '1'
+      TOKENIZERS_PARALLELISM: 'false'
+      OMP_NUM_THREADS: '4'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build canonical benchmark inputs
+        run: |
+          mkdir -p /tmp/head/audio /tmp/head/st3/onnx /tmp/head/st3/voice_styles /tmp/head/st3/py
+          node - <<'NODE' > /tmp/head/jobs.json
+          const K=require('./public/ko-voice.js');
+          const src=[
+            ['ordinary-short','예비군 훈련은 해마다 받습니다.'],
+            ['ordinary-medium','국방부장관은 전쟁이 없는 때에도 정해진 날수만큼 예비군을 불러 쓸 수 있습니다.'],
+            ['legal-chain','제6조제1항제3호가목을 적용한다.'],
+            ['date-range-particle','2026-09-11~2026-09-12에 시행한다.'],
+            ['mil-k2','K2 전차를 점검한다.'],
+            ['mil-kf21','KF-21 비행시험을 실시한다.']
+          ];
+          const jobs=src.map(([id,source])=>({id,source,canonical:K.normalize(source)}));
+          process.stdout.write(JSON.stringify(jobs,null,2));
+          NODE
+          cat /tmp/head/jobs.json
+      - name: Install zero-cost CPU runtimes and production Supertonic assets
+        run: |
+          START=$(date +%s)
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch==2.7.0 torchaudio==2.7.0
+          python -m pip install qwen-tts==0.1.1 faster-whisper onnxruntime numpy soundfile PyYAML praat-parselmouth imageio-ffmpeg
+          B=https://huggingface.co/Supertone/supertonic-3/resolve/main
+          for f in config.json onnx/duration_predictor.onnx onnx/text_encoder.onnx onnx/tts.json onnx/unicode_indexer.json onnx/vector_estimator.onnx onnx/vocoder.onnx; do curl -fsSL -o /tmp/head/st3/$f "$B/$f"; done
+          for s in F2 F4; do curl -fsSL -o /tmp/head/st3/voice_styles/$s.json "$B/voice_styles/$s.json"; done
+          curl -fsSL -o /tmp/head/st3/py/helper.py https://raw.githubusercontent.com/supertone-inc/supertonic/main/py/helper.py
+          echo "setup_seconds=$(( $(date +%s)-START ))" > /tmp/head/setup.txt
+      - name: Synthesize exact production Supertonic u5
+        run: |
+          python - <<'PY'
+          import json, os, resource, sys, time
+          import numpy as np, soundfile as sf
+          sys.path.insert(0,'/tmp/head/st3/py')
+          sys.path.insert(0,os.path.abspath('server'))
+          import helper
+          import voice_shape as VS
+          jobs=json.load(open('/tmp/head/jobs.json',encoding='utf-8'))
+          t=time.perf_counter(); tts=helper.load_text_to_speech('/tmp/head/st3/onnx',False); load=time.perf_counter()-t
+          ttl=dp=None
+          for name,w in [('F4',0.6),('F2',0.4)]:
+              st=helper.load_voice_style([f'/tmp/head/st3/voice_styles/{name}.json'])
+              ttl=st.ttl*w if ttl is None else ttl+st.ttl*w
+              dp=st.dp*w if dp is None else dp+st.dp*w
+          style=helper.Style(ttl.astype(np.float32),dp.astype(np.float32))
+          out={'provider':'supertonic-u5-production','model_load_seconds':round(load,3),'steps':8,'style':'F4:0.6,F2:0.4','jobs':[]}
+          for j in jobs:
+              hard=VS.is_sentence_end(j['canonical'])
+              speed=float(np.clip(1.05*VS.unit_speed_mult(0,hard),0.7,1.6))
+              t=time.perf_counter()
+              wav,dur=tts._infer([j['canonical']],['ko'],style,8,speed)
+              infer=time.perf_counter()-t
+              w=np.asarray(wav,dtype=np.float32).reshape(-1)[:int(float(np.asarray(dur).reshape(-1)[0])*tts.sample_rate)]
+              t=time.perf_counter(); w=VS.shape(w,tts.sample_rate,j['canonical'],hard); shape=time.perf_counter()-t
+              p=f"/tmp/head/audio/st--{j['id']}.wav"; sf.write(p,w,tts.sample_rate)
+              out['jobs'].append({**j,'speed':round(speed,4),'infer_seconds':round(infer,3),'shape_seconds':round(shape,3),'synthesis_seconds':round(infer+shape,3),'audio_seconds':round(len(w)/tts.sample_rate,3),'sample_rate':int(tts.sample_rate)})
+          out['peak_rss_mb']=round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/1024,1)
+          json.dump(out,open('/tmp/head/supertonic.json','w',encoding='utf-8'),ensure_ascii=False,indent=2)
+          print(json.dumps(out,ensure_ascii=False,indent=2))
+          PY
+      - name: Synthesize Qwen3-TTS Sohee on identical canonical strings
+        run: |
+          python - <<'PY'
+          import json, resource, time, torch
+          import soundfile as sf
+          from qwen_tts import Qwen3TTSModel
+          jobs=json.load(open('/tmp/head/jobs.json',encoding='utf-8'))
+          t=time.perf_counter(); model=Qwen3TTSModel.from_pretrained('Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice',device_map='cpu',dtype=torch.float32,attn_implementation='sdpa'); load=time.perf_counter()-t
+          out={'provider':'qwen3-tts-0.6b-customvoice-sohee','model_load_seconds':round(load,3),'sampling':True,'seed':7,'jobs':[]}
+          for j in jobs:
+              torch.manual_seed(7)
+              t=time.perf_counter(); wavs,sr=model.generate_custom_voice(text=j['canonical'],language='Korean',speaker='Sohee',do_sample=True,max_new_tokens=192); elapsed=time.perf_counter()-t
+              w=wavs[0]; p=f"/tmp/head/audio/qwen--{j['id']}.wav"; sf.write(p,w,sr)
+              out['jobs'].append({**j,'synthesis_seconds':round(elapsed,3),'audio_seconds':round(len(w)/sr,3),'sample_rate':int(sr)})
+          out['peak_rss_mb']=round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/1024,1)
+          json.dump(out,open('/tmp/head/qwen.json','w',encoding='utf-8'),ensure_ascii=False,indent=2)
+          print(json.dumps(out,ensure_ascii=False,indent=2))
+          PY
+      - name: Apply identical production-like delivery codec
+        run: |
+          FFMPEG=$(python - <<'PY'
+          import imageio_ffmpeg; print(imageio_ffmpeg.get_ffmpeg_exe())
+          PY
+          )
+          for p in /tmp/head/audio/*.wav; do
+            o="${p%.wav}.mp3"
+            "$FFMPEG" -v error -y -i "$p" -ar 24000 -codec:a libmp3lame -b:a 48k "$o"
+          done
+      - name: Judge all delivered MP3s with one Whisper-small model
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          from faster_whisper import WhisperModel
+          root=pathlib.Path('/tmp/head'); jobs=json.load(open(root/'jobs.json',encoding='utf-8'))
+          model=WhisperModel('small',device='cpu',compute_type='int8',cpu_threads=4)
+          rows=[]
+          for provider,prefix in [('supertonic-u5-production','st'),('qwen3-tts-0.6b-customvoice-sohee','qwen')]:
+              for j in jobs:
+                  p=root/'audio'/f"{prefix}--{j['id']}.mp3"
+                  segs,info=model.transcribe(str(p),language='ko',beam_size=5,vad_filter=True)
+                  text=' '.join(s.text.strip() for s in segs).strip()
+                  rows.append({'provider':provider,'id':j['id'],'canonical':j['canonical'],'asr':text,'language_probability':round(info.language_probability,4)})
+          json.dump(rows,open(root/'asr.json','w',encoding='utf-8'),ensure_ascii=False,indent=2)
+          print(json.dumps(rows,ensure_ascii=False,indent=2))
+          PY
+      - name: Compute semantic CER and backend screen summary
+        run: |
+          node - <<'NODE'
+          const fs=require('fs'); const K=require('./public/ko-voice.js');
+          const asr=JSON.parse(fs.readFileSync('/tmp/head/asr.json','utf8'));
+          const st=JSON.parse(fs.readFileSync('/tmp/head/supertonic.json','utf8'));
+          const qw=JSON.parse(fs.readFileSync('/tmp/head/qwen.json','utf8'));
+          const compact=s=>String(s??'').replace(/[^가-힣0-9A-Za-z]/g,'');
+          function cer(a,b){a=compact(a);b=compact(b);if(!a)return b?1:0;let d=Array.from({length:b.length+1},(_,i)=>i);for(let i=1;i<=a.length;i++){let prev=d[0];d[0]=i;for(let j=1;j<=b.length;j++){const cur=d[j];d[j]=Math.min(d[j]+1,d[j-1]+1,prev+(a[i-1]===b[j-1]?0:1));prev=cur;}}return d[b.length]/a.length;}
+          const results=asr.map(r=>{const target=K.normalize(r.canonical), heard=K.normalize(r.asr); return {...r,target_canonical:target,asr_canonical:heard,semantic_cer:+cer(target,heard).toFixed(4)};});
+          function stats(provider,perf){const rr=results.filter(x=>x.provider===provider);const pj=new Map(perf.jobs.map(x=>[x.id,x]));const cers=rr.map(x=>x.semantic_cer);const synth=rr.reduce((a,x)=>a+pj.get(x.id).synthesis_seconds,0);const audio=rr.reduce((a,x)=>a+pj.get(x.id).audio_seconds,0);return {mean_semantic_cer:+(cers.reduce((a,b)=>a+b,0)/cers.length).toFixed(4),perfect_cases:cers.filter(x=>x===0).length,total_cases:cers.length,total_synthesis_seconds:+synth.toFixed(3),total_audio_seconds:+audio.toFixed(3),aggregate_rtf:+(synth/audio).toFixed(3),model_load_seconds:perf.model_load_seconds,peak_rss_mb:perf.peak_rss_mb};}
+          const summary={supertonic:stats('supertonic-u5-production',st),qwen:stats('qwen3-tts-0.6b-customvoice-sohee',qw)};
+          const pairs={};for(const r of results){(pairs[r.id]??={})[r.provider.startsWith('supertonic')?'supertonic':'qwen']=r.semantic_cer;}
+          const out={date:'2026-09-12',input_policy:'identical ko-voice canonical strings',delivery:'24kHz 48kbps MP3 both backends',judge:'faster-whisper small int8 CPU',execution:{paid_tts_api_calls:0,cloudflare_r2_calls:0,cloudflare_do_calls:0,cloudflare_container_calls:0},results,pairs,summary};
+          fs.writeFileSync('/tmp/head/final.json',JSON.stringify(out,null,2)); console.log(JSON.stringify(out,null,2));
+          NODE
+      - name: Upload ephemeral screen evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: champion-u5-vs-qwen-sohee-screen
+          path: |
+            /tmp/head/jobs.json
+            /tmp/head/supertonic.json
+            /tmp/head/qwen.json
+            /tmp/head/asr.json
+            /tmp/head/final.json
+            /tmp/head/audio/*.mp3
+          retention-days: 1
