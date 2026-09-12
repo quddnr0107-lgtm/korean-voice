@@ -327,3 +327,20 @@ test('날짜 범위 조사 결합은 시각·일반 수량 범위에 새지 않�
   assert.strictEqual(K.normalize('09:00~18:00에 운영한다.'), '아홉 시부터 십팔 시까지 운영한다.');
   assert.strictEqual(K.normalize('18~21개월에 해당한다.'), '십팔 개월에서 이십일 개월에 해당한다.');
 });
+
+
+test('중첩 Markdown 표지도 한 번에 제거해 멱등성을 보장한다', () => {
+  const cases = [
+    '* - 기본: 예비군 훈련 안내',
+    '- * 기본: 예비군 훈련 안내',
+    '"* - 기본: 예비군 훈련 안내',
+    '// * - 기본: 예비군 훈련 안내',
+  ];
+  for (const input of cases) {
+    const once = K.normalize(input);
+    assert.strictEqual(once, '기본: 예비군 훈련 안내', input);
+    assert.strictEqual(K.normalize(once), once, '멱등성: ' + input);
+  }
+  assert.strictEqual(K.normalize('-3도'), '영하 삼 도', '음수는 불릿으로 제거하지 않는다');
+  assert.strictEqual(K.normalize('2026. 9. 11.'), '이천이십육 년 구 월 십일 일', '점 날짜는 ordered-list로 오인하지 않는다');
+});
