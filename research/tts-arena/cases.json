@@ -53,11 +53,11 @@
     {"id":"mil-temperature","domain":"military","gate":true,"source":"영하 -3도에서도 운용한다.","target":"영하 삼 도에서도 운용한다"},
     {"id":"mil-kf21","domain":"military","gate":true,"source":"KF-21 비행시험을 실시한다.","target":"케이에프 이십일 비행시험을 실시한다"},
     {"id":"mil-fa50","domain":"military","gate":true,"source":"FA-50을 운용한다.","target":"에프에이 오십을 운용한다"},
-    {"id":"research-k21","domain":"military","gate":false,"source":"K21 보병전투차를 운용한다.","target":null,"research_question":"현장 표준 낭독이 케이 이십일인지 케이 이원인지 공개 군 자료/청취로 확정"},
+    {"id":"mil-k21","domain":"military","gate":true,"source":"K21 보병전투차를 운용한다.","target":"케이 이십일 보병전투차를 운용한다"},
     {"id":"research-k239","domain":"military","gate":false,"source":"K239 천무를 운용한다.","target":null,"research_question":"모델 숫자 낭독이 자리읽기인지 수읽기인지 확정"},
     {"id":"research-km21","domain":"military","gate":false,"source":"KM21 장비를 점검한다.","target":null,"research_question":"KM 계열 현장 낭독 관례 확정"},
     {"id":"research-k808","domain":"military","gate":false,"source":"K808 차륜형장갑차를 운용한다.","target":null,"research_question":"세 자리 K 모델 번호 현장 낭독 관례 확정"},
-    {"id":"research-f35a","domain":"military","gate":false,"source":"F-35A를 운용한다.","target":null,"research_question":"영문·숫자·개량형 혼합 모델 낭독 규칙 확정"},
+    {"id":"mil-f35a","domain":"military","gate":true,"source":"F-35A를 운용한다.","target":"에프 삼십오 에이를 운용한다"},
     {"id":"research-uh60","domain":"military","gate":false,"source":"UH-60을 운용한다.","target":null,"research_question":"헬기 모델 현장 낭독 관례 확정"},
     {"id":"research-ch47","domain":"military","gate":false,"source":"CH-47을 운용한다.","target":null,"research_question":"헬기 모델 현장 낭독 관례 확정"}
   ]

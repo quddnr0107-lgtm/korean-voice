@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "provider": "moss-tts-nano",
+  "date": "2026-09-12",
+  "runner": "github-actions-ubuntu-4cpu",
+  "run_id": 34674387839,
+  "artifact_id": 10291334553,
+  "setup_seconds": 33,
+  "runtime_load_seconds": 8.315,
+  "asr_load_seconds": 3.087,
+  "onnx_model_assets_mib": 729,
+  "max_new_frames": 80,
+  "paid_tts_api_calls": 0,
+  "cloudflare_calls": 0,
+  "summary": {
+    "pair_count": 6,
+    "canonical_improves_or_ties": 5,
+    "canonical_worse": 1,
+    "raw_frame_cap_hits": 6,
+    "canonical_frame_cap_hits": 4,
+    "interpretation": "ko-voice canonical input materially improves MOSS Nano on military alphanumeric names, especially K2/KF-21, but the backend remains unstable on several longer legal/admin phrases. legal-chain is a measured counterexample where canonical CER worsened, so this result must not be generalized as universal improvement."
+  },
+  "pairs": [
+    {"id":"mil-k2","raw_cer_canonical":0.8,"canonical_cer_canonical":0.0,"raw_hit_cap":true,"canonical_hit_cap":false,"raw_audio_seconds":6.4,"canonical_audio_seconds":1.68,"raw_synth_seconds":19.785,"canonical_synth_seconds":5.421},
+    {"id":"mil-kf21","raw_cer_canonical":0.75,"canonical_cer_canonical":0.1875,"raw_hit_cap":true,"canonical_hit_cap":false,"raw_audio_seconds":6.4,"canonical_audio_seconds":5.44,"raw_synth_seconds":19.864,"canonical_synth_seconds":17.006},
+    {"id":"mil-fa50","raw_cer_canonical":0.8182,"canonical_cer_canonical":0.6364,"raw_hit_cap":true,"canonical_hit_cap":true,"raw_audio_seconds":6.4,"canonical_audio_seconds":6.4,"raw_synth_seconds":19.637,"canonical_synth_seconds":20.609},
+    {"id":"legal-chain","raw_cer_canonical":0.75,"canonical_cer_canonical":0.875,"raw_hit_cap":true,"canonical_hit_cap":true,"raw_audio_seconds":6.4,"canonical_audio_seconds":6.4,"raw_synth_seconds":20.706,"canonical_synth_seconds":20.934},
+    {"id":"conditional-range","raw_cer_canonical":0.7368,"canonical_cer_canonical":0.6842,"raw_hit_cap":true,"canonical_hit_cap":true,"raw_audio_seconds":6.4,"canonical_audio_seconds":6.4,"raw_synth_seconds":20.346,"canonical_synth_seconds":20.05},
+    {"id":"date-range-particle","raw_cer_canonical":1.0,"canonical_cer_canonical":0.7667,"raw_hit_cap":true,"canonical_hit_cap":true,"raw_audio_seconds":6.4,"canonical_audio_seconds":6.4,"raw_synth_seconds":20.133,"canonical_synth_seconds":20.268}
+  ]
+}
