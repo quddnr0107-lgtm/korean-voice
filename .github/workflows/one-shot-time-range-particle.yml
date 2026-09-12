@@ -1,0 +1,47 @@
+name: One-shot time range particle patch
+
+on:
+  push:
+    branches:
+      - gpt/time-range-particle-20260912
+
+permissions:
+  contents: write
+
+jobs:
+  patch-and-verify:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Reproduce current defects before patch
+        run: |
+          node <<'NODE'
+          const K = require('./public/ko-voice.js');
+          const a = K.normalize('운영시간은 09:00~18:00에 한정한다.');
+          const b = K.normalize('회의는 09:00~18:00까지 진행한다.');
+          console.log('before A:', a);
+          console.log('before B:', b);
+          if (!a.includes('까지에')) throw new Error('expected current 까지에 defect was not reproduced');
+          if (!b.includes('까지까지')) throw new Error('expected current 까지까지 defect was not reproduced');
+          NODE
+
+      - name: Apply minimal frontend patch
+        run: node tools/patch-time-range-particle.mjs
+
+      - name: Verify syntax and full static regression suite
+        run: |
+          node --check public/ko-voice.js
+          node --test test/private-source.test.mjs test/container-cost.test.mjs test/ko-voice.test.cjs test/frontend-invariants.test.cjs
+
+      - name: Remove one-shot helpers and commit verified patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm tools/patch-time-range-particle.mjs .github/workflows/one-shot-time-range-particle.yml
+          git add public/ko-voice.js test/ko-voice.test.cjs
+          git commit -m "fix: normalize trailing particles on time ranges"
+          git push origin HEAD:${GITHUB_REF_NAME}
