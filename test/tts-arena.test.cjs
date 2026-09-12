@@ -97,3 +97,25 @@ test('ARENA_ALLOW_PAID는 설계상 거부된다', () => {
   assert.notEqual(r.status, 0);
   assert.match(r.stderr, /intentionally unsupported/);
 });
+
+
+test('MOSS Nano batch1 증거와 K21 F-35A 승격을 보존한다', () => {
+  const k21 = cases.cases.find((c) => c.id === 'mil-k21');
+  const f35 = cases.cases.find((c) => c.id === 'mil-f35a');
+  assert.equal(k21?.gate, true);
+  assert.equal(k21?.target, '케이 이십일 보병전투차를 운용한다');
+  assert.equal(f35?.gate, true);
+  assert.equal(f35?.target, '에프 삼십오 에이를 운용한다');
+  assert.equal(cases.cases.some((c) => c.id === 'research-k21' || c.id === 'research-f35a'), false);
+  const result = JSON.parse(fs.readFileSync(path.join(ROOT, 'research/tts-arena/results/moss-nano-batch1-20260912.json'), 'utf8'));
+  assert.equal(result.paid_tts_api_calls, 0);
+  assert.equal(result.cloudflare_calls, 0);
+  assert.equal(result.summary.pair_count, 6);
+  assert.equal(result.summary.canonical_improves_or_ties, 5);
+  assert.equal(result.summary.canonical_worse, 1);
+  const k2 = result.pairs.find((p) => p.id === 'mil-k2');
+  const legal = result.pairs.find((p) => p.id === 'legal-chain');
+  assert.equal(k2.canonical_cer_canonical, 0);
+  assert.ok(k2.canonical_synth_seconds < k2.raw_synth_seconds);
+  assert.ok(legal.canonical_cer_canonical > legal.raw_cer_canonical);
+});
