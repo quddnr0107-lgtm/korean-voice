@@ -1,0 +1,91 @@
+name: Experiment Qwen3 TTS 0.6B Sohee sampled smoke
+
+on:
+  push:
+    branches:
+      - experiment/qwen3-tts-06b-sohee-sampled-20260912
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      HF_HUB_DISABLE_TELEMETRY: '1'
+      TOKENIZERS_PARALLELISM: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install CPU Qwen and ASR runtime
+        run: |
+          START=$(date +%s)
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch==2.7.0 torchaudio==2.7.0
+          python -m pip install qwen-tts==0.1.1 faster-whisper
+          END=$(date +%s)
+          echo "install_seconds=$((END-START))" | tee /tmp/setup.txt
+      - name: Synthesize canonical K2 with recommended sampling
+        run: |
+          mkdir -p /tmp/qwen-sampled
+          node - <<'NODE' > /tmp/qwen-sampled/text.txt
+          const K = require('./public/ko-voice.js');
+          process.stdout.write(K.normalize('K2 전차를 점검한다.') + '\n');
+          NODE
+          python - <<'PY' | tee /tmp/qwen-sampled/synth-result.json
+          import json, os, time, torch
+          import soundfile as sf
+          from qwen_tts import Qwen3TTSModel
+
+          torch.manual_seed(7)
+          text=open('/tmp/qwen-sampled/text.txt',encoding='utf-8').read().strip()
+          t=time.perf_counter()
+          model=Qwen3TTSModel.from_pretrained(
+              'Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice',
+              device_map='cpu', dtype=torch.float32, attn_implementation='sdpa')
+          load=time.perf_counter()-t
+          t=time.perf_counter()
+          wavs,sr=model.generate_custom_voice(
+              text=text, language='Korean', speaker='Sohee',
+              do_sample=True, max_new_tokens=128)
+          synth=time.perf_counter()-t
+          p='/tmp/qwen-sampled/canonical.wav'
+          sf.write(p,wavs[0],sr)
+          print(json.dumps({'text':text,'load_seconds':round(load,3),'synthesis_seconds':round(synth,3),'sample_rate':int(sr),'audio_seconds':round(len(wavs[0])/sr,3),'bytes':os.path.getsize(p),'paid_tts_api_calls':0,'cloudflare_calls':0},ensure_ascii=False,indent=2))
+          PY
+      - name: Measure amplitude and ASR
+        run: |
+          python - <<'PY' | tee /tmp/qwen-sampled/judge-result.json
+          import json, re, wave, numpy as np
+          from faster_whisper import WhisperModel
+          p='/tmp/qwen-sampled/canonical.wav'
+          with wave.open(p,'rb') as w:
+              sr=w.getframerate(); n=w.getnframes(); x=np.frombuffer(w.readframes(n),dtype='<i2').astype(np.float32)/32768
+          rms=float(np.sqrt(np.mean(x*x))); peak=float(np.max(np.abs(x)))
+          L=max(1,int(sr*.02)); m=len(x)//L; fr=x[:m*L].reshape(m,L); frms=np.sqrt(np.mean(fr*fr,axis=1))
+          model=WhisperModel('small',device='cpu',compute_type='int8',cpu_threads=4)
+          segs,info=model.transcribe(p,language='ko',beam_size=5,vad_filter=True)
+          text=' '.join(s.text.strip() for s in segs).strip()
+          target='케이투 전차를 점검한다'
+          semantic=re.sub(r'(?i)K\s*-?\s*2','케이투',text)
+          def compact(s): return re.sub(r'[^가-힣0-9a-zA-Z]','',s or '')
+          def cer(a,b):
+              a,b=compact(a),compact(b)
+              if not a: return 0.0 if not b else 1.0
+              d=list(range(len(b)+1))
+              for i,ca in enumerate(a,1):
+                  prev,d[0]=d[0],i
+                  for j,cb in enumerate(b,1):
+                      cur=d[j]; d[j]=min(d[j]+1,d[j-1]+1,prev+(ca!=cb)); prev=cur
+              return d[-1]/len(a)
+          print(json.dumps({'rms':round(rms,6),'peak':round(peak,6),'frames_above_-50dB':round(float(np.mean(frms>10**(-50/20))),4),'asr':text,'asr_semantic':semantic,'cer_literal':round(cer(target,text),4),'cer_canonical':round(cer(target,semantic),4),'language_probability':round(info.language_probability,4)},ensure_ascii=False,indent=2))
+          PY
+      - name: Upload ephemeral evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qwen3-tts-06b-sohee-sampled-smoke
+          path: /tmp/qwen-sampled/
+          retention-days: 1
