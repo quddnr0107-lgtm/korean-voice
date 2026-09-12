@@ -13,7 +13,7 @@ jobs:
         with:
           node-version: '22'
       - name: Security and Korean frontend regressions
-        run: node --test test/private-source.test.mjs test/container-cost.test.mjs test/ko-voice.test.cjs test/frontend-invariants.test.cjs test/tts-arena.test.cjs
+        run: node --test test/private-source.test.mjs test/container-cost.test.mjs test/ko-voice.test.cjs test/frontend-invariants.test.cjs test/tts-arena.test.cjs test/voice-diversity.test.cjs
       - name: Python selftests
         run: python3 server/singleflight.py --selftest && python3 test/judge_test.py && python3 -m py_compile server/singleflight.py server/server.py research/judge.py
       - name: No private-text artifact or Container bulk queue

@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "policy": {
+    "synthetic_voice_first": true,
+    "real_person_imitation": "deny",
+    "voice_cloning_without_consent": "deny",
+    "korean_accuracy_required_before_promotion": true,
+    "blind_listening_required_for_timbre_promotion": true
+  },
+  "voices": [
+    {
+      "id": "supertonic-u5-production",
+      "family": "Supertonic",
+      "model": "production-u5",
+      "gender": "female-blend",
+      "native_language": "Korean",
+      "korean_status": "production-current",
+      "timbre_status": "current-reference",
+      "role_flexibility": "post-processing-limited"
+    },
+    {
+      "id": "qwen06-vivian",
+      "family": "Qwen3-TTS",
+      "model": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+      "speaker": "Vivian",
+      "gender": "female",
+      "native_language": "Chinese",
+      "official_description": "bright slightly edgy young female",
+      "korean_status": "cpu-screen-verified-challenger",
+      "screen_mean_semantic_cer": 0.0303,
+      "screen_rank": 2
+    },
+    {
+      "id": "qwen06-serena",
+      "family": "Qwen3-TTS",
+      "model": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+      "speaker": "Serena",
+      "gender": "female",
+      "native_language": "Chinese",
+      "official_description": "warm gentle young female",
+      "korean_status": "cpu-screen-verified-research",
+      "screen_mean_semantic_cer": 0.0606,
+      "screen_rank": 4
+    },
+    {
+      "id": "qwen06-uncle-fu",
+      "family": "Qwen3-TTS",
+      "model": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+      "speaker": "Uncle_Fu",
+      "gender": "male",
+      "native_language": "Chinese",
+      "official_description": "seasoned low mellow male",
+      "korean_status": "cpu-screen-verified-research",
+      "screen_mean_semantic_cer": 0.0606,
+      "screen_rank": 7
+    },
+    {
+      "id": "qwen06-dylan",
+      "family": "Qwen3-TTS",
+      "model": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+      "speaker": "Dylan",
+      "gender": "male",
+      "native_language": "Chinese-Beijing",
+      "official_description": "youthful clear natural male",
+      "korean_status": "cpu-screen-verified-male-primary",
+      "screen_mean_semantic_cer": 0.0454,
+      "screen_rank": 3
+    },
+    {
+      "id": "qwen06-eric",
+      "family": "Qwen3-TTS",
+      "model": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+      "speaker": "Eric",
+      "gender": "male",
+      "native_language": "Chinese-Sichuan",
+      "official_description": "lively slightly husky bright male",
+      "korean_status": "cpu-screen-verified-research",
+      "screen_mean_semantic_cer": 0.0757,
+      "screen_rank": 8
+    },
+    {
+      "id": "qwen06-ryan",
+      "family": "Qwen3-TTS",
+      "model": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+      "speaker": "Ryan",
+      "gender": "male",
+      "native_language": "English",
+      "official_description": "dynamic rhythmic male",
+      "korean_status": "cpu-screen-verified-male-secondary",
+      "screen_mean_semantic_cer": 0.0606,
+      "screen_rank": 5
+    },
+    {
+      "id": "qwen06-aiden",
+      "family": "Qwen3-TTS",
+      "model": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+      "speaker": "Aiden",
+      "gender": "male",
+      "native_language": "English",
+      "official_description": "sunny clear-midrange male",
+      "korean_status": "research-only-low-korean-accuracy",
+      "screen_mean_semantic_cer": 0.2303,
+      "screen_rank": 9,
+      "screen_warning": "K2 case semantic CER 0.4"
+    },
+    {
+      "id": "qwen06-ono-anna",
+      "family": "Qwen3-TTS",
+      "model": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+      "speaker": "Ono_Anna",
+      "gender": "female",
+      "native_language": "Japanese",
+      "official_description": "playful light nimble female",
+      "korean_status": "cpu-screen-verified-research",
+      "screen_mean_semantic_cer": 0.0606,
+      "screen_rank": 6
+    },
+    {
+      "id": "qwen06-sohee",
+      "family": "Qwen3-TTS",
+      "model": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+      "speaker": "Sohee",
+      "gender": "female",
+      "native_language": "Korean",
+      "official_description": "warm Korean female with rich emotion",
+      "korean_status": "official-and-cpu-verified-female-primary",
+      "screen_mean_semantic_cer": 0.0,
+      "screen_rank": 1,
+      "human_feedback": "preferred timbre over production-u5 in initial blind listening"
+    },
+    {
+      "id": "qwen17-voice-design",
+      "family": "Qwen3-TTS",
+      "model": "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign",
+      "gender": "designable",
+      "native_language": "synthetic-designed",
+      "official_description": "free-form voice design by natural-language description",
+      "korean_status": "official-and-cpu-verified-role-design",
+      "occupation_flexibility": "high",
+      "pilot_perfect_semantic_cases": "2/3",
+      "pilot_peak_rss_mb": 5204.0,
+      "pilot_model_load_seconds": 33.885
+    },
+    {
+      "id": "qwen17-sohee",
+      "family": "Qwen3-TTS",
+      "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+      "speaker": "Sohee",
+      "gender": "female",
+      "native_language": "Korean",
+      "official_description": "same official Sohee preset on larger CustomVoice model",
+      "korean_status": "cpu-verified-mixed-case-legal-challenger",
+      "screen_mean_semantic_cer": 0.0869,
+      "research_reason": "official benchmark reports lower Korean WER for 1.7B than 0.6B; local three-case screen improved legal-chain but worsened K2 and ordinary-medium",
+      "universal_upgrade": false
+    }
+  ]
+}

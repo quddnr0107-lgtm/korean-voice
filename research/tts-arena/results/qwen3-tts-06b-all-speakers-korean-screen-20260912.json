@@ -1,0 +1,45 @@
+{
+  "date": "2026-09-12",
+  "provider": "qwen3-tts-0.6b-customvoice-all-speakers",
+  "model": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+  "source_run": 34694995089,
+  "source_job": 103556838458,
+  "artifact_id": 10297433861,
+  "goal": "screen all nine official preset speakers for Korean voice diversity before occupation-style expansion",
+  "execution": {
+    "runner": "github-hosted ubuntu-24.04 CPU",
+    "dtype": "float32",
+    "seed": 7,
+    "case_count_per_speaker": 2,
+    "paid_tts_api_calls": 0,
+    "cloudflare_r2_calls": 0,
+    "cloudflare_do_calls": 0,
+    "cloudflare_container_calls": 0,
+    "audio_git_commit": 0
+  },
+  "model_load_seconds": 22.194,
+  "peak_rss_mb": 5726.4,
+  "cases": [
+    "케이투 전차를 점검한다.",
+    "국방부장관은 전쟁이 없는 때에도 정해진 날수만큼 예비군을 불러 쓸 수 있습니다."
+  ],
+  "ranking": [
+    {"rank":1,"speaker":"Sohee","gender":"female","native":"Korean","mean_semantic_cer":0.0,"perfect_cases":2,"case_cer":{"mil-k2":0.0,"ordinary-medium":0.0}},
+    {"rank":2,"speaker":"Vivian","gender":"female","native":"Chinese","mean_semantic_cer":0.0303,"perfect_cases":1,"case_cer":{"mil-k2":0.0,"ordinary-medium":0.0606}},
+    {"rank":3,"speaker":"Dylan","gender":"male","native":"Chinese-Beijing","mean_semantic_cer":0.0454,"perfect_cases":1,"case_cer":{"mil-k2":0.0,"ordinary-medium":0.0909}},
+    {"rank":4,"speaker":"Serena","gender":"female","native":"Chinese","mean_semantic_cer":0.0606,"perfect_cases":1,"case_cer":{"mil-k2":0.0,"ordinary-medium":0.1212}},
+    {"rank":5,"speaker":"Ryan","gender":"male","native":"English","mean_semantic_cer":0.0606,"perfect_cases":1,"case_cer":{"mil-k2":0.0,"ordinary-medium":0.1212}},
+    {"rank":6,"speaker":"Ono_Anna","gender":"female","native":"Japanese","mean_semantic_cer":0.0606,"perfect_cases":1,"case_cer":{"mil-k2":0.0,"ordinary-medium":0.1212}},
+    {"rank":7,"speaker":"Uncle_Fu","gender":"male","native":"Chinese","mean_semantic_cer":0.0606,"perfect_cases":1,"case_cer":{"mil-k2":0.0,"ordinary-medium":0.1212}},
+    {"rank":8,"speaker":"Eric","gender":"male","native":"Chinese-Sichuan","mean_semantic_cer":0.0757,"perfect_cases":1,"case_cer":{"mil-k2":0.0,"ordinary-medium":0.1515}},
+    {"rank":9,"speaker":"Aiden","gender":"male","native":"English","mean_semantic_cer":0.2303,"perfect_cases":0,"case_cer":{"mil-k2":0.4,"ordinary-medium":0.0606}}
+  ],
+  "decisions": {
+    "female_primary": "Sohee",
+    "female_secondary": "Vivian",
+    "male_primary": "Dylan",
+    "male_secondary_pool": ["Ryan", "Uncle_Fu"],
+    "deprioritize_for_korean": ["Aiden"],
+    "note": "two-case screen is a filter, not a production promotion; broader legal/admin/military gates and blind listening remain required"
+  }
+}

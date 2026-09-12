@@ -1,0 +1,66 @@
+{
+  "date": "2026-09-12",
+  "provider": "qwen3-tts-1.7b-customvoice-sohee",
+  "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+  "speaker": "Sohee",
+  "source_run": 34695099556,
+  "source_job": 103557118711,
+  "artifact_id": 10298558236,
+  "goal": "test whether the larger CustomVoice model preserves the Sohee lane while improving Korean pronunciation over the 0.6B screen",
+  "execution": {
+    "runner": "github-hosted ubuntu-24.04 CPU",
+    "dtype": "bfloat16",
+    "seed": 7,
+    "paid_tts_api_calls": 0,
+    "cloudflare_r2_calls": 0,
+    "cloudflare_do_calls": 0,
+    "cloudflare_container_calls": 0,
+    "audio_git_commit": 0
+  },
+  "model_load_seconds": 34.669,
+  "peak_rss_mb": 5266.6,
+  "mean_semantic_cer": 0.0869,
+  "perfect_cases": 1,
+  "comparison_to_06b_same_three_cases": {
+    "qwen06_mean_semantic_cer": 0.0958,
+    "qwen17_mean_semantic_cer": 0.0869,
+    "interpretation": "small aggregate improvement but mixed per-case behavior; not a universal replacement"
+  },
+  "results": [
+    {
+      "id": "mil-k2",
+      "text": "케이투 전차를 점검한다.",
+      "synthesis_seconds": 7.759,
+      "audio_seconds": 1.84,
+      "asr": "K2 전철을 점검한다",
+      "semantic_cer": 0.2,
+      "qwen06_semantic_cer": 0.1,
+      "comparison": "worse"
+    },
+    {
+      "id": "legal-chain",
+      "text": "제육 조 제일 항 제삼 호 가목을 적용한다.",
+      "synthesis_seconds": 17.275,
+      "audio_seconds": 4.16,
+      "asr": "제육조 제1항 제3호 가목을 적용한다",
+      "semantic_cer": 0.0,
+      "qwen06_semantic_cer": 0.1875,
+      "comparison": "better"
+    },
+    {
+      "id": "ordinary-medium",
+      "text": "국방부장관은 전쟁이 없는 때에도 정해진 날수만큼 예비군을 불러 쓸 수 있습니다.",
+      "synthesis_seconds": 25.310,
+      "audio_seconds": 6.16,
+      "asr": "국방 부장관은 전쟁이 없는 때에도 정해진 날수만큼 예비군을 불렀을 수 있습니다",
+      "semantic_cer": 0.0606,
+      "qwen06_semantic_cer": 0.0,
+      "comparison": "worse"
+    }
+  ],
+  "decision": {
+    "universal_upgrade": false,
+    "legal_pronunciation_challenger": true,
+    "requires_backend_case_gating": true
+  }
+}
