@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "provider": "qwen3-tts-0.6b-customvoice-sohee",
+  "date": "2026-09-12",
+  "runner": "github-actions-ubuntu-4cpu",
+  "paid_tts_api_calls": 0,
+  "cloudflare_calls": 0,
+  "greedy_failure": {
+    "run_id": 34680570366,
+    "configuration": {"device":"cpu","dtype":"float32","attention":"sdpa","do_sample":false,"max_new_tokens":128},
+    "install_seconds": 77,
+    "model_load_seconds": 19.359,
+    "synthesis_seconds": 75.046,
+    "audio_seconds": 10.16,
+    "sample_rate": 24000,
+    "rms": 0.000361,
+    "peak": 0.001038,
+    "frames_above_minus_50db_ratio": 0.0,
+    "asr": "",
+    "canonical_cer": 1.0,
+    "interpretation": "Greedy generation ran to the token cap and produced near-silence; do_sample=false is not a valid arena policy for this CPU path."
+  },
+  "sampled_smoke": {
+    "run_id": 34680816182,
+    "configuration": {"device":"cpu","dtype":"float32","attention":"sdpa","do_sample":true,"max_new_tokens":128,"torch_seed":7},
+    "install_seconds": 66,
+    "model_load_seconds": 12.575,
+    "synthesis_seconds": 15.571,
+    "audio_seconds": 2.64,
+    "sample_rate": 24000,
+    "rms": 0.080424,
+    "peak": 0.506592,
+    "frames_above_minus_50db_ratio": 0.553,
+    "asr": "케이트 전차를 점검한다.",
+    "canonical_cer": 0.1,
+    "interpretation": "Recommended sampling recovered normal-amplitude Korean speech and made CPU inference feasible."
+  },
+  "sampled_k2_pair": {
+    "run_id": 34680950015,
+    "artifact_id": 10293512901,
+    "configuration": {"device":"cpu","dtype":"float32","attention":"sdpa","do_sample":true,"max_new_tokens":128,"reset_torch_seed_each_variant":7,"one_model_load":true},
+    "model_load_seconds": 22.152,
+    "raw": {
+      "text": "K2 전차를 점검한다.",
+      "synthesis_seconds": 9.563,
+      "audio_seconds": 2.64,
+      "asr": "K2 전차를 점검한다.",
+      "canonical_cer": 0.0,
+      "rms": 0.075523,
+      "peak": 0.486633
+    },
+    "canonical": {
+      "text": "케이투 전차를 점검한다.",
+      "synthesis_seconds": 9.462,
+      "audio_seconds": 2.64,
+      "asr": "K2 전차를 점검한다",
+      "canonical_cer": 0.0,
+      "rms": 0.080424,
+      "peak": 0.506592
+    },
+    "interpretation": "Raw and ko-voice canonical K2 are tied at semantic/canonical CER 0.0 on sampled Qwen3-TTS. Unlike MOSS Nano, Qwen does not require K2 expansion to avoid a generation failure. Frontend benefit is backend- and case-dependent."
+  }
+}
