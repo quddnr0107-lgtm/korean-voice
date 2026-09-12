@@ -1,0 +1,73 @@
+name: Experiment Qwen3 TTS 0.6B Sohee ASR judge
+
+on:
+  push:
+    branches:
+      - experiment/qwen3-tts-06b-sohee-asr-20260912
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  judge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      HF_HUB_DISABLE_TELEMETRY: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Reuse Qwen smoke artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: qwen3-tts-06b-sohee-cpu-smoke
+          path: /tmp/qwen-smoke
+          github-token: ${{ github.token }}
+          repository: quddnr0107-lgtm/korean-voice
+          run-id: 34680570366
+      - name: Install local ASR
+        run: python -m pip install faster-whisper
+      - name: Transcribe and compute literal/canonical CER
+        run: |
+          python - <<'PY' | tee /tmp/qwen-smoke/asr-result.json
+          import json, re
+          from faster_whisper import WhisperModel
+
+          def compact(s): return re.sub(r'[^가-힣0-9a-zA-Z]', '', s or '')
+          def cer(ref,hyp):
+              r,h=compact(ref),compact(hyp)
+              if not r: return 0.0 if not h else 1.0
+              d=list(range(len(h)+1))
+              for i,rc in enumerate(r,1):
+                  prev,d[0]=d[0],i
+                  for j,hc in enumerate(h,1):
+                      cur=d[j]
+                      d[j]=min(d[j]+1,d[j-1]+1,prev+(rc!=hc)); prev=cur
+              return d[-1]/len(r)
+
+          model=WhisperModel('small',device='cpu',compute_type='int8',cpu_threads=4)
+          segs,info=model.transcribe('/tmp/qwen-smoke/qwen-sohee-canonical.wav',language='ko',beam_size=5,vad_filter=True)
+          text=' '.join(s.text.strip() for s in segs).strip()
+          target='케이투 전차를 점검한다'
+          # known ASR orthography K2 is semantically equivalent to spoken 케이투 in this test.
+          semantic=re.sub(r'(?i)K\s*-?\s*2','케이투',text)
+          out={
+            'asr':text,
+            'asr_semantic':semantic,
+            'cer_literal':round(cer(target,text),4),
+            'cer_canonical':round(cer(target,semantic),4),
+            'language_probability':round(info.language_probability,4),
+            'paid_tts_api_calls':0,
+            'cloudflare_calls':0
+          }
+          print(json.dumps(out,ensure_ascii=False,indent=2))
+          PY
+      - name: Upload ASR evidence only
+        uses: actions/upload-artifact@v4
+        with:
+          name: qwen3-tts-06b-sohee-asr-result
+          path: /tmp/qwen-smoke/asr-result.json
+          retention-days: 1
