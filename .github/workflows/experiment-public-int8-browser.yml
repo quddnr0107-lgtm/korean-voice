@@ -1,0 +1,103 @@
+name: Experiment public INT8 browser Supertonic
+
+on:
+  push:
+    branches:
+      - experiment/public-int8-browser-20260912
+
+permissions:
+  contents: read
+
+jobs:
+  chromium-int8:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser runtime
+        working-directory: /tmp
+        run: |
+          set -euo pipefail
+          rm -rf st-int8 && mkdir st-int8 && cd st-int8
+          npm init -y >/dev/null
+          npm pkg set type=module
+          npm install --no-audit --no-fund vite@5.4.0 onnxruntime-web@latest playwright
+          npx playwright install --with-deps chromium
+          node -p "require('onnxruntime-web/package.json').version" > ort-version.txt
+      - name: Download public INT8 model
+        working-directory: /tmp/st-int8
+        run: |
+          set -euo pipefail
+          mkdir -p public/assets/onnx public/assets/voice_styles public/ort src
+          BASE='https://huggingface.co/q3146dq4/Supertonic-3-ONNX-INT8/resolve/main'
+          for f in duration_predictor.onnx text_encoder.onnx vector_estimator.onnx vocoder.onnx tts.json unicode_indexer.json; do
+            curl -fL --retry 3 --retry-delay 2 "$BASE/onnx/$f" -o "public/assets/onnx/$f"
+          done
+          for v in F2 F4; do curl -fL --retry 3 "$BASE/voice_styles/$v.json" -o "public/assets/voice_styles/$v.json"; done
+          curl -fL --retry 3 'https://raw.githubusercontent.com/supertone-oss-archive/supertonic/main/web/helper.js' -o src/helper.js
+          cp node_modules/onnxruntime-web/dist/ort-wasm*.wasm public/ort/ || true
+          du -ch public/assets/onnx/* | tail -1 > model-size.txt
+      - name: Build Chromium harness
+        working-directory: /tmp/st-int8
+        run: |
+          cat > index.html <<'HTML'
+          <!doctype html><html><body><script type="module" src="/src/app.js"></script></body></html>
+          HTML
+          cat > src/app.js <<'JS'
+          import * as ort from 'onnxruntime-web';
+          import { loadTextToSpeech, Style, writeWavFile } from './helper.js';
+          ort.env.wasm.numThreads = 1;
+          ort.env.wasm.wasmPaths = '/ort/';
+          const flat=x=>x.flat(Infinity);
+          async function style(){
+            const ds=await Promise.all(['F4','F2'].map(async n=>(await fetch('/assets/voice_styles/'+n+'.json')).json()));
+            const td=ds[0].style_ttl.dims, dd=ds[0].style_dp.dims;
+            const ttl=new Float32Array(td[1]*td[2]), dp=new Float32Array(dd[1]*dd[2]);
+            ds.forEach((d,i)=>{const w=i?0.4:0.6,a=flat(d.style_ttl.data),b=flat(d.style_dp.data);for(let j=0;j<ttl.length;j++)ttl[j]+=a[j]*w;for(let j=0;j<dp.length;j++)dp[j]+=b[j]*w});
+            return new Style(new ort.Tensor('float32',ttl,[1,td[1],td[2]]),new ort.Tensor('float32',dp,[1,dd[1],dd[2]]));
+          }
+          async function main(){
+            const t0=performance.now();
+            const {textToSpeech}=await loadTextToSpeech('/assets/onnx',{executionProviders:['wasm'],graphOptimizationLevel:'all'});
+            const load=(performance.now()-t0)/1000;
+            const s=await style();
+            const text='예비군 훈련은 해마다 받습니다.';
+            const a=performance.now(); const raw=await textToSpeech.call(text,'ko',s,8,.966,.25); const synth=(performance.now()-a)/1000;
+            const n=Math.floor(textToSpeech.sampleRate*raw.duration[0]); const wav=Float32Array.from(raw.wav.slice(0,n));
+            let sq=0,p=0;for(const v of wav){sq+=v*v;p=Math.max(p,Math.abs(v))}
+            const result={browser:true,model:'q3146dq4/Supertonic-3-ONNX-INT8',load_seconds:+load.toFixed(3),synth_seconds:+synth.toFixed(3),audio_seconds:+(wav.length/textToSpeech.sampleRate).toFixed(3),rms:+Math.sqrt(sq/wav.length).toFixed(6),peak:+p.toFixed(6),paid_tts_api_calls:0,cloudflare_calls:0};
+            if(result.rms<.005||result.peak<.02) throw new Error('near silence '+JSON.stringify(result));
+            window.__result=result; window.__wav=Array.from(new Uint8Array(writeWavFile(Array.from(wav),textToSpeech.sampleRate))); window.__done=true;
+          }
+          main().catch(e=>{window.__error=String(e&&e.stack||e);window.__done=true});
+          JS
+          cat > run.mjs <<'NODE'
+          import fs from 'node:fs'; import { chromium } from 'playwright';
+          const b=await chromium.launch({headless:true}); const p=await b.newPage(); p.on('console',m=>console.log('[browser]',m.text())); p.on('pageerror',e=>console.error('[pageerror]',e));
+          await p.goto('http://127.0.0.1:5173',{waitUntil:'domcontentloaded'}); await p.waitForFunction(()=>window.__done===true,null,{timeout:180000});
+          const err=await p.evaluate(()=>window.__error||null); if(err) throw new Error(err); const r=await p.evaluate(()=>window.__result); const w=await p.evaluate(()=>window.__wav);
+          fs.writeFileSync('result.json',JSON.stringify(r,null,2)); fs.writeFileSync('sample.wav',Buffer.from(w)); console.log(JSON.stringify(r,null,2)); await b.close();
+          NODE
+      - name: Run real Chromium
+        working-directory: /tmp/st-int8
+        run: |
+          set -euo pipefail
+          npx vite --host 127.0.0.1 --port 5173 >/tmp/st-int8-vite.log 2>&1 & PID=$!; trap 'kill $PID 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:5173 >/dev/null && break; sleep 1; done
+          node run.mjs
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-int8-browser-probe
+          retention-days: 1
+          if-no-files-found: warn
+          path: |
+            /tmp/st-int8/result.json
+            /tmp/st-int8/sample.wav
+            /tmp/st-int8/model-size.txt
+            /tmp/st-int8/ort-version.txt
+            /tmp/st-int8-vite.log
