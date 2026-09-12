@@ -344,3 +344,19 @@ test('중첩 Markdown 표지도 한 번에 제거해 멱등성을 보장한다',
   assert.strictEqual(K.normalize('-3도'), '영하 삼 도', '음수는 불릿으로 제거하지 않는다');
   assert.strictEqual(K.normalize('2026. 9. 11.'), '이천이십육 년 구 월 십일 일', '점 날짜는 ordered-list로 오인하지 않는다');
 });
+
+
+test('일반 수량 범위의 까지는 오른쪽 끝에만 남긴다', () => {
+  assert.strictEqual(K.normalize('68~70점대까지'), '육십팔 점대에서 칠십 점대까지');
+  assert.strictEqual(K.normalize('68~70점대까지는'), '육십팔 점대에서 칠십 점대까지는');
+  assert.strictEqual(K.normalize('18~21개월까지'), '십팔 개월에서 이십일 개월까지');
+  assert.strictEqual(K.normalize('1~3시간까지'), '한 시간에서 세 시간까지');
+});
+
+test('범위 까지 교정은 기존 서술어·조사·복합 단위를 보존한다', () => {
+  assert.strictEqual(K.normalize('복무기간은 18~21개월이다.'), '복무기간은 십팔 개월에서 이십일 개월이다.');
+  assert.strictEqual(K.normalize('3~6문장으로'), '삼문장에서 육문장으로');
+  assert.strictEqual(K.normalize('2025~2026년에'), '이천이십오 년에서 이천이십육 년에');
+  assert.strictEqual(K.normalize('1~4년차'), '일 년차에서 사 년차');
+  assert.strictEqual(K.normalize('4~5만원이'), '사만 원에서 오만 원이');
+});
