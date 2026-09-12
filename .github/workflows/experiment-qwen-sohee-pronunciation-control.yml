@@ -1,0 +1,108 @@
+name: Experiment Qwen Sohee pronunciation control
+
+on:
+  push:
+    branches:
+      - experiment/qwen-sohee-pronunciation-control-20260912
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      HF_HUB_DISABLE_TELEMETRY: 1
+      TOKENIZERS_PARALLELISM: "false"
+      OMP_NUM_THREADS: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install zero-cost CPU runtime
+        run: |
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch==2.7.0 torchaudio==2.7.0
+          python -m pip install qwen-tts==0.1.1 faster-whisper soundfile
+      - name: Generate baseline and two pronunciation-control variants
+        run: |
+          mkdir -p /tmp/qpc/audio
+          python - <<'PY'
+          import json, resource, time, torch
+          import soundfile as sf
+          from qwen_tts import Qwen3TTSModel
+
+          cases = [
+              ('mil-k2', '케이투 전차를 점검한다.'),
+              ('legal-chain', '제육 조 제일 항 제삼 호 가목을 적용한다.'),
+              ('ordinary-medium', '국방부장관은 전쟁이 없는 때에도 정해진 날수만큼 예비군을 불러 쓸 수 있습니다.'),
+          ]
+          variants = [
+              ('base', None),
+              ('precision', 'Speak in a warm natural Korean female voice. Articulate every syllable precisely. Pronounce military designations, legal article numbers, particles, and final consonants exactly as written. Do not slur, merge, or substitute sounds. Keep a moderate natural pace.'),
+              ('instructor', 'Speak like a professional Korean military law instructor: warm and natural, but very clear and authoritative. Use precise standard Korean diction, crisp consonants, distinct syllables, and careful pronunciation of military and legal terminology. Avoid exaggerated emotion and keep a steady moderate pace.'),
+          ]
+
+          t0=time.perf_counter()
+          model=Qwen3TTSModel.from_pretrained(
+              'Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice',
+              device_map='cpu', dtype=torch.float32, attn_implementation='sdpa')
+          load=time.perf_counter()-t0
+          out={'provider':'qwen3-tts-0.6b-customvoice-sohee','speaker':'Sohee','model_load_seconds':round(load,3),'seed':7,'variants':{},'jobs':[]}
+          for vname, instruct in variants:
+              out['variants'][vname]=instruct
+              for cid,text in cases:
+                  torch.manual_seed(7)
+                  t=time.perf_counter()
+                  wavs,sr=model.generate_custom_voice(
+                      text=text, language='Korean', speaker='Sohee', instruct=instruct,
+                      do_sample=True, max_new_tokens=192)
+                  elapsed=time.perf_counter()-t
+                  w=wavs[0]
+                  sf.write(f'/tmp/qpc/audio/{cid}--{vname}.wav', w, sr)
+                  out['jobs'].append({'id':cid,'variant':vname,'text':text,'synthesis_seconds':round(elapsed,3),'audio_seconds':round(len(w)/sr,3),'sample_rate':int(sr)})
+          out['peak_rss_mb']=round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/1024,1)
+          json.dump(out,open('/tmp/qpc/synth.json','w',encoding='utf-8'),ensure_ascii=False,indent=2)
+          print(json.dumps(out,ensure_ascii=False,indent=2))
+          PY
+      - name: Judge pronunciation with one Whisper-small model
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          from faster_whisper import WhisperModel
+          root=pathlib.Path('/tmp/qpc')
+          synth=json.load(open(root/'synth.json',encoding='utf-8'))
+          model=WhisperModel('small',device='cpu',compute_type='int8',cpu_threads=4)
+          rows=[]
+          for j in synth['jobs']:
+              p=root/'audio'/f"{j['id']}--{j['variant']}.wav"
+              segs,info=model.transcribe(str(p),language='ko',beam_size=5,vad_filter=True)
+              text=' '.join(s.text.strip() for s in segs).strip()
+              rows.append({**j,'asr':text,'language_probability':round(info.language_probability,4)})
+          json.dump(rows,open(root/'asr.json','w',encoding='utf-8'),ensure_ascii=False,indent=2)
+          print(json.dumps(rows,ensure_ascii=False,indent=2))
+          PY
+      - name: Compute canonical CER summary
+        run: |
+          node - <<'NODE'
+          const fs=require('fs'); const K=require('./public/ko-voice.js');
+          const rows=JSON.parse(fs.readFileSync('/tmp/qpc/asr.json','utf8'));
+          const compact=s=>String(s??'').replace(/[^가-힣0-9A-Za-z]/g,'');
+          function cer(a,b){a=compact(a);b=compact(b);if(!a)return b?1:0;let d=Array.from({length:b.length+1},(_,i)=>i);for(let i=1;i<=a.length;i++){let prev=d[0];d[0]=i;for(let j=1;j<=b.length;j++){const cur=d[j];d[j]=Math.min(d[j]+1,d[j-1]+1,prev+(a[i-1]===b[j-1]?0:1));prev=cur;}}return d[b.length]/a.length;}
+          const enriched=rows.map(r=>{const target=K.normalize(r.text),heard=K.normalize(r.asr);return {...r,target_canonical:target,asr_canonical:heard,semantic_cer:+cer(target,heard).toFixed(4)};});
+          const summary={};
+          for(const v of ['base','precision','instructor']){const x=enriched.filter(r=>r.variant===v); summary[v]={mean_semantic_cer:+(x.reduce((a,r)=>a+r.semantic_cer,0)/x.length).toFixed(4),perfect_cases:x.filter(r=>r.semantic_cer===0).length,total_cases:x.length,total_synthesis_seconds:+x.reduce((a,r)=>a+r.synthesis_seconds,0).toFixed(3),total_audio_seconds:+x.reduce((a,r)=>a+r.audio_seconds,0).toFixed(3)};}
+          const out={date:'2026-09-12',goal:'preserve Sohee timbre while approaching production-u5 pronunciation accuracy',execution:{paid_tts_api_calls:0,cloudflare_r2_calls:0,cloudflare_do_calls:0,cloudflare_container_calls:0},results:enriched,summary};
+          fs.writeFileSync('/tmp/qpc/final.json',JSON.stringify(out,null,2)); console.log(JSON.stringify(out,null,2));
+          NODE
+      - name: Upload ephemeral blind-test source audio and evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: qwen-sohee-pronunciation-control
+          path: |
+            /tmp/qpc/synth.json
+            /tmp/qpc/asr.json
+            /tmp/qpc/final.json
+            /tmp/qpc/audio/*.wav
+          retention-days: 1
