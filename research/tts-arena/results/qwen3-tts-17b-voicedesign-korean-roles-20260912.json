@@ -1,0 +1,51 @@
+{
+  "date": "2026-09-12",
+  "provider": "qwen3-tts-1.7b-voicedesign",
+  "model": "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign",
+  "source_run": 34695058678,
+  "source_job": 103557007585,
+  "artifact_id": 10297883418,
+  "goal": "test zero-cost CPU feasibility for gender/occupation-specific Korean voice design",
+  "execution": {
+    "runner": "github-hosted ubuntu-24.04 CPU",
+    "dtype": "bfloat16",
+    "seed": 7,
+    "paid_tts_api_calls": 0,
+    "cloudflare_r2_calls": 0,
+    "cloudflare_do_calls": 0,
+    "cloudflare_container_calls": 0,
+    "audio_git_commit": 0
+  },
+  "model_load_seconds": 33.885,
+  "peak_rss_mb": 5204.0,
+  "shared_text": "국방부장관은 정해진 절차에 따라 예비군 훈련 계획을 정확하게 안내합니다.",
+  "summary": {
+    "role_count": 3,
+    "perfect_semantic_cer": 2,
+    "cpu_feasible": true,
+    "decision": "promote VoiceDesign to verified research lane for occupation and gender diversity; keep pronunciation gating per designed voice"
+  },
+  "results": [
+    {
+      "role": "female-news-anchor",
+      "synthesis_seconds": 26.504,
+      "audio_seconds": 8.16,
+      "asr": "국방부장관은 정해진 절차에 따라 예비군 훈련 계획을 정확하게 안내합니다.",
+      "semantic_cer": 0.0
+    },
+    {
+      "role": "male-military-law-instructor",
+      "synthesis_seconds": 23.770,
+      "audio_seconds": 7.36,
+      "asr": "국방부장과는 정해진 절차에 따라 예비군 훈련 계획을 정확하게 안내합니다.",
+      "semantic_cer": 0.0645
+    },
+    {
+      "role": "female-teacher",
+      "synthesis_seconds": 23.939,
+      "audio_seconds": 7.44,
+      "asr": "국방부 장관은 정해진 절차에 따라 예비군 훈련 계획을 정확하게 안내합니다.",
+      "semantic_cer": 0.0
+    }
+  ]
+}
