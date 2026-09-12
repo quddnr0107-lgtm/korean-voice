@@ -1,0 +1,93 @@
+name: Experiment Qwen VoiceDesign Korean roles CPU
+
+on:
+  push:
+    branches:
+      - experiment/qwen-voicedesign-korean-roles-cpu-20260912
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      HF_HUB_DISABLE_TELEMETRY: '1'
+      TOKENIZERS_PARALLELISM: 'false'
+      OMP_NUM_THREADS: '4'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install zero-cost CPU runtime
+        run: |
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch==2.7.0 torchaudio==2.7.0
+          python -m pip install qwen-tts==0.1.1 faster-whisper soundfile
+      - name: Generate three Korean occupation voices
+        run: |
+          mkdir -p /tmp/qvd/audio
+          python - <<'PY'
+          import json, resource, time, torch
+          import soundfile as sf
+          from qwen_tts import Qwen3TTSModel
+
+          text='국방부장관은 정해진 절차에 따라 예비군 훈련 계획을 정확하게 안내합니다.'
+          roles=[
+            ('female-news-anchor','30대 한국인 여성 뉴스 아나운서. 맑고 신뢰감 있는 중저음, 정확한 표준어 발음, 안정적이고 절제된 호흡, 과장 없는 전문적인 뉴스 전달 톤.'),
+            ('male-military-law-instructor','40대 한국인 남성 군사·법률 교관. 낮고 단단하며 권위 있지만 위압적이지 않은 목소리, 또렷한 자음과 정확한 법률·군사용어 발음, 차분한 강의 속도.'),
+            ('female-teacher','30대 한국인 여성 교사. 따뜻하고 친절하며 집중이 잘 되는 목소리, 또박또박한 표준어, 학습자가 오래 들어도 피로하지 않은 안정된 속도와 억양.'),
+          ]
+          t0=time.perf_counter()
+          model=Qwen3TTSModel.from_pretrained('Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign',device_map='cpu',dtype=torch.bfloat16,attn_implementation='sdpa')
+          out={'date':'2026-09-12','model':'Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign','dtype':'bfloat16','model_load_seconds':round(time.perf_counter()-t0,3),'seed':7,'text':text,'jobs':[]}
+          for rid,instruct in roles:
+            torch.manual_seed(7)
+            t=time.perf_counter()
+            wavs,sr=model.generate_voice_design(text=text,language='Korean',instruct=instruct,do_sample=True,max_new_tokens=192)
+            elapsed=time.perf_counter()-t
+            w=wavs[0]
+            sf.write(f'/tmp/qvd/audio/{rid}.wav',w,sr)
+            out['jobs'].append({'role':rid,'instruction':instruct,'synthesis_seconds':round(elapsed,3),'audio_seconds':round(len(w)/sr,3),'sample_rate':int(sr)})
+          out['peak_rss_mb']=round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/1024,1)
+          json.dump(out,open('/tmp/qvd/synth.json','w',encoding='utf-8'),ensure_ascii=False,indent=2)
+          print(json.dumps(out,ensure_ascii=False,indent=2))
+          PY
+      - name: Judge pronunciation with one Whisper-small model
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          from faster_whisper import WhisperModel
+          root=pathlib.Path('/tmp/qvd')
+          synth=json.load(open(root/'synth.json',encoding='utf-8'))
+          model=WhisperModel('small',device='cpu',compute_type='int8',cpu_threads=4)
+          rows=[]
+          for j in synth['jobs']:
+            segs,info=model.transcribe(str(root/'audio'/f"{j['role']}.wav"),language='ko',beam_size=5,vad_filter=True)
+            heard=' '.join(s.text.strip() for s in segs).strip()
+            rows.append({**j,'text':synth['text'],'asr':heard,'language_probability':round(info.language_probability,4)})
+          json.dump(rows,open(root/'asr.json','w',encoding='utf-8'),ensure_ascii=False,indent=2)
+          print(json.dumps(rows,ensure_ascii=False,indent=2))
+          PY
+      - name: Compute canonical CER
+        run: |
+          node - <<'NODE'
+          const fs=require('fs'); const K=require('./public/ko-voice.js');
+          const synth=JSON.parse(fs.readFileSync('/tmp/qvd/synth.json','utf8')); const rows=JSON.parse(fs.readFileSync('/tmp/qvd/asr.json','utf8'));
+          const compact=s=>String(s??'').replace(/[^가-힣0-9A-Za-z]/g,'');
+          function cer(a,b){a=compact(a);b=compact(b);if(!a)return b?1:0;let d=Array.from({length:b.length+1},(_,i)=>i);for(let i=1;i<=a.length;i++){let prev=d[0];d[0]=i;for(let j=1;j<=b.length;j++){const cur=d[j];d[j]=Math.min(d[j]+1,d[j-1]+1,prev+(a[i-1]===b[j-1]?0:1));prev=cur;}}return d[b.length]/a.length;}
+          const result=rows.map(r=>({...r,target_canonical:K.normalize(r.text),asr_canonical:K.normalize(r.asr),semantic_cer:+cer(K.normalize(r.text),K.normalize(r.asr)).toFixed(4)}));
+          const out={date:'2026-09-12',goal:'test zero-cost CPU feasibility for gender/occupation-specific Korean voice design',execution:{paid_tts_api_calls:0,cloudflare_r2_calls:0,cloudflare_do_calls:0,cloudflare_container_calls:0},model_load_seconds:synth.model_load_seconds,peak_rss_mb:synth.peak_rss_mb,results:result};
+          fs.writeFileSync('/tmp/qvd/final.json',JSON.stringify(out,null,2)); console.log(JSON.stringify(out,null,2));
+          NODE
+      - name: Upload ephemeral role voices and evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: qwen-voicedesign-korean-roles-cpu
+          retention-days: 1
+          path: |
+            /tmp/qvd/synth.json
+            /tmp/qvd/asr.json
+            /tmp/qvd/final.json
+            /tmp/qvd/audio/*.wav
