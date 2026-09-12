@@ -551,12 +551,14 @@
       const bare = w.replace(/[,.!?]+$/, '');
       // 'A에서 B' 범위 한가운데는 끊지 않는다('에서'는 연결어미 '서'로도 걸린다).
       const 범위중간 = 범위연결(bare, words[i - 1], words[i + 1]);
+      // 법령의 고정 결합 '다음과 같다/같이'는 조사 '과' 뒤 자동 호흡으로 갈라지면 의미가 어색해진다.
+      const 다음과같 = bare === '다음과' && /^같/.test(String(words[i + 1] || '').replace(/[,.!?]+$/, ''));
       if (/,$/.test(w)) { flush(PAUSE.comma); continue; }
       if (bare.length >= 2 && !범위중간 && CONJ.some((c) => bare.endsWith(c))) { flush(PAUSE.conj); continue; }
       // 긴 구는 조사 뒤에서 살짝 쉰다(호흡 단위 ≈ 12음절)
       // 수량과 그 단위 사이는 끊지 않는다 — '오만 ⟂ 원'처럼 들린다.
       const 단위앞 = UNIT_ONLY_RE.test(String(words[i + 1] || '').replace(/[,.!?]+$/, ''));
-      if (syl >= 12 && WEAK_BREAK_PARTICLE.test(bare) && !범위중간 && !단위앞) { flush(PAUSE.weak); continue; }
+      if (syl >= 12 && WEAK_BREAK_PARTICLE.test(bare) && !범위중간 && !다음과같 && !단위앞) { flush(PAUSE.weak); continue; }
       if (cur.join(' ').length >= maxChars) { flush(PAUSE.weak); continue; }
     }
     flush(0);

@@ -374,3 +374,14 @@ test('복합 수 범위 판정은 진짜 장소격 에서를 범위로 오인하
   const out = p.sentences.map(x => K.joinSpokenChunks(x.chunks)).join(' | ');
   assert.ok(/세션에서, 이미/.test(out), out);
 });
+
+
+test('법령 고정 결합 다음과 같다·같이는 한 호흡으로 읽는다', () => {
+  const say = (s) => K.prepare(s).sentences.map(x => K.joinSpokenChunks(x.chunks)).join(' | ');
+  const a = say('제5조(정의) 이 법에서 사용하는 용어의 뜻은 다음과 같다.');
+  const b = say('세부 처리 절차와 필요한 서류는 다음과 같이 정한다.');
+  assert.ok(!/다음과,\s*같다/.test(a), a);
+  assert.ok(/다음과 같다/.test(a), a);
+  assert.ok(!/다음과,\s*같이/.test(b), b);
+  assert.ok(/다음과 같이/.test(b), b);
+});
