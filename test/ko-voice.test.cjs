@@ -360,3 +360,17 @@ test('범위 까지 교정은 기존 서술어·조사·복합 단위를 보존�
   assert.strictEqual(K.normalize('1~4년차'), '일 년차에서 사 년차');
   assert.strictEqual(K.normalize('4~5만원이'), '사만 원에서 오만 원이');
 });
+
+
+test('복합 고유어 수와 표 형식 범위 한가운데는 끊지 않는다', () => {
+  const say = (s) => K.prepare(s).sentences.map(x => K.joinSpokenChunks(x.chunks)).join(' | ');
+  assert.ok(!/스물여덟 시간에서,\s*서른두 시간/.test(say('동원훈련은 연 약 28~32시간 실시한다.')));
+  assert.ok(!/백사십에서,\s*백사십육/.test(say('신장 기준은 140~146=5급 구간이다.')));
+  assert.ok(!/사 에서,\s*스물한 개/.test(say('공군은 색약 지원가능 분야 4→21개로 확대한다.')));
+});
+
+test('복합 수 범위 판정은 진짜 장소격 에서를 범위로 오인하지 않는다', () => {
+  const p = K.prepare('이번 세션에서 이미 확인한 환경 사실부터 뒤져야 한다는 점을 잊지 마세요.');
+  const out = p.sentences.map(x => K.joinSpokenChunks(x.chunks)).join(' | ');
+  assert.ok(/세션에서, 이미/.test(out), out);
+});
