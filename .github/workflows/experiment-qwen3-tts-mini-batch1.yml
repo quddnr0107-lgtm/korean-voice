@@ -1,0 +1,102 @@
+name: Experiment Qwen3 TTS Sohee mini batch 1
+
+on:
+  push:
+    branches:
+      - experiment/qwen3-tts-06b-mini-batch1-20260912
+
+permissions:
+  contents: read
+
+jobs:
+  arena:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      HF_HUB_DISABLE_TELEMETRY: '1'
+      TOKENIZERS_PARALLELISM: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build 3 paired arena cases
+        run: |
+          mkdir -p /tmp/qwen-mini/audio
+          node - <<'NODE' > /tmp/qwen-mini/jobs.json
+          const fs = require('fs');
+          const K = require('./public/ko-voice.js');
+          const arena = JSON.parse(fs.readFileSync('research/tts-arena/cases.json','utf8'));
+          const ids = new Set(['mil-kf21','legal-chain','date-range-particle']);
+          const rows = arena.cases.filter(c => ids.has(c.id));
+          if (rows.length !== 3) throw new Error(`selected=${rows.length}`);
+          const jobs = [];
+          for (const c of rows) {
+            jobs.push({id:c.id,variant:'raw',text:c.source,target:c.target});
+            jobs.push({id:c.id,variant:'canonical',text:K.normalize(c.source),target:c.target});
+          }
+          process.stdout.write(JSON.stringify(jobs,null,2));
+          NODE
+          cat /tmp/qwen-mini/jobs.json
+      - name: Install CPU Qwen and ASR runtime
+        run: |
+          START=$(date +%s)
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch==2.7.0 torchaudio==2.7.0
+          python -m pip install qwen-tts==0.1.1 faster-whisper
+          END=$(date +%s)
+          echo "install_seconds=$((END-START))" > /tmp/qwen-mini/setup.txt
+      - name: Synthesize all 6 jobs with one model load
+        run: |
+          python - <<'PY' | tee /tmp/qwen-mini/synth-result.json
+          import json, os, time, torch
+          import soundfile as sf
+          from qwen_tts import Qwen3TTSModel
+          jobs=json.load(open('/tmp/qwen-mini/jobs.json',encoding='utf-8'))
+          t=time.perf_counter()
+          model=Qwen3TTSModel.from_pretrained('Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice',device_map='cpu',dtype=torch.float32,attn_implementation='sdpa')
+          load=time.perf_counter()-t
+          out={'provider':'qwen3-tts-0.6b-customvoice-sohee','model_load_seconds':round(load,3),'paid_tts_api_calls':0,'cloudflare_calls':0,'jobs':[]}
+          for j in jobs:
+              torch.manual_seed(7)
+              t=time.perf_counter()
+              wavs,sr=model.generate_custom_voice(text=j['text'],language='Korean',speaker='Sohee',do_sample=True,max_new_tokens=192)
+              elapsed=time.perf_counter()-t
+              p=f"/tmp/qwen-mini/audio/{j['id']}--{j['variant']}.wav"
+              sf.write(p,wavs[0],sr)
+              out['jobs'].append({**j,'path':p,'synthesis_seconds':round(elapsed,3),'sample_rate':int(sr),'audio_seconds':round(len(wavs[0])/sr,3),'bytes':os.path.getsize(p)})
+          print(json.dumps(out,ensure_ascii=False,indent=2))
+          PY
+      - name: Whisper all audio once
+        run: |
+          python - <<'PY' | tee /tmp/qwen-mini/asr-result.json
+          import json
+          from faster_whisper import WhisperModel
+          synth=json.load(open('/tmp/qwen-mini/synth-result.json',encoding='utf-8'))
+          model=WhisperModel('small',device='cpu',compute_type='int8',cpu_threads=4)
+          out=[]
+          for j in synth['jobs']:
+              segs,info=model.transcribe(j['path'],language='ko',beam_size=5,vad_filter=True)
+              text=' '.join(s.text.strip() for s in segs).strip()
+              out.append({'id':j['id'],'variant':j['variant'],'target':j['target'],'input_text':j['text'],'asr':text,'language_probability':round(info.language_probability,4),'synthesis_seconds':j['synthesis_seconds'],'audio_seconds':j['audio_seconds']})
+          print(json.dumps(out,ensure_ascii=False,indent=2))
+          PY
+      - name: Canonicalize ASR and compute semantic CER
+        run: |
+          node - <<'NODE' | tee /tmp/qwen-mini/final-result.json
+          const fs=require('fs');
+          const K=require('./public/ko-voice.js');
+          const rows=JSON.parse(fs.readFileSync('/tmp/qwen-mini/asr-result.json','utf8'));
+          const compact=s=>String(s??'').replace(/[^가-힣0-9A-Za-z]/g,'');
+          function cer(a,b){a=compact(a);b=compact(b);if(!a)return b?1:0;let d=Array.from({length:b.length+1},(_,i)=>i);for(let i=1;i<=a.length;i++){let prev=d[0];d[0]=i;for(let j=1;j<=b.length;j++){const cur=d[j];d[j]=Math.min(d[j]+1,d[j-1]+1,prev+(a[i-1]===b[j-1]?0:1));prev=cur;}}return d[b.length]/a.length;}
+          const out=rows.map(r=>{const targetCanonical=K.normalize(r.target);const asrCanonical=K.normalize(r.asr);return {...r,target_canonical:targetCanonical,asr_canonical:asrCanonical,cer_literal:+cer(r.target,r.asr).toFixed(4),cer_canonical:+cer(targetCanonical,asrCanonical).toFixed(4)};});
+          const pairs={};for(const r of out){pairs[r.id]??={};pairs[r.id][r.variant]=r;}
+          const summary=Object.fromEntries(Object.entries(pairs).map(([id,p])=>[id,{raw:p.raw.cer_canonical,canonical:p.canonical.cer_canonical,delta:+(p.canonical.cer_canonical-p.raw.cer_canonical).toFixed(4)}]));
+          process.stdout.write(JSON.stringify({paid_tts_api_calls:0,cloudflare_calls:0,results:out,summary},null,2));
+          NODE
+      - name: Upload ephemeral evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qwen3-tts-06b-mini-batch1
+          path: /tmp/qwen-mini/
+          retention-days: 1
