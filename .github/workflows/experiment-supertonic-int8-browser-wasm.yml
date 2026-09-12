@@ -1,0 +1,81 @@
+name: Experiment Supertonic INT8 browser WASM
+
+on:
+  push:
+    branches:
+      - experiment/supertonic-int8-browser-wasm-20260912
+
+permissions:
+  contents: read
+
+jobs:
+  wasm-smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install exact browser runtime only
+        working-directory: /tmp
+        run: |
+          mkdir -p st-browser && cd st-browser
+          npm init -y >/dev/null
+          npm pkg set type=module
+          npm install --no-audit --no-fund onnxruntime-web@1.17.0
+      - name: Download quantized model and official MIT web helper
+        working-directory: /tmp/st-browser
+        run: |
+          set -euo pipefail
+          mkdir -p assets/onnx assets/voice_styles
+          BASE='https://huggingface.co/q3146dq4/Supertonic-3-ONNX-INT8/resolve/main'
+          for f in duration_predictor.onnx text_encoder.onnx vector_estimator.onnx vocoder.onnx tts.json unicode_indexer.json; do
+            curl -fL --retry 3 --retry-delay 2 "$BASE/onnx/$f" -o "assets/onnx/$f"
+          done
+          curl -fL --retry 3 "$BASE/voice_styles/F2.json" -o assets/voice_styles/F2.json
+          curl -fL --retry 3 'https://raw.githubusercontent.com/supertone-oss-archive/supertonic/main/web/helper.js' -o helper.js
+          du -h assets/onnx/*
+      - name: Run exact ONNX Runtime Web WASM path
+        working-directory: /tmp/st-browser
+        run: |
+          cat > smoke.mjs <<'NODE'
+          import fs from 'node:fs';
+          globalThis.self = globalThis;
+          const ort = await import('onnxruntime-web');
+          ort.env.wasm.numThreads = 1;
+          const { loadTextToSpeech, loadVoiceStyle, writeWavFile } = await import('./helper.js');
+          const base='http://127.0.0.1:8765/assets/onnx';
+          const t0=performance.now();
+          const {textToSpeech}=await loadTextToSpeech(base,{executionProviders:['wasm'],graphOptimizationLevel:'all'});
+          const loadSeconds=(performance.now()-t0)/1000;
+          const style=await loadVoiceStyle(['http://127.0.0.1:8765/assets/voice_styles/F2.json']);
+          const rows=[];
+          for (const text of ['케이투 전차를 점검한다.','제육 조 제일 항 제삼 호 가목을 적용한다.']) {
+            const t=performance.now();
+            const {wav,duration}=await textToSpeech.call(text,'ko',style,4,1.05,0.25);
+            const n=Math.floor(textToSpeech.sampleRate*duration[0]);
+            const out=Float32Array.from(wav.slice(0,n));
+            let sq=0, peak=0; for(const x of out){sq+=x*x;peak=Math.max(peak,Math.abs(x));}
+            const rms=Math.sqrt(sq/Math.max(1,out.length));
+            const file='out-'+rows.length+'.wav';
+            fs.writeFileSync(file,Buffer.from(writeWavFile(Array.from(out),textToSpeech.sampleRate)));
+            rows.push({text,synthesis_seconds:+((performance.now()-t)/1000).toFixed(3),audio_seconds:+duration[0].toFixed(3),rms:+rms.toFixed(6),peak:+peak.toFixed(6),file});
+          }
+          const result={runtime:'onnxruntime-web@1.17.0',provider:'wasm',model:'q3146dq4/Supertonic-3-ONNX-INT8',load_seconds:+loadSeconds.toFixed(3),rows,paid_tts_api_calls:0,cloudflare_calls:0};
+          fs.writeFileSync('result.json',JSON.stringify(result,null,2));
+          console.log(JSON.stringify(result,null,2));
+          if(rows.some(r=>r.rms<0.01||r.audio_seconds<0.4)) process.exit(2);
+          NODE
+          python3 -m http.server 8765 >/tmp/st-http.log 2>&1 &
+          HPID=$!
+          trap 'kill $HPID 2>/dev/null || true' EXIT
+          node smoke.mjs
+      - name: Upload smoke evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: supertonic-int8-browser-wasm-smoke
+          retention-days: 1
+          path: |
+            /tmp/st-browser/result.json
+            /tmp/st-browser/out-*.wav
