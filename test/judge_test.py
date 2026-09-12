@@ -21,6 +21,22 @@ class JudgeTest(unittest.TestCase):
         self.assertEqual(JUDGE.cer('', ''), 0.0)
         self.assertEqual(JUDGE.cer('', '오독'), 1.0)
 
+    def test_ko_voice_canonicalizer_normalizes_military_model(self):
+        self.assertEqual(JUDGE.canonicalize_text('K2 전차를 점검한다.'), '케이투 전차를 점검한다.')
+
+    def test_canonical_cer_does_not_penalize_asr_symbol_spelling(self):
+        target = '케이투 전차를 점검한다.'
+        asr = 'K2 전차를 점검한다.'
+        self.assertGreater(JUDGE.cer(target, asr), 0.0)
+        self.assertEqual(JUDGE.canonical_cer(target, asr), 0.0)
+
+    def test_canonical_cer_still_detects_semantic_failure(self):
+        self.assertGreater(JUDGE.canonical_cer('케이투 전차를 점검한다.', 'KR'), 0.0)
+
+    def test_new_aircraft_gates_canonicalize(self):
+        self.assertEqual(JUDGE.canonicalize_text('KF-21 비행시험을 실시한다.'), '케이에프 이십일 비행시험을 실시한다.')
+        self.assertEqual(JUDGE.canonicalize_text('FA-50을 운용한다.'), '에프에이 오십을 운용한다.')
+
     def test_load_jobs_accepts_dict_and_tuple(self):
         data = [
             {'name': 'a', 'path': '/tmp/a.wav', 'target': '제일 항'},

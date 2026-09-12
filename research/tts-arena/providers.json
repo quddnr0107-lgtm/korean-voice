@@ -63,13 +63,14 @@
       "id": "moss-tts-nano",
       "family": "MOSS-TTS",
       "kind": "local",
-      "korean": "verify-on-model",
+      "korean": "official-and-verified",
       "license": "Apache-2.0",
       "tier": "zero-cost-compute-only",
       "default_enabled": false,
       "production_candidate": true,
-      "repo": "https://github.com/OpenMOSS/MOSS-TTS",
-      "notes": "Family officially supports Korean; Nano is prioritized because it targets CPU/browser execution. Korean output must be verified before promotion to gate provider."
+      "repo": "https://github.com/OpenMOSS/MOSS-TTS-Nano",
+      "model": "OpenMOSS-Team/MOSS-TTS-Nano-100M-ONNX",
+      "notes": "Official Nano README lists Korean among 20 languages. Verified 2026-09-12 on a 4-core GitHub Ubuntu runner with the official ONNX CPU backend. Raw K2 input hit the 30 s generation cap, while ko-voice canonical input produced a 1.68 s correct utterance; see results/2026-09-12-moss-nano-k2-smoke.json."
     },
     {
       "id": "moss-tts-v1.5",
