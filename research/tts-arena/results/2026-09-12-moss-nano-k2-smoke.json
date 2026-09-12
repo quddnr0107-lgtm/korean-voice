@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-12",
+  "provider": "moss-tts-nano",
+  "backend": "official ONNX CPU",
+  "upstream_repo": "OpenMOSS/MOSS-TTS-Nano",
+  "upstream_commit_observed": "8b7bcc9341b3b4ef3a3a58ba1338a7d85ff133eb",
+  "execution": {
+    "runner": "GitHub Actions ubuntu-24.04 public standard runner",
+    "cpu_threads": 4,
+    "torch": "2.7.0+cpu",
+    "onnxruntime": "1.30.0",
+    "install_seconds": 29,
+    "model_assets_mib_approx": 729,
+    "cloudflare_r2_calls": 0,
+    "cloudflare_do_calls": 0,
+    "cloudflare_container_calls": 0,
+    "paid_tts_api_calls": 0
+  },
+  "case": {
+    "source": "K2 전차를 점검한다.",
+    "ko_voice_canonical": "케이투 전차를 점검한다.",
+    "semantic_target": "케이투 전차를 점검한다"
+  },
+  "raw": {
+    "synthesis_seconds": 100,
+    "audio_seconds": 30.0,
+    "generated_frames": 375,
+    "hit_max_new_frames": true,
+    "asr_model": "faster-whisper small, CPU int8",
+    "asr": "KR",
+    "literal_cer": 1.0,
+    "assessment": "catastrophic generation / semantic content lost"
+  },
+  "ko_voice": {
+    "synthesis_seconds": 11,
+    "audio_seconds": 1.68,
+    "generated_frames": 21,
+    "hit_max_new_frames": false,
+    "asr_model": "faster-whisper small, CPU int8",
+    "asr": "K2 전차를 점검한다.",
+    "literal_cer_against_spelled_target": 0.3,
+    "canonicalized_asr": "케이투 전차를 점검한다.",
+    "canonical_cer": 0.0,
+    "assessment": "semantic target recovered; normal short utterance"
+  },
+  "derived": {
+    "synthesis_speedup_raw_over_canonical": 9.09,
+    "audio_duration_ratio_raw_over_canonical": 17.86,
+    "finding": "For this military model designation, ko-voice preprocessing converted a max-length failed generation into a correct short utterance. The benefit is semantic accuracy plus generation stability and latency, not pronunciation alone."
+  },
+  "evidence": {
+    "synthesis_run_id": 34673860101,
+    "asr_run_id": 34674068784,
+    "synthesis_artifact_retention_days": 1,
+    "audio_committed_to_git": false
+  }
+}
