@@ -1,0 +1,163 @@
+name: Experiment MOSS cross-engine synthetic role transfer
+
+on:
+  push:
+    branches:
+      - experiment/moss-crossengine-synthetic-roles-20260912
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  transfer:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      HF_HUB_DISABLE_TELEMETRY: '1'
+      OMP_NUM_THREADS: '4'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download prior synthetic VoiceDesign references
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p /tmp/ref
+          curl -L --fail \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            -o /tmp/ref.zip \
+            https://api.github.com/repos/quddnr0107-lgtm/korean-voice/actions/artifacts/10297883418/zip
+          unzip -q /tmp/ref.zip -d /tmp/ref
+          test -f /tmp/ref/audio/female-news-anchor.wav
+          test -f /tmp/ref/audio/female-teacher.wav
+          test -f /tmp/ref/audio/male-military-law-instructor.wav
+      - name: Install zero-cost MOSS ONNX CPU runtime
+        run: |
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch==2.7.0 torchaudio==2.7.0
+          python -m pip install numpy sentencepiece soundfile onnxruntime==1.30.0 huggingface_hub faster-whisper
+          git clone --filter=blob:none https://github.com/OpenMOSS/MOSS-TTS-Nano.git /tmp/moss-src
+          cd /tmp/moss-src
+          git checkout 8b7bcc9341b3b4ef3a3a58ba1338a7d85ff133eb
+      - name: Transfer synthetic role voices and synthesize new Korean text
+        run: |
+          mkdir -p /tmp/cross/audio
+          python - <<'PY'
+          import json, pathlib, sys, time
+          sys.path.insert(0, '/tmp/moss-src')
+          from onnx_tts_runtime import OnnxTtsRuntime
+
+          root=pathlib.Path('/tmp/cross')
+          refs=pathlib.Path('/tmp/ref/audio')
+          jobs=[
+            {
+              'id':'anchor-kf21',
+              'role':'news-anchor',
+              'gender':'female',
+              'reference':refs/'female-news-anchor.wav',
+              'text':'케이에프 이십일 비행시험 결과를 오늘 발표합니다.'
+            },
+            {
+              'id':'teacher-admin',
+              'role':'teacher',
+              'gender':'female',
+              'reference':refs/'female-teacher.wav',
+              'text':'훈련 대상자는 정해진 시간과 장소를 먼저 확인합니다.'
+            },
+            {
+              'id':'instructor-military',
+              'role':'military-instructor',
+              'gender':'male',
+              'reference':refs/'male-military-law-instructor.wav',
+              'text':'케이투 전차와 케이에프 이십일의 점검 결과를 정확하게 보고한다.'
+            },
+            {
+              'id':'instructor-legal',
+              'role':'legal-instructor',
+              'gender':'male',
+              'reference':refs/'male-military-law-instructor.wav',
+              'text':'제육 조 제일 항 제삼 호 가목을 적용한다.'
+            }
+          ]
+          t0=time.perf_counter()
+          runtime=OnnxTtsRuntime(thread_count=4,max_new_frames=80,sample_mode='greedy',execution_provider='cpu',output_dir=root/'audio')
+          load_s=round(time.perf_counter()-t0,3)
+          rows=[]
+          for j in jobs:
+            t=time.perf_counter()
+            out=runtime.synthesize(
+              text=j['text'],
+              voice='',
+              prompt_audio_path=j['reference'],
+              output_audio_path=root/'audio'/f"{j['id']}.wav",
+              sample_mode='greedy',
+              do_sample=False,
+              streaming=True,
+              max_new_frames=80,
+              voice_clone_max_text_tokens=75,
+              enable_wetext=False,
+              enable_normalize_tts_text=True,
+              seed=7,
+            )
+            frames=int(out['audio_token_ids'].shape[0])
+            rows.append({
+              **{k:(str(v) if k=='reference' else v) for k,v in j.items()},
+              'synthesis_seconds':round(time.perf_counter()-t,3),
+              'audio_seconds':round(len(out['waveform'])/out['sample_rate'],3),
+              'frames':frames,
+              'hit_frame_cap':frames>=80,
+              'sample_rate':int(out['sample_rate'])
+            })
+          evidence={
+            'date':'2026-09-12',
+            'goal':'test transfer of synthetic occupation voice designs into MOSS-TTS-Nano without real-person cloning',
+            'qwen_reference_artifact_id':10297883418,
+            'moss_commit':'8b7bcc9341b3b4ef3a3a58ba1338a7d85ff133eb',
+            'model_load_seconds':load_s,
+            'execution':{'paid_tts_api_calls':0,'cloudflare_r2_calls':0,'cloudflare_do_calls':0,'cloudflare_container_calls':0,'real_person_reference_audio':0,'audio_git_commit':0},
+            'jobs':rows
+          }
+          json.dump(evidence,open(root/'synth.json','w',encoding='utf-8'),ensure_ascii=False,indent=2)
+          print(json.dumps(evidence,ensure_ascii=False,indent=2))
+          PY
+      - name: Judge transferred speech with Whisper-small
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          from faster_whisper import WhisperModel
+          root=pathlib.Path('/tmp/cross')
+          data=json.load(open(root/'synth.json',encoding='utf-8'))
+          model=WhisperModel('small',device='cpu',compute_type='int8',cpu_threads=4)
+          rows=[]
+          for j in data['jobs']:
+            segs,info=model.transcribe(str(root/'audio'/f"{j['id']}.wav"),language='ko',beam_size=5,vad_filter=True)
+            heard=' '.join(s.text.strip() for s in segs).strip()
+            rows.append({**j,'asr':heard,'language_probability':round(info.language_probability,4)})
+          json.dump(rows,open(root/'asr.json','w',encoding='utf-8'),ensure_ascii=False,indent=2)
+          print(json.dumps(rows,ensure_ascii=False,indent=2))
+          PY
+      - name: Compute canonical CER
+        run: |
+          node - <<'NODE'
+          const fs=require('fs'); const K=require('./public/ko-voice.js');
+          const rows=JSON.parse(fs.readFileSync('/tmp/cross/asr.json','utf8'));
+          const compact=s=>String(s??'').replace(/[^가-힣0-9A-Za-z]/g,'');
+          function cer(a,b){a=compact(a);b=compact(b);if(!a)return b?1:0;let d=Array.from({length:b.length+1},(_,i)=>i);for(let i=1;i<=a.length;i++){let prev=d[0];d[0]=i;for(let j=1;j<=b.length;j++){const cur=d[j];d[j]=Math.min(d[j]+1,d[j-1]+1,prev+(a[i-1]===b[j-1]?0:1));prev=cur;}}return d[b.length]/a.length;}
+          const result=rows.map(r=>({...r,target_canonical:K.normalize(r.text),asr_canonical:K.normalize(r.asr),semantic_cer:+cer(K.normalize(r.text),K.normalize(r.asr)).toFixed(4)}));
+          const out={date:'2026-09-12',mean_semantic_cer:+(result.reduce((a,r)=>a+r.semantic_cer,0)/result.length).toFixed(4),perfect_cases:result.filter(r=>r.semantic_cer===0).length,total_cases:result.length,results:result};
+          fs.writeFileSync('/tmp/cross/final.json',JSON.stringify(out,null,2)); console.log(JSON.stringify(out,null,2));
+          NODE
+      - name: Upload ephemeral cross-engine audio and evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: moss-crossengine-synthetic-role-transfer
+          retention-days: 1
+          path: |
+            /tmp/cross/synth.json
+            /tmp/cross/asr.json
+            /tmp/cross/final.json
+            /tmp/cross/audio/*.wav
