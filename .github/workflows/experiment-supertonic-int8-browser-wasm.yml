@@ -1,4 +1,4 @@
-name: Experiment Supertonic INT8 browser WASM
+name: Experiment Supertonic FP16 browser WASM
 
 on:
   push:
@@ -11,7 +11,7 @@ permissions:
 jobs:
   wasm-smoke:
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -24,14 +24,14 @@ jobs:
           npm init -y >/dev/null
           npm pkg set type=module
           npm install --no-audit --no-fund onnxruntime-web@1.17.0
-      - name: Download quantized model and official MIT web helper
+      - name: Download public FP16 model and official MIT web helper
         working-directory: /tmp/st-browser
         run: |
           set -euo pipefail
           mkdir -p assets/onnx assets/voice_styles
-          BASE='https://huggingface.co/q3146dq4/Supertonic-3-ONNX-INT8/resolve/main'
+          BASE='https://huggingface.co/Kyumdroid/supertonic-3-quant/resolve/main'
           for f in duration_predictor.onnx text_encoder.onnx vector_estimator.onnx vocoder.onnx tts.json unicode_indexer.json; do
-            curl -fL --retry 3 --retry-delay 2 "$BASE/onnx/$f" -o "assets/onnx/$f"
+            curl -fL --retry 3 --retry-delay 2 "$BASE/fp16/onnx/$f" -o "assets/onnx/$f"
           done
           curl -fL --retry 3 "$BASE/voice_styles/F2.json" -o assets/voice_styles/F2.json
           curl -fL --retry 3 'https://raw.githubusercontent.com/supertone-oss-archive/supertonic/main/web/helper.js' -o helper.js
@@ -62,7 +62,7 @@ jobs:
             fs.writeFileSync(file,Buffer.from(writeWavFile(Array.from(out),textToSpeech.sampleRate)));
             rows.push({text,synthesis_seconds:+((performance.now()-t)/1000).toFixed(3),audio_seconds:+duration[0].toFixed(3),rms:+rms.toFixed(6),peak:+peak.toFixed(6),file});
           }
-          const result={runtime:'onnxruntime-web@1.17.0',provider:'wasm',model:'q3146dq4/Supertonic-3-ONNX-INT8',load_seconds:+loadSeconds.toFixed(3),rows,paid_tts_api_calls:0,cloudflare_calls:0};
+          const result={runtime:'onnxruntime-web@1.17.0',provider:'wasm',model:'Kyumdroid/supertonic-3-quant/fp16',load_seconds:+loadSeconds.toFixed(3),rows,paid_tts_api_calls:0,cloudflare_calls:0};
           fs.writeFileSync('result.json',JSON.stringify(result,null,2));
           console.log(JSON.stringify(result,null,2));
           if(rows.some(r=>r.rms<0.01||r.audio_seconds<0.4)) process.exit(2);
@@ -74,7 +74,7 @@ jobs:
       - name: Upload smoke evidence
         uses: actions/upload-artifact@v4
         with:
-          name: supertonic-int8-browser-wasm-smoke
+          name: supertonic-fp16-browser-wasm-smoke
           retention-days: 1
           path: |
             /tmp/st-browser/result.json
