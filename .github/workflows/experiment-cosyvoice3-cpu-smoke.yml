@@ -1,0 +1,113 @@
+name: Experiment CosyVoice3 0.5B Korean CPU smoke
+
+on:
+  push:
+    branches:
+      - experiment/cosyvoice3-05b-cpu-smoke-20260912
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      HF_HUB_DISABLE_TELEMETRY: '1'
+      TOKENIZERS_PARALLELISM: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Prepare canonical Korean sentence
+        run: |
+          mkdir -p /tmp/cosy-result
+          node - <<'NODE' > /tmp/cosy-result/text.txt
+          const K=require('./public/ko-voice.js');
+          process.stdout.write(K.normalize('K2 전차를 점검한다.')+'\n');
+          NODE
+      - name: Clone official repo and install CPU-only runtime
+        run: |
+          START=$(date +%s)
+          git clone --depth=1 --recursive https://github.com/QwenAudio/CosyVoice.git /tmp/CosyVoice
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch==2.3.1 torchaudio==2.3.1
+          python - <<'PY'
+          from pathlib import Path
+          src=Path('/tmp/CosyVoice/requirements.txt').read_text()
+          drop=('extra-index-url','deepspeed','onnxruntime-gpu','tensorrt','torch==','torchaudio==')
+          lines=[x for x in src.splitlines() if x.strip() and not any(k in x for k in drop)]
+          Path('/tmp/cosy-requirements-cpu.txt').write_text('\n'.join(lines)+'\n')
+          PY
+          python -m pip install -r /tmp/cosy-requirements-cpu.txt
+          python -m pip install faster-whisper huggingface_hub
+          END=$(date +%s)
+          echo "install_seconds=$((END-START))" | tee /tmp/cosy-result/setup.txt
+      - name: Download official CosyVoice3 model
+        run: |
+          START=$(date +%s)
+          python - <<'PY'
+          from huggingface_hub import snapshot_download
+          snapshot_download('FunAudioLLM/Fun-CosyVoice3-0.5B-2512', local_dir='/tmp/CosyVoice/pretrained_models/Fun-CosyVoice3-0.5B')
+          PY
+          END=$(date +%s)
+          echo "model_download_seconds=$((END-START))" | tee -a /tmp/cosy-result/setup.txt
+          du -sh /tmp/CosyVoice/pretrained_models/Fun-CosyVoice3-0.5B | tee -a /tmp/cosy-result/setup.txt
+      - name: Load once and synthesize Korean cross-lingual on CPU
+        working-directory: /tmp/CosyVoice
+        run: |
+          python - <<'PY' | tee /tmp/cosy-result/synth-result.json
+          import json, os, sys, time, torch
+          import torchaudio
+          sys.path.insert(0,'/tmp/CosyVoice')
+          sys.path.insert(0,'/tmp/CosyVoice/third_party/Matcha-TTS')
+          from cosyvoice.cli.cosyvoice import AutoModel
+          text=open('/tmp/cosy-result/text.txt',encoding='utf-8').read().strip()
+          t=time.perf_counter()
+          model=AutoModel(model_dir='/tmp/CosyVoice/pretrained_models/Fun-CosyVoice3-0.5B',load_trt=False,load_vllm=False,fp16=False)
+          load=time.perf_counter()-t
+          t=time.perf_counter()
+          chunks=[]
+          for out in model.inference_cross_lingual(text,'/tmp/CosyVoice/asset/zero_shot_prompt.wav',stream=False,text_frontend=False):
+              chunks.append(out['tts_speech'].detach().cpu())
+          synth=time.perf_counter()-t
+          if not chunks: raise RuntimeError('no audio chunks')
+          wav=torch.cat(chunks,dim=1)
+          p='/tmp/cosy-result/canonical.wav'
+          torchaudio.save(p,wav,model.sample_rate)
+          print(json.dumps({'provider':'cosyvoice3-0.5b','text':text,'model_load_seconds':round(load,3),'synthesis_seconds':round(synth,3),'sample_rate':int(model.sample_rate),'audio_seconds':round(wav.shape[1]/model.sample_rate,3),'bytes':os.path.getsize(p),'paid_tts_api_calls':0,'cloudflare_calls':0},ensure_ascii=False,indent=2))
+          PY
+      - name: ASR and amplitude judge
+        run: |
+          python - <<'PY' | tee /tmp/cosy-result/judge-result.json
+          import json,re,wave,numpy as np
+          from faster_whisper import WhisperModel
+          p='/tmp/cosy-result/canonical.wav'
+          with wave.open(p,'rb') as w:
+              sr=w.getframerate(); n=w.getnframes(); x=np.frombuffer(w.readframes(n),dtype='<i2').astype(np.float32)/32768
+          rms=float(np.sqrt(np.mean(x*x))); peak=float(np.max(np.abs(x)))
+          model=WhisperModel('small',device='cpu',compute_type='int8',cpu_threads=4)
+          segs,info=model.transcribe(p,language='ko',beam_size=5,vad_filter=True)
+          text=' '.join(s.text.strip() for s in segs).strip()
+          target='케이투 전차를 점검한다'
+          semantic=re.sub(r'(?i)K\s*-?\s*2','케이투',text)
+          def compact(s): return re.sub(r'[^가-힣0-9A-Za-z]','',s or '')
+          def cer(a,b):
+              a,b=compact(a),compact(b)
+              if not a:return 0.0 if not b else 1.0
+              d=list(range(len(b)+1))
+              for i,ca in enumerate(a,1):
+                  prev,d[0]=d[0],i
+                  for j,cb in enumerate(b,1):
+                      cur=d[j]; d[j]=min(d[j]+1,d[j-1]+1,prev+(ca!=cb)); prev=cur
+              return d[-1]/len(a)
+          print(json.dumps({'rms':round(rms,6),'peak':round(peak,6),'asr':text,'asr_semantic':semantic,'cer_canonical':round(cer(target,semantic),4),'language_probability':round(info.language_probability,4)},ensure_ascii=False,indent=2))
+          PY
+      - name: Upload ephemeral smoke evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cosyvoice3-05b-cpu-smoke
+          path: /tmp/cosy-result/
+          retention-days: 1
