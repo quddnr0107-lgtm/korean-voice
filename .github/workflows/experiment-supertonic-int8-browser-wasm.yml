@@ -1,4 +1,4 @@
-name: Experiment Supertonic browser segmented PSOLA u5
+name: Experiment Supertonic browser u5 five-case screen
 
 on:
   push:
@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  browser-psola:
+  browser-five-case:
     runs-on: ubuntu-24.04
     timeout-minutes: 35
     steps:
@@ -18,7 +18,7 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Install browser + DSP weapons
+      - name: Install minimal browser harness
         working-directory: /tmp
         run: |
           set -euo pipefail
@@ -27,15 +27,10 @@ jobs:
           cd st-browser
           npm init -y >/dev/null
           npm pkg set type=module
-          npm install --no-audit --no-fund \
-            vite@5.4.0 \
-            onnxruntime-web@1.17.0 \
-            @audio/pitch@2.0.4 \
-            @audio/shift@1.1.4 \
-            playwright
+          npm install --no-audit --no-fund vite@5.4.0 onnxruntime-web@1.17.0 playwright
           npx playwright install --with-deps chromium
 
-      - name: Download public FP16 model + official web helper
+      - name: Download public FP16 model and styles
         working-directory: /tmp/st-browser
         run: |
           set -euo pipefail
@@ -50,7 +45,7 @@ jobs:
           curl -fL --retry 3 'https://raw.githubusercontent.com/supertone-oss-archive/supertonic/main/web/helper.js' -o src/helper.js
           cp node_modules/onnxruntime-web/dist/ort-wasm*.wasm public/ort/
 
-      - name: Build real browser segmented-PSOLA harness
+      - name: Build five-case browser harness
         working-directory: /tmp/st-browser
         run: |
           cat > index.html <<'HTML'
@@ -58,88 +53,65 @@ jobs:
           HTML
           cat > src/app.js <<'JS'
           import * as ort from 'onnxruntime-web';
-          import { yin } from '@audio/pitch';
-          import { psola } from '@audio/shift';
           import { loadTextToSpeech, Style, writeWavFile } from './helper.js';
-
           ort.env.wasm.numThreads = 1;
           ort.env.wasm.wasmPaths = '/ort/';
-          const status=document.getElementById('status');
-          const say=s=>{status.textContent=s;console.log(s)};
           const flatten=x=>x.flat(Infinity);
-
-          async function blendStyle(spec){
-            const docs=await Promise.all(spec.map(async([name])=>{const r=await fetch('/assets/voice_styles/'+name+'.json');if(!r.ok)throw new Error('style '+name+' HTTP '+r.status);return r.json()}));
+          const cases=[
+            ['ordinary-medium','국방부장관은 전쟁이 없는 때에도 정해진 날수만큼 예비군을 불러 쓸 수 있습니다.'],
+            ['legal-chain','제육 조 제일 항 제삼 호 가목을 적용한다.'],
+            ['date-range-particle','이천이십육 년 구 월 십일 일부터 이천이십육 년 구 월 십이 일까지 시행한다.'],
+            ['mil-k2','케이투 전차를 점검한다.'],
+            ['mil-kf21','케이에프 이십일 비행시험을 실시한다.']
+          ];
+          async function blendStyle(){
+            const docs=await Promise.all(['F4','F2'].map(async n=>(await fetch('/assets/voice_styles/'+n+'.json')).json()));
             const td=docs[0].style_ttl.dims,dd=docs[0].style_dp.dims;
             const ttl=new Float32Array(td[1]*td[2]),dp=new Float32Array(dd[1]*dd[2]);
-            spec.forEach(([name,w],i)=>{const a=flatten(docs[i].style_ttl.data),b=flatten(docs[i].style_dp.data);for(let j=0;j<ttl.length;j++)ttl[j]+=a[j]*w;for(let j=0;j<dp.length;j++)dp[j]+=b[j]*w});
+            const weights=[.6,.4];
+            docs.forEach((d,i)=>{const a=flatten(d.style_ttl.data),b=flatten(d.style_dp.data);for(let j=0;j<ttl.length;j++)ttl[j]+=a[j]*weights[i];for(let j=0;j<dp.length;j++)dp[j]+=b[j]*weights[i]});
             return new Style(new ort.Tensor('float32',ttl,[1,td[1],td[2]]),new ort.Tensor('float32',dp,[1,dd[1],dd[2]]));
           }
-
-          function trim(x,sr,thresholdDb=-45,padMs=50){
-            const frame=Math.max(1,Math.floor(sr*.01)),n=Math.floor(x.length/frame);if(n<3)return Float32Array.from(x);
-            const rms=new Float32Array(n);let mx=0;for(let i=0;i<n;i++){let s=0;for(let j=0;j<frame;j++){const v=x[i*frame+j];s+=v*v}rms[i]=Math.sqrt(s/frame+1e-12);mx=Math.max(mx,rms[i])}
-            const cut=mx*Math.pow(10,thresholdDb/20);let a=0,b=n-1;while(a<n&&rms[a]<=cut)a++;while(b>a&&rms[b]<=cut)b--;if(a>=n)return Float32Array.from(x);
-            const pad=Math.floor(sr*padMs/1000);return Float32Array.from(x.slice(Math.max(0,a*frame-pad),Math.min(x.length,(b+1)*frame+pad)));
-          }
-          function tailTrim(x,sr,keepMs=60){
-            const frame=Math.max(1,Math.floor(sr*.01)),n=Math.floor(x.length/frame);if(n<3)return Float32Array.from(x);
-            const rms=new Float32Array(n);let mx=0;for(let i=0;i<n;i++){let s=0;for(let j=0;j<frame;j++){const v=x[i*frame+j];s+=v*v}rms[i]=Math.sqrt(s/frame+1e-12);mx=Math.max(mx,rms[i])}
-            const cut=mx*Math.pow(10,-42/20);let last=n-1;while(last>0&&rms[last]<=cut)last--;const end=Math.min(x.length,(last+1)*frame+Math.floor(sr*keepMs/1000));return Float32Array.from(x.slice(0,end));
-          }
-          function preShape(input,sr){
-            let x=trim(input,sr,-45,50);const fade=Math.min(Math.floor(sr*.01),Math.floor(x.length/2));for(let i=0;i<fade;i++){const g=i/Math.max(1,fade-1);x[i]*=g;x[x.length-1-i]*=g}
-            const onset=Math.min(Math.floor(sr*.15),x.length);for(let i=0;i<onset;i++){const g=2-i/Math.max(1,onset-1);x[i]*=g}return x;
-          }
-          function normalize(x){let p=0;for(const v of x)p=Math.max(p,Math.abs(v));if(p>0){const g=.89/p;for(let i=0;i<x.length;i++)x[i]*=g}return x}
-
-          function u5RatioTrack(x,sr,question=false){
-            const frame=1024,hop=Math.max(1,Math.floor(sr*.01)),rows=[];
-            for(let i=0;i+frame<=x.length;i+=hop){const p=yin(x.subarray(i,i+frame),{fs:sr,minFreq:70,maxFreq:500,threshold:.15});rows.push({t:(i+frame/2)/sr,f:p&&p.clarity>=.50?p.freq:0,clarity:p?p.clarity:0})}
-            const voiced=rows.filter(r=>r.f>0);if(voiced.length<5)return{rows,ratio:()=>1,voiced:voiced.length};
-            const meanLog=voiced.reduce((s,r)=>s+Math.log(r.f),0)/voiced.length;let vi=0;const nv=voiced.length,step=hop/sr,tailN=Math.max(1,Math.round(.2/step));
-            for(const r of rows){if(!(r.f>0)){r.ratio=1;continue}const d=Math.log(r.f)-meanLog;let target=meanLog+(d>0?d*1.8:d)+Math.log(Math.pow(2,1/12));const elapsed=vi*step;let hat;if(elapsed<.2)hat=-1+1.3*(elapsed/.2);else hat=.3-.8*((vi-Math.round(.2/step))/Math.max(1,nv-Math.round(.2/step)));target+=Math.log(Math.pow(2,hat/12));if(vi>=nv-tailN){const q=(vi-(nv-tailN))/Math.max(1,tailN-1);target+=Math.log(Math.pow(2,((question?8:6)*q)/12))}r.ratio=Math.exp(target-Math.log(r.f));vi++}
-            const ratio=t=>{const k=Math.max(0,Math.min(rows.length-1,Math.round((t*sr-frame/2)/hop)));return rows[k]?.ratio||1};return{rows,ratio,voiced:nv};
-          }
-
-          function segmentedPsola(x,sr,track,windowMs){
-            const win=Math.max(256,Math.round(sr*windowMs/1000));const hop=Math.max(128,Math.floor(win/2));const out=new Float32Array(x.length),weight=new Float32Array(x.length);
-            const window=new Float32Array(win);for(let i=0;i<win;i++)window[i]=.5-.5*Math.cos(2*Math.PI*i/Math.max(1,win-1));
-            for(let start=-hop;start<x.length;start+=hop){
-              const seg=new Float32Array(win);for(let i=0;i<win;i++){const src=start+i;if(src>=0&&src<x.length)seg[i]=x[src]}
-              const center=Math.max(0,Math.min(x.length-1,start+win/2))/sr;let ratio=track.ratio(center);ratio=Math.max(.72,Math.min(1.55,ratio));
-              let shifted;try{shifted=psola(seg,{ratio,sampleRate:sr,minFreq:70,maxFreq:500})}catch(_){shifted=seg}
-              for(let i=0;i<win;i++){const dst=start+i;if(dst<0||dst>=x.length)continue;const w=window[i];out[dst]+=shifted[i]*w;weight[dst]+=w}
-            }
-            for(let i=0;i<out.length;i++){if(weight[i]>.02)out[i]/=weight[i];else out[i]=x[i]}
-            return out;
-          }
-
           function stats(x,sr){let sq=0,p=0;for(const v of x){sq+=v*v;p=Math.max(p,Math.abs(v))}return{seconds:+(x.length/sr).toFixed(3),rms:+Math.sqrt(sq/Math.max(1,x.length)).toFixed(6),peak:+p.toFixed(6)}}
-          function bytesWav(x,sr){return Array.from(new Uint8Array(writeWavFile(Array.from(x),sr)))}
-
+          function wavBytes(x,sr){return Array.from(new Uint8Array(writeWavFile(Array.from(x),sr)))}
           async function main(){
-            say('loading model');const t0=performance.now();const{textToSpeech}=await loadTextToSpeech('/assets/onnx',{executionProviders:['wasm'],graphOptimizationLevel:'all'});const loadSeconds=(performance.now()-t0)/1000;
-            const style=await blendStyle([['F4',.6],['F2',.4]]);const text='예비군 훈련은 해마다 받습니다.';
-            say('synthesizing');const ts=performance.now();const raw=await textToSpeech.call(text,'ko',style,8,.966,.25);const synthSeconds=(performance.now()-ts)/1000;const n=Math.floor(textToSpeech.sampleRate*raw.duration[0]);const base=Float32Array.from(raw.wav.slice(0,n));
-            const pre=preShape(base,textToSpeech.sampleRate);const track=u5RatioTrack(pre,textToSpeech.sampleRate,false);
-            say('psola 80');const t80=performance.now();let p80=segmentedPsola(pre,textToSpeech.sampleRate,track,80);p80=normalize(tailTrim(p80,textToSpeech.sampleRate,60));const p80s=(performance.now()-t80)/1000;
-            say('psola 160');const t160=performance.now();let p160=segmentedPsola(pre,textToSpeech.sampleRate,track,160);p160=normalize(tailTrim(p160,textToSpeech.sampleRate,60));const p160s=(performance.now()-t160)/1000;
-            const result={browser:true,provider:'wasm',model:'Kyumdroid/supertonic-3-quant/fp16',recipe:'u5 browser F4.6/F2.4 + YIN + segmented PSOLA OLA',load_seconds:+loadSeconds.toFixed(3),synth_seconds:+synthSeconds.toFixed(3),psola80_seconds:+p80s.toFixed(3),psola160_seconds:+p160s.toFixed(3),voiced_frames:track.voiced,base:stats(base,textToSpeech.sampleRate),psola80:stats(p80,textToSpeech.sampleRate),psola160:stats(p160,textToSpeech.sampleRate),paid_tts_api_calls:0,cloudflare_calls:0,files:{'base.wav':bytesWav(base,textToSpeech.sampleRate),'u5-psola80.wav':bytesWav(p80,textToSpeech.sampleRate),'u5-psola160.wav':bytesWav(p160,textToSpeech.sampleRate)}};
-            if(result.psola80.rms<.01||result.psola160.rms<.01||result.cloudflare_calls!==0)throw new Error('quality gate failed '+JSON.stringify(result));window.__result=result;window.__done=true;say('done');
+            const t0=performance.now();
+            const {textToSpeech}=await loadTextToSpeech('/assets/onnx',{executionProviders:['wasm'],graphOptimizationLevel:'all'});
+            const load_seconds=+(performance.now()-t0).toFixed(0)/1000;
+            const style=await blendStyle();
+            const out=[];const files={};
+            for(const [id,text] of cases){
+              console.log('synth',id);const t=performance.now();
+              const raw=await textToSpeech.call(text,'ko',style,8,.966,.25);
+              const synth_seconds=+(performance.now()-t).toFixed(0)/1000;
+              const n=Math.floor(textToSpeech.sampleRate*raw.duration[0]);
+              const audio=Float32Array.from(raw.wav.slice(0,n));
+              const s=stats(audio,textToSpeech.sampleRate);
+              if(s.rms<.005||s.peak<.02)throw new Error('near-silence '+id+' '+JSON.stringify(s));
+              out.push({id,text,synth_seconds,...s});
+              files[id+'.wav']=wavBytes(audio,textToSpeech.sampleRate);
+            }
+            window.__result={browser:true,provider:'wasm',model:'Kyumdroid/supertonic-3-quant/fp16',recipe:'F4:0.6,F2:0.4 steps=8 speed=.966 no server DSP',load_seconds,cases:out,paid_tts_api_calls:0,cloudflare_calls:0,files};
+            window.__done=true;
           }
-          main().catch(e=>{window.__error=String(e&&e.stack||e);window.__done=true;say('ERROR '+window.__error)});
+          main().catch(e=>{window.__error=String(e&&e.stack||e);window.__done=true});
           JS
-
           cat > run.mjs <<'NODE'
           import fs from 'node:fs';
           import { chromium } from 'playwright';
-          const browser=await chromium.launch({headless:true});const page=await browser.newPage();page.on('console',m=>console.log('[browser]',m.type(),m.text()));page.on('pageerror',e=>console.error('[pageerror]',e));
-          await page.goto('http://127.0.0.1:5173',{waitUntil:'domcontentloaded',timeout:30000});await page.waitForFunction(()=>window.__done===true,{timeout:240000});const err=await page.evaluate(()=>window.__error||null);if(err)throw new Error(err);const result=await page.evaluate(()=>window.__result);
-          for(const[name,bytes]of Object.entries(result.files))fs.writeFileSync(name,Buffer.from(bytes));delete result.files;fs.writeFileSync('result.json',JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));await browser.close();
+          const browser=await chromium.launch({headless:true});const page=await browser.newPage();
+          page.on('console',m=>console.log('[browser]',m.text()));page.on('pageerror',e=>console.error('[pageerror]',e));
+          await page.goto('http://127.0.0.1:5173',{waitUntil:'domcontentloaded',timeout:30000});
+          await page.waitForFunction(()=>window.__done===true,{timeout:300000});
+          const err=await page.evaluate(()=>window.__error||null);if(err)throw new Error(err);
+          const result=await page.evaluate(()=>window.__result);
+          for(const [name,bytes] of Object.entries(result.files))fs.writeFileSync(name,Buffer.from(bytes));
+          delete result.files;fs.writeFileSync('result.json',JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));
+          if(result.cloudflare_calls!==0||result.paid_tts_api_calls!==0)process.exitCode=2;
+          await browser.close();
           NODE
 
-      - name: Run real Chromium WASM + segmented PSOLA
+      - name: Run real Chromium WASM five-case screen
         working-directory: /tmp/st-browser
         run: |
           set -euo pipefail
@@ -149,16 +121,14 @@ jobs:
           for i in $(seq 1 30); do curl -fsS http://127.0.0.1:5173 >/dev/null && break; sleep 1; done
           node run.mjs
 
-      - name: Upload browser PSOLA evidence
+      - name: Upload browser five-case evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: supertonic-browser-u5-segmented-psola
+          name: supertonic-browser-u5-five-case
           retention-days: 1
           if-no-files-found: warn
           path: |
             /tmp/st-browser/result.json
-            /tmp/st-browser/base.wav
-            /tmp/st-browser/u5-psola80.wav
-            /tmp/st-browser/u5-psola160.wav
+            /tmp/st-browser/*.wav
             /tmp/st-vite.log
