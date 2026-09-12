@@ -1,0 +1,107 @@
+name: Experiment Qwen VoiceDesign 18-role Korean matrix
+
+on:
+  push:
+    branches:
+      - experiment/qwen-voicedesign-18role-matrix-20260912
+
+permissions:
+  contents: read
+
+jobs:
+  matrix:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      HF_HUB_DISABLE_TELEMETRY: '1'
+      TOKENIZERS_PARALLELISM: 'false'
+      OMP_NUM_THREADS: '4'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install zero-cost CPU runtime
+        run: |
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch==2.7.0 torchaudio==2.7.0
+          python -m pip install qwen-tts==0.1.1 faster-whisper soundfile
+      - name: Generate 9 occupations x 2 genders with one model load
+        run: |
+          mkdir -p /tmp/qrole/audio
+          python - <<'PY'
+          import json, resource, time, torch
+          import soundfile as sf
+          from pathlib import Path
+          from qwen_tts import Qwen3TTSModel
+
+          roles=json.load(open('research/tts-arena/roles.json',encoding='utf-8'))['roles']
+          texts={
+            'military-instructor':'케이투 전차와 케이에프 이십일의 점검 결과를 정확하게 보고한다.',
+            'legal-instructor':'제육 조 제일 항 제삼 호 가목을 적용한다.',
+            'news-anchor':'국방부는 오늘 예비군 훈련 계획을 발표했습니다.',
+            'teacher':'예비군 훈련은 정해진 절차와 순서에 따라 진행됩니다.',
+            'civil-service-guide':'신청 기간은 시월 십오일부터 십일월 삼일까지입니다.',
+            'counselor':'문의하신 내용은 담당 부서에서 확인한 뒤 안내드리겠습니다.',
+            'navigation-system':'삼백 미터 앞에서 오른쪽으로 이동하십시오.',
+            'study-narrator':'훈련 대상자는 정해진 시간과 장소를 확인하고 필요한 준비물을 미리 챙겨야 합니다.',
+            'emergency-announcement':'비상 상황이 발생했습니다. 안내에 따라 즉시 지정된 장소로 이동하십시오.'
+          }
+          t0=time.perf_counter()
+          model=Qwen3TTSModel.from_pretrained('Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign',device_map='cpu',dtype=torch.bfloat16,attn_implementation='sdpa')
+          out={'date':'2026-09-12','model':'Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign','dtype':'bfloat16','seed':7,'model_load_seconds':round(time.perf_counter()-t0,3),'jobs':[]}
+          for role in roles:
+            rid=role['id']; text=texts[rid]
+            for gender,prompt_key in [('female','female_prompt'),('male','male_prompt')]:
+              torch.manual_seed(7)
+              t=time.perf_counter()
+              wavs,sr=model.generate_voice_design(text=text,language='Korean',instruct=role[prompt_key],do_sample=True,max_new_tokens=192)
+              elapsed=time.perf_counter()-t
+              w=wavs[0]
+              key=f'{rid}--{gender}'
+              sf.write(f'/tmp/qrole/audio/{key}.wav',w,sr)
+              out['jobs'].append({'role':rid,'label_ko':role['label_ko'],'gender':gender,'instruction':role[prompt_key],'text':text,'synthesis_seconds':round(elapsed,3),'audio_seconds':round(len(w)/sr,3),'sample_rate':int(sr)})
+          out['peak_rss_mb']=round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/1024,1)
+          json.dump(out,open('/tmp/qrole/synth.json','w',encoding='utf-8'),ensure_ascii=False,indent=2)
+          print(json.dumps(out,ensure_ascii=False,indent=2))
+          PY
+      - name: Judge all 18 outputs with one Whisper-small model
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          from faster_whisper import WhisperModel
+          root=pathlib.Path('/tmp/qrole')
+          synth=json.load(open(root/'synth.json',encoding='utf-8'))
+          model=WhisperModel('small',device='cpu',compute_type='int8',cpu_threads=4)
+          rows=[]
+          for j in synth['jobs']:
+            p=root/'audio'/f"{j['role']}--{j['gender']}.wav"
+            segs,info=model.transcribe(str(p),language='ko',beam_size=5,vad_filter=True)
+            heard=' '.join(s.text.strip() for s in segs).strip()
+            rows.append({**j,'asr':heard,'language_probability':round(info.language_probability,4)})
+          json.dump(rows,open(root/'asr.json','w',encoding='utf-8'),ensure_ascii=False,indent=2)
+          print(json.dumps(rows,ensure_ascii=False,indent=2))
+          PY
+      - name: Compute canonical CER and role/gender summaries
+        run: |
+          node - <<'NODE'
+          const fs=require('fs'); const K=require('./public/ko-voice.js');
+          const synth=JSON.parse(fs.readFileSync('/tmp/qrole/synth.json','utf8'));
+          const rows=JSON.parse(fs.readFileSync('/tmp/qrole/asr.json','utf8'));
+          const compact=s=>String(s??'').replace(/[^가-힣0-9A-Za-z]/g,'');
+          function cer(a,b){a=compact(a);b=compact(b);if(!a)return b?1:0;let d=Array.from({length:b.length+1},(_,i)=>i);for(let i=1;i<=a.length;i++){let prev=d[0];d[0]=i;for(let j=1;j<=b.length;j++){const cur=d[j];d[j]=Math.min(d[j]+1,d[j-1]+1,prev+(a[i-1]===b[j-1]?0:1));prev=cur;}}return d[b.length]/a.length;}
+          const result=rows.map(r=>({...r,target_canonical:K.normalize(r.text),asr_canonical:K.normalize(r.asr),semantic_cer:+cer(K.normalize(r.text),K.normalize(r.asr)).toFixed(4)}));
+          const roleSummary=[...new Set(result.map(r=>r.role))].map(role=>{const x=result.filter(r=>r.role===role);return {role, female_cer:x.find(r=>r.gender==='female').semantic_cer,male_cer:x.find(r=>r.gender==='male').semantic_cer,best_gender:[...x].sort((a,b)=>a.semantic_cer-b.semantic_cer)[0].gender,best_cer:Math.min(...x.map(r=>r.semantic_cer))};});
+          const genderSummary=['female','male'].map(g=>{const x=result.filter(r=>r.gender===g);return {gender:g,mean_semantic_cer:+(x.reduce((a,r)=>a+r.semantic_cer,0)/x.length).toFixed(4),perfect_cases:x.filter(r=>r.semantic_cer===0).length,total_cases:x.length};});
+          const out={date:'2026-09-12',goal:'measure 9 occupation styles across female and male synthetic Korean voices',execution:{paid_tts_api_calls:0,cloudflare_r2_calls:0,cloudflare_do_calls:0,cloudflare_container_calls:0,audio_git_commit:0},model_load_seconds:synth.model_load_seconds,peak_rss_mb:synth.peak_rss_mb,results:result,role_summary:roleSummary,gender_summary:genderSummary};
+          fs.writeFileSync('/tmp/qrole/final.json',JSON.stringify(out,null,2)); console.log(JSON.stringify(out,null,2));
+          NODE
+      - name: Upload ephemeral matrix audio and evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: qwen-voicedesign-18role-matrix
+          retention-days: 1
+          path: |
+            /tmp/qrole/synth.json
+            /tmp/qrole/asr.json
+            /tmp/qrole/final.json
+            /tmp/qrole/audio/*.wav
