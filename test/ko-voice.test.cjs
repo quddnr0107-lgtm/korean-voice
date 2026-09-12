@@ -385,3 +385,22 @@ test('법령 고정 결합 다음과 같다·같이는 한 호흡으로 읽는�
   assert.ok(!/다음과,\s*같이/.test(b), b);
   assert.ok(/다음과 같이/.test(b), b);
 });
+
+
+test('법령 인용 에 따른·의한과 비교 와 다르다는 한 호흡으로 읽는다', () => {
+  const say = (s) => K.prepare(s).sentences.map(x => K.joinSpokenChunks(x.chunks)).join(' | ');
+  const a = say('서비스는 정보통신망법 제44조의2에 따른 임시조치를 이행합니다.');
+  const b = say('제3조의2제1항제4호에 따른다.');
+  const c = say('KATUSA 지원자는 ROTC와 다르다.');
+  assert.ok(!/이에,\s*따른/.test(a), a);
+  assert.ok(/이에 따른/.test(a), a);
+  assert.ok(!/호에,\s*따른다/.test(b), b);
+  assert.ok(/호에 따른다/.test(b), b);
+  assert.ok(!/알오티씨와,\s*다르다/.test(c), c);
+  assert.ok(/알오티씨와 다르다/.test(c), c);
+});
+
+test('고정 결합 예외는 일반 장소격 호흡을 건드리지 않는다', () => {
+  const say = (s) => K.prepare(s).sentences.map(x => K.joinSpokenChunks(x.chunks)).join(' | ');
+  assert.ok(/세션에서, 이미/.test(say('이번 세션에서 이미 확인한 환경 사실부터 뒤져야 한다는 점을 잊지 마세요.')));
+});
