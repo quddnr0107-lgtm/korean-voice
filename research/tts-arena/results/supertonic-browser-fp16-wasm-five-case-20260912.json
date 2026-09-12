@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-12",
+  "source": {
+    "run_id": 34704720281,
+    "job_id": 103582589290,
+    "artifact_id": 10301213473,
+    "head_sha": "54055e2465f35705d1e3cfa156618d4d3ae6f4a9"
+  },
+  "runtime": {
+    "browser": "Chromium 153 headless",
+    "provider": "wasm",
+    "onnxruntime_web": "1.17.0",
+    "model": "Kyumdroid/supertonic-3-quant/fp16",
+    "style": "F4:0.6,F2:0.4",
+    "steps": 8,
+    "speed": 0.966,
+    "wasm_threads": 1,
+    "server_dsp": false,
+    "model_load_seconds": 4.679
+  },
+  "execution": {
+    "paid_tts_api_calls": 0,
+    "cloudflare_calls": 0,
+    "audio_git_commit": 0
+  },
+  "cases": [
+    {"id":"ordinary-medium","synthesis_seconds":10.632,"audio_seconds":6.450,"rtf":1.648,"rms":0.048483,"peak":0.297363},
+    {"id":"legal-chain","synthesis_seconds":6.926,"audio_seconds":3.532,"rtf":1.961,"rms":0.043482,"peak":0.278564},
+    {"id":"date-range-particle","synthesis_seconds":10.149,"audio_seconds":5.977,"rtf":1.698,"rms":0.048168,"peak":0.344482},
+    {"id":"mil-k2","synthesis_seconds":5.139,"audio_seconds":2.250,"rtf":2.284,"rms":0.043808,"peak":0.298584},
+    {"id":"mil-kf21","synthesis_seconds":5.482,"audio_seconds":3.013,"rtf":1.819,"rms":0.043391,"peak":0.240723}
+  ],
+  "summary": {
+    "case_count": 5,
+    "total_synthesis_seconds": 38.328,
+    "total_audio_seconds": 21.222,
+    "aggregate_rtf": 1.806,
+    "min_case_rtf": 1.648,
+    "max_case_rtf": 2.284,
+    "near_silence_cases": 0,
+    "decision": {
+      "wasm_unconditional_live_default": false,
+      "require_runtime_speed_gate": true,
+      "prefer_webgpu_when_available": true,
+      "fallback_required": true,
+      "reason": "All five Chromium WASM cases were slower than real time on the measured 4-core runner. Browser-local synthesis is useful only behind a device/runtime speed gate; a server fallback must remain available."
+    }
+  }
+}
