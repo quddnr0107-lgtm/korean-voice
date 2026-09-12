@@ -23,7 +23,7 @@
       "id": "qwen3-tts-0.6b-customvoice-sohee",
       "family": "Qwen3-TTS",
       "kind": "local",
-      "korean": "official",
+      "korean": "official-and-verified",
       "license": "Apache-2.0",
       "tier": "zero-cost-compute-only",
       "default_enabled": false,
@@ -31,7 +31,9 @@
       "repo": "https://github.com/QwenLM/Qwen3-TTS",
       "model": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
       "speaker": "Sohee",
-      "notes": "Official Korean support; Sohee is the Korean native speaker preset. Enable after runtime feasibility check."
+      "notes": "Official Korean support with native Sohee preset. Verified 2026-09-12 on a 4-core GitHub Ubuntu CPU runner. Sampling is required: do_sample=false produced near-silence at the token cap, while sampled inference produced normal Korean speech. In a same-seed K2 pair, raw and ko-voice canonical inputs both reached semantic CER 0.0, so frontend gains must be judged per backend/case; see results/qwen3-tts-06b-sohee-k2-20260912.json.",
+      "cpu_verified": true,
+      "required_generation_policy": "sampling"
     },
     {
       "id": "qwen3-tts-0.6b-base",
@@ -108,7 +110,11 @@
       "production_candidate": true,
       "credential_env": "GOOGLE_APPLICATION_CREDENTIALS",
       "hard_char_budget": 2000,
-      "voices": ["ko-KR-Neural2-A", "ko-KR-Neural2-B", "ko-KR-Neural2-C"]
+      "voices": [
+        "ko-KR-Neural2-A",
+        "ko-KR-Neural2-B",
+        "ko-KR-Neural2-C"
+      ]
     },
     {
       "id": "azure-korean-hd",
@@ -140,7 +146,10 @@
       "production_candidate": true,
       "credential_env": "AWS_ACCESS_KEY_ID",
       "hard_char_budget": 2000,
-      "voices": ["Seoyeon", "Jihye"],
+      "voices": [
+        "Seoyeon",
+        "Jihye"
+      ],
       "notes": "Korean neural voices Seoyeon/Jihye; Seoyeon also has a generative variant. No call unless an explicit zero-cost account budget is confirmed."
     },
     {

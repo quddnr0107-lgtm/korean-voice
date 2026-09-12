@@ -119,3 +119,21 @@ test('MOSS Nano batch1 증거와 K21 F-35A 승격을 보존한다', () => {
   assert.ok(k2.canonical_synth_seconds < k2.raw_synth_seconds);
   assert.ok(legal.canonical_cer_canonical > legal.raw_cer_canonical);
 });
+
+
+test('Qwen3-TTS Sohee CPU 증거는 sampling 필수와 K2 동률을 보존한다', () => {
+  const p = providers.providers.find((x) => x.id === 'qwen3-tts-0.6b-customvoice-sohee');
+  assert.equal(p?.korean, 'official-and-verified');
+  assert.equal(p?.cpu_verified, true);
+  assert.equal(p?.required_generation_policy, 'sampling');
+  const r = JSON.parse(fs.readFileSync(path.join(ROOT, 'research/tts-arena/results/qwen3-tts-06b-sohee-k2-20260912.json'), 'utf8'));
+  assert.equal(r.paid_tts_api_calls, 0);
+  assert.equal(r.cloudflare_calls, 0);
+  assert.equal(r.greedy_failure.canonical_cer, 1);
+  assert.ok(r.greedy_failure.rms < 0.001);
+  assert.ok(r.sampled_smoke.rms > 0.05);
+  assert.ok(r.sampled_smoke.canonical_cer < r.greedy_failure.canonical_cer);
+  assert.equal(r.sampled_k2_pair.raw.canonical_cer, 0);
+  assert.equal(r.sampled_k2_pair.canonical.canonical_cer, 0);
+  assert.ok(Math.abs(r.sampled_k2_pair.raw.synthesis_seconds - r.sampled_k2_pair.canonical.synthesis_seconds) < 1);
+});
