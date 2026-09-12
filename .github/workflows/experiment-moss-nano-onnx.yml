@@ -1,0 +1,96 @@
+name: Experiment MOSS Nano ONNX Korean smoke
+on:
+  push:
+    branches: [experiment/moss-nano-onnx-smoke-20260912]
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      HF_HUB_DISABLE_TELEMETRY: '1'
+      TOKENIZERS_PARALLELISM: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Prepare raw and ko-voice texts
+        run: |
+          mkdir -p /tmp/moss-results
+          printf '%s\n' 'K2 전차를 점검한다.' > /tmp/moss-results/raw.txt
+          node - <<'NODE' > /tmp/moss-results/canonical.txt
+          const K = require('./public/ko-voice.js');
+          process.stdout.write(K.normalize('K2 전차를 점검한다.') + '\n');
+          NODE
+          echo "RAW=$(cat /tmp/moss-results/raw.txt)"
+          echo "CANONICAL=$(cat /tmp/moss-results/canonical.txt)"
+      - name: Clone official MOSS Nano and install minimal ONNX runtime dependencies
+        run: |
+          START=$(date +%s)
+          git clone --depth=1 https://github.com/OpenMOSS/MOSS-TTS-Nano.git /tmp/MOSS-TTS-Nano
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch==2.7.0 torchaudio==2.7.0
+          python -m pip install 'numpy>=1.24' 'sentencepiece>=0.1.99' soundfile 'onnxruntime>=1.20.0' huggingface_hub
+          END=$(date +%s)
+          echo "install_seconds=$((END-START))" | tee /tmp/moss-results/install.txt
+          du -sh /tmp/MOSS-TTS-Nano | tee -a /tmp/moss-results/install.txt
+          python - <<'PY' | tee -a /tmp/moss-results/install.txt
+          import torch, onnxruntime
+          print('torch', torch.__version__)
+          print('onnxruntime', onnxruntime.__version__)
+          print('cpu_threads_available', __import__('os').cpu_count())
+          PY
+      - name: Synthesize raw Korean text on CPU ONNX
+        working-directory: /tmp/MOSS-TTS-Nano
+        run: |
+          START=$(date +%s)
+          python infer_onnx.py \
+            --voice Junhao \
+            --text "$(cat /tmp/moss-results/raw.txt)" \
+            --output-audio-path /tmp/moss-results/raw.wav \
+            --cpu-threads 4 \
+            --execution-provider cpu \
+            --sample-mode greedy \
+            --do-sample 0 \
+            --disable-wetext-processing \
+            --seed 7
+          END=$(date +%s)
+          echo "raw_seconds=$((END-START))" | tee /tmp/moss-results/runtime.txt
+          ls -lh /tmp/moss-results/raw.wav
+          du -sh models | tee /tmp/moss-results/model-size.txt
+      - name: Synthesize ko-voice canonical Korean text on same loaded assets
+        working-directory: /tmp/MOSS-TTS-Nano
+        run: |
+          START=$(date +%s)
+          python infer_onnx.py \
+            --voice Junhao \
+            --text "$(cat /tmp/moss-results/canonical.txt)" \
+            --output-audio-path /tmp/moss-results/canonical.wav \
+            --cpu-threads 4 \
+            --execution-provider cpu \
+            --sample-mode greedy \
+            --do-sample 0 \
+            --disable-wetext-processing \
+            --seed 7
+          END=$(date +%s)
+          echo "canonical_seconds=$((END-START))" | tee -a /tmp/moss-results/runtime.txt
+          ls -lh /tmp/moss-results/canonical.wav
+      - name: Inspect audio without external services
+        run: |
+          python - <<'PY' | tee /tmp/moss-results/audio-stats.json
+          import json, wave, os
+          out = {}
+          for name in ['raw','canonical']:
+              p=f'/tmp/moss-results/{name}.wav'
+              with wave.open(p,'rb') as w:
+                  out[name]={'channels':w.getnchannels(),'rate':w.getframerate(),'frames':w.getnframes(),'seconds':round(w.getnframes()/w.getframerate(),3),'bytes':os.path.getsize(p)}
+          print(json.dumps(out, ensure_ascii=False, indent=2))
+          PY
+      - name: Upload public-test audio and measurements
+        uses: actions/upload-artifact@v4
+        with:
+          name: moss-nano-korean-smoke
+          path: /tmp/moss-results/
+          retention-days: 1
