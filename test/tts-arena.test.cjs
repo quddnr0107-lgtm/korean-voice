@@ -137,3 +137,26 @@ test('Qwen3-TTS Sohee CPU 증거는 sampling 필수와 K2 동률을 보존한다
   assert.equal(r.sampled_k2_pair.canonical.canonical_cer, 0);
   assert.ok(Math.abs(r.sampled_k2_pair.raw.synthesis_seconds - r.sampled_k2_pair.canonical.synthesis_seconds) < 1);
 });
+
+
+test('Qwen3-TTS mini-batch는 backend별 전처리 손익이 섞임을 보존한다', () => {
+  const r = JSON.parse(fs.readFileSync(path.join(ROOT, 'research/tts-arena/results/qwen3-tts-06b-sohee-mini-batch1-20260912.json'), 'utf8'));
+  assert.equal(r.execution.paid_tts_api_calls, 0);
+  assert.equal(r.execution.cloudflare_r2_calls, 0);
+  assert.equal(r.execution.cloudflare_do_calls, 0);
+  assert.equal(r.execution.cloudflare_container_calls, 0);
+  assert.equal(r.source.tts_regenerated_for_judge, false);
+  assert.equal(r.summary.pair_count, 3);
+  assert.equal(r.summary.canonical_better, 1);
+  assert.equal(r.summary.canonical_tied, 1);
+  assert.equal(r.summary.canonical_worse, 1);
+  const legal = r.pairs.find((x) => x.id === 'legal-chain');
+  const date = r.pairs.find((x) => x.id === 'date-range-particle');
+  const kf = r.pairs.find((x) => x.id === 'mil-kf21');
+  assert.equal(legal.raw.semantic_cer, 0);
+  assert.ok(legal.canonical.semantic_cer > legal.raw.semantic_cer);
+  assert.ok(date.canonical.semantic_cer < date.raw.semantic_cer);
+  assert.equal(date.canonical.semantic_cer, 0);
+  assert.equal(kf.raw.semantic_cer, 0);
+  assert.equal(kf.canonical.semantic_cer, 0);
+});
