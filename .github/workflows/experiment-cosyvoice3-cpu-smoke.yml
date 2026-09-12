@@ -41,7 +41,8 @@ jobs:
           Path('/tmp/cosy-requirements-cpu.txt').write_text('\n'.join(lines)+'\n')
           PY
           python -m pip install -r /tmp/cosy-requirements-cpu.txt
-          python -m pip install faster-whisper huggingface_hub onnxruntime
+          python -m pip install faster-whisper huggingface_hub onnxruntime tiktoken==0.7.0
+          python -m pip install --no-deps --no-build-isolation openai-whisper==20231117
           END=$(date +%s)
           echo "install_seconds=$((END-START))" | tee /tmp/cosy-result/setup.txt
       - name: Download official CosyVoice3 model
