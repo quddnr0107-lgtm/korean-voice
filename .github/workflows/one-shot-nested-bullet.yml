@@ -1,0 +1,28 @@
+name: One-shot nested bullet idempotence patch
+
+on:
+  push:
+    branches:
+      - gpt/nested-bullet-idempotence-20260912
+
+permissions:
+  contents: write
+
+jobs:
+  patch-and-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Reproduce, patch, and verify
+        run: node .github/scripts/patch-nested-bullet.cjs
+      - name: Commit verified patch and remove one-shot helpers
+        shell: bash
+        run: |
+          rm -f .github/scripts/patch-nested-bullet.cjs .github/workflows/one-shot-nested-bullet.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'fix: normalize nested markdown bullets in one pass'
+          git push origin HEAD:gpt/nested-bullet-idempotence-20260912
