@@ -26,7 +26,7 @@ jobs:
           npm pkg set type=module
           npm install --no-audit --no-fund vite@5.4.0 onnxruntime-web@latest playwright
           npx playwright install --with-deps chromium
-          node -p "require('onnxruntime-web/package.json').version" > ort-version.txt
+          node -p "JSON.parse(require('fs').readFileSync('node_modules/onnxruntime-web/package.json','utf8')).version" > ort-version.txt
       - name: Download public INT8 model
         working-directory: /tmp/st-int8
         run: |
