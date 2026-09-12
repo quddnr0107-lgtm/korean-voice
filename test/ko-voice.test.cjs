@@ -447,3 +447,20 @@ test('미확정 복합 군 모델명은 추측 규칙으로 강제하지 않는�
     assert.ok(out.length > 0);
   }
 });
+
+
+test('공개 방송에서 낭독이 확인된 K21·F-35A를 명시 발음한다', () => {
+  assert.match(K.normalize('K21 보병전투차를 운용한다.'), /케이 이십일 보병전투차/);
+  assert.match(K.normalize('K-21 보병전투차를 운용한다.'), /케이 이십일 보병전투차/);
+  assert.match(K.normalize('F-35A 전투기를 운용한다.'), /에프 삼십오 에이 전투기/);
+  assert.match(K.normalize('F35A 전투기를 운용한다.'), /에프 삼십오 에이 전투기/);
+});
+
+test('미확정 세 자리 군 모델은 K21 규칙으로 일반화하지 않는다', () => {
+  const values = ['K239 천무', 'K808 장갑차'];
+  for (const s of values) {
+    const out = K.normalize(s);
+    assert.equal(typeof out, 'string');
+    assert.ok(out.length > 0);
+  }
+});
