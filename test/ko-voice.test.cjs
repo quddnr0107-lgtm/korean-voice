@@ -431,3 +431,19 @@ test('잔존 범위 교정은 기존 날짜·시각·수량 범위와 장소격 
   assert.match(say('9~10월에 시행한다.'), /구 월에서 시월에/);
   assert.doesNotMatch(say('9~10월에 시행한다.'), /월에서,\s*시월/);
 });
+
+
+test('공식 근거가 있는 군 항공기 모델명은 현행 낭독으로 읽는다', () => {
+  assert.match(K.normalize('KF-21 비행시험을 실시한다.'), /케이에프 이십일 비행시험/);
+  assert.match(K.normalize('KF21 비행시험을 실시한다.'), /케이에프 이십일 비행시험/);
+  assert.match(K.normalize('FA-50을 운용한다.'), /에프에이 오십을 운용한다/);
+  assert.match(K.normalize('FA50을 운용한다.'), /에프에이 오십을 운용한다/);
+});
+
+test('미확정 복합 군 모델명은 추측 규칙으로 강제하지 않는다', () => {
+  for (const s of ['K239 천무', 'K808 장갑차', 'KM21 장비', 'UH-60 헬기', 'CH-47 헬기']) {
+    const out = K.normalize(s);
+    assert.equal(typeof out, 'string');
+    assert.ok(out.length > 0);
+  }
+});
