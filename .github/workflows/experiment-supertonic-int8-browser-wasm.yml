@@ -102,7 +102,7 @@ jobs:
           const browser=await chromium.launch({headless:true});const page=await browser.newPage();
           page.on('console',m=>console.log('[browser]',m.text()));page.on('pageerror',e=>console.error('[pageerror]',e));
           await page.goto('http://127.0.0.1:5173',{waitUntil:'domcontentloaded',timeout:30000});
-          await page.waitForFunction(()=>window.__done===true,{timeout:300000});
+          await page.waitForFunction(()=>window.__done===true,null,{timeout:120000});
           const err=await page.evaluate(()=>window.__error||null);if(err)throw new Error(err);
           const result=await page.evaluate(()=>window.__result);
           for(const [name,bytes] of Object.entries(result.files))fs.writeFileSync(name,Buffer.from(bytes));
