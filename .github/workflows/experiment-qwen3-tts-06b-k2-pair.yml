@@ -1,0 +1,92 @@
+name: Experiment Qwen3 TTS 0.6B K2 raw canonical pair
+
+on:
+  push:
+    branches:
+      - experiment/qwen3-tts-06b-k2-pair-20260912
+
+permissions:
+  contents: read
+
+jobs:
+  pair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      HF_HUB_DISABLE_TELEMETRY: '1'
+      TOKENIZERS_PARALLELISM: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install CPU Qwen and ASR runtime
+        run: |
+          START=$(date +%s)
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch==2.7.0 torchaudio==2.7.0
+          python -m pip install qwen-tts==0.1.1 faster-whisper
+          END=$(date +%s)
+          mkdir -p /tmp/qwen-pair
+          echo "install_seconds=$((END-START))" > /tmp/qwen-pair/setup.txt
+      - name: Generate raw and canonical with one model load
+        run: |
+          node - <<'NODE' > /tmp/qwen-pair/texts.json
+          const K = require('./public/ko-voice.js');
+          const raw = 'K2 전차를 점검한다.';
+          process.stdout.write(JSON.stringify({raw, canonical: K.normalize(raw)}, null, 2));
+          NODE
+          python - <<'PY' | tee /tmp/qwen-pair/synth-result.json
+          import json, os, time, torch
+          import soundfile as sf
+          from qwen_tts import Qwen3TTSModel
+          texts=json.load(open('/tmp/qwen-pair/texts.json',encoding='utf-8'))
+          t=time.perf_counter()
+          model=Qwen3TTSModel.from_pretrained('Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice',device_map='cpu',dtype=torch.float32,attn_implementation='sdpa')
+          load=time.perf_counter()-t
+          out={'load_seconds':round(load,3),'paid_tts_api_calls':0,'cloudflare_calls':0,'variants':{}}
+          for name in ('raw','canonical'):
+              torch.manual_seed(7)
+              t=time.perf_counter()
+              wavs,sr=model.generate_custom_voice(text=texts[name],language='Korean',speaker='Sohee',do_sample=True,max_new_tokens=128)
+              elapsed=time.perf_counter()-t
+              p=f'/tmp/qwen-pair/{name}.wav'
+              sf.write(p,wavs[0],sr)
+              out['variants'][name]={'text':texts[name],'synthesis_seconds':round(elapsed,3),'sample_rate':int(sr),'audio_seconds':round(len(wavs[0])/sr,3),'bytes':os.path.getsize(p)}
+          print(json.dumps(out,ensure_ascii=False,indent=2))
+          PY
+      - name: ASR and semantic CER for both variants
+        run: |
+          python - <<'PY' | tee /tmp/qwen-pair/judge-result.json
+          import json,re,wave,numpy as np
+          from faster_whisper import WhisperModel
+          target='케이투 전차를 점검한다'
+          def compact(s): return re.sub(r'[^가-힣0-9a-zA-Z]','',s or '')
+          def cer(a,b):
+              a,b=compact(a),compact(b)
+              if not a:return 0.0 if not b else 1.0
+              d=list(range(len(b)+1))
+              for i,ca in enumerate(a,1):
+                  prev,d[0]=d[0],i
+                  for j,cb in enumerate(b,1):
+                      cur=d[j]; d[j]=min(d[j]+1,d[j-1]+1,prev+(ca!=cb)); prev=cur
+              return d[-1]/len(a)
+          asr=WhisperModel('small',device='cpu',compute_type='int8',cpu_threads=4)
+          out={}
+          for name in ('raw','canonical'):
+              p=f'/tmp/qwen-pair/{name}.wav'
+              with wave.open(p,'rb') as w:
+                  sr=w.getframerate(); n=w.getnframes(); x=np.frombuffer(w.readframes(n),dtype='<i2').astype(np.float32)/32768
+              rms=float(np.sqrt(np.mean(x*x))); peak=float(np.max(np.abs(x)))
+              segs,info=asr.transcribe(p,language='ko',beam_size=5,vad_filter=True)
+              text=' '.join(s.text.strip() for s in segs).strip()
+              semantic=re.sub(r'(?i)K\s*-?\s*2','케이투',text)
+              out[name]={'asr':text,'asr_semantic':semantic,'cer_literal':round(cer(target,text),4),'cer_canonical':round(cer(target,semantic),4),'rms':round(rms,6),'peak':round(peak,6),'language_probability':round(info.language_probability,4)}
+          print(json.dumps(out,ensure_ascii=False,indent=2))
+          PY
+      - name: Upload ephemeral paired evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qwen3-tts-06b-k2-pair
+          path: /tmp/qwen-pair/
+          retention-days: 1
