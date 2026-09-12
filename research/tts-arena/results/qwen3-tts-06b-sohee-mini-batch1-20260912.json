@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-12",
+  "provider": "qwen3-tts-0.6b-customvoice-sohee",
+  "model": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+  "speaker": "Sohee",
+  "runtime": {
+    "device": "cpu",
+    "dtype": "float32",
+    "sampling": true,
+    "seed": 7,
+    "max_new_tokens": 192,
+    "model_load_seconds": 11.945
+  },
+  "source": {
+    "synthesis_run_id": 34681217379,
+    "synthesis_artifact_id": 10293959343,
+    "judge_run_id": 34681817736,
+    "judge_artifact_id": 10294014920,
+    "tts_regenerated_for_judge": false
+  },
+  "execution": {
+    "paid_tts_api_calls": 0,
+    "cloudflare_r2_calls": 0,
+    "cloudflare_do_calls": 0,
+    "cloudflare_container_calls": 0
+  },
+  "pairs": [
+    {
+      "id": "legal-chain",
+      "target": "제육 조 제일 항 제삼 호 가목을 적용한다",
+      "raw": {
+        "input": "제6조제1항제3호가목을 적용한다.",
+        "synthesis_seconds": 22.596,
+        "audio_seconds": 3.92,
+        "asr": "제 6조제 1항제 3호 가목을 적용한다",
+        "asr_canonical": "제육 조 제일 항 제삼 호 가목을 적용한다",
+        "semantic_cer": 0
+      },
+      "canonical": {
+        "input": "제육 조 제일 항 제삼 호 가목을 적용한다.",
+        "synthesis_seconds": 22.386,
+        "audio_seconds": 3.92,
+        "asr": "제육조 제1랑 제3호 감옥을 적용한다.",
+        "asr_canonical": "제육조 제일랑 제삼 호 감옥을 적용한다.",
+        "semantic_cer": 0.1875
+      },
+      "delta_canonical_minus_raw": 0.1875
+    },
+    {
+      "id": "date-range-particle",
+      "target": "이천이십육 년 구 월 십일 일부터 이천이십육 년 구 월 십이 일까지 시행한다",
+      "raw": {
+        "input": "2026-09-11~2026-09-12에 시행한다.",
+        "synthesis_seconds": 41.03,
+        "audio_seconds": 7.2,
+        "asr": "2026 공구 시리일에서 2026 공구 시리에 시행한다.",
+        "asr_canonical": "이천이십육 공구 시리일에서 이천이십육 공구 시리에 시행한다.",
+        "semantic_cer": 0.4333
+      },
+      "canonical": {
+        "input": "이천이십육 년 구 월 십일 일부터 이천이십육 년 구 월 십이 일까지 시행한다.",
+        "synthesis_seconds": 36.972,
+        "audio_seconds": 6.4,
+        "asr": "2026년 9월 11일부터 2026년 9월 12일까지 시행한다.",
+        "asr_canonical": "이천이십육 년 구 월 십일 일부터 이천이십육 년 구 월 십이 일까지 시행한다.",
+        "semantic_cer": 0
+      },
+      "delta_canonical_minus_raw": -0.4333
+    },
+    {
+      "id": "mil-kf21",
+      "target": "케이에프 이십일 비행시험을 실시한다",
+      "raw": {
+        "input": "KF-21 비행시험을 실시한다.",
+        "synthesis_seconds": 29.488,
+        "audio_seconds": 5.2,
+        "asr": "KF-21 비행시험을 실시한다.",
+        "asr_canonical": "케이에프 이십일 비행시험을 실시한다.",
+        "semantic_cer": 0
+      },
+      "canonical": {
+        "input": "케이에프 이십일 비행시험을 실시한다.",
+        "synthesis_seconds": 23.289,
+        "audio_seconds": 4.08,
+        "asr": "KF-21 비행시험을 실시한다.",
+        "asr_canonical": "케이에프 이십일 비행시험을 실시한다.",
+        "semantic_cer": 0
+      },
+      "delta_canonical_minus_raw": 0
+    }
+  ],
+  "summary": {
+    "pair_count": 3,
+    "canonical_better": 1,
+    "canonical_tied": 1,
+    "canonical_worse": 1,
+    "conclusion": "Qwen Sohee benefits from ko-voice on the tested date range, ties on KF-21, and regresses on the tested legal chain. Do not assume global canonicalization improves this backend."
+  }
+}
