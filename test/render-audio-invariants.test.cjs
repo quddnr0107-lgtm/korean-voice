@@ -36,3 +36,15 @@ test('만든 낭독 파일은 서버에 남기지 않는다 — 대본은 이용
   assert.ok(/os\.remove\(path\)/.test(handler), '응답 뒤 지운다');
   assert.ok(/finally/.test(handler), '실패해도 지운다');
 });
+
+test('목소리 목록이 워커와 서버에서 같다 — 어긋나면 400 나거나 캐시가 갈린다', () => {
+  const worker = readFileSync(join(__dirname, '..', 'worker.mjs'), 'utf8');
+  const list = (worker.match(/const VOICES = \[([^\]]+)\]/) || [])[1];
+  assert.ok(list, '워커의 VOICES 를 못 찾았다');
+  const names = list.match(/'([a-z0-9]+)'/g).map((s) => s.replace(/'/g, ''));
+  const py = src.slice(src.indexOf('VOICES = {'), src.indexOf('def style_spec'));
+  for (const n of names) assert.match(py, new RegExp("'" + n + "':"), `server.py 에 목소리 ${n} 이 없다`);
+  for (const m of py.matchAll(/^\s{4}'([a-z0-9]+)':/gm)) {
+    assert.ok(names.includes(m[1]), `워커 VOICES 에 목소리 ${m[1]} 이 없다`);
+  }
+});

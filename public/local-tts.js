@@ -19,8 +19,8 @@ export const MODEL_BASE = (typeof window !== 'undefined' && window.KO_MODEL_BASE
   'https://huggingface.co/Supertone/supertonic-3/resolve/main';
 const CACHE_NAME = 'ko-voice-model-v1';
 const RECIPES = {
-  u5: { steps: 8, female: 'F4:0.6,F2:0.4', male: 'M1:0.7,M3:0.3' },
-  k2: { steps: 16, female: 'F2', male: 'M1:0.7,M3:0.3' },
+  u5: { steps: 8, female: 'F4:0.6,F2:0.4', male: 'M1:0.7,M3:0.3', f4: 'F4', m1: 'M1' },
+  k2: { steps: 16, female: 'F2', male: 'M1:0.7,M3:0.3', f4: 'F4', m1: 'M1' },
 };
 const SPEED = 1.05;                 // server.py VOICES[*].speed 와 같다
 export const SPEED_GATE_RTF = 3.0;  // 첫 문장이 이보다 느리면 서버로 물러난다(레포 실측: 단일 스레드 1.65~2.28)

@@ -183,7 +183,7 @@ const SECURITY = {
    캐시 키는 server.py 의 cache_key 와 같다(lib/tts-key.mjs): sha1("voice|steps|r|조합표식|text") · text 는 공백 정리·400자.
    🔴 r(합성 속도 배수)과 조합표식(voice_shape.RECIPE_TAG)이 키에 들어간다 — 다듬기 조합이 바뀌면 옛 R2 캐시는 자연히 안 맞는다. */
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, OPTIONS', 'Access-Control-Allow-Headers': 'Range, Content-Type', 'Access-Control-Expose-Headers': 'Content-Length, Content-Range, Accept-Ranges' };
-const VOICES = ['female', 'male'];
+const VOICES = ['female', 'male', 'f4', 'm1'];   // f4·m1 = 순수 스타일(server.py VOICES 와 같아야 한다)
 /* 🔴 스텝은 캐시 키(v|s|r|표식|글)에 들어간다 — 바꾸면 구운 것이 전부 무효가 되고 전량 재굽기다.
    16 → 8 (2026-09-08): 실측으로 품질이 안 떨어지는 것을 확인하고 내렸다.
      조각당 5.31s → 2.97s (절반) · HNR 15.46 → 15.55 (오히려 미세 상승) · 사용자 청취 「소리는 똑같아」
