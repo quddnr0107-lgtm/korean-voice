@@ -133,7 +133,8 @@ const SECURITY = {
 /* ── 즉시 합성 서버(컨테이너) — server/server.py 가 Supertonic 3 를 돌린다 ─────────────────────────
    GET  /tts?v=female|male&t=문장[&s=16][&r=1.0]  → R2 캐시(korean-voice-tts) 적중이면 바로, 아니면 컨테이너가 합성 → R2 저장
    POST /warm {v, texts:[…][, r]}         → 컨테이너 대기열(앞서 굽기)
-   GET  /health                           → 컨테이너 상태(잠들어 있으면 깨운다)
+   GET  /meta                             → 워커 메타데이터(recipe·voice_sets·R2)만, 컨테이너 접근 0
+   GET  /health                           → 관리자/진단용 컨테이너 상태(잠들어 있으면 깨울 수 있다)
    캐시 키는 server.py 의 cache_key 와 같다(lib/tts-key.mjs): sha1("voice|steps|r|조합표식|text") · text 는 공백 정리·400자.
    🔴 r(합성 속도 배수)과 조합표식(voice_shape.RECIPE_TAG)이 키에 들어간다 — 다듬기 조합이 바뀌면 옛 R2 캐시는 자연히 안 맞는다. */
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, OPTIONS', 'Access-Control-Allow-Headers': 'Range, Content-Type', 'Access-Control-Expose-Headers': 'Content-Length, Content-Range, Accept-Ranges' };
@@ -248,10 +249,17 @@ async function handleWarm(request, env) {
    8초를 끌면 폰에서 그 요청이 끊기고, 사이트는 그걸 「즉시 합성 죽음」으로 읽어 60초 동안 시스템 음성으로 떨어졌다.
    그래서 컨테이너 물어보기에 시간을 재고(HEALTH_PROBE_MS), 넘으면 그것 없이 답한다.
    사이트에 필요한 것(무엇을 고를 수 있나·표식·R2 있나)은 전부 워커가 아는 값이라 컨테이너와 무관하다. */
+function workerMeta(env) {
+  const voice_sets = Object.entries(TAGS).map(([tag, v]) => ({ id: `${tag}.${v.rev}`, tag, label: v.label, steps: v.steps }));
+  return { cache: env.TTS_CACHE ? 'r2' : 'none', recipe_worker: RECIPE_TAG, voice_sets, worker_ok: true };
+}
+function handleMeta(env) {
+  return json({ ...workerMeta(env), ok: true, available: true, container_probe: false }, 200, CORS);
+}
+
 const HEALTH_PROBE_MS = 1200;
 async function handleHealth(request, env) {
-  const voice_sets = Object.entries(TAGS).map(([tag, v]) => ({ id: `${tag}.${v.rev}`, tag, label: v.label, steps: v.steps }));
-  const 바탕 = { cache: env.TTS_CACHE ? 'r2' : 'none', recipe_worker: RECIPE_TAG, voice_sets, worker_ok: true };
+  const 바탕 = workerMeta(env);
   const c = container(env);
   if (!c) return json({ ...바탕, ok: false, available: false, reason: '컨테이너 바인딩 없음' }, 200, CORS);
   try {
@@ -273,13 +281,14 @@ async function handleHealth(request, env) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    if (request.method === 'OPTIONS' && ['/tts', '/warm', '/health', '/api/tts', '/bake'].includes(url.pathname)) return new Response(null, { status: 204, headers: { ...CORS, 'Access-Control-Max-Age': '86400', 'Access-Control-Allow-Headers': 'Range, Content-Type, Authorization' } });
+    if (request.method === 'OPTIONS' && ['/tts', '/warm', '/meta', '/health', '/api/tts', '/bake'].includes(url.pathname)) return new Response(null, { status: 204, headers: { ...CORS, 'Access-Control-Max-Age': '86400', 'Access-Control-Allow-Headers': 'Range, Content-Type, Authorization' } });
     if (url.pathname === '/tts') return handleLiveTts(request, env, ctx);
     if (url.pathname === '/warm' && request.method === 'POST') return handleWarm(request, env);
     if (url.pathname === '/bake' && (request.method === 'GET' || request.method === 'POST')) return handleBake(request, env);
     if (url.pathname === '/bake/put' && (request.method === 'PUT' || request.method === 'POST')) return handleBakePut(request, env);   // PUT 이 엣지에서 403 이 난 적이 있어 POST 도 받는다
     if (url.pathname === '/bake/has' && request.method === 'POST') return handleBakeHas(request, env);
     if (url.pathname === '/bake/prune' && request.method === 'POST') return handleBakePrune(request, env);
+    if (url.pathname === '/meta') return handleMeta(env);
     if (url.pathname === '/health') return handleHealth(request, env);
     if (url.pathname === '/api/tts') return handleTts(request, env, ctx);
     const res = await env.ASSETS.fetch(request);
