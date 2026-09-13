@@ -1,0 +1,37 @@
+korean-voice — 라이선스
+
+Copyright (c) 2026 quddnr0107. All rights reserved.
+
+이 저장소는 **두 가지 라이선스**로 나뉜다. 파일마다 어느 쪽인지 아래 표로 정한다.
+
+| 범위 | 라이선스 |
+|---|---|
+| `public/ko-voice.js` (한국어 정규화·운율 엔진) | Apache License 2.0 — `LICENSES/Apache-2.0.txt` |
+| 그 밖의 모든 파일 (`worker.mjs`, `lib/`, `server/`, `tools/`, `research/`, `public/profiles/`, `public/index.html`, `public/lab.js`, `test/`, 문서) | 독점(All rights reserved) — 아래 조건 |
+
+## 1. public/ko-voice.js — Apache License 2.0
+
+    SPDX-License-Identifier: Apache-2.0
+
+복제·수정·배포·상업적 이용이 모두 허용된다. 전문은 `LICENSES/Apache-2.0.txt`.
+
+## 2. 그 밖의 파일 — All rights reserved
+
+저작권자의 사전 서면 허락 없이 복제·수정·배포·2차적 저작물 작성·공중송신·상업적 이용을 할 수 없다.
+GitHub에서 열람하는 것과 GitHub 기능(fork·PR)을 통한 기여는 여기서 제한하지 않는다.
+상업적 사용·재배포 문의는 저작권자에게 한다.
+
+## 3. 제3자 구성요소 — 각 원 라이선스가 우선한다
+
+이 저장소는 제3자 모델·데이터·코드를 **포함하지 않고 호출·측정만** 하지만, 실행·배포 시 다음이 적용된다.
+출처와 조건은 `docs/CREDITS.md`가 정본이다.
+
+- **Supertonic 3** (`server/Dockerfile`이 Hugging Face에서 받는 ONNX·voice_styles): **BigScience OpenRAIL-M**.
+  상업적 이용은 허용되나 **Attachment A의 사용 제한이 하위 이용자에게 그대로 승계**된다.
+  이 저장소 또는 파생물로 서비스를 제공하는 자는 자신의 이용약관에 같은 제한을 실어야 하고,
+  특히 **실존 인물의 동의 없는 음성 모사**와 **AI 생성 사실의 미고지**를 금지해야 한다.
+- **Supertonic 샘플 코드**(`py/helper.py` 등): MIT.
+- **MeloTTS**(Cloudflare Workers AI 경로): MIT.
+- **운율 통계의 출처 코퍼스**: `docs/CREDITS.md`의 표기 의무를 따른다.
+
+이 파일은 법률 자문이 아니다. 유료 서비스 개시 전에는 각 원 라이선스 원문을 직접 확인한다.

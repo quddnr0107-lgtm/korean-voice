@@ -1,4 +1,5 @@
-/* 나의 군대 — 한국어 음성 자연화 엔진 (ko-voice.js)
+/* SPDX-License-Identifier: Apache-2.0  (이 파일만 Apache-2.0 · 저장소 나머지는 LICENSE 참조)
+   나의 군대 — 한국어 음성 자연화 엔진 (ko-voice.js)
    외부 의존 없음. 브라우저(window.KoVoice)와 Node(require)에서 같이 쓴다.
 
    하는 일 — "말하기 전에 글을 사람이 읽듯 고쳐 쓴다":
