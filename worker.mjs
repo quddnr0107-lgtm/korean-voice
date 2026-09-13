@@ -25,32 +25,32 @@ export class TtsContainer extends Container {
   envVars = { STEPS: '8', ALLOW_ORIGIN: '*', CACHE_DIR: '/app/cache' };
 }
 
-/* ── 무료 한도 계량기(Durable Object) — 로그인 없이 쓰는 하루 글자 수를 센다 ──
-   이름은 sha1(IP) 이라 원본 주소를 저장하지 않는다. 날짜(UTC)가 바뀌면 전날 기록은 지운다.
-   🔴 R2 에 이미 있는 대본(= 합성이 없는 요청)은 한도를 쓰지 않는다 — 계량은 handleRender 가 R2 miss 뒤에 부른다.
-   결제를 붙일 때 이 자리가 그대로 「남은 글자 수」의 근거가 된다. */
-export class Meter extends DurableObject {
-  async use(day, chars, limit) {
-    const stored = (await this.ctx.storage.get('day')) || '';
-    let used = (await this.ctx.storage.get('used')) || 0;
-    if (stored !== day) { used = 0; await this.ctx.storage.put({ day, used: 0 }); }
-    const q = quota(used, chars, limit);
-    if (q.ok) await this.ctx.storage.put({ day, used: q.after });
-    return q;
-  }
-  async peek(day, limit) {
-    const stored = (await this.ctx.storage.get('day')) || '';
-    const used = stored === day ? ((await this.ctx.storage.get('used')) || 0) : 0;
-    return quota(used, 0, limit);
-  }
-}
-
 /* ── 굽기 대기열(Durable Object) — 전편을 컨테이너가 스스로 굽고 R2 에 넣는다(lib/bake.mjs · 2026-09-04) ──
    POST /bake {action:'enqueue', v, s, items:[{t, r}…]}   ≤400개 · Authorization: Bearer <BAKE_TOKEN>
    POST /bake {action:'stop'|'resume'|'clear'}             같은 토큰
    GET  /bake                                              상태(열려 있다 · 읽기만)
    🔴 BAKE_TOKEN(비밀값)이 안 심겨 있으면 POST 는 503 — 아무나 컨테이너 시간을 못 태운다. */
 export class BakeQueue extends DurableObject {
+  /* ── 무료 한도 계량기 ── 같은 클래스의 **다른 오브젝트**(이름 'meter|sha1(IP)')로 센다.
+     🔴 왜 전용 클래스를 안 쓰나: 새 Durable Object 클래스 + migration 을 넣은 배포가 2026-09-13 에
+        3회 연속 13초 안에 거부됐고, 그 설정을 되돌리자 바로 성공했다(c0bd069). 이미 등록된 클래스를
+        나눠 쓰면 migration 이 필요 없다. 굽기 쪽 키와 섞이지 않게 'meter:' 를 붙인다.
+     이름이 sha1(IP) 라 원본 주소를 저장하지 않고, 날짜(UTC)가 바뀌면 전날 기록은 버린다.
+     R2 에 이미 있는 대본(= 합성이 없는 요청)은 한도를 쓰지 않는다 — handleRender 가 R2 miss 뒤에 부른다. */
+  async use(day, chars, limit) {
+    const stored = (await this.ctx.storage.get('meter:day')) || '';
+    let used = (await this.ctx.storage.get('meter:used')) || 0;
+    if (stored !== day) { used = 0; await this.ctx.storage.put({ 'meter:day': day, 'meter:used': 0 }); }
+    const q = quota(used, chars, limit);
+    if (q.ok) await this.ctx.storage.put({ 'meter:day': day, 'meter:used': q.after });
+    return q;
+  }
+  async peek(day, limit) {
+    const stored = (await this.ctx.storage.get('meter:day')) || '';
+    const used = stored === day ? ((await this.ctx.storage.get('meter:used')) || 0) : 0;
+    return quota(used, 0, limit);
+  }
+
   constructor(ctx, env) {
     super(ctx, env);
     this.baker = makeBaker({
@@ -293,19 +293,19 @@ async function handleRender(request, env, ctx) {
 }
 /** 계량기 호출 — 바인딩이 없으면(로컬·미배포) 한도를 걸지 않는다. */
 async function meterUse(env, request, day, chars) {
-  if (!env.METER) return null;
+  if (!env.BAKE) return null;                  // 계량기는 BakeQueue 클래스의 다른 오브젝트다(migration 불필요)
   const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
-  const name = await sha1('meter|' + ip);      // 원본 주소는 저장하지 않는다
-  try { return await env.METER.get(env.METER.idFromName(name)).use(day, chars, FREE_DAILY_CHARS); } catch (_) { return null; }
+  const name = 'meter|' + await sha1('meter|' + ip);   // 원본 주소는 저장하지 않는다
+  try { return await env.BAKE.get(env.BAKE.idFromName(name)).use(day, chars, FREE_DAILY_CHARS); } catch (_) { return null; }
 }
 /** GET /render — 오늘 남은 무료 글자 수(화면이 미리 알려 주기 위한 것). */
 async function handleRenderQuota(env, request) {
   const day = dayStamp();
-  if (!env.METER) return json({ ok: true, metered: false, limit: FREE_DAILY_CHARS, day, limits: LIMITS }, 200, CORS);
+  if (!env.BAKE) return json({ ok: true, metered: false, limit: FREE_DAILY_CHARS, day, limits: LIMITS }, 200, CORS);
   const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
-  const name = await sha1('meter|' + ip);
+  const name = 'meter|' + await sha1('meter|' + ip);
   try {
-    const q = await env.METER.get(env.METER.idFromName(name)).peek(day, FREE_DAILY_CHARS);
+    const q = await env.BAKE.get(env.BAKE.idFromName(name)).peek(day, FREE_DAILY_CHARS);
     return json({ ok: true, metered: true, ...q, day, limits: LIMITS }, 200, CORS);
   } catch (_) {
     return json({ ok: true, metered: false, limit: FREE_DAILY_CHARS, day, limits: LIMITS }, 200, CORS);

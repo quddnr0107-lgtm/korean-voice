@@ -28,10 +28,9 @@
       { "name": "TTS_CONTAINER", "class_name": "TtsContainer" },
       // 굽기 대기열 — 전편을 컨테이너가 스스로 굽고 R2 에 넣는다(lib/bake.mjs). POST /bake 는 비밀값 BAKE_TOKEN 이 있어야 한다:
       //   npx wrangler secret put BAKE_TOKEN   (아무 긴 문자열 · yebijun 의 bake-live-tts.mjs 가 같은 값을 보낸다)
+      // 굽기 대기열 + **무료 한도 계량기**. 계량기는 같은 클래스의 다른 오브젝트('meter|sha1(IP)')다 —
+      // 새 DO 클래스 + migration 을 넣은 배포가 2026-09-13 에 3회 거부됐고 되돌리자 성공했다(c0bd069).
       { "name": "BAKE", "class_name": "BakeQueue" }
-      // 🔴 무료 한도 계량기(Meter)는 아직 붙이지 않는다 — 새 Durable Object 클래스 + migration v3 를 넣은
-      //    2026-09-13 배포 3회가 모두 13초 안에 거부됐다(Workers Builds 로그는 대시보드 인증이 필요해 확인 못 함).
-      //    원인이 확정되기 전까지 바인딩을 비워 둔다. worker.mjs 는 env.METER 가 없으면 한도를 걸지 않는다.
     ]
   },
   "migrations": [
