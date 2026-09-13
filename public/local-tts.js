@@ -11,6 +11,7 @@
 import * as ort from './vendor/ort-cdn.js';
 import { ORT_WASM_PATHS } from './vendor/ort-cdn.js';
 import { TextToSpeech, UnicodeProcessor, Style, loadOnnx, writeWavFile } from './vendor/supertonic-helper.js';
+import { shape } from './voice-shape.mjs';   // 서버의 U5 다듬기를 옮긴 것(PSOLA 만 빠진다)
 
 /** 모델 출처. R2 에 올리면 window.KO_MODEL_BASE 로 갈아탄다(egress 무료 · 우리 도메인).
  *  그때까지는 Hugging Face CDN 을 쓴다(IP 당 5분 3,000 요청 제한이 있다). */
@@ -130,7 +131,8 @@ export async function synth(items, { onItem = () => {}, signal } = {}) {
     const t0 = performance.now();
     const { wav } = await engine.tts._infer([it.t], ['ko'], engine.style, engine.steps, SPEED * (it.r || 1));
     const took = (performance.now() - t0) / 1000;
-    const pcm = Float32Array.from(wav);
+    // 🔴 서버와 같은 다듬기를 건다 — 안 걸면 앞뒤 무음·첫 음절 크기·꼬리 공백이 서버와 달라진다
+    const pcm = shape(wav, engine.sampleRate);
     chunks.push(pcm); audio += pcm.length / sr; spent += took;
     if (it.pause) chunks.push(new Float32Array(Math.round(sr * it.pause / 1000)));
     if (firstRtf == null) firstRtf = took / (pcm.length / sr);
@@ -139,7 +141,8 @@ export async function synth(items, { onItem = () => {}, signal } = {}) {
   let n = 0; for (const c of chunks) n += c.length;
   const out = new Float32Array(n); let at = 0;
   for (const c of chunks) { out.set(c, at); at += c.length; }
-  // 전체에 단일 게인 — 조각별로 다르게 걸면 강조·감정의 셈여림이 뭉개진다(서버의 loudnorm linear 와 같은 취지)
+  /* 전체에 단일 게인 — 조각은 이미 다듬기에서 피크 0.89 로 맞춰졌고(서버와 같다), 여기서는 이어붙인
+     결과를 한 번만 손댄다. 조각별로 다르게 걸면 강조·감정의 셈여림이 뭉개진다(서버 loudnorm linear 와 같은 취지). */
   let peak = 0; for (let i = 0; i < out.length; i++) { const a = Math.abs(out[i]); if (a > peak) peak = a; }
   const target = 0.84;                       // 약 -1.5 dBFS
   if (peak > 0) { const g = target / peak; for (let i = 0; i < out.length; i++) out[i] *= g; }
