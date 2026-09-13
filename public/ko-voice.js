@@ -133,6 +133,7 @@
 
   /* ───────────────────────── 3. 기호·영문 약어 ───────────────────────── */
   const ABBR = {
+    ChatGPT: '챗지피티', OpenAI: '오픈에이아이',
     KATUSA: '카투사', ROTC: '알오티씨', TOEIC: '토익', TOEFL: '토플', TEPS: '텝스', OPIc: '오픽', OPIC: '오픽', HSK: '에이치에스케이', JLPT: '제이엘피티',
     DMZ: '디엠지', GOP: '지오피', GP: '지피', PX: '피엑스', UDT: '유디티', SSU: '에스에스유', MP: '엠피', CCTV: '씨씨티비', PT: '피티',
     AI: '에이아이', IT: '아이티', SNS: '에스엔에스', PC: '피씨', TV: '티비', ID: '아이디', URL: '유알엘', QR: '큐알', OK: '오케이',
@@ -233,8 +234,20 @@
       });
     // 날짜: 2026-09-03 · 2026.9.3 · 2026/9/3
     t = t.replace(/\b(\d{4})\s*[.\-/]\s*(\d{1,2})\s*[.\-/]\s*(\d{1,2})\.?(?!\d)/g, (m, y, mo, d) => readSino(y) + ' 년 ' + readWithUnit(mo, '월') + ' ' + readSino(d) + ' 일');
-    // 9/3 → 구 월 삼 일 (월·일 범위일 때만), 아니면 분수
-    t = t.replace(/(?<![\d.])(\d{1,2})\/(\d{1,2})(?![\d/])/g, (m, a, b) => (+a >= 1 && +a <= 12 && +b >= 1 && +b <= 31) ? readWithUnit(a, '월') + ' ' + readSino(b) + ' 일' : readSino(b) + ' 분의 ' + readSino(a));
+    /* 9/3 → 구 월 삼 일 · 1/2 → 이 분의 일. 날짜와 분수를 가린다.
+       🔴 예전 규칙은 「a 가 1~12, b 가 1~31 이면 날짜」였다 — 그래서 「1/2 확률」을 **일 월 이 일**로 읽었다
+          (2026-09-13 시험 대본에서 잡음). 진분수(a<b, 분모 12 이하)는 날짜보다 분수가 압도적이므로
+          날짜 맥락이 앞뒤에 있을 때만 날짜로 읽는다. 9/3·3/25·12/25 는 진분수가 아니어서 그대로 날짜다. */
+    t = t.replace(/(?<![\d.])(\d{1,2})\/(\d{1,2})(?![\d/])/g, (m, a, b, off, src) => {
+      const A = +a, B = +b;
+      const dateShape = A >= 1 && A <= 12 && B >= 1 && B <= 31;
+      const after = src.slice(off + m.length, off + m.length + 6);
+      const before = src.slice(Math.max(0, off - 4), off);
+      const dateCtx = /^\s*(?:요일|부터|까지|마감|기준|자|[~\-–]|\(?\s*[월화수목금토일]\s*\)?)/.test(after) || /(?:년|월|일)\s*$/.test(before);
+      const properFraction = A < B && B <= 12;
+      if (dateShape && (dateCtx || !properFraction)) return readWithUnit(a, '월') + ' ' + readSino(b) + ' 일';
+      return readSino(b) + ' 분의 ' + readSino(a);
+    });
     // 시각 범위: 09:00~18:00 → 아홉 시부터 십팔 시까지.
     // standalone 시각보다 먼저 처리해야 물결표가 일반 범위로 바뀌지 않는다.
     t = t.replace(/\b(\d{1,2}):(\d{2})(?::(\d{2}))?\s*[~∼～]\s*(\d{1,2}):(\d{2})(?::(\d{2}))?\b(?:(까지(?:는|도|만)?|에(?:는|도|만)?)(?=\s|[,.!?)]|$))?/g,
