@@ -105,12 +105,55 @@
   $('preview').addEventListener('click', preview);
   $('stop').addEventListener('click', () => { stopPreview(); say('멈춤'); });
 
+  /* ── 브라우저에서 만들기(우리 비용 0) ── 고른 순간에만 모듈·모델을 들여온다.
+     서버만 쓰는 사람은 384MB 를 받지 않는다. 기기가 느리면 서버로 물러나라고 알려 준다. */
+  let local = null;                       // import('/local-tts.js') 결과
+  const where = () => $('where').value;
+  async function localEngine() {
+    if (!local) { say('브라우저 합성 모듈 불러오는 중…'); local = await import('/local-tts.js'); }
+    if (!local.ready()) {
+      await local.load({
+        voice: $('voice').value,
+        onStatus: (m, p) => say(m + (p ? ' ' + Math.round(p * 100) + '%' : '') + ' — 한 번만 받습니다'),
+      });
+      const i = local.info();
+      $('engineInfo').textContent = '브라우저 엔진: ' + i.providers[0] + ' · 스레드 ' + i.threads +
+        (self.crossOriginIsolated ? '' : ' (교차출처 격리 꺼짐 → 1스레드)');
+    }
+    return local;
+  }
+  $('where').addEventListener('change', () => { revoke(); say(where() === 'local' ? '내 브라우저에서 만듭니다 — 처음 한 번 모델 384MB를 받습니다.' : '서버에서 만듭니다.'); });
+
   /* ── 전체 mp3 만들기 — 워커의 /render 가 조각을 잇고 계획된 쉼을 넣어 한 파일로 돌려준다 ── */
   let url = null;
   function revoke() { if (url) { URL.revokeObjectURL(url); url = null; } $('player').hidden = true; $('download').hidden = true; }
   $('render').addEventListener('click', async () => {
     stopPreview(); revoke();
     $('render').disabled = true;
+    if (where() === 'local') {
+      try {
+        const L = await localEngine();
+        say('내 브라우저에서 만들고 있습니다…');
+        const t0 = performance.now();
+        const r = await L.synth(items, {
+          onItem: (i, n, s) => say('내 브라우저에서 만드는 중 ' + i + '/' + n + ' · 속도 ' + s.rtf.toFixed(2) + '배'),
+        });
+        const blob = L.wavBlob(r.pcm, r.sampleRate);
+        url = URL.createObjectURL(blob);
+        const p = $('player'); p.src = url; p.hidden = false;
+        const a = $('download');
+        a.href = url; a.download = '낭독.wav'; a.textContent = '⬇ 내려받기 (' + Math.round(blob.size / 1024) + 'KB · WAV)'; a.hidden = false;
+        const slow = r.rtf > L.SPEED_GATE_RTF;
+        say('완성 — AI로 생성된 음성입니다. 오디오 ' + r.audioSeconds.toFixed(1) + '초를 ' +
+            ((performance.now() - t0) / 1000).toFixed(1) + '초에 만들었습니다(실시간의 ' + (1 / r.rtf).toFixed(2) + '배)' +
+            (slow ? ' · 이 기기에서는 서버가 더 빠릅니다.' : '') + ' 서버를 쓰지 않았습니다.');
+      } catch (e) {
+        say('브라우저 합성 실패: ' + e.message + ' — 만드는 곳을 서버로 바꿔 보세요.');
+      } finally {
+        $('render').disabled = !items.length;
+      }
+      return;
+    }
     say('만들고 있습니다… 처음 나오는 문장은 합성에 문장당 2~4초가 걸립니다.');
     try {
       const res = await fetch('/render', {

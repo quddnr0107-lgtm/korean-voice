@@ -89,6 +89,15 @@
 
   <section>
     <h2>4. 만들기</h2>
+    <div class="row" style="margin-bottom:10px">
+      <label>만드는 곳
+        <select id="where">
+          <option value="server">서버 (빠름 · 하루 3,000자 무료)</option>
+          <option value="local">내 브라우저 (무제한 · 모델 384MB 한 번 받음)</option>
+        </select>
+      </label>
+      <span id="engineInfo" style="font-size:13px;color:var(--dim)"></span>
+    </div>
     <div class="row">
       <button type="button" id="preview">미리듣기</button>
       <button type="button" id="stop">멈춤</button>

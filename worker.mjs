@@ -145,9 +145,27 @@ async function handleBake(request, env) {
   }
 }
 
+/* 보안 헤더. 브라우저 합성(우리 비용 0)을 켜기 위해 정확히 필요한 것만 넓혔다:
+   - script-src cdn.jsdelivr.net : onnxruntime-web 1.17.0 (ESM) — 25MB 를 저장소에 넣지 않는다
+   - 'wasm-unsafe-eval'          : WebAssembly 컴파일. 없으면 ORT 가 조용히 죽는다
+   - worker-src blob:            : ORT 가 스레드용 워커를 blob: 로 만든다
+   - connect-src huggingface·hf.co: 모델 384MB(리다이렉트 대상이 *.hf.co 다)
+   - media-src blob:             : 만든 소리를 <audio> 로 들려준다
+   COOP/COEP 는 SharedArrayBuffer 를 켜 WASM 멀티스레드를 쓰기 위한 것이다(교차출처 격리).
+   credentialless 는 교차출처 자원을 CORP 헤더 없이도 받게 해 준다(require-corp 면 CDN·HF 가 막힌다). */
 const SECURITY = {
-  // media-src blob: — /app.html 이 만든 mp3 를 <audio> 로 들려준다
-  'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; media-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'",
+  'Content-Security-Policy': [
+    "default-src 'self'",
+    "script-src 'self' 'wasm-unsafe-eval' https://cdn.jsdelivr.net",
+    "worker-src 'self' blob:",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data:",
+    "connect-src 'self' blob: https://cdn.jsdelivr.net https://huggingface.co https://*.huggingface.co https://*.hf.co",
+    "media-src 'self' blob:",
+    "object-src 'none'", "base-uri 'self'", "frame-ancestors 'none'",
+  ].join('; '),
+  'Cross-Origin-Opener-Policy': 'same-origin',
+  'Cross-Origin-Embedder-Policy': 'credentialless',
   'X-Content-Type-Options': 'nosniff',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
 };
