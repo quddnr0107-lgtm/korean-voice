@@ -464,3 +464,23 @@ test('미확정 세 자리 군 모델은 K21 규칙으로 일반화하지 않는
     assert.ok(out.length > 0);
   }
 });
+
+/* 합성 엔진의 전처리가 한국어 낭독에 영어를 심는 것을 여기서 막는다.
+   Supertonic 의 preprocessText(py/helper.py · web/helper.js)는 '@'→' at ',
+   'e.g.,'→'for example, ', 'i.e.,'→'that is, ' 로 치환한다 — 서버 경로와 브라우저 경로가
+   둘 다 그 전처리를 지나므로, 정규화(정본)에서 먼저 한국어로 바꿔 발동을 막아야 한다. */
+test('엔진 전처리의 영어 주입을 막는다 — @ · e.g. · i.e.', () => {
+  const cases = [
+    ['문의는 admin@drill.kr 로 주세요.', /골뱅이/],
+    ['가격은 3개@1,000원입니다.', /골뱅이/],
+    ['조건(e.g., 만 19세)을 보세요.', /예를 들어/],
+    ['설명(i.e., 요약)입니다.', /즉/],
+    ['조건(E.G., 만 19세)', /예를 들어/],
+  ];
+  for (const [input, want] of cases) {
+    const out = K.normalize(input);
+    assert.match(out, want);
+    assert.ok(!/@/.test(out), '@ 가 남으면 엔진이 " at " 로 바꾼다: ' + out);
+    assert.ok(!/e\.g\.|i\.e\./i.test(out), '약어가 남으면 엔진이 영어 문구로 바꾼다: ' + out);
+  }
+});

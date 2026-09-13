@@ -276,6 +276,13 @@
       if (k && k[1]) return a + k[1] + '에서 ' + b + k[1] + k[2];
       return a + u + '에서 ' + b + u;
     });
+    /* 🔴 약어·숫자보다 먼저 — 여기서 한국어로 바꿔 두지 않으면 **합성 엔진이 영어를 심는다.**
+       Supertonic 의 전처리(py/helper.py · web/helper.js 의 preprocessText)가 '@'→' at ',
+       'e.g.,'→'for example, ', 'i.e.,'→'that is, ' 로 치환한다 — 한국어 낭독 중간에 영어가 나온다
+       (2026-09-13 실측). 서버·브라우저 두 경로가 같은 전처리를 지나므로 정본인 여기서 막는다.
+       낱자 읽기(spellLetters)보다 앞에 둬야 'E.G.' 도 '이.지.' 가 되지 않는다. */
+    t = t.replace(/\be\.\s*g\.,?/gi, '예를 들어,').replace(/\bi\.\s*e\.,?/gi, '즉,');
+    t = t.replace(/@/g, ' 골뱅이 ');
     // 150만원 · 3억 → 숫자로 환산 후 읽기
     t = t.replace(BIG_RE, (m, n, big) => {
       const mult = { 만: 1e4, 억: 1e8, 조: 1e12 }[big];
