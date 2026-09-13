@@ -80,14 +80,23 @@ export function ready() { return !!engine; }
 
 export async function load({ tag = 'u5', voice = 'female', onStatus = () => {} } = {}) {
   if (engine && engine.tag === tag && engine.voice === voice) return engine;
-  const threads = Math.max(1, Math.min(4, (navigator.hardwareConcurrency || 1)));
-  // SharedArrayBuffer 가 없으면(교차출처 격리 안 됨) 멀티스레드가 불가능하다 — 그때는 1 스레드로 돈다
-  ort.env.wasm.numThreads = (typeof SharedArrayBuffer === 'undefined' || !self.crossOriginIsolated) ? 1 : threads;
+  /* 🔴 1 스레드로 고정한다. 교차출처 격리(COOP/COEP)는 켜 뒀고 SharedArrayBuffer 도 쓸 수 있지만
+     (헤드리스 실측: crossOriginIsolated true), onnxruntime-web 1.17.0 **ESM 빌드**에서 numThreads>1 로
+     두면 pthread 워커가 `importScripts` 에 실패하며 세션 생성이 **영구 대기**한다(1.17 dist 에는
+     .worker.js 파일이 아예 없다 · 2026-09-13 Chromium 141 실측). 레포의 앞선 브라우저 실측도 1 스레드였다.
+     스레드를 켜는 것은 실제 브라우저에서 확인한 뒤에 한다 — 그때 쓸 헤더는 이미 워커가 보내고 있다.
+     지금은 SIMD 로만 돈다(그래도 실시간의 절반쯤은 나온다: 레포 실측 RTF 1.65~2.28). */
+  ort.env.wasm.numThreads = 1;
+  const threads = 1;
   ort.env.wasm.simd = true;
   ort.env.wasm.wasmPaths = ORT_WASM_PATHS;   // 페이지 기준 상대경로로 찾으면 404 (실측 2026-09-13)
-  const providers = [];
-  if (navigator.gpu) providers.push('webgpu');        // 있으면 먼저 쓴다(ORT 의 WebGPU EP 는 아직 실험적이라 폴백 필수)
-  providers.push('wasm');
+  /* WebGPU 는 있으면 훨씬 빠르지만 ORT 의 EP 가 아직 실험적이고 기기마다 깨진다
+     (헤드리스 실측: 어댑터는 잡히는데 컨텍스트 생성이 실패하고 세션이 내부 오류로 무너졌다).
+     그래서 ① 어댑터를 **실제로** 요청해 보고 ② 그래도 실패하면 wasm 으로 통째로 다시 만든다. */
+  let providers = ['wasm'];
+  if (navigator.gpu) {
+    try { if (await navigator.gpu.requestAdapter()) providers = ['webgpu', 'wasm']; } catch (_) { /* 없는 셈 친다 */ }
+  }
   onStatus('모델 받는 중', 0);
   const names = ['duration_predictor', 'text_encoder', 'vector_estimator', 'vocoder'];
   const files = {};
@@ -102,9 +111,17 @@ export async function load({ tag = 'u5', voice = 'female', onStatus = () => {} }
   /* vendor 의 loadTextToSpeech 는 경로를 받아 스스로 fetch 한다 — 우리는 이미 캐시에서 바이트를 들고 있으므로
      그 함수를 쓰지 않고 **부품으로 직접 조립**한다(같은 384MB 를 두 번 받지 않는다).
      조립 순서는 vendor 의 loadTextToSpeech 와 같다: 설정 → 모델 4개 → 글자 처리기. */
-  const opt = { executionProviders: providers };
-  const [dpOrt, textEncOrt, vectorEstOrt, vocoderOrt] = await Promise.all(
-    names.map((n) => loadOnnx(new Uint8Array(files[n]), opt)));
+  const make = (eps) => Promise.all(names.map((n) => loadOnnx(new Uint8Array(files[n]), { executionProviders: eps })));
+  let sessions;
+  try {
+    sessions = await make(providers);
+  } catch (e) {
+    if (providers[0] === 'wasm') throw e;
+    onStatus('WebGPU 실패 — wasm 으로 다시 만드는 중', 1);   // 기기의 WebGPU 가 깨져 있어도 소리는 나와야 한다
+    providers = ['wasm'];
+    sessions = await make(providers);
+  }
+  const [dpOrt, textEncOrt, vectorEstOrt, vocoderOrt] = sessions;
   const text = (k) => JSON.parse(new TextDecoder().decode(new Uint8Array(files[k])));
   const cfgs = text('tts.json');
   const tts = new TextToSpeech(cfgs, new UnicodeProcessor(text('unicode_indexer.json')),

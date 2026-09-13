@@ -1,0 +1,47 @@
+{
+  "date": "2026-09-13",
+  "question": "우리 비용 0 경로(브라우저 합성)가 실제로 끝까지 도는가",
+  "runtime": {
+    "browser": "Chromium 141 headless (playwright)",
+    "onnxruntime_web": "1.17.0 (esm/ort.webgpu.min.js)",
+    "wasm_threads": 1,
+    "simd": true,
+    "execution_provider_selected": "wasm",
+    "webgpu": "어댑터는 잡혔으나 컨텍스트 생성 실패 → wasm 으로 자동 폴백(코드가 처리)",
+    "model": "Supertonic 3 fp32 ONNX (Supertone/supertonic-3)",
+    "style": "F4:0.6,F2:0.4 (u5 · 서버와 같은 블렌딩)",
+    "steps": 8,
+    "sample_rate": 44100,
+    "cross_origin_isolated": true,
+    "shared_array_buffer": true
+  },
+  "measurements": {
+    "module_import_s": 0.1,
+    "model_load_s": 20.0,
+    "case": "2026년 9월 3일 접수 인원은 1,234명입니다.",
+    "spoken": "이천이십육 년 구 월 삼 일 접수 인원은, 천이백삼십사 …",
+    "audio_s": 4.17,
+    "synth_s": 10.83,
+    "rtf": 2.597,
+    "peak": 0.84,
+    "samples": 183897
+  },
+  "compare": {
+    "repo_prior_browser_wasm_fp16": "RTF 1.65~2.28 (results/supertonic-browser-fp16-wasm-five-case-20260912.json · 1 스레드)",
+    "why_slower": "그 실측은 **fp16 양자화 모델**이고 이번은 fp32 원본이다. fp16 으로 바꾸면 받는 크기도 절반이 된다 — 다음 강화 대상.",
+    "server_cpu_4core": "RTF 0.521 (2026-09-13 · steps 8 · 같은 문장군)"
+  },
+  "blockers_found_and_fixed": [
+    "CSP 가 import map(인라인 script)을 막는다 → 모듈 한 개로 CDN 을 잇는다(public/vendor/ort-cdn.js)",
+    "ort.env.wasm.wasmPaths 미지정 시 .wasm 404",
+    "기본 esm/ort.min.js 에는 WebGPU(JSEP) 백엔드가 없다 → 'JS execution provider is not supported in this build'",
+    "numThreads>1 (ESM 빌드)이면 pthread 워커가 importScripts 에 실패하며 **세션 생성이 영구 대기**한다(1.17 dist 에 .worker.js 가 없다)",
+    "WebGPU 컨텍스트가 깨진 기기에서 세션이 내부 오류(r.Qa is not a function)로 무너진다 → 어댑터 확인 + wasm 재시도"
+  ],
+  "conclusion": {
+    "works": true,
+    "our_cost": 0,
+    "usable_for": "대본을 받아 파일로 만들기(배치). 실시간 재생은 RTF>1 이라 부적합 — 그 경우 서버 경로.",
+    "speed_gate_rtf": 3.0
+  }
+}

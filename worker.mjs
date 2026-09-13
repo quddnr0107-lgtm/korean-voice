@@ -148,7 +148,8 @@ async function handleBake(request, env) {
 /* 보안 헤더. 브라우저 합성(우리 비용 0)을 켜기 위해 정확히 필요한 것만 넓혔다:
    - script-src cdn.jsdelivr.net : onnxruntime-web 1.17.0 (ESM) — 25MB 를 저장소에 넣지 않는다
    - 'wasm-unsafe-eval'          : WebAssembly 컴파일. 없으면 ORT 가 조용히 죽는다
-   - worker-src blob:            : ORT 가 스레드용 워커를 blob: 로 만든다
+   - worker-src blob: + script-src blob: : ORT 가 스레드용 워커를 blob: 로 만들고, 그 워커가
+                                    blob: 스크립트를 importScripts 로 읽는다(둘 다 없으면 워커가 죽는다)
    - connect-src huggingface·hf.co: 모델 384MB(리다이렉트 대상이 *.hf.co 다)
    - media-src blob:             : 만든 소리를 <audio> 로 들려준다
    COOP/COEP 는 SharedArrayBuffer 를 켜 WASM 멀티스레드를 쓰기 위한 것이다(교차출처 격리).
@@ -156,7 +157,9 @@ async function handleBake(request, env) {
 const SECURITY = {
   'Content-Security-Policy': [
     "default-src 'self'",
-    "script-src 'self' 'wasm-unsafe-eval' https://cdn.jsdelivr.net",
+    // blob: 은 ORT 가 만드는 워커 때문에 필요하다 — 워커가 blob: 스크립트를 importScripts 로 읽는다
+    // (없으면 "Failed to execute 'importScripts'" 로 조용히 죽는다 · 2026-09-13 헤드리스 실측)
+    "script-src 'self' 'wasm-unsafe-eval' blob: https://cdn.jsdelivr.net",
     "worker-src 'self' blob:",
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data:",
