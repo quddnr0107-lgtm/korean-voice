@@ -109,8 +109,28 @@
      서버만 쓰는 사람은 384MB 를 받지 않는다. 기기가 느리면 서버로 물러나라고 알려 준다. */
   let local = null;                       // import('/local-tts.js') 결과
   const where = () => $('where').value;
+
+  /* 모델을 내려받는 것은 라이선스상 **배포**다(OpenRAIL-M §1(g)는 "web access" 로 모델을 제공하는 것을
+     Distribution 으로 정의한다). §4(a)는 사용 제한을 집행 가능한 조항으로 두고 **다음 이용자에게 고지**하라고
+     요구하므로, 첫 내려받기 직전에 한 번 확인을 받는다. 확인 사실은 이 기기에만 남는다. */
+  const CONSENT_KEY = 'ko-voice-model-consent-v1';
+  const consented = () => { try { return localStorage.getItem(CONSENT_KEY) === '1'; } catch (_) { return false; } };
+  function askConsent() {
+    return new Promise((resolve, reject) => {
+      const box = $('consent'), check = $('consentCheck'), ok = $('consentOk');
+      box.hidden = false; check.checked = false; ok.disabled = true;
+      check.onchange = () => { ok.disabled = !check.checked; };
+      ok.onclick = () => {
+        try { localStorage.setItem(CONSENT_KEY, '1'); } catch (_) { /* 이 기기에 못 남겨도 진행은 한다 */ }
+        box.hidden = true; resolve();
+      };
+      $('where').addEventListener('change', () => { box.hidden = true; reject(new Error('취소했습니다')); }, { once: true });
+    });
+  }
+
   async function localEngine() {
     if (!local) { say('브라우저 합성 모듈 불러오는 중…'); local = await import('/local-tts.js'); }
+    if (!local.ready() && !consented()) { say('모델을 내려받기 전 확인이 필요합니다.'); await askConsent(); }
     if (!local.ready()) {
       await local.load({
         voice: $('voice').value,

@@ -104,6 +104,18 @@
       <button type="button" class="primary" id="render">전체 mp3 만들기</button>
       <a id="download" hidden></a>
     </div>
+    <div class="notice" id="consent" hidden style="margin:10px 0">
+      <p style="margin:0 0 8px"><strong>모델을 내려받기 전에 확인해 주세요.</strong>
+      「내 브라우저에서 만들기」는 음성 합성 모델(Supertonic 3, 약 384MB)을 <strong>이 기기로 내려받아</strong> 실행합니다.
+      이 모델은 BigScience Open RAIL-M 조건으로 제공되며, <a href="/terms.html">이용약관 제1조</a>의 사용 제한이
+      여러분에게도 적용됩니다 — 특히 <strong>실존 인물의 동의 없는 음성 모사</strong>와
+      <strong>AI 생성 사실을 숨기는 것</strong>이 금지됩니다. 원문은 <a href="/licenses.html">라이선스 페이지</a>에 있습니다.</p>
+      <label style="display:flex;gap:8px;align-items:flex-start">
+        <input type="checkbox" id="consentCheck">
+        <span>위 내용을 읽었고, 모델을 다시 배포할 때 라이선스 사본과 같은 제한을 함께 전달하겠습니다.</span>
+      </label>
+      <p style="margin:10px 0 0"><button type="button" id="consentOk" disabled>동의하고 내려받기</button></p>
+    </div>
     <p class="status" id="status"></p>
     <p class="quota" id="quota"></p>
     <audio id="player" controls hidden></audio>
@@ -119,7 +131,7 @@
 <footer class="wrap">
   <p><strong>음성 기술 출처</strong> — 음성 합성: Supertonic 3 (Supertone, BigScience OpenRAIL-M) · 한국어 정규화·운율 엔진: ko-voice (Apache-2.0)</p>
   <p>운율 통계 측정에 쓴 공개 코퍼스: Zeroth-Korean (CC BY 4.0) · FLEURS (CC BY 4.0) · Mozilla Common Voice (CC0) · YODAS (CC BY 3.0). 이 서비스는 위 코퍼스의 음성을 재배포하지 않고 측정된 통계 수치만 사용합니다.</p>
-  <p><a href="/terms.html">이용약관</a> · <a href="/">실험실</a></p>
+  <p><a href="/terms.html">이용약관</a> · <a href="/licenses.html">라이선스</a> · <a href="/">실험실</a></p>
 </footer>
 
 <script src="/ko-voice.js"></script>

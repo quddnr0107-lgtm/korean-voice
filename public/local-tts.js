@@ -10,7 +10,7 @@
    기기가 느리면(첫 문장 RTF 가 한계를 넘으면) 서버 경로로 물러난다 — speedGate 를 보라. */
 import * as ort from './vendor/ort-cdn.js';
 import { ORT_WASM_PATHS } from './vendor/ort-cdn.js';
-import { TextToSpeech, UnicodeProcessor, Style, loadOnnx, writeWavFile } from './vendor/supertonic-helper.js';
+import { TextToSpeech, UnicodeProcessor, Style, loadOnnx } from './vendor/supertonic-helper.js';
 import { shape } from './voice-shape.mjs';   // 서버의 U5 다듬기를 옮긴 것(PSOLA 만 빠진다)
 
 /** 모델 출처. R2 에 올리면 window.KO_MODEL_BASE 로 갈아탄다(egress 무료 · 우리 도메인).
@@ -174,9 +174,53 @@ export async function speedGate(item) {
   return { rtf, ok: rtf <= SPEED_GATE_RTF };
 }
 
-/** writeWavFile 은 **−1~1 실수**를 받아 안에서 int16 으로 바꾼다 — 미리 바꿔 넘기면 두 번 변환된다. */
-export function wavBlob(pcm, sampleRate) {
-  return new Blob([writeWavFile(pcm, sampleRate)], { type: 'audio/wav' });
+/* WAV 쓰기 — vendor 의 writeWavFile 대신 우리 것을 쓴다. 이유 하나: **파일 안에 AI 생성 고지를 남기려고**.
+   OpenRAIL-M Attachment A 는 "기계가 만든 것임을 명시적으로 밝히지 않은 채 생성·배포"하는 것을 금지한다 —
+   화면 배지는 파일이 떠돌기 시작하면 사라지므로, RIFF LIST/INFO 청크에 같은 문장을 심는다.
+   (vendor 것은 헤더 44바이트 + 데이터뿐이다.) */
+const AI_NOTICE = 'AI로 생성된 음성입니다 (AI-generated speech). Model: Supertonic 3, BigScience OpenRAIL-M.';
+function infoChunk(fields) {
+  const enc = new TextEncoder();
+  const parts = [];
+  for (const [id, value] of fields) {
+    const bytes = enc.encode(value + '\0');
+    const padded = bytes.length + (bytes.length % 2);          // 청크는 짝수 바이트로 맞춘다
+    const buf = new Uint8Array(8 + padded);
+    buf.set(enc.encode(id), 0);
+    new DataView(buf.buffer).setUint32(4, bytes.length, true);
+    buf.set(bytes, 8);
+    parts.push(buf);
+  }
+  let n = 4; for (const p of parts) n += p.length;             // 'INFO' + 항목들
+  const list = new Uint8Array(8 + n);
+  list.set(enc.encode('LIST'), 0);
+  new DataView(list.buffer).setUint32(4, n, true);
+  list.set(enc.encode('INFO'), 8);
+  let at = 12; for (const p of parts) { list.set(p, at); at += p.length; }
+  return list;
+}
+/** −1~1 실수 PCM → WAV(16bit 모노) + AI 생성 고지 메타데이터. */
+export function wavBlob(pcm, sampleRate, { title = '낭독' } = {}) {
+  const info = infoChunk([['INAM', title], ['ICMT', AI_NOTICE], ['ISFT', 'korean-voice']]);
+  const dataSize = pcm.length * 2;
+  const buf = new ArrayBuffer(12 + 24 + info.length + 8 + dataSize);
+  const view = new DataView(buf);
+  const enc = new TextEncoder();
+  const put = (off, s) => { const b = enc.encode(s); for (let i = 0; i < b.length; i++) view.setUint8(off + i, b[i]); };
+  put(0, 'RIFF'); view.setUint32(4, buf.byteLength - 8, true); put(8, 'WAVE');
+  put(12, 'fmt '); view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+  view.setUint32(24, sampleRate, true); view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true); view.setUint16(34, 16, true);
+  new Uint8Array(buf).set(info, 36);
+  const dataAt = 36 + info.length;
+  put(dataAt, 'data'); view.setUint32(dataAt + 4, dataSize, true);
+  let at = dataAt + 8;
+  for (let i = 0; i < pcm.length; i++) {
+    const s = Math.max(-1, Math.min(1, pcm[i]));
+    view.setInt16(at, Math.round(s * 32767), true); at += 2;
+  }
+  return new Blob([buf], { type: 'audio/wav' });
 }
 export const info = () => engine && { tag: engine.tag, voice: engine.voice, steps: engine.steps,
   sampleRate: engine.sampleRate, threads: engine.threads, providers: engine.providers };
