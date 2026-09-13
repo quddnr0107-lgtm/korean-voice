@@ -32,6 +32,45 @@
 - **탈락**: `sox`(GPL 전염) · `librosa`(numba/scipy 수백MB · 분석용 과잉) · `pydub`(3.13 에서 audioop 제거) · `-c copy`.
 - 코드 반영: `server/server.py` 의 `render()`. 불변식은 `test/render-audio-invariants.test.cjs` 가 지킨다.
 
+## ⓪ 우리 비용 0 — 합성을 사용자 브라우저로 (2026-09-13)
+
+컨테이너가 유일한 변동비였다. 합성을 브라우저로 옮기면 **그 경로의 우리 비용이 0**이 되고, 오늘 겪은
+이미지 재빌드 사고(컨테이너가 기동 못 하던 것)도 구조적으로 사라진다.
+
+| 층 | 무기 | 무료 근거 |
+|---|---|---|
+| 오리진 | Cloudflare Workers 무료 | 요청 10만/일 + **정적 자산 요청은 무제한·무과금** |
+| 모델 배달(384MB) | **R2 무료 10GB + 커스텀 도메인 + Cache Rules** | 저장 10GB·egress 영구 무료·Class B 월 1,000만 무료. 2023 ToS 개편으로 **CF 호스팅 대용량 파일의 CDN 배달은 허용**된다 |
+| 합성 | 사용자 브라우저 (onnxruntime-web 1.17.0 + Supertonic 3 ONNX) | 우리 CPU 0 |
+| 속도 | `COOP: same-origin` + `COEP: credentialless` → SharedArrayBuffer → WASM 멀티스레드 + SIMD, 있으면 WebGPU | 헤드리스 실측에서 `crossOriginIsolated: true` 확인 |
+| 모델 캐시 | Cache API + `navigator.storage.persist()` | 한 번 받으면 재다운로드 0 |
+| 부가 | D1(5GB) · KV · Web Analytics · Sentry(5천/월) · `*.workers.dev` | 전부 무료 |
+
+### 🔴 약관 위반이라 못 쓰는 꼼수
+
+| 수단 | 조항 |
+|---|---|
+| **Vercel Hobby** | "personal or **non-commercial** use only" — 수익화하면 무통보 삭제 |
+| **GitHub Pages** | "free web hosting to run your online business…or SaaS" 명시 금지 |
+| **jsDelivr 로 384MB 배달** | GitHub 단일 파일 20MB 상한 · "general-purpose file hosting = abuse" |
+| **raw.githubusercontent** | CDN 용도 아님 + 2025-05 비인증 rate limit 강화 |
+| **Colab·Kaggle 을 백엔드로** | "web service offerings not related to interactive compute" 금지 |
+| **GitHub Actions 를 요청 기반 합성 백엔드로** | "serverless computing"·"소프트웨어 프로젝트와 무관한 활동" 금지. 지금 `bake.yml` 처럼 **우리 레포 산출물**을 굽는 것은 허용 |
+| **Workers AI** | 한국어 TTS 모델이 없다(MeloTTS 는 EN/ZH) |
+
+### 구현에서 실제로 걸린 것 (헤드리스 Chromium 실측)
+
+1. **CSP 가 import map 을 막는다** — import map 은 인라인 `<script>` 라 `'unsafe-inline'` 이 필요하다.
+   그걸 켜면 XSS 방어가 무너지므로 **모듈 한 개(`public/vendor/ort-cdn.js`)로 CDN 을 잇는다**.
+2. **ORT 의 `.wasm` 404** — `ort.env.wasm.wasmPaths` 를 CDN 으로 지정해야 한다(기본은 페이지 상대경로).
+3. **`writeWavFile` 이중 변환** — −1~1 실수를 받아 안에서 int16 으로 바꾼다. 미리 바꿔 넘기면 소리가 깨진다.
+4. **`loadVoiceStyle` 은 가중 평균을 하지 않는다** — 스타일을 배치로 쌓기만 한다. 서버(F4:0.6+F2:0.4)와
+   같은 목소리를 내려면 블렌딩을 우리가 해야 한다(`public/local-tts.js`).
+5. **엔진 전처리가 영어를 심는다** — `@`→" at ", `e.g.,`→"for example, ". 서버·브라우저 두 경로가 같은
+   전처리를 지나므로 `ko-voice.js` 정규화에서 먼저 한국어로 바꿔 막았다(골뱅이·예를 들어·즉).
+6. **다듬기가 빠져 소리가 달랐다** — `server/voice_shape.py` 의 U5 중 4단계를 `public/voice-shape.mjs` 로
+   옮겼다(트림·페이드·첫 음절 보강·꼬리 트림·피크 0.89). Praat PSOLA 억양만 옮기지 못했다.
+
 ## ④ 오독 자동 검증 — STT 왕복은 탈락 ❌ / 골든 텍스트로 대체 ✅
 
 | 모델 | RTF(4코어) | canonical CER 평균 |
