@@ -1,0 +1,29 @@
+{
+  "date": "2026-09-13",
+  "machine": "4-core x86_64 CPU · GPU 없음",
+  "question": "STT 로 되받아써(CER) TTS 오독을 자동으로 잡을 수 있는가",
+  "method": "우리 낭독(Supertonic u5 · steps 8) → faster-whisper int8 (language=ko, beam 5) → research/judge.py 의 canonical_cer",
+  "models": {
+    "small": { "load_s": 6.5, "audio_s": 23.7, "stt_s": 19.2, "rtf": 0.812, "cer_canon_mean": 0.1357, "cer_raw_mean": 0.1433 },
+    "large-v3-turbo": { "audio_s": 23.7, "stt_s": 43.1, "rtf": 1.821, "cer_canon_mean": 0.1424, "cer_raw_mean": 0.1628 }
+  },
+  "per_case_cer_canon": {
+    "산문(법령)": { "small": 0.0741, "turbo": 0.037 },
+    "산문(금액·인원)": { "small": 0.0, "turbo": 0.0 },
+    "날짜 표기 차이(시월 육일 ↔ 10월 6일)": { "small_raw": 0.1304, "small_canon": 0.0, "turbo_canon": 0.0 },
+    "전화번호+시각(1588-9090 · 09:00~18:00)": { "small": 0.5517, "turbo": 0.5172 }
+  },
+  "decisive_evidence": {
+    "our_reading": "문의는 일오팔팔 구공구공, 접수는 매일 아홉 시부터 십팔 시까지입니다.",
+    "whisper_small": "문인은 1588 구정 9신, 접수는 매일 연구웨어 원행 8입니다.",
+    "whisper_turbo": "문의는 천우보 88 구정구신, 접수는 매일 연구웨어 언행팔입니다.",
+    "conclusion": "우리 읽기는 정확했고 두 모델이 똑같이 숫자열에서 무너졌다 → CER 0.52 는 TTS 가 아니라 STT 의 오류다."
+  },
+  "verdict": {
+    "gate": "탈락 — 숫자·단위·전화·시각에서 오탐이 난다. 우리가 파는 바로 그 지점이라 게이트로 쓰면 해롭다.",
+    "screening": "채택(제한) — 산문 낭독에서는 CER 0.00~0.04 로 쓸 만하다. 문장 유형을 가려 산문에만 쓴다.",
+    "replacement": "오독 검증은 골든 텍스트 회귀로 한다(test/ko-voice.test.cjs 방식: 원문 → 기대 읽기 고정). 결정적이고 공짜이며 오탐이 없다.",
+    "canonical_cer": "유효 — 표기 차이(시월 육일 ↔ 10월 6일)를 raw 0.13 → canon 0.00 으로 정확히 흡수했다."
+  },
+  "rejected": { "sherpa-onnx 한국어 zipformer": "가중치가 AI Hub KsponSpeech 기반 · 상업 이용은 별도 협의", "openai-whisper": "torch 2GB · faster-whisper 로 대체", "Kanana Nano": "CC-BY-NC", "NeMo Parakeet/Canary": "한국어 미지원", "ETRI 오픈API": "2025-06-30 종료" }
+}

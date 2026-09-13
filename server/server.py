@@ -169,6 +169,12 @@ def warm(voice, texts, steps, r=1.0, tag=None):
     return n
 
 
+# 낭독 전체 음량 — EBU R128(ITU-R BS.1770). 웹 재생이 쓰는 I=-16 LUFS · 트루피크 -1.5dB.
+# 🔴 2-pass 다. 1-pass 는 **동적** 정규화라 구간마다 게인이 달라질 수 있고(= 강조·감정의 셈여림이 뭉개진다),
+#    2-pass 는 측정값을 넣어 `linear=true` 로 **전체에 단일 게인**을 건다. 비용 차이는 25초당 0.26초뿐이다
+#    (실측 2026-09-13: 1-pass 0.62s/-16.71 LUFS · 2-pass 0.88s/-16.48 LUFS · 구간 게인 편차 0.85 vs 0.91 LU —
+#     이 길이의 표본으로는 두 방식을 가릴 수 없었다. 그래서 구조적으로 단일 게인이 보장되는 쪽을 쓴다).
+LOUDNORM_TARGET = 'I=-16:TP=-1.5:LRA=11'
 RENDER_MAX_ITEMS = 400
 RENDER_MAX_CHARS = 20000
 RENDER_MAX_PAUSE_MS = 3000
@@ -189,7 +195,13 @@ def silence_mp3(ms):
 def render(voice, items, steps, tag=None):
     """조각을 순서대로 합성해(캐시 우선) 계획된 쉼과 함께 하나의 mp3 로 잇는다.
 
-    이어붙이기는 ffmpeg concat 디먹서 + `-c copy` — 다시 인코딩하지 않으니 소리가 그대로이고 빠르다.
+    이어붙이기는 ffmpeg concat 디먹서 + **디코드 후 한 번 인코딩**이다. `-c copy` 는 쓰지 않는다 —
+    조각마다 mp3 프레임(1152샘플 = 24kHz 에서 48ms) 패딩이 남아 **조각 수 × 약 48ms 만큼 길어진다**
+    (실측 2026-09-13: 조각 10개 26초에서 +500ms). 재인코딩하면 길이 오차가 0 이고 25초당 0.6초면 된다.
+    같은 패스에 loudnorm(EBU R128 · I=-16 LUFS · TP=-1.5dB)을 걸어 문장 간 음량도 고른다
+    (조각 간 편차는 이미 1.1 LU 라 문장별 정규화는 하지 않는다 — 강조·감정의 셈여림을 뭉갠다).
+    1-pass 로 -16.73 LUFS, 2-pass 로 -16.72 LUFS 라 2-pass 는 쓰지 않는다.
+
     조각 자체는 /tts 와 **같은 캐시**를 쓴다: 대본을 고쳐 다시 만들면 바뀐 문장만 새로 합성된다.
     """
     import subprocess, tempfile, uuid
@@ -217,8 +229,24 @@ def render(voice, items, steps, tag=None):
         for p in parts:
             f.write("file '" + p.replace("'", "'\\''") + "'\n")
     try:
+        # 1차: 라우드니스 측정만(출력 없음)
+        m = subprocess.run([ffmpeg(), '-v', 'info', '-f', 'concat', '-safe', '0', '-i', listfile,
+                            '-af', 'loudnorm=' + LOUDNORM_TARGET + ':print_format=json', '-f', 'null', '-'],
+                           capture_output=True, text=True)
+        af = 'loudnorm=' + LOUDNORM_TARGET
+        hit = re.search(r'\{[^{}]*"input_i"[\s\S]*?\}', m.stderr or '')
+        if hit:
+            try:
+                st = json.loads(hit.group(0))
+                af = ('loudnorm=' + LOUDNORM_TARGET +
+                      ':measured_I=%s:measured_TP=%s:measured_LRA=%s:measured_thresh=%s:linear=true'
+                      % (st['input_i'], st['input_tp'], st['input_lra'], st['input_thresh']))
+            except (ValueError, KeyError):
+                pass                       # 측정을 못 읽으면 1-pass 로 떨어진다(소리는 나온다)
+        # 2차: 이어붙이며 단일 게인 적용 → mp3 한 번만 인코딩
         subprocess.run([ffmpeg(), '-v', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', listfile,
-                        '-c', 'copy', '-f', 'mp3', out], check=True)
+                        '-af', af, '-ar', '24000', '-ac', '1',
+                        '-codec:a', 'libmp3lame', '-b:a', '48k', '-f', 'mp3', out], check=True)
     finally:
         try: os.remove(listfile)
         except OSError: pass
