@@ -4,6 +4,7 @@
     GET /health                       → {"ok":true,"voices":[…],"cached":N}
     GET /tts?v=female&t=<문장>[&s=16][&r=1.0]  → audio/mpeg  (Cache-Control 1년 · CORS * · Range 지원(iOS))
     GET /voices                       → 목소리 목록
+    POST /render {v,items:[{t,r,pause}]} → audio/mpeg  (대본 전체를 잇고 계획된 쉼을 넣은 하나의 파일)
 
 설계
 - 텍스트 정규화·문장 나누기·쉼은 **클라이언트**(ko-voice.js)가 한다. 서버는 받은 문장을 그대로 읽는다.
@@ -168,6 +169,62 @@ def warm(voice, texts, steps, r=1.0, tag=None):
     return n
 
 
+RENDER_MAX_ITEMS = 400
+RENDER_MAX_CHARS = 20000
+RENDER_MAX_PAUSE_MS = 3000
+
+
+def silence_mp3(ms):
+    """계획된 쉼 — 조각과 **같은 인코딩 설정**의 무음 mp3. 값의 종류가 몇 개뿐이라 디스크에 두고 다시 쓴다."""
+    import subprocess
+    d = os.path.join(CACHE, 'sil'); os.makedirs(d, exist_ok=True)
+    out = os.path.join(d, f'{int(ms)}.mp3')
+    if not os.path.exists(out):
+        subprocess.run([ffmpeg(), '-v', 'error', '-y', '-f', 'lavfi', '-i', 'anullsrc=r=24000:cl=mono',
+                        '-t', f'{ms / 1000.0:.3f}', '-codec:a', 'libmp3lame', '-b:a', '48k', '-f', 'mp3', out + '.part'], check=True)
+        os.replace(out + '.part', out)
+    return out
+
+
+def render(voice, items, steps, tag=None):
+    """조각을 순서대로 합성해(캐시 우선) 계획된 쉼과 함께 하나의 mp3 로 잇는다.
+
+    이어붙이기는 ffmpeg concat 디먹서 + `-c copy` — 다시 인코딩하지 않으니 소리가 그대로이고 빠르다.
+    조각 자체는 /tts 와 **같은 캐시**를 쓴다: 대본을 고쳐 다시 만들면 바뀐 문장만 새로 합성된다.
+    """
+    import subprocess, tempfile, uuid
+    tag = RC.get(tag).RECIPE_TAG
+    parts = []
+    for it in items:
+        text = clean_text(it.get('t'))
+        if not text:
+            continue
+        r = parse_r(it.get('r', 1.0))
+        parts.append(cached_or_synthesize(voice, text, steps, r, tag))
+        pause = it.get('pause') or 0
+        try:
+            pause = max(0, min(RENDER_MAX_PAUSE_MS, int(pause)))
+        except (TypeError, ValueError):
+            pause = 0
+        if pause >= 10:                       # 10ms 아래는 무음 파일을 만들 가치가 없다
+            parts.append(silence_mp3(pause))
+    if not parts:
+        raise ValueError('empty_items')
+    d = os.path.join(CACHE, 'render'); os.makedirs(d, exist_ok=True)
+    out = os.path.join(d, uuid.uuid4().hex + '.mp3')
+    with tempfile.NamedTemporaryFile('w', suffix='.txt', dir=d, delete=False, encoding='utf-8') as f:
+        listfile = f.name
+        for p in parts:
+            f.write("file '" + p.replace("'", "'\\''") + "'\n")
+    try:
+        subprocess.run([ffmpeg(), '-v', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', listfile,
+                        '-c', 'copy', '-f', 'mp3', out], check=True)
+    finally:
+        try: os.remove(listfile)
+        except OSError: pass
+    return out
+
+
 def cache_key(voice, text, steps, r=1.0, tag=None):
     # 🔴 worker.mjs 의 키와 같은 꼴(sha1("voice|steps|r|tag|text")) — r 은 소수 둘째 자리까지
     return hashlib.sha1(f'{voice}|{steps}|{fmt_r(r)}|{RC.get(tag).RECIPE_TAG}|{text}'.encode('utf-8')).hexdigest()
@@ -237,13 +294,15 @@ class H(BaseHTTPRequestHandler):
 
     def do_POST(self):
         u = urllib.parse.urlsplit(self.path)
-        if u.path != '/warm':
+        if u.path not in ('/warm', '/render'):
             return self._json({'ok': False, 'error': 'not_found'}, 404)
         try:
             n = int(self.headers.get('Content-Length') or 0)
-            body = json.loads(self.rfile.read(min(n, 200000)).decode('utf-8') or '{}')
+            body = json.loads(self.rfile.read(min(n, 2000000)).decode('utf-8') or '{}')
         except Exception:
             return self._json({'ok': False, 'error': 'bad_json'}, 400)
+        if u.path == '/render':
+            return self._render(body)
         voice = body.get('v') or 'female'
         if voice not in VOICES:
             return self._json({'ok': False, 'error': 'bad_voice'}, 400)
@@ -257,6 +316,36 @@ class H(BaseHTTPRequestHandler):
         r = parse_r(body.get('r', 1.0))
         tag = RC.get(body.get('k')).RECIPE_TAG
         return self._json({'ok': True, 'queued': warm(voice, texts[:400], steps, r, tag), 'queue': _warm_q.qsize()})
+
+    def _render(self, body):
+        """POST /render {v, s?, k?, items:[{t, r, pause}]} → audio/mpeg (대본 전체 · 계획된 쉼 포함)"""
+        voice = body.get('v') or 'female'
+        if voice not in VOICES:
+            return self._json({'ok': False, 'error': 'bad_voice'}, 400)
+        items = body.get('items') or []
+        if not isinstance(items, list) or not items:
+            return self._json({'ok': False, 'error': 'empty_items'}, 400)
+        if len(items) > RENDER_MAX_ITEMS:
+            return self._json({'ok': False, 'error': 'too_many_items'}, 400)
+        chars = sum(len(clean_text(it.get('t') if isinstance(it, dict) else '')) for it in items)
+        if chars > RENDER_MAX_CHARS:
+            return self._json({'ok': False, 'error': 'too_many_chars', 'chars': chars}, 400)
+        tag = RC.get(body.get('k')).RECIPE_TAG
+        try:
+            steps = max(4, min(32, int(body.get('s') or RC.steps_for(tag))))
+        except (TypeError, ValueError):
+            steps = RC.steps_for(tag)
+        try:
+            path = render(voice, [it for it in items if isinstance(it, dict)], steps, tag)
+        except ValueError:
+            return self._json({'ok': False, 'error': 'empty_items'}, 400)
+        except Exception as e:
+            return self._json({'ok': False, 'error': 'synthesis_failed', 'reason': str(e)[:300]}, 502)
+        try:
+            self._send_file(path, tag)
+        finally:
+            try: os.remove(path)      # 대본은 이용자의 것이다 — 서버에 남기지 않는다(조각 캐시만 남는다)
+            except OSError: pass
 
     def do_HEAD(self):
         self.do_GET()

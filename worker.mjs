@@ -11,9 +11,10 @@
 import { Container, getContainer } from '@cloudflare/containers';
 import { DurableObject } from 'cloudflare:workers';
 import { handleTts, json } from './lib/melotts.mjs';
-import { cacheKey, parseR, RECIPE_TAG, FALLBACK, TAGS, tagOf } from './lib/tts-key.mjs';
+import { cacheKey, parseR, RECIPE_TAG, FALLBACK, TAGS, tagOf, sha1 } from './lib/tts-key.mjs';
 import { makeBaker } from './lib/bake.mjs';
 import { prune } from './lib/prune.mjs';
+import { normalizeItems, renderKey, dayStamp, quota, FREE_DAILY_CHARS, LIMITS } from './lib/render.mjs';
 import { verifyGithubOidc } from './lib/oidc.mjs';
 export { handleTts, MODEL, LANGS, MAX_CHARS, _reset } from './lib/melotts.mjs';
 
@@ -22,6 +23,26 @@ export class TtsContainer extends Container {
   defaultPort = 8790;
   sleepAfter = '3m';   // 유휴 3분이면 잠든다(비용 0). 깨우는 데 수 초 · 캐시(R2)는 잠들어도 즉시 답한다
   envVars = { STEPS: '8', ALLOW_ORIGIN: '*', CACHE_DIR: '/app/cache' };
+}
+
+/* ── 무료 한도 계량기(Durable Object) — 로그인 없이 쓰는 하루 글자 수를 센다 ──
+   이름은 sha1(IP) 이라 원본 주소를 저장하지 않는다. 날짜(UTC)가 바뀌면 전날 기록은 지운다.
+   🔴 R2 에 이미 있는 대본(= 합성이 없는 요청)은 한도를 쓰지 않는다 — 계량은 handleRender 가 R2 miss 뒤에 부른다.
+   결제를 붙일 때 이 자리가 그대로 「남은 글자 수」의 근거가 된다. */
+export class Meter extends DurableObject {
+  async use(day, chars, limit) {
+    const stored = (await this.ctx.storage.get('day')) || '';
+    let used = (await this.ctx.storage.get('used')) || 0;
+    if (stored !== day) { used = 0; await this.ctx.storage.put({ day, used: 0 }); }
+    const q = quota(used, chars, limit);
+    if (q.ok) await this.ctx.storage.put({ day, used: q.after });
+    return q;
+  }
+  async peek(day, limit) {
+    const stored = (await this.ctx.storage.get('day')) || '';
+    const used = stored === day ? ((await this.ctx.storage.get('used')) || 0) : 0;
+    return quota(used, 0, limit);
+  }
 }
 
 /* ── 굽기 대기열(Durable Object) — 전편을 컨테이너가 스스로 굽고 R2 에 넣는다(lib/bake.mjs · 2026-09-04) ──
@@ -125,7 +146,8 @@ async function handleBake(request, env) {
 }
 
 const SECURITY = {
-  'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'",
+  // media-src blob: — /app.html 이 만든 mp3 를 <audio> 로 들려준다
+  'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; media-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'",
   'X-Content-Type-Options': 'nosniff',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
 };
@@ -133,6 +155,8 @@ const SECURITY = {
 /* ── 즉시 합성 서버(컨테이너) — server/server.py 가 Supertonic 3 를 돌린다 ─────────────────────────
    GET  /tts?v=female|male&t=문장[&s=16][&r=1.0]  → R2 캐시(korean-voice-tts) 적중이면 바로, 아니면 컨테이너가 합성 → R2 저장
    POST /warm {v, texts:[…][, r]}         → 컨테이너 대기열(앞서 굽기)
+   POST /render {v, items:[{t,r,pause}]}  → 대본 전체를 하나의 mp3 로(조각 캐시 재사용 · 결과도 R2 에 둔다 · lib/render.mjs)
+   GET  /render                           → 오늘 남은 무료 글자 수(Meter DO)
    GET  /meta                             → 워커 메타데이터(recipe·voice_sets·R2)만, 컨테이너 접근 0
    GET  /health                           → 관리자/진단용 컨테이너 상태(잠들어 있으면 깨울 수 있다)
    캐시 키는 server.py 의 cache_key 와 같다(lib/tts-key.mjs): sha1("voice|steps|r|조합표식|text") · text 는 공백 정리·400자.
@@ -218,6 +242,75 @@ async function handleLiveTts(request, env, ctx) {
   }
   return audioResponse(bytes, bytes.length, 200, cacheable ? { 'X-TTS-Cache': 'miss' } : { 'X-TTS-Cache': 'miss-nocache', 'X-TTS-Recipe-Mismatch': `${recipe || 'none'}!=${RECIPE_TAG}`, 'Cache-Control': 'no-store' });
 }
+/* POST /render {v, k?, s?, items:[{t, r, pause}]} → audio/mpeg — 대본 전체를 하나의 파일로.
+   문장 나누기·쉼은 브라우저의 ko-voice.js 가 정한다(정본 하나). 조각은 /tts 와 같은 캐시를 쓰므로
+   대본을 고쳐 다시 만들면 바뀐 문장만 새로 합성된다. 결과도 R2 에 키(대본 해시)로 두어 두 번째는 즉시 나간다. */
+async function handleRender(request, env, ctx) {
+  if (request.method !== 'POST') return json({ ok: false, error: 'method' }, 405, CORS);
+  let body = {};
+  try { body = await request.json(); } catch (_) { return json({ ok: false, error: 'bad_json' }, 400, CORS); }
+  const v = body.v || 'female';
+  if (!VOICES.includes(v)) return json({ ok: false, error: 'bad_voice' }, 400, CORS);
+  const norm = normalizeItems(body.items);
+  if (!norm.ok) return json({ ok: false, error: norm.error, limits: LIMITS }, 400, CORS);
+  const tag = tagOf(body.k);
+  const steps = body.s ? Math.max(4, Math.min(32, parseInt(body.s, 10) || TAGS[tag].steps)) : TAGS[tag].steps;
+  const key = await renderKey(v, steps, tag, norm.items);
+  // 1) 같은 대본을 이미 만든 적이 있다 — 합성도, 한도도 쓰지 않는다
+  if (env.TTS_CACHE) {
+    try {
+      const obj = await env.TTS_CACHE.get(key);
+      if (obj) return audioResponse(obj.body, obj.size, 200, { 'X-TTS-Cache': 'r2', 'X-Render-Chars': String(norm.chars) });
+    } catch (_) { /* 캐시가 없어도 합성으로 간다 */ }
+  }
+  // 2) 무료 한도
+  const day = dayStamp();
+  const q = await meterUse(env, request, day, norm.chars);
+  if (q && !q.ok) return json({ ok: false, error: 'quota_exceeded', ...q, day }, 429, CORS);
+  // 3) 컨테이너에서 만든다
+  const c = container(env);
+  if (!c) return json({ ok: false, error: 'tts_unavailable', reason: '컨테이너 바인딩 없음' }, 503, CORS);
+  let res;
+  try {
+    res = await c.fetch(new Request('http://container/render', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ v, s: steps, k: tag, items: norm.items }),
+    }));
+  } catch (e) {
+    return json({ ok: false, error: 'container_failed', reason: String((e && e.message) || e).slice(0, 300) }, 502, CORS);
+  }
+  if (!res.ok || !(res.headers.get('Content-Type') || '').startsWith('audio/')) {
+    const text = await res.text().catch(() => '');
+    return json({ ok: false, error: 'synthesis_failed', status: res.status, reason: text.slice(0, 300) }, 502, CORS);
+  }
+  const bytes = new Uint8Array(await res.arrayBuffer());
+  const recipe = res.headers.get('X-TTS-Recipe') || '';
+  if (env.TTS_CACHE && recipe === tag) {
+    const put = env.TTS_CACHE.put(key, bytes, { httpMetadata: { contentType: 'audio/mpeg', cacheControl: 'public, max-age=31536000, immutable' } }).catch(() => {});
+    if (ctx && ctx.waitUntil) ctx.waitUntil(put); else await put;
+  }
+  return audioResponse(bytes, bytes.length, 200, { 'X-TTS-Cache': 'miss', 'X-Render-Chars': String(norm.chars) });
+}
+/** 계량기 호출 — 바인딩이 없으면(로컬·미배포) 한도를 걸지 않는다. */
+async function meterUse(env, request, day, chars) {
+  if (!env.METER) return null;
+  const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+  const name = await sha1('meter|' + ip);      // 원본 주소는 저장하지 않는다
+  try { return await env.METER.get(env.METER.idFromName(name)).use(day, chars, FREE_DAILY_CHARS); } catch (_) { return null; }
+}
+/** GET /render — 오늘 남은 무료 글자 수(화면이 미리 알려 주기 위한 것). */
+async function handleRenderQuota(env, request) {
+  const day = dayStamp();
+  if (!env.METER) return json({ ok: true, metered: false, limit: FREE_DAILY_CHARS, day, limits: LIMITS }, 200, CORS);
+  const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+  const name = await sha1('meter|' + ip);
+  try {
+    const q = await env.METER.get(env.METER.idFromName(name)).peek(day, FREE_DAILY_CHARS);
+    return json({ ok: true, metered: true, ...q, day, limits: LIMITS }, 200, CORS);
+  } catch (_) {
+    return json({ ok: true, metered: false, limit: FREE_DAILY_CHARS, day, limits: LIMITS }, 200, CORS);
+  }
+}
 async function handleWarm(request, env) {
   let body = {};
   try { body = await request.json(); } catch (_) { body = {}; }
@@ -281,9 +374,11 @@ async function handleHealth(request, env) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    if (request.method === 'OPTIONS' && ['/tts', '/warm', '/meta', '/health', '/api/tts', '/bake'].includes(url.pathname)) return new Response(null, { status: 204, headers: { ...CORS, 'Access-Control-Max-Age': '86400', 'Access-Control-Allow-Headers': 'Range, Content-Type, Authorization' } });
+    if (request.method === 'OPTIONS' && ['/tts', '/warm', '/meta', '/health', '/api/tts', '/bake', '/render'].includes(url.pathname)) return new Response(null, { status: 204, headers: { ...CORS, 'Access-Control-Max-Age': '86400', 'Access-Control-Allow-Headers': 'Range, Content-Type, Authorization' } });
     if (url.pathname === '/tts') return handleLiveTts(request, env, ctx);
     if (url.pathname === '/warm' && request.method === 'POST') return handleWarm(request, env);
+    if (url.pathname === '/render' && request.method === 'POST') return handleRender(request, env, ctx);
+    if (url.pathname === '/render' && request.method === 'GET') return handleRenderQuota(env, request);
     if (url.pathname === '/bake' && (request.method === 'GET' || request.method === 'POST')) return handleBake(request, env);
     if (url.pathname === '/bake/put' && (request.method === 'PUT' || request.method === 'POST')) return handleBakePut(request, env);   // PUT 이 엣지에서 403 이 난 적이 있어 POST 도 받는다
     if (url.pathname === '/bake/has' && request.method === 'POST') return handleBakeHas(request, env);
