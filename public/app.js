@@ -182,7 +182,8 @@
       });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
-        if (j.error === 'quota_exceeded') throw new Error('오늘 무료 한도를 다 썼습니다(하루 ' + j.limit + '자). 내일 다시 쓰거나 유료 이용을 기다려 주세요.');
+        if (j.error === 'quota_exceeded') throw new Error('오늘 무료 한도를 다 썼습니다(하루 ' + j.limit + '자). 「만드는 곳」을 내 브라우저로 바꾸면 한도 없이 만들 수 있습니다.');
+        if (j.error === 'global_cap_reached') throw new Error('오늘 전체 무료 분량이 소진되었습니다(남은 ' + j.remaining + '자). 「만드는 곳」을 내 브라우저로 바꾸면 지금 바로 만들 수 있습니다.');
         if (j.error === 'too_many_chars') throw new Error('한 번에 만들 수 있는 길이를 넘었습니다(최대 ' + (j.limits && j.limits.chars) + '자). 대본을 나눠 주세요.');
         throw new Error('만들지 못했습니다: ' + (j.reason || j.error || res.status));
       }
@@ -204,9 +205,11 @@
   function quota() {
     fetch('/render', { cache: 'no-store' }).then((r) => r.json()).then((j) => {
       if (!j || !j.ok) return;
-      $('quota').textContent = j.metered
-        ? '오늘 남은 무료 분량: ' + j.remaining + '자 / ' + j.limit + '자'
-        : '무료 한도: 하루 ' + j.limit + '자 (계량기가 아직 붙지 않은 환경입니다)';
+      const mine = j.metered ? '오늘 남은 무료 분량: ' + j.remaining + '자 / ' + j.limit + '자'
+                             : '무료 한도: 하루 ' + j.limit + '자 (계량기가 아직 붙지 않은 환경입니다)';
+      // 전체 상한은 지출 천장이다 — 소진되면 서버 경로가 막히고 브라우저 경로만 남는다
+      const all = j.global ? ' · 전체 남은 분량 ' + j.global.remaining.toLocaleString() + '자' : '';
+      $('quota').textContent = mine + all + ' · 내 브라우저에서 만들면 한도 없음';
     }).catch(() => {});
   }
 

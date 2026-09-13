@@ -37,6 +37,8 @@
     { "tag": "v1", "new_sqlite_classes": ["TtsContainer"] },
     { "tag": "v2", "new_sqlite_classes": ["BakeQueue"] }
   ],
+  // 하루 전역 합성 상한(글자). 지출 천장 = 이 값 × 약 $0.011/1,000자. 20만 자 ≈ $2.2/일.
+  "vars": { "DAILY_CHAR_CAP": "200000" },
   "r2_buckets": [
     { "binding": "TTS_CACHE", "bucket_name": "korean-voice-tts" }
   ],

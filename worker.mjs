@@ -14,7 +14,7 @@ import { handleTts, json } from './lib/melotts.mjs';
 import { cacheKey, parseR, RECIPE_TAG, FALLBACK, TAGS, tagOf, sha1 } from './lib/tts-key.mjs';
 import { makeBaker } from './lib/bake.mjs';
 import { prune } from './lib/prune.mjs';
-import { normalizeItems, renderKey, dayStamp, quota, FREE_DAILY_CHARS, LIMITS } from './lib/render.mjs';
+import { normalizeItems, renderKey, dayStamp, quota, FREE_DAILY_CHARS, GLOBAL_DAILY_CHARS, globalCap, LIMITS } from './lib/render.mjs';
 import { verifyGithubOidc } from './lib/oidc.mjs';
 export { handleTts, MODEL, LANGS, MAX_CHARS, _reset } from './lib/melotts.mjs';
 
@@ -284,10 +284,17 @@ async function handleRender(request, env, ctx) {
       if (obj) return audioResponse(obj.body, obj.size, 200, { 'X-TTS-Cache': 'r2', 'X-Render-Chars': String(norm.chars) });
     } catch (_) { /* 캐시가 없어도 합성으로 간다 */ }
   }
-  // 2) 무료 한도
+  // 2) 무료 한도 — 전역 천장을 먼저 보고(세지 않고), 개인 한도를 세고, 그 다음 전역을 센다.
+  //    순서가 이렇게 된 이유: 전역이 이미 찼으면 개인 한도를 깎지 않고 돌려보낸다.
   const day = dayStamp();
+  const g0 = await meterGlobal(env, day, 0);
+  if (g0 && g0.remaining < norm.chars) {
+    return json({ ok: false, error: 'global_cap_reached', day, limit: g0.limit, remaining: g0.remaining,
+                  reason: '오늘 전체 무료 분량이 소진되었습니다' }, 429, CORS);
+  }
   const q = await meterUse(env, request, day, norm.chars);
   if (q && !q.ok) return json({ ok: false, error: 'quota_exceeded', ...q, day }, 429, CORS);
+  await meterGlobal(env, day, norm.chars);
   // 3) 컨테이너에서 만든다
   const c = container(env);
   if (!c) return json({ ok: false, error: 'tts_unavailable', reason: '컨테이너 바인딩 없음' }, 503, CORS);
@@ -312,6 +319,14 @@ async function handleRender(request, env, ctx) {
   }
   return audioResponse(bytes, bytes.length, 200, { 'X-TTS-Cache': 'miss', 'X-Render-Chars': String(norm.chars) });
 }
+/** 전역 계량기 — 같은 BakeQueue 클래스의 **하나뿐인 오브젝트**('meter|global')로 센다.
+ *  chars=0 이면 세지 않고 남은 양만 본다. 지출 천장은 여기 하나로 고정된다. */
+async function meterGlobal(env, day, chars) {
+  if (!env.BAKE) return null;
+  const stub = env.BAKE.get(env.BAKE.idFromName('meter|global'));
+  const cap = globalCap(env);
+  try { return chars > 0 ? await stub.use(day, chars, cap) : await stub.peek(day, cap); } catch (_) { return null; }
+}
 /** 계량기 호출 — 바인딩이 없으면(로컬·미배포) 한도를 걸지 않는다. */
 async function meterUse(env, request, day, chars) {
   if (!env.BAKE) return null;                  // 계량기는 BakeQueue 클래스의 다른 오브젝트다(migration 불필요)
@@ -327,7 +342,9 @@ async function handleRenderQuota(env, request) {
   const name = 'meter|' + await sha1('meter|' + ip);
   try {
     const q = await env.BAKE.get(env.BAKE.idFromName(name)).peek(day, FREE_DAILY_CHARS);
-    return json({ ok: true, metered: true, ...q, day, limits: LIMITS }, 200, CORS);
+    const g = await meterGlobal(env, day, 0);
+    return json({ ok: true, metered: true, ...q, day, limits: LIMITS,
+                  global: g ? { limit: g.limit, remaining: g.remaining } : null }, 200, CORS);
   } catch (_) {
     return json({ ok: true, metered: false, limit: FREE_DAILY_CHARS, day, limits: LIMITS }, 200, CORS);
   }
