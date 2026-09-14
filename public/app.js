@@ -66,6 +66,7 @@
   const ttsUrl = (it) => '/tts?v=' + encodeURIComponent($('voice').value) + '&t=' + encodeURIComponent(it.t) + '&r=' + it.r.toFixed(2);
   async function fetchPiece(it) {
     const r = await fetch(ttsUrl(it));
+    if (r.status === 404 || r.status === 503) throw new Error('이 배포에는 서버 합성이 없습니다 — 「만드는 곳」을 「내 브라우저」로 바꾸면 들을 수 있습니다.');
     if (!r.ok) { let why = r.status; try { const j = await r.json(); why = j.reason || j.error || why; } catch (_) { /* */ } throw new Error('합성 실패: ' + why); }
     const ab = await r.arrayBuffer();
     return await new Promise((res, rej) => audioCtx().decodeAudioData(ab.slice(0), res, rej));
@@ -180,6 +181,14 @@
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ v: $('voice').value, items }),
       });
+      if (res.status === 404 || res.status === 503) {
+        /* 서버 합성 경로가 없는 배포(정적 미리보기 등)이거나 컨테이너가 없다.
+           「합성 실패: 404」를 보여 주는 대신 우리 비용 0 경로로 넘어간다 — 사용자는 이유를 알 필요가 없다. */
+        say('서버 경로가 없어 내 브라우저에서 만듭니다…');
+        $('where').value = 'local';
+        $('render').disabled = false;
+        return void $('render').click();
+      }
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
         if (j.error === 'quota_exceeded') throw new Error('오늘 무료 한도를 다 썼습니다(하루 ' + j.limit + '자). 「만드는 곳」을 내 브라우저로 바꾸면 한도 없이 만들 수 있습니다.');

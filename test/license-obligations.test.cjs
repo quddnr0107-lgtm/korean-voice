@@ -63,3 +63,12 @@ test('파생 화자를 파일로 내보내지 않는다 — 내보내면 파생�
   const blend = js.slice(js.indexOf('async function blendStyle'), js.indexOf('/* ── 엔진 ──'));
   assert.ok(!/Blob|createObjectURL|download/.test(blend), '스타일을 파일로 내보내는 코드가 생겼다');
 });
+
+/* 서버 경로가 없는 배포(정적 미리보기·컨테이너 부재)에서 사용자가 막다른 404 를 보면 안 된다.
+   2026-09-14 실제 미리보기에서 「합성 실패: 404」가 나왔고, 그게 기능이 없는 것처럼 보였다. */
+test('서버가 없으면 브라우저 경로로 넘어간다', () => {
+  const js = read('public', 'app.js');
+  assert.match(js, /res\.status === 404 \|\| res\.status === 503/, '서버 부재를 가려내야 한다');
+  assert.match(js, /\$\('where'\)\.value = 'local'/, '브라우저 경로로 전환해야 한다');
+  assert.match(js, /「내 브라우저」로 바꾸면/, '미리듣기도 무엇을 하라고 알려 줘야 한다');
+});
