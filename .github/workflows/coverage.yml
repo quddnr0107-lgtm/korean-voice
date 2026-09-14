@@ -1,0 +1,35 @@
+# 구운 조각이 얼마나 빠졌나 — **어디가** 빠졌는지까지 짚는다 (2026-09-14 사용자 「부분적으로 빠진 건지 확인해봐」).
+#   🔴 읽기만 한다(HEAD). 지우지도 굽지도 않는다 — 아무 때나 돌려도 된다.
+#   폐기(Prune voice)의 마른 실행은 「몇 개」만 알려 준다. 이건 법·갈래별로 무엇이 빠졌는지 보여 준다.
+name: Coverage (빠진 조각 짚기)
+
+on:
+  workflow_dispatch:
+    inputs:
+      sample:
+        description: '묶음마다 본문을 몇 개 보여 줄까'
+        default: '5'
+      fail_over:
+        description: '빠진 것이 이 수를 넘으면 빨갛게 끝낸다(-1 = 안 막는다)'
+        default: '-1'
+
+permissions:
+  id-token: write   # OIDC — 조각 목록을 만들 때 비공개 원고를 받는다
+  contents: read
+
+concurrency:
+  group: coverage
+  cancel-in-progress: true
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: 조각 목록 (GitHub OIDC로 비공개 원고 받기)
+        run: node tools/chunks.mjs --out chunks.json
+      - name: 빠진 조각 짚기
+        run: node tools/coverage.mjs --chunks chunks.json --sample ${{ inputs.sample }} --fail-over ${{ inputs.fail_over }}
