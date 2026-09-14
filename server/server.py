@@ -38,20 +38,8 @@ import recipes as RC       # noqa: E402  — 조합 등록부: 목소리 두 벌
 VOICES = {
     'female': {'style': None, 'label': '여성', 'speed': 1.05},   # None = 그 조합이 정한 목소리(조합마다 다르다)
     'male': {'style': 'M1:0.7,M3:0.3', 'label': '남성', 'speed': 1.05},
-    # 🔵 공개 스타일 원본 10개 — 2026-09-13 청취 뒤 전부 고를 수 있게 했다. **기존 두 목소리는 그대로 둔다**:
-    #    캐시 키에 목소리 이름이 들어가므로 새 이름을 쓰면 구워 둔 조각이 하나도 무효화되지 않는다
-    #    (조합을 바꿔치웠으면 RECIPE_TAG 를 올려 전량 재굽기를 해야 했다).
-    #    굽는 것은 여전히 female·male 둘뿐이다(worker.mjs 의 BAKED_VOICES).
-    'f1': {'style': 'F1', 'label': '여성 F1', 'speed': 1.05},
-    'f2': {'style': 'F2', 'label': '여성 F2', 'speed': 1.05},
-    'f3': {'style': 'F3', 'label': '여성 F3', 'speed': 1.05},
-    'f4': {'style': 'F4', 'label': '여성 F4', 'speed': 1.05},
-    'f5': {'style': 'F5', 'label': '여성 F5', 'speed': 1.05},
-    'm1': {'style': 'M1', 'label': '남성 M1', 'speed': 1.05},
-    'm2': {'style': 'M2', 'label': '남성 M2', 'speed': 1.05},
-    'm3': {'style': 'M3', 'label': '남성 M3', 'speed': 1.05},
-    'm4': {'style': 'M4', 'label': '남성 M4', 'speed': 1.05},
-    'm5': {'style': 'M5', 'label': '남성 M5', 'speed': 1.05},
+    # 🔴 2026-09-14: 공개 스타일 원본 10개(f1…m5)를 뺐다. 굽는 것은 이 둘뿐이라 나머지는 들을 때마다
+    #    합성을 기다려야 했다. 캐시 키에 목소리 이름이 들어가므로 빼도 이 둘의 구운 조각은 그대로다.
 }
 
 
