@@ -119,7 +119,7 @@ async function handleBakePrune(request, env) {
   const items = Array.isArray(body.items) ? body.items : [];
   const s = Math.max(4, Math.min(32, parseInt(body.s || DEFAULT_STEPS, 10) || DEFAULT_STEPS));
   const keep = new Set();
-  for (const it of items) { const t = cleanText(it && it.t); if (!t) continue; const r = parseR(it.r == null ? 1 : it.r); for (const voice of VOICES) keep.add(await cacheKey(voice, s, r, t)); }
+  for (const it of items) { const t = cleanText(it && it.t); if (!t) continue; const r = parseR(it.r == null ? 1 : it.r); for (const voice of BAKED_VOICES) keep.add(await cacheKey(voice, s, r, t)); }
   try {
     const out = await prune({ r2: env.TTS_CACHE, keep, dry: body.dry !== false, force: body.force === true });
     return json(out, out.ok ? 200 : 400, CORS);
@@ -183,7 +183,13 @@ const SECURITY = {
    캐시 키는 server.py 의 cache_key 와 같다(lib/tts-key.mjs): sha1("voice|steps|r|조합표식|text") · text 는 공백 정리·400자.
    🔴 r(합성 속도 배수)과 조합표식(voice_shape.RECIPE_TAG)이 키에 들어간다 — 다듬기 조합이 바뀌면 옛 R2 캐시는 자연히 안 맞는다. */
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, OPTIONS', 'Access-Control-Allow-Headers': 'Range, Content-Type', 'Access-Control-Expose-Headers': 'Content-Length, Content-Range, Accept-Ranges' };
-const VOICES = ['female', 'male', 'f4', 'm1'];   // f4·m1 = 순수 스타일(server.py VOICES 와 같아야 한다)
+/* 고를 수 있는 목소리 — server.py 의 VOICES 와 같아야 한다(test/render-audio-invariants.test.cjs 가 잰다).
+   조합 2개 + 공개 스타일 원본 10개. 원본을 추가해도 기존 두 목소리의 캐시는 무효화되지 않는다(키에 이름이 들어간다). */
+const VOICES = ['female', 'male', 'f1', 'f2', 'f3', 'f4', 'f5', 'm1', 'm2', 'm3', 'm4', 'm5'];
+/* 🔴 **굽는 목소리는 둘뿐이다.** 폐기(prune)의 보존 키를 VOICES 전체로 만들면 조각 5만8천 × 12 = 70만 개
+   sha1 을 워커 메모리(128MB)에 쌓고 crypto 를 70만 번 돌린다 — 강의는 female·male 만 굽기 때문에
+   나머지 키는 R2 에 **애초에 없어서 계산할 이유도 없다**. 그래서 폐기는 이 목록만 본다. */
+const BAKED_VOICES = ['female', 'male'];
 /* 🔴 스텝은 캐시 키(v|s|r|표식|글)에 들어간다 — 바꾸면 구운 것이 전부 무효가 되고 전량 재굽기다.
    16 → 8 (2026-09-08): 실측으로 품질이 안 떨어지는 것을 확인하고 내렸다.
      조각당 5.31s → 2.97s (절반) · HNR 15.46 → 15.55 (오히려 미세 상승) · 사용자 청취 「소리는 똑같아」

@@ -18,9 +18,12 @@ import { shape } from './voice-shape.mjs';   // 서버의 U5 다듬기를 옮긴
 export const MODEL_BASE = (typeof window !== 'undefined' && window.KO_MODEL_BASE) ||
   'https://huggingface.co/Supertone/supertonic-3/resolve/main';
 const CACHE_NAME = 'ko-voice-model-v1';
+/* 공개 스타일 원본은 이름이 곧 조합이다 — 벌(u5·k2)에 상관없이 같다. 조합 두 개만 벌마다 다르다.
+   server.py 의 VOICES 와 이름이 같아야 한다(test/render-audio-invariants.test.cjs 가 잰다). */
+const PURE = { f1: 'F1', f2: 'F2', f3: 'F3', f4: 'F4', f5: 'F5', m1: 'M1', m2: 'M2', m3: 'M3', m4: 'M4', m5: 'M5' };
 const RECIPES = {
-  u5: { steps: 8, female: 'F4:0.6,F2:0.4', male: 'M1:0.7,M3:0.3', f4: 'F4', m1: 'M1' },
-  k2: { steps: 16, female: 'F2', male: 'M1:0.7,M3:0.3', f4: 'F4', m1: 'M1' },
+  u5: { steps: 8, female: 'F4:0.6,F2:0.4', male: 'M1:0.7,M3:0.3', ...PURE },
+  k2: { steps: 16, female: 'F2', male: 'M1:0.7,M3:0.3', ...PURE },
 };
 const SPEED = 1.05;                 // server.py VOICES[*].speed 와 같다
 export const SPEED_GATE_RTF = 3.0;  // 첫 문장이 이보다 느리면 서버로 물러난다(레포 실측: 단일 스레드 1.65~2.28)

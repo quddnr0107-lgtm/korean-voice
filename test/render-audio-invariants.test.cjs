@@ -47,4 +47,22 @@ test('목소리 목록이 워커와 서버에서 같다 — 어긋나면 400 나
   for (const m of py.matchAll(/^\s{4}'([a-z0-9]+)':/gm)) {
     assert.ok(names.includes(m[1]), `워커 VOICES 에 목소리 ${m[1]} 이 없다`);
   }
+  // 브라우저 경로도 같은 이름을 알아야 한다 — 모르면 그 목소리를 고른 사람이 여성 조합을 듣는다
+  const local = readFileSync(join(__dirname, '..', 'public', 'local-tts.js'), 'utf8');
+  const pure = (local.match(/const PURE = \{([^}]+)\}/) || [])[1] || '';
+  for (const n of names) {
+    if (n === 'female' || n === 'male') continue;
+    assert.match(pure, new RegExp('\\b' + n + ':'), `local-tts.js PURE 에 목소리 ${n} 이 없다`);
+  }
+  // 화면에도 있어야 한다
+  const html = readFileSync(join(__dirname, '..', 'public', 'app.html'), 'utf8');
+  for (const n of names) assert.match(html, new RegExp('value="' + n + '"'), `app.html 선택지에 ${n} 이 없다`);
+});
+
+test('굽는 목소리는 둘뿐이다 — 폐기 보존 키가 목소리 수에 비례해 터지면 안 된다', () => {
+  const worker = readFileSync(join(__dirname, '..', 'worker.mjs'), 'utf8');
+  assert.match(worker, /const BAKED_VOICES = \['female', 'male'\]/);
+  const prune = worker.slice(worker.indexOf('async function handleBakePrune'), worker.indexOf('async function handleMeta'));
+  assert.match(prune, /for \(const voice of BAKED_VOICES\)/, '폐기가 VOICES 전체를 돌면 조각 수 × 목소리 수만큼 sha1 을 쌓는다');
+  assert.ok(!/for \(const voice of VOICES\)/.test(prune), '폐기에서 VOICES 전체를 쓰고 있다');
 });
