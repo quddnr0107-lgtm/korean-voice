@@ -66,13 +66,22 @@ test('/meta GET returns current voice choices without any service access', async
     assert.equal(response.status, 200);
     assert.equal(response.headers.get('Access-Control-Allow-Origin'), '*');
     assert.equal(response.headers.get('Cache-Control'), 'no-store');
-    assert.deepEqual(await response.json(), {
+    /* voice_list 는 이름표를 여기 다시 적지 않는다 — 적으면 워커와 갈라져 검사가 뜻을 잃는다.
+       이름은 render-audio-invariants 가 VOICES 와 대조한다. 여기서는 **꼴**과 컨테이너 접근 0 만 본다. */
+    const { voice_list, ...rest } = await response.json();
+    assert.deepEqual(rest, {
       cache: hasCache ? 'r2' : 'none', recipe_worker: RECIPE_TAG,
       voice_sets: Object.entries(TAGS).map(([tag, v]) => ({
         id: `${tag}.${v.rev}`, tag, label: v.label, steps: v.steps,
       })),
       worker_ok: true, ok: true, available: true, container_probe: false,
     });
+    assert.ok(Array.isArray(voice_list) && voice_list.length >= 2, 'voice_list 가 없다 — 사이트가 목소리를 못 그린다');
+    for (const v of voice_list) {
+      assert.equal(typeof v.id, 'string'); assert.equal(typeof v.label, 'string'); assert.equal(typeof v.baked, 'boolean');
+      assert.ok(v.label && v.label !== v.id, `원시 키가 이름으로 나간다: ${v.id}`);
+    }
+    assert.ok(voice_list.some((v) => v.baked), '구운 목소리가 표시되지 않는다');
     assert.equal(h.calls(), 0);
   }
 });
