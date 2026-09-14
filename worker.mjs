@@ -108,8 +108,12 @@ async function handleBakeHas(request, env) {
   return json({ ok: true, has: out }, 200, CORS);
 }
 /* POST /bake/prune {items:[{t,r}…], s?, dry?, force?} — 옛 조각 폐기 (2026-09-05 yebijun 사용자 「이전 꺼 다 폐기해」)
-   지금 조각 목록으로 목소리 전부의 키를 만들고, R2 tts/ 아래에서 그 집합에 없는 것을 지운다(lib/prune.mjs). 인증은 /bake/put 과 같은 GitHub OIDC(main).
-   🔴 dry 가 기본 — 지우려면 dry:false 를 명시한다. 목록이 1,000키 미만이면 거부한다(빈 목록으로 전부 지우는 사고 차단). */
+   지금 조각 목록으로 키를 만들고, 그 집합에 없는 것을 지운다(lib/prune.mjs). 인증은 /bake/put 과 같은 GitHub OIDC(main).
+   🔴 **구운 목소리의 우리(tts/<목소리>/) 안에서만 지운다.** 옛날처럼 tts/ 전체를 훑으면, 굽지 않고 주문형으로
+      쌓인 나머지 목소리(f1…m5)의 조각이 보존 집합에 없다는 이유로 **폐기 때마다 통째로 지워진다** — 들을 때마다
+      다시 합성돼 합성 비용이 반복해서 나가고 첫 청취자가 매번 기다린다. 키가 tts/<목소리>/<sha1>.mp3 라
+      우리를 목소리별로 좁히면 구조적으로 손이 닿지 않는다.
+   🔴 dry 가 기본 — 지우려면 dry:false 를 명시한다. 목소리마다 1,000키 미만이면 거부한다(빈 목록으로 전부 지우는 사고 차단). */
 async function handleBakePrune(request, env) {
   if (!env.TTS_CACHE) return json({ ok: false, error: 'no_r2' }, 503, CORS);
   const tok = (request.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
@@ -118,11 +122,19 @@ async function handleBakePrune(request, env) {
   let body = {}; try { body = await request.json(); } catch (_) { body = {}; }
   const items = Array.isArray(body.items) ? body.items : [];
   const s = Math.max(4, Math.min(32, parseInt(body.s || DEFAULT_STEPS, 10) || DEFAULT_STEPS));
-  const keep = new Set();
-  for (const it of items) { const t = cleanText(it && it.t); if (!t) continue; const r = parseR(it.r == null ? 1 : it.r); for (const voice of BAKED_VOICES) keep.add(await cacheKey(voice, s, r, t)); }
+  const keepBy = new Map(BAKED_VOICES.map((voice) => [voice, new Set()]));
+  for (const it of items) { const t = cleanText(it && it.t); if (!t) continue; const r = parseR(it.r == null ? 1 : it.r); for (const voice of BAKED_VOICES) keepBy.get(voice).add(await cacheKey(voice, s, r, t)); }
+  const dry = body.dry !== false, force = body.force === true;
   try {
-    const out = await prune({ r2: env.TTS_CACHE, keep, dry: body.dry !== false, force: body.force === true });
-    return json(out, out.ok ? 200 : 400, CORS);
+    const per = [];
+    for (const voice of BAKED_VOICES) {
+      const out = await prune({ r2: env.TTS_CACHE, keep: keepBy.get(voice), prefix: `tts/${voice}/`, dry, force });
+      per.push({ voice, ...out });
+      if (!out.ok) return json({ ok: false, dry, voice, ...out, per }, 400, CORS);
+    }
+    const sum = (f) => per.reduce((a, o) => a + (o[f] || 0), 0);
+    return json({ ok: true, dry, voices: BAKED_VOICES, total: sum('total'), keep: sum('keep'), hit: sum('hit'),
+                  drop: sum('drop'), deleted: sum('deleted'), truncated: per.some((o) => o.truncated), per }, 200, CORS);
   } catch (e) { return json({ ok: false, error: 'prune_failed', reason: String((e && e.message) || e).slice(0, 400) }, 500, CORS); }
 }
 async function handleBake(request, env) {

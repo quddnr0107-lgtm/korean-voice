@@ -66,3 +66,12 @@ test('굽는 목소리는 둘뿐이다 — 폐기 보존 키가 목소리 수에
   assert.match(prune, /for \(const voice of BAKED_VOICES\)/, '폐기가 VOICES 전체를 돌면 조각 수 × 목소리 수만큼 sha1 을 쌓는다');
   assert.ok(!/for \(const voice of VOICES\)/.test(prune), '폐기에서 VOICES 전체를 쓰고 있다');
 });
+
+/* 🔴 굽지 않는 목소리(f1…m5)는 주문형으로 R2 에 쌓인다. 폐기가 tts/ 전체를 훑으면 그 조각들이
+   보존 집합에 없다는 이유로 매번 지워지고, 들을 때마다 다시 합성돼 비용이 반복해서 나간다. */
+test('폐기는 구운 목소리 우리(tts/<목소리>/) 안에서만 지운다 — 주문형 목소리 조각을 쓸어가면 안 된다', () => {
+  const worker = readFileSync(join(__dirname, '..', 'worker.mjs'), 'utf8');
+  const prune = worker.slice(worker.indexOf('async function handleBakePrune'), worker.indexOf('async function handleBake('));
+  assert.match(prune, /prefix: `tts\/\$\{voice\}\//, '폐기가 목소리별 우리로 좁히지 않는다 — tts/ 전체를 훑으면 주문형 조각이 지워진다');
+  assert.ok(/prune\(\{[^}]*prefix:/.test(prune), 'prune 호출에 prefix 가 없다(기본값 tts/ 로 전체를 훑는다)');
+});
