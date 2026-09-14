@@ -11,7 +11,12 @@ RUN mkdir -p supertonic3/onnx supertonic3/voice_styles supertonic3/py && \
     for f in config.json onnx/duration_predictor.onnx onnx/text_encoder.onnx onnx/tts.json onnx/unicode_indexer.json onnx/vector_estimator.onnx onnx/vocoder.onnx; do curl -sL -o supertonic3/$f "$B/$f"; done && \
     for s in F1 F2 F3 F4 F5 M1 M2 M3 M4 M5; do curl -sL -o supertonic3/voice_styles/$s.json "$B/voice_styles/$s.json"; done && \
     for f in helper.py example_onnx.py; do curl -sL -o supertonic3/py/$f https://raw.githubusercontent.com/supertone-inc/supertonic/main/py/$f; done
-COPY server.py voice_shape.py ./
+# 🔴 server.py 가 import 하는 우리 모듈을 **전부** 넣는다. 이 줄이 2026-09-04 에 멈춰 있어서
+#    그 뒤 생긴 recipes.py·voice_shape_k2.py(#19 · 09-08)와 singleflight.py(#27 · 09-11)가 빠졌고,
+#    이미지가 재빌드되는 순간 컨테이너가 `ModuleNotFoundError: No module named 'singleflight'` 로
+#    기동 즉시 죽었다(프로덕션 /tts 502 · 강의 사이트 「즉시합성 실패」).
+#    test/container-image.test.cjs 가 import 와 이 줄이 어긋나면 잡는다.
+COPY server.py voice_shape.py voice_shape_k2.py recipes.py singleflight.py ./
 ENV SUPERTONIC_DIR=/app/supertonic3 CACHE_DIR=/app/cache PORT=8790 STEPS=16 ALLOW_ORIGIN=*
 EXPOSE 8790
 HEALTHCHECK --interval=30s --timeout=5s CMD curl -fs http://localhost:8790/health || exit 1
