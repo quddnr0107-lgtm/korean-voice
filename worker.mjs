@@ -13,7 +13,7 @@ import { DurableObject } from 'cloudflare:workers';
 import { handleTts, json } from './lib/melotts.mjs';
 import { cacheKey, parseR, RECIPE_TAG, FALLBACK, TAGS, tagOf, sha1 } from './lib/tts-key.mjs';
 import { makeBaker } from './lib/bake.mjs';
-import { prune } from './lib/prune.mjs';
+import { prune, retireVoices } from './lib/prune.mjs';
 import { normalizeItems, renderKey, dayStamp, quota, FREE_DAILY_CHARS, GLOBAL_DAILY_CHARS, globalCap, LIMITS } from './lib/render.mjs';
 import { verifyGithubOidc } from './lib/oidc.mjs';
 export { handleTts, MODEL, LANGS, MAX_CHARS, _reset } from './lib/melotts.mjs';
@@ -122,6 +122,14 @@ async function handleBakePrune(request, env) {
   let body = {}; try { body = await request.json(); } catch (_) { body = {}; }
   const items = Array.isArray(body.items) ? body.items : [];
   const s = Math.max(4, Math.min(32, parseInt(body.s || DEFAULT_STEPS, 10) || DEFAULT_STEPS));
+  /* 🔴 물러난 목소리의 우리를 통째로 비운다. 남길 목록은 **요청이 아니라 코드의 VOICES** 다 —
+     요청이 정하게 하면 한 번의 실수로 쓰고 있는 목소리가 날아간다. dry 가 기본인 것은 아래와 같다. */
+  if (body.retire === true) {
+    try {
+      const out = await retireVoices({ r2: env.TTS_CACHE, keep: VOICES, dry: body.dry !== false });
+      return json(out, out.ok ? 200 : 400, CORS);
+    } catch (e) { return json({ ok: false, error: 'retire_failed', reason: String((e && e.message) || e).slice(0, 400) }, 500, CORS); }
+  }
   const keepBy = new Map(BAKED_VOICES.map((voice) => [voice, new Set()]));
   for (const it of items) { const t = cleanText(it && it.t); if (!t) continue; const r = parseR(it.r == null ? 1 : it.r); for (const voice of BAKED_VOICES) keepBy.get(voice).add(await cacheKey(voice, s, r, t)); }
   const dry = body.dry !== false, force = body.force === true;
@@ -196,22 +204,21 @@ const SECURITY = {
    🔴 r(합성 속도 배수)과 조합표식(voice_shape.RECIPE_TAG)이 키에 들어간다 — 다듬기 조합이 바뀌면 옛 R2 캐시는 자연히 안 맞는다. */
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, OPTIONS', 'Access-Control-Allow-Headers': 'Range, Content-Type', 'Access-Control-Expose-Headers': 'Content-Length, Content-Range, Accept-Ranges' };
 /* 고를 수 있는 목소리 — server.py 의 VOICES 와 같아야 한다(test/render-audio-invariants.test.cjs 가 잰다).
-   조합 2개 + 공개 스타일 원본 10개. 원본을 추가해도 기존 두 목소리의 캐시는 무효화되지 않는다(키에 이름이 들어간다). */
-const VOICES = ['female', 'male', 'f1', 'f2', 'f3', 'f4', 'f5', 'm1', 'm2', 'm3', 'm4', 'm5'];
+   🔴 2026-09-14: **하은 하나만 남긴다.** 굽기(bake-live-tts.yml)는 2026-09-04 에 기본값 voice=female 로
+      딱 한 번 성공했다 — male 도, 원본 10개도 구워진 적이 없다. 안 구운 목소리는 들을 때마다 합성을
+      기다려야 하고(조각당 약 3초) 고르는 사람에게 「왜 이건 느리지」로만 남는다.
+      캐시 키에 목소리 이름이 들어가므로 빼도 하은의 구운 조각은 하나도 무효화되지 않는다.
+      물러난 목소리의 조각은 /bake/prune {retire:true} 로 지운다(tools/retire-voices.mjs). */
+const VOICES = ['female'];
 /* 🔴 **굽는 목소리는 둘뿐이다.** 폐기(prune)의 보존 키를 VOICES 전체로 만들면 조각 5만8천 × 12 = 70만 개
    sha1 을 워커 메모리(128MB)에 쌓고 crypto 를 70만 번 돌린다 — 강의는 female·male 만 굽기 때문에
    나머지 키는 R2 에 **애초에 없어서 계산할 이유도 없다**. 그래서 폐기는 이 목록만 본다. */
-const BAKED_VOICES = ['female', 'male'];
+const BAKED_VOICES = ['female'];
 /* 화면에 그릴 이름 — 🔴 **사이트가 목록을 박지 않게 워커가 내준다.** 원시 키(f3·m2)가 학생 화면에 나오면 안 되고,
    두 저장소에 이름을 따로 적으면 갈라진다(yebijun 이 /health·/meta 의 voice_list 를 그대로 그린다).
    baked=true 는 전편을 구워 둔 목소리라 기다림이 0 이다. 나머지는 처음 듣는 조각만 합성을 기다린다(조각당 약 3초). */
-const VOICE_LABELS = {
-  female: '하은', male: '준호',
-  f1: '지우', f2: '서연', f3: '예린', f4: '다인', f5: '소율',
-  m1: '도현', m2: '시우', m3: '태윤', m4: '민재', m5: '건우',
-};
-/* 이름만으로는 남녀가 안 갈리는 이름이 있다 — 화면이 묶음으로 갈라 보여 줄 수 있게 성별도 함께 내준다. */
-const VOICE_SEX = { female: 'f', male: 'm', f1: 'f', f2: 'f', f3: 'f', f4: 'f', f5: 'f', m1: 'm', m2: 'm', m3: 'm', m4: 'm', m5: 'm' };
+const VOICE_LABELS = { female: '하은' };
+const VOICE_SEX = { female: 'f' };
 /* 🔴 스텝은 캐시 키(v|s|r|표식|글)에 들어간다 — 바꾸면 구운 것이 전부 무효가 되고 전량 재굽기다.
    16 → 8 (2026-09-08): 실측으로 품질이 안 떨어지는 것을 확인하고 내렸다.
      조각당 5.31s → 2.97s (절반) · HNR 15.46 → 15.55 (오히려 미세 상승) · 사용자 청취 「소리는 똑같아」

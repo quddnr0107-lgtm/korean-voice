@@ -1,0 +1,32 @@
+# 물러난 목소리의 R2 조각을 통째로 지운다 (2026-09-14 사용자 「하은만 두고 나머지 r2 캐시에서 모두 지워」).
+#   🔴 남길 목소리는 여기서 정하지 않는다 — **워커의 VOICES** 다. 목록에서 뺀 목소리의 우리(tts/<목소리>/)를 비운다.
+#      러너가 목록을 주게 하면 한 번의 실수로 쓰고 있는 목소리가 날아간다.
+#   🔴 lib/oidc.mjs 가 「이 저장소의 main」 토큰만 받는다 — 브랜치에서 돌리면 워커가 401 을 준다.
+#   🔴 워커를 먼저 배포하고 돌려라. 옛 워커에는 아직 뺀 목소리가 VOICES 에 있어 아무것도 안 지워진다.
+name: Retire voices (물러난 목소리 조각 지우기)
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry:
+        description: '마른 실행만 — 지우지 않고 무엇이 몇 개 지워질지만 본다(true/false)'
+        default: 'true'
+
+permissions:
+  id-token: write   # OIDC — 워커가 이 토큰으로 「이 저장소의 main」임을 확인한다
+  contents: read
+
+concurrency:
+  group: retire-voices
+  cancel-in-progress: false
+
+jobs:
+  retire:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: 물러난 목소리 지우기
+        run: node tools/retire-voices.mjs ${{ inputs.dry == 'true' && '--dry' || '' }}

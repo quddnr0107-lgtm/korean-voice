@@ -76,7 +76,7 @@ test('/meta GET returns current voice choices without any service access', async
       })),
       worker_ok: true, ok: true, available: true, container_probe: false,
     });
-    assert.ok(Array.isArray(voice_list) && voice_list.length >= 2, 'voice_list 가 없다 — 사이트가 목소리를 못 그린다');
+    assert.ok(Array.isArray(voice_list) && voice_list.length >= 1, 'voice_list 가 없다 — 사이트가 목소리를 못 그린다');
     for (const v of voice_list) {
       assert.equal(typeof v.id, 'string'); assert.equal(typeof v.label, 'string'); assert.equal(typeof v.baked, 'boolean');
       assert.ok(v.label && v.label !== v.id, `원시 키가 이름으로 나간다: ${v.id}`);

@@ -1,13 +1,21 @@
 // 옛 조각 폐기(lib/prune.mjs) — 가짜 R2 로 잰다. 🔴 대조군: dry 는 안 지운다 · 짧은 목록은 거부한다.
 import test from 'node:test';
 import assert from 'node:assert';
-import { prune, MIN_KEEP } from '../lib/prune.mjs';
+import { prune, retireVoices, MIN_KEEP } from '../lib/prune.mjs';
 
 function fakeR2(keys, pageSize = 2) {
   const m = new Set(keys); const deleted = [];
   return {
     m, deleted,
-    async list({ prefix, cursor, limit }) {
+    async list({ prefix, cursor, limit, delimiter }) {
+      if (delimiter) {   // 우리(폴더) 목록 — R2 의 delimitedPrefixes 를 흉내 낸다
+        const set = new Set();
+        for (const k of m) if (k.startsWith(prefix)) {
+          const rest = k.slice(prefix.length); const i = rest.indexOf(delimiter);
+          if (i >= 0) set.add(prefix + rest.slice(0, i + 1));
+        }
+        return { objects: [], delimitedPrefixes: [...set].sort(), truncated: false };
+      }
       const all = [...m].filter((k) => k.startsWith(prefix)).sort();
       const start = cursor ? parseInt(cursor, 10) : 0; const n = Math.min(limit || pageSize, pageSize);
       const objects = all.slice(start, start + n).map((key) => ({ key }));
@@ -64,4 +72,46 @@ test('[대조군] 우리를 안 좁히면(tts/) 주문형 조각이 전부 지�
   const r = await prune({ r2, keep, dry: false });
   assert.equal(r.deleted, 2);
   assert.ok(!r2.m.has('tts/f1/aaa.mp3'));
+});
+
+
+/* 물러난 목소리 지우기 — 사용자 「하은만 두고 나머지 r2 캐시에서 모두 지워」(2026-09-14) */
+const 섞어 = () => fakeR2([
+  'tts/female/a.mp3', 'tts/female/b.mp3',
+  'tts/male/x.mp3', 'tts/f4/y.mp3', 'tts/m1/z.mp3', 'tts/m1/z2.mp3',
+  'render/keep.mp3',
+], 100);
+
+test('남길 목소리의 우리는 그대로 두고 나머지 우리를 비운다', async () => {
+  const r2 = 섞어();
+  const r = await retireVoices({ r2, keep: ['female'], dry: false });
+  assert.equal(r.ok, true);
+  assert.deepEqual(r.kept, ['female']);
+  assert.deepEqual(r.retired.slice().sort(), ['f4', 'm1', 'male']);
+  assert.equal(r.found, 4);
+  assert.equal(r.deleted, 4);
+  assert.ok(r2.m.has('tts/female/a.mp3') && r2.m.has('tts/female/b.mp3'), '🔴 남길 목소리의 조각이 지워졌다');
+  assert.ok(r2.m.has('render/keep.mp3'), 'tts/ 밖을 건드렸다');
+  for (const k of ['tts/male/x.mp3', 'tts/f4/y.mp3', 'tts/m1/z.mp3', 'tts/m1/z2.mp3']) assert.ok(!r2.m.has(k), k);
+});
+
+test('[대조군] dry 는 세기만 하고 하나도 안 지운다', async () => {
+  const r2 = 섞어();
+  const r = await retireVoices({ r2, keep: ['female'], dry: true });
+  assert.equal(r.found, 4); assert.equal(r.deleted, 0);
+  assert.deepEqual(r2.deleted, []);
+  assert.equal(r2.m.size, 7);
+});
+
+test('[음성] 남길 목록이 비면 거부한다 — 빈 목록은 「전부 지워라」가 된다', async () => {
+  const r2 = 섞어();
+  const r = await retireVoices({ r2, keep: [], dry: false });
+  assert.equal(r.ok, false); assert.equal(r.error, 'keep_empty');
+  assert.equal(r2.m.size, 7);
+});
+
+test('지울 것이 없으면 조용히 0 — 이미 정리된 상태를 사고로 보지 않는다', async () => {
+  const r2 = fakeR2(['tts/female/a.mp3'], 100);
+  const r = await retireVoices({ r2, keep: ['female'], dry: false });
+  assert.equal(r.ok, true); assert.deepEqual(r.retired, []); assert.equal(r.deleted, 0);
 });
