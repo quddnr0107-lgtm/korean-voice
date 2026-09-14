@@ -20,7 +20,11 @@
       "image": "./server/Dockerfile",
       "instance_type": "standard-3",
       // 1 = 학생 청취(main) · 나머지 = 굽기 샤드(bake-0…4 · lib/bake.mjs SHARDS). 계정 한도(메모리 40GiB·standard-3 8GiB)면 5개까지
-      "max_instances": 6
+      "max_instances": 6,
+      /* 🔴 새 이미지를 한 걸음에 전부 바꾼다. 기본값은 max_instances 가 2 이상이면 [10, 100] 이라 단계식으로 퍼지는데,
+         컨테이너가 상태를 안 갖는 우리는 섞여 도는 동안 **워커는 새 코드인데 컨테이너는 옛 이미지**인 창이 생긴다
+         (2026-09-14: 목소리 12개를 넣은 배포 뒤에도 컨테이너가 female·male 둘만 알아 f1…m5 가 502 를 냈다). */
+      "rollout_step_percentage": 100
     }
   ],
   "durable_objects": {

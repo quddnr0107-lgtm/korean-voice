@@ -202,6 +202,14 @@ const VOICES = ['female', 'male', 'f1', 'f2', 'f3', 'f4', 'f5', 'm1', 'm2', 'm3'
    sha1 을 워커 메모리(128MB)에 쌓고 crypto 를 70만 번 돌린다 — 강의는 female·male 만 굽기 때문에
    나머지 키는 R2 에 **애초에 없어서 계산할 이유도 없다**. 그래서 폐기는 이 목록만 본다. */
 const BAKED_VOICES = ['female', 'male'];
+/* 화면에 그릴 이름 — 🔴 **사이트가 목록을 박지 않게 워커가 내준다.** 원시 키(f3·m2)가 학생 화면에 나오면 안 되고,
+   두 저장소에 이름을 따로 적으면 갈라진다(yebijun 이 /health·/meta 의 voice_list 를 그대로 그린다).
+   baked=true 는 전편을 구워 둔 목소리라 기다림이 0 이다. 나머지는 처음 듣는 조각만 합성을 기다린다(조각당 약 3초). */
+const VOICE_LABELS = {
+  female: '여자 (기본)', male: '남자 (기본)',
+  f1: '여자 1', f2: '여자 2', f3: '여자 3', f4: '여자 4', f5: '여자 5',
+  m1: '남자 1', m2: '남자 2', m3: '남자 3', m4: '남자 4', m5: '남자 5',
+};
 /* 🔴 스텝은 캐시 키(v|s|r|표식|글)에 들어간다 — 바꾸면 구운 것이 전부 무효가 되고 전량 재굽기다.
    16 → 8 (2026-09-08): 실측으로 품질이 안 떨어지는 것을 확인하고 내렸다.
      조각당 5.31s → 2.97s (절반) · HNR 15.46 → 15.55 (오히려 미세 상승) · 사용자 청취 「소리는 똑같아」
@@ -400,7 +408,8 @@ async function handleWarm(request, env) {
    사이트에 필요한 것(무엇을 고를 수 있나·표식·R2 있나)은 전부 워커가 아는 값이라 컨테이너와 무관하다. */
 function workerMeta(env) {
   const voice_sets = Object.entries(TAGS).map(([tag, v]) => ({ id: `${tag}.${v.rev}`, tag, label: v.label, steps: v.steps }));
-  return { cache: env.TTS_CACHE ? 'r2' : 'none', recipe_worker: RECIPE_TAG, voice_sets, worker_ok: true };
+  const voice_list = VOICES.map((id) => ({ id, label: VOICE_LABELS[id] || id, baked: BAKED_VOICES.includes(id) }));
+  return { cache: env.TTS_CACHE ? 'r2' : 'none', recipe_worker: RECIPE_TAG, voice_sets, voice_list, worker_ok: true };
 }
 function handleMeta(env) {
   return json({ ...workerMeta(env), ok: true, available: true, container_probe: false }, 200, CORS);
