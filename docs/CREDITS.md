@@ -29,6 +29,33 @@
 | **KsponSpeech (AI Hub)** | **AI Hub 이용약관** (CC BY 4.0 아님) | **별도 협의 필요** | 연구·개발 활용은 되지만 상업적 이용·제3자 제공은 수행기관 협의가 필요하다. 이 저장소에서는 `research/absorb_kspon.py`와 `research/FINDINGS.md`의 **조사 기록에만** 남아 있고, 배포되는 코드(`server/`·`public/`·`lib/`)에는 유래 수치가 없다 — 대화체 궤적의 정본은 YODAS 표다 |
 | KSS (Korean Single Speaker) | CC BY-NC-SA 4.0 | **불가(비상업)** | 이 저장소는 쓰지 않는다. 참고 문헌으로만 언급된다 |
 
+## 2-1. 조항 단위로 확인한 것 (2026-09-13 · 원문 대조)
+
+BigScience Open RAIL-M(2022-08-18 무수정본, Supertone 이 덧붙인 조항 없음) 원문을 읽고 정리한다.
+
+| 질문 | 조항 | 답 |
+|---|---|---|
+| 돈을 받아도 되나 | §2 "no-charge, royalty-free, **irrevocable**" · §11 "may choose to offer, and **charge a fee**" · Attachment A 13개 중 상업 금지 0개 | **된다** |
+| 소스를 공개해야 하나 | §4 "may provide **additional or different license terms**" | **아니다**(카피레프트 아님). 전파되는 건 사용 제한 조항뿐 |
+| 만든 음성의 권리는 | §6 "Licensor claims **no rights in the Output**" | **우리 것**. 단 §6 은 산출물도 사용 제한을 어길 수 없다고 못 박는다 |
+| 브라우저로 모델을 내려주는 것은 | §1(g) "Distribution … including providing the Model as a **hosted service** … e.g. API-based or **web access**" | **배포다**(사용이 아니다) |
+| 그래서 생기는 의무 | §4(b) "must give any Third Party recipients … **a copy of this License**" · §4(a) 사용 제한을 "**enforceable provision**" 으로 두고 "give notice to subsequent users" | 라이선스 사본 제공 + 약관 편입 + 내려받기 전 고지 |
+| 아카이브되면 | §2 "**irrevocable**" | 권리는 유지된다. 다만 소스가 사라질 수 있으니 **미러를 우리가 갖고 있어야** 한다 |
+| 스타일 벡터 평균은 | §1(f) "any other model created or initialized by **transfer of patterns of the weights**" | 파생물로 보는 게 안전하다. **파일로 내보내지 않으면 배포가 아니다** — 그래서 브라우저 메모리에서만 섞는다 |
+
+이행한 것: `public/licenses.html` + `public/licenses/*.txt`(원문 사본) · `public/terms.html` 제1조(편입) ·
+내려받기 전 1회 확인(`public/app.js`) · 만든 WAV 의 LIST/INFO 청크에 AI 생성 고지.
+`test/license-obligations.test.cjs` 5개가 이 의무들이 사라지지 않게 잰다.
+
+### 코퍼스 — 통계 수치만 쓸 때
+
+- CC BY 4.0 §4(c): 표시 의무는 "**Share all or a substantial portion of the contents of the database**" 할 때 발생한다.
+  측정치는 상당 부분이 아니다. 한국 저작권법 제93조② 도 "개별 소재는 상당한 부분으로 보지 않는다"고 한다.
+- 🔴 다만 제93조② 단서: "**반복적이거나 특정한 목적을 위하여 체계적으로**" 복제하면 상당 부분으로 본다 →
+  코퍼스를 상시 재다운로드하지 않는다. **한 번 받고 → 수치만 남기고 → 지운다**(research/absorb_*.py 가 그 방식이다).
+- 🔴 Mozilla Common Voice 는 2025-10 부터 Mozilla Data Collective 전용이고 **미러 재배포를 금지**한다.
+  CC0 라 저작권상 강제력은 없지만 계정 약관은 구속이다 — 우리는 수치만 쓰고 원본을 두지 않는다.
+
 ## 3. 목소리 정책
 
 - `public/profiles/owner.json`은 **저작권자 본인 녹음**의 파생 수치다(원본 녹음은 저장소에 없다).

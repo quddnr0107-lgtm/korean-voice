@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>라이선스 — 한국어 낭독 만들기</title>
+<style>
+  :root { --bg:#fbfaf8; --fg:#1a1a19; --dim:#6b6b66; --line:#e3e1dc; --card:#fff; --accent:#1f6f5c; --warn-bg:#fff8e8; --warn-line:#e8d9a8; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#16181a; --fg:#eceae6; --dim:#9b9a95; --line:#2e3134; --card:#1d2022; --accent:#4db39a; --warn-bg:#2a2416; --warn-line:#4a4028; } }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.75 -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif; }
+  .wrap { max-width: 820px; margin: 0 auto; padding: 0 16px; }
+  header { border-bottom:1px solid var(--line); padding-block: 26px 20px; }
+  h1 { font-size:22px; margin:0 0 6px; }
+  h2 { font-size:16px; margin:28px 0 8px; }
+  main { padding-block: 10px 40px; }
+  table { width:100%; border-collapse: collapse; font-size:14px; }
+  th, td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); vertical-align: top; }
+  th { color: var(--dim); font-weight:600; }
+  .notice { border:1px solid var(--warn-line); background:var(--warn-bg); border-radius:10px; padding:12px 14px; font-size:14px; }
+  footer { border-top:1px solid var(--line); padding-block:18px 40px; font-size:13px; color:var(--dim); }
+  a { color: var(--accent); }
+  code { background:var(--card); border:1px solid var(--line); border-radius:5px; padding:1px 5px; font-size:13px; }
+</style>
+</head>
+<body>
+<header class="wrap"><h1>라이선스</h1><p class="dim" style="color:var(--dim);margin:0">이 서비스가 쓰는 모델·코드·자료의 원문 사본을 여기에 둡니다.</p></header>
+<main class="wrap">
+
+<div class="notice">
+  <strong>모델을 내려받는 분께</strong> — 이 서비스의 「내 브라우저에서 만들기」는 음성 합성 모델(Supertonic 3)을
+  여러분의 기기로 <strong>내려받아</strong> 실행합니다. 그 모델은 <strong>BigScience Open RAIL-M</strong> 조건으로 제공되며,
+  아래 원문 사본과 <a href="/terms.html">이용약관 제1조</a>의 사용 제한이 <strong>여러분에게도 그대로 적용</strong>됩니다.
+  모델을 다른 곳에 다시 배포할 때는 이 라이선스 사본을 함께 전달해야 합니다.
+</div>
+
+<h2>모델</h2>
+<table>
+  <tr><th>대상</th><th>라이선스</th><th>원문</th></tr>
+  <tr><td>Supertonic 3 (ONNX 가중치 · voice_styles)<br><span style="color:var(--dim)">Supertone Inc.</span></td>
+      <td>BigScience Open RAIL-M (2022-08-18)</td>
+      <td><a href="/licenses/OpenRAIL-M-supertonic-3.txt">전문 보기</a> · <a href="https://huggingface.co/Supertone/supertonic-3" rel="noopener">출처</a></td></tr>
+</table>
+<p style="font-size:14px;color:var(--dim)">이 서비스는 모델 가중치를 <strong>수정하지 않고</strong> 그대로 전달합니다.
+화자는 공개된 스타일 벡터를 브라우저 메모리에서 가중 평균해 만들며, 그 결과를 파일로 배포하지 않습니다.</p>
+
+<h2>코드</h2>
+<table>
+  <tr><th>대상</th><th>라이선스</th><th>원문</th></tr>
+  <tr><td>Supertonic 웹 예제 (<code>helper.js</code>)<br><span style="color:var(--dim)">© Supertone Inc. · 우리가 import 한 줄과 머리말을 수정함</span></td>
+      <td>MIT</td><td><a href="/licenses/MIT-supertonic-sample-code.txt">전문 보기</a></td></tr>
+  <tr><td>ONNX Runtime Web<br><span style="color:var(--dim)">© Microsoft Corporation</span></td>
+      <td>MIT</td><td><a href="/licenses/MIT-onnxruntime.txt">전문 보기</a> · <a href="https://github.com/microsoft/onnxruntime/blob/main/ThirdPartyNotices.txt" rel="noopener">제3자 고지</a></td></tr>
+  <tr><td>MeloTTS (폴백 경로)<br><span style="color:var(--dim)">© MyShell.ai</span></td>
+      <td>MIT</td><td><a href="https://github.com/myshell-ai/MeloTTS/blob/main/LICENSE" rel="noopener">원문</a></td></tr>
+  <tr><td>ko-voice (한국어 정규화·운율 엔진)<br><span style="color:var(--dim)">이 서비스가 만든 것</span></td>
+      <td>Apache-2.0</td><td><a href="https://github.com/quddnr0107-lgtm/korean-voice/blob/main/LICENSES/Apache-2.0.txt" rel="noopener">원문</a></td></tr>
+</table>
+
+<h2>말투 통계를 잰 공개 코퍼스</h2>
+<p style="font-size:14px">음성이나 전사문을 서비스에 포함하지 않습니다. 한 번 내려받아 <strong>수치만 재고 원본은 지웠습니다</strong>.
+법적 표시 의무가 없는 범위이지만 출처를 밝힙니다.</p>
+<table>
+  <tr><th>코퍼스</th><th>라이선스</th></tr>
+  <tr><td><a href="https://www.openslr.org/40/" rel="noopener">Zeroth-Korean</a></td><td>CC BY 4.0</td></tr>
+  <tr><td><a href="https://huggingface.co/datasets/google/fleurs" rel="noopener">FLEURS</a></td><td>CC BY 4.0</td></tr>
+  <tr><td><a href="https://commonvoice.mozilla.org/" rel="noopener">Mozilla Common Voice (ko)</a></td><td>CC0</td></tr>
+  <tr><td><a href="https://huggingface.co/datasets/espnet/yodas" rel="noopener">YODAS</a></td><td>CC BY 3.0</td></tr>
+</table>
+
+</main>
+<footer class="wrap"><a href="/app.html">← 낭독 만들기로</a> · <a href="/terms.html">이용약관</a></footer>
+</body>
+</html>

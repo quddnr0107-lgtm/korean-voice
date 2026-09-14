@@ -14,6 +14,9 @@ Worker 하나**로 만든 것. (2026-09-03 militaryapplyhelper 저장소의 `kor
 |---|---|
 | `public/ko-voice.js` | 엔진. 브라우저(`window.KoVoice`)·Node·Worker에서 같은 파일. 외부 의존 0 |
 | `public/index.html` · `public/lab.js` | 실험실 — 원문 vs 자연화 A/B, 정규화 diff, 운율 표, 발음 표기, SSML |
+| `public/app.html` · `public/app.js` | **파는 화면** — 대본 붙이기 → 고쳐 읽는 곳 표시 → 미리듣기 → 전체 mp3 내려받기 |
+| `public/terms.html` | 이용약관(AI 생성 고지·OpenRAIL-M 사용제한 승계) · `docs/TERMS-SNIPPET.md` 가 정본 |
+| `lib/render.mjs` | 낭독 만들기의 한도·결과 캐시 키·무료 한도 계산(순수 함수 · `test/render.test.mjs`) |
 | `worker.mjs` | Cloudflare Worker: 정적 실험실 + `POST /api/tts`(신경망 음성, 엣지 캐시) |
 | `wrangler.jsonc` | Worker `korean-voice` 설정. AI 바인딩만 있고 KV·R2·D1 없음 |
 | `test/` | 정규화·음운 변동·운율·태그·API·프로필 회귀 테스트 (`npm test`) |
@@ -71,6 +74,25 @@ npm test                 # 회귀 테스트 (외부 의존 없음)
 npm run dev              # 로컬: http://localhost:8787  (AI 바인딩은 --remote 일 때만 실제 호출)
 npm run deploy           # Cloudflare Worker "korean-voice" 배포 → https://korean-voice.<account>.workers.dev
 ```
+
+## 파는 화면 — `/app.html` (대본 → mp3)
+
+```
+대본 붙이기 ─▶ ko-voice.js prepare() ─▶ 고쳐 읽는 곳 표시 ─▶ 미리듣기(/tts · 문장 단위)
+                                                              └▶ 전체 만들기(POST /render) ─▶ mp3 내려받기
+```
+
+- **파는 것은 단가가 아니라 교정이다.** 화면 2번 칸이 원문과 다른 낱말을 노랗게 칠하고 "고쳐 읽는 곳 N군데"를 센다 —
+  숫자·단위·날짜·약어·법령 용어를 틀리는 것이 경쟁 서비스의 약점이고, 그 차이가 눈에 보이는 자리다.
+- **미리듣기와 mp3 는 같은 조각을 쓴다.** 둘 다 `buildItems`(문장 하나 = 요청 하나 · 구 쉼은 문장 쉼에 합침)로
+  나누므로 캐시 키가 같다. 미리들은 문장은 mp3 를 만들 때 다시 합성되지 않고, 대본을 고쳐 다시 만들면
+  **바뀐 문장만** 새로 합성된다. 같은 대본을 그대로 다시 만들면 R2 결과 캐시에서 즉시 나온다.
+- **`POST /render`** (`worker.mjs` → 컨테이너 `server.py`): 조각을 순서대로 합성해 계획된 쉼(무음 mp3)과 함께
+  `ffmpeg concat -c copy` 로 잇는다 — 다시 인코딩하지 않으니 소리가 그대로다. 만든 파일은 응답 뒤 서버에서 지운다
+  (조각 캐시만 남는다). 한도: 조각 400개 · 20,000자 · 조각당 400자 · 쉼 3초.
+- **무료 한도**: 하루 3,000자. `Meter`(Durable Object)가 `sha1(IP)` 이름으로 세고 원본 주소는 저장하지 않는다.
+  R2 적중(= 합성 없는 요청)은 한도를 쓰지 않는다. 결제를 붙일 자리는 여기 하나다 — `lib/render.mjs`의 `quota()`.
+- **아직 없는 것**: 로그인·결제. 지금은 무료 한도까지만 쓰이고, 한도를 넘으면 429 와 안내가 나간다.
 
 ## 배포 후 확인 절차 (머지 = 배포가 아니다)
 

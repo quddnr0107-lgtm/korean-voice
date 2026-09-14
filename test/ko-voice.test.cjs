@@ -464,3 +464,45 @@ test('미확정 세 자리 군 모델은 K21 규칙으로 일반화하지 않는
     assert.ok(out.length > 0);
   }
 });
+
+/* 합성 엔진의 전처리가 한국어 낭독에 영어를 심는 것을 여기서 막는다.
+   Supertonic 의 preprocessText(py/helper.py · web/helper.js)는 '@'→' at ',
+   'e.g.,'→'for example, ', 'i.e.,'→'that is, ' 로 치환한다 — 서버 경로와 브라우저 경로가
+   둘 다 그 전처리를 지나므로, 정규화(정본)에서 먼저 한국어로 바꿔 발동을 막아야 한다. */
+test('엔진 전처리의 영어 주입을 막는다 — @ · e.g. · i.e.', () => {
+  const cases = [
+    ['문의는 admin@drill.kr 로 주세요.', /골뱅이/],
+    ['가격은 3개@1,000원입니다.', /골뱅이/],
+    ['조건(e.g., 만 19세)을 보세요.', /예를 들어/],
+    ['설명(i.e., 요약)입니다.', /즉/],
+    ['조건(E.G., 만 19세)', /예를 들어/],
+  ];
+  for (const [input, want] of cases) {
+    const out = K.normalize(input);
+    assert.match(out, want);
+    assert.ok(!/@/.test(out), '@ 가 남으면 엔진이 " at " 로 바꾼다: ' + out);
+    assert.ok(!/e\.g\.|i\.e\./i.test(out), '약어가 남으면 엔진이 영어 문구로 바꾼다: ' + out);
+  }
+});
+
+/* 날짜와 분수 가리기 — 2026-09-13 시험 대본에서 「1/2 확률」을 '일 월 이 일' 로 읽는 것을 잡았다.
+   규칙: 진분수(a<b · 분모 12 이하)는 분수, 그 밖은 날짜. 단 날짜 맥락이 붙으면 날짜가 이긴다. */
+test('1/2 은 분수, 9/3 은 날짜 — 맥락으로 가린다', () => {
+  const cases = [
+    ['1/2 확률의 알약', /이 분의 일 확률/],
+    ['1/10 만큼', /십 분의 일/],
+    ['2/3 정도', /삼 분의 이/],
+    ['9/3 마감', /구 월 삼 일 마감/],
+    ['3/25 행사', /삼 월 이십오 일/],
+    ['12/25 크리스마스', /십이 월 이십오 일/],
+    ['1/10 마감', /일 월 십 일/],          // 날짜 맥락(마감)이 있으면 날짜
+    ['6/1부터', /유월 일 일부터/],
+    ['1/2(월) 회의', /일 월 이 일/],
+  ];
+  for (const [input, want] of cases) assert.match(K.normalize(input), want, input);
+});
+
+test('ChatGPT·OpenAI 는 한국어로 읽는다 — 영단어로 남으면 엔진 발음에 맡겨진다', () => {
+  assert.match(K.normalize('ChatGPT와 API 연동'), /챗지피티와 에이피아이/);
+  assert.match(K.normalize('OpenAI 발표'), /오픈에이아이/);
+});

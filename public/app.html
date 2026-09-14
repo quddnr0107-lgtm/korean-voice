@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>한국어 낭독 만들기 — 숫자·단위·법령 용어를 틀리지 않게</title>
+<meta name="description" content="대본을 붙이면 숫자·단위·날짜·약어를 사람이 읽는 대로 고쳐 읽고, 문장별 쉼과 억양을 넣어 mp3로 만들어 줍니다.">
+<style>
+  :root {
+    --bg: #fbfaf8; --fg: #1a1a19; --dim: #6b6b66; --line: #e3e1dc; --card: #ffffff;
+    --accent: #1f6f5c; --accent-fg: #ffffff; --mark: #fdf0c8; --mark-fg: #5a4600;
+    --warn-bg: #fff8e8; --warn-line: #e8d9a8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #16181a; --fg: #eceae6; --dim: #9b9a95; --line: #2e3134; --card: #1d2022;
+      --accent: #4db39a; --accent-fg: #10201c; --mark: #453a16; --mark-fg: #f6e7b0;
+      --warn-bg: #2a2416; --warn-line: #4a4028;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.65 -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif; }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 0 16px; }
+  header { border-bottom: 1px solid var(--line); padding-block: 28px 22px; }
+  h1 { font-size: 24px; margin: 0 0 6px; letter-spacing: -0.02em; }
+  .lede { color: var(--dim); margin: 0; }
+  .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line); color: var(--dim); background: var(--card); }
+  main { padding-block: 22px 40px; }
+  section { margin-bottom: 26px; }
+  h2 { font-size: 14px; text-transform: none; color: var(--dim); font-weight: 600; margin: 0 0 8px; }
+  textarea { width: 100%; min-height: 150px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--fg); font: inherit; resize: vertical; }
+  textarea:focus, select:focus, button:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .samples button { font-size: 13px; }
+  button { font: inherit; padding: 8px 14px; border-radius: 9px; border: 1px solid var(--line); background: var(--card); color: var(--fg); cursor: pointer; }
+  button:hover:not(:disabled) { border-color: var(--accent); }
+  button:disabled { opacity: 0.5; cursor: default; }
+  button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); font-weight: 600; }
+  select { font: inherit; padding: 7px 10px; border-radius: 9px; border: 1px solid var(--line); background: var(--card); color: var(--fg); }
+  label { font-size: 13px; color: var(--dim); display: inline-flex; gap: 6px; align-items: center; }
+  .card { border: 1px solid var(--line); background: var(--card); border-radius: 10px; padding: 14px; }
+  .read { line-height: 1.9; word-break: keep-all; }
+  .read mark { background: var(--mark); color: var(--mark-fg); padding: 1px 3px; border-radius: 3px; }
+  .fixcount { font-size: 13px; color: var(--dim); margin-top: 8px; }
+  .fixcount b { color: var(--accent); }
+  .notice { border: 1px solid var(--warn-line); background: var(--warn-bg); border-radius: 10px; padding: 11px 13px; font-size: 13px; }
+  .status { font-size: 13px; color: var(--dim); min-height: 1.6em; }
+  .quota { font-size: 13px; color: var(--dim); }
+  audio { width: 100%; margin-top: 10px; }
+  footer { border-top: 1px solid var(--line); padding-block: 18px 40px; font-size: 13px; color: var(--dim); }
+  footer a { color: inherit; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>한국어 낭독 만들기</h1>
+  <p class="lede">대본을 붙이면 <strong>숫자·단위·날짜·약어</strong>를 사람이 읽는 대로 고쳐 읽습니다. 문장별 쉼과 억양까지 넣어 mp3로 내려받으세요.</p>
+  <p style="margin:12px 0 0"><span class="badge" aria-label="AI로 생성된 음성">🔊 AI 음성</span></p>
+</div></header>
+
+<main class="wrap">
+  <section>
+    <h2>1. 대본</h2>
+    <textarea id="text" spellcheck="false" placeholder="여기에 대본을 붙여 넣으세요."></textarea>
+    <div class="row samples" style="margin-top:8px">
+      <span style="font-size:13px;color:var(--dim)">예시:</span>
+      <button type="button" data-sample="numbers">숫자·단위</button>
+      <button type="button" data-sample="notice">안내문</button>
+      <button type="button" data-sample="law">법령</button>
+      <button type="button" data-sample="tags">감정 태그</button>
+    </div>
+  </section>
+
+  <section>
+    <h2>2. 이렇게 읽습니다 <span style="font-weight:400">— 노란 부분이 고쳐 읽는 곳</span></h2>
+    <div class="card read" id="normalized" aria-live="polite"></div>
+    <p class="fixcount" id="fixcount"></p>
+  </section>
+
+  <section>
+    <h2>3. 목소리</h2>
+    <div class="row">
+      <label>목소리 <select id="voice"><optgroup label="조합 (사람이 표본 듣고 정한 것)"><option value="female">여성 조합</option><option value="male">남성 조합</option></optgroup><optgroup label="여성 원본"><option value="f1">여성 F1</option><option value="f2">여성 F2</option><option value="f3">여성 F3</option><option value="f4">여성 F4</option><option value="f5">여성 F5</option></optgroup><optgroup label="남성 원본"><option value="m1">남성 M1</option><option value="m2">남성 M2</option><option value="m3">남성 M3</option><option value="m4">남성 M4</option><option value="m5">남성 M5</option></optgroup></select></label>
+      <label>감정 <select id="emotion"><option value="">자동 감지</option></select></label>
+      <label>속도 <select id="rate"><option value="0.9">느리게</option><option value="1" selected>보통</option><option value="1.1">빠르게</option></select></label>
+    </div>
+  </section>
+
+  <section>
+    <h2>4. 만들기</h2>
+    <div class="row" style="margin-bottom:10px">
+      <label>만드는 곳
+        <select id="where">
+          <option value="server">서버 (빠름 · 하루 3,000자 무료)</option>
+          <option value="local">내 브라우저 (무제한 · 모델 384MB 한 번 받음)</option>
+        </select>
+      </label>
+      <span id="engineInfo" style="font-size:13px;color:var(--dim)"></span>
+    </div>
+    <div class="row">
+      <button type="button" id="preview">미리듣기</button>
+      <button type="button" id="stop">멈춤</button>
+      <button type="button" class="primary" id="render">전체 mp3 만들기</button>
+      <a id="download" hidden></a>
+    </div>
+    <div class="notice" id="consent" hidden style="margin:10px 0">
+      <p style="margin:0 0 8px"><strong>모델을 내려받기 전에 확인해 주세요.</strong>
+      「내 브라우저에서 만들기」는 음성 합성 모델(Supertonic 3, 약 384MB)을 <strong>이 기기로 내려받아</strong> 실행합니다.
+      이 모델은 BigScience Open RAIL-M 조건으로 제공되며, <a href="/terms.html">이용약관 제1조</a>의 사용 제한이
+      여러분에게도 적용됩니다 — 특히 <strong>실존 인물의 동의 없는 음성 모사</strong>와
+      <strong>AI 생성 사실을 숨기는 것</strong>이 금지됩니다. 원문은 <a href="/licenses.html">라이선스 페이지</a>에 있습니다.</p>
+      <label style="display:flex;gap:8px;align-items:flex-start">
+        <input type="checkbox" id="consentCheck">
+        <span>위 내용을 읽었고, 모델을 다시 배포할 때 라이선스 사본과 같은 제한을 함께 전달하겠습니다.</span>
+      </label>
+      <p style="margin:10px 0 0"><button type="button" id="consentOk" disabled>동의하고 내려받기</button></p>
+    </div>
+    <p class="status" id="status"></p>
+    <p class="quota" id="quota"></p>
+    <audio id="player" controls hidden></audio>
+  </section>
+
+  <section>
+    <p class="notice">이 음성은 <strong>AI로 생성</strong>되었습니다. 실제 사람의 녹음이 아닙니다.
+    실존 인물의 목소리를 동의 없이 모사하는 데 쓸 수 없고, 만들어진 음성을 사람이 직접 발화한 것처럼 제시할 수 없습니다.
+    자세한 조건은 <a href="/terms.html">이용약관</a>에 있습니다.</p>
+  </section>
+</main>
+
+<footer class="wrap">
+  <p><strong>음성 기술 출처</strong> — 음성 합성: Supertonic 3 (Supertone, BigScience OpenRAIL-M) · 한국어 정규화·운율 엔진: ko-voice (Apache-2.0)</p>
+  <p>운율 통계 측정에 쓴 공개 코퍼스: Zeroth-Korean (CC BY 4.0) · FLEURS (CC BY 4.0) · Mozilla Common Voice (CC0) · YODAS (CC BY 3.0). 이 서비스는 위 코퍼스의 음성을 재배포하지 않고 측정된 통계 수치만 사용합니다.</p>
+  <p><a href="/terms.html">이용약관</a> · <a href="/licenses.html">라이선스</a> · <a href="/">실험실</a></p>
+</footer>
+
+<script src="/ko-voice.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>

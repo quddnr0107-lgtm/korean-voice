@@ -4,6 +4,7 @@
     GET /health                       → {"ok":true,"voices":[…],"cached":N}
     GET /tts?v=female&t=<문장>[&s=16][&r=1.0]  → audio/mpeg  (Cache-Control 1년 · CORS * · Range 지원(iOS))
     GET /voices                       → 목소리 목록
+    POST /render {v,items:[{t,r,pause}]} → audio/mpeg  (대본 전체를 잇고 계획된 쉼을 넣은 하나의 파일)
 
 설계
 - 텍스트 정규화·문장 나누기·쉼은 **클라이언트**(ko-voice.js)가 한다. 서버는 받은 문장을 그대로 읽는다.
@@ -37,6 +38,20 @@ import recipes as RC       # noqa: E402  — 조합 등록부: 목소리 두 벌
 VOICES = {
     'female': {'style': None, 'label': '여성', 'speed': 1.05},   # None = 그 조합이 정한 목소리(조합마다 다르다)
     'male': {'style': 'M1:0.7,M3:0.3', 'label': '남성', 'speed': 1.05},
+    # 🔵 공개 스타일 원본 10개 — 2026-09-13 청취 뒤 전부 고를 수 있게 했다. **기존 두 목소리는 그대로 둔다**:
+    #    캐시 키에 목소리 이름이 들어가므로 새 이름을 쓰면 구워 둔 조각이 하나도 무효화되지 않는다
+    #    (조합을 바꿔치웠으면 RECIPE_TAG 를 올려 전량 재굽기를 해야 했다).
+    #    굽는 것은 여전히 female·male 둘뿐이다(worker.mjs 의 BAKED_VOICES).
+    'f1': {'style': 'F1', 'label': '여성 F1', 'speed': 1.05},
+    'f2': {'style': 'F2', 'label': '여성 F2', 'speed': 1.05},
+    'f3': {'style': 'F3', 'label': '여성 F3', 'speed': 1.05},
+    'f4': {'style': 'F4', 'label': '여성 F4', 'speed': 1.05},
+    'f5': {'style': 'F5', 'label': '여성 F5', 'speed': 1.05},
+    'm1': {'style': 'M1', 'label': '남성 M1', 'speed': 1.05},
+    'm2': {'style': 'M2', 'label': '남성 M2', 'speed': 1.05},
+    'm3': {'style': 'M3', 'label': '남성 M3', 'speed': 1.05},
+    'm4': {'style': 'M4', 'label': '남성 M4', 'speed': 1.05},
+    'm5': {'style': 'M5', 'label': '남성 M5', 'speed': 1.05},
 }
 
 
@@ -56,6 +71,7 @@ _singleflight = KeyedSingleflight()
 
 def load():
     global _tts
+    _style_cache = {}
     _tts = helper.load_text_to_speech(os.path.join(ST_DIR, 'onnx'), False)
     for tag in RC.TAGS:
      for name, v in VOICES.items():
@@ -70,7 +86,9 @@ def load():
         total = sum(w for _, w in parts) or 1.0
         for n, w in parts:
             w = w / total                                  # 가중치 합을 1 로 정규화(load_blend 와 같다)
-            st = helper.load_voice_style([os.path.join(ST_DIR, 'voice_styles', n + '.json')])
+            if n not in _style_cache:                      # 목소리 12개 × 벌 2개 = 같은 파일을 수십 번 읽게 된다
+                _style_cache[n] = helper.load_voice_style([os.path.join(ST_DIR, 'voice_styles', n + '.json')])
+            st = _style_cache[n]
             ttl = st.ttl * w if ttl is None else ttl + st.ttl * w
             dp = st.dp * w if dp is None else dp + st.dp * w
         _styles[(tag, name)] = helper.Style(ttl.astype(np.float32), dp.astype(np.float32))
@@ -168,6 +186,90 @@ def warm(voice, texts, steps, r=1.0, tag=None):
     return n
 
 
+# 낭독 전체 음량 — EBU R128(ITU-R BS.1770). 웹 재생이 쓰는 I=-16 LUFS · 트루피크 -1.5dB.
+# 🔴 2-pass 다. 1-pass 는 **동적** 정규화라 구간마다 게인이 달라질 수 있고(= 강조·감정의 셈여림이 뭉개진다),
+#    2-pass 는 측정값을 넣어 `linear=true` 로 **전체에 단일 게인**을 건다. 비용 차이는 25초당 0.26초뿐이다
+#    (실측 2026-09-13: 1-pass 0.62s/-16.71 LUFS · 2-pass 0.88s/-16.48 LUFS · 구간 게인 편차 0.85 vs 0.91 LU —
+#     이 길이의 표본으로는 두 방식을 가릴 수 없었다. 그래서 구조적으로 단일 게인이 보장되는 쪽을 쓴다).
+LOUDNORM_TARGET = 'I=-16:TP=-1.5:LRA=11'
+RENDER_MAX_ITEMS = 400
+RENDER_MAX_CHARS = 20000
+RENDER_MAX_PAUSE_MS = 3000
+
+
+def silence_mp3(ms):
+    """계획된 쉼 — 조각과 **같은 인코딩 설정**의 무음 mp3. 값의 종류가 몇 개뿐이라 디스크에 두고 다시 쓴다."""
+    import subprocess
+    d = os.path.join(CACHE, 'sil'); os.makedirs(d, exist_ok=True)
+    out = os.path.join(d, f'{int(ms)}.mp3')
+    if not os.path.exists(out):
+        subprocess.run([ffmpeg(), '-v', 'error', '-y', '-f', 'lavfi', '-i', 'anullsrc=r=24000:cl=mono',
+                        '-t', f'{ms / 1000.0:.3f}', '-codec:a', 'libmp3lame', '-b:a', '48k', '-f', 'mp3', out + '.part'], check=True)
+        os.replace(out + '.part', out)
+    return out
+
+
+def render(voice, items, steps, tag=None):
+    """조각을 순서대로 합성해(캐시 우선) 계획된 쉼과 함께 하나의 mp3 로 잇는다.
+
+    이어붙이기는 ffmpeg concat 디먹서 + **디코드 후 한 번 인코딩**이다. `-c copy` 는 쓰지 않는다 —
+    조각마다 mp3 프레임(1152샘플 = 24kHz 에서 48ms) 패딩이 남아 **조각 수 × 약 48ms 만큼 길어진다**
+    (실측 2026-09-13: 조각 10개 26초에서 +500ms). 재인코딩하면 길이 오차가 0 이고 25초당 0.6초면 된다.
+    같은 패스에 loudnorm(EBU R128 · I=-16 LUFS · TP=-1.5dB)을 걸어 문장 간 음량도 고른다
+    (조각 간 편차는 이미 1.1 LU 라 문장별 정규화는 하지 않는다 — 강조·감정의 셈여림을 뭉갠다).
+    1-pass 로 -16.73 LUFS, 2-pass 로 -16.72 LUFS 라 2-pass 는 쓰지 않는다.
+
+    조각 자체는 /tts 와 **같은 캐시**를 쓴다: 대본을 고쳐 다시 만들면 바뀐 문장만 새로 합성된다.
+    """
+    import subprocess, tempfile, uuid
+    tag = RC.get(tag).RECIPE_TAG
+    parts = []
+    for it in items:
+        text = clean_text(it.get('t'))
+        if not text:
+            continue
+        r = parse_r(it.get('r', 1.0))
+        parts.append(cached_or_synthesize(voice, text, steps, r, tag))
+        pause = it.get('pause') or 0
+        try:
+            pause = max(0, min(RENDER_MAX_PAUSE_MS, int(pause)))
+        except (TypeError, ValueError):
+            pause = 0
+        if pause >= 10:                       # 10ms 아래는 무음 파일을 만들 가치가 없다
+            parts.append(silence_mp3(pause))
+    if not parts:
+        raise ValueError('empty_items')
+    d = os.path.join(CACHE, 'render'); os.makedirs(d, exist_ok=True)
+    out = os.path.join(d, uuid.uuid4().hex + '.mp3')
+    with tempfile.NamedTemporaryFile('w', suffix='.txt', dir=d, delete=False, encoding='utf-8') as f:
+        listfile = f.name
+        for p in parts:
+            f.write("file '" + p.replace("'", "'\\''") + "'\n")
+    try:
+        # 1차: 라우드니스 측정만(출력 없음)
+        m = subprocess.run([ffmpeg(), '-v', 'info', '-f', 'concat', '-safe', '0', '-i', listfile,
+                            '-af', 'loudnorm=' + LOUDNORM_TARGET + ':print_format=json', '-f', 'null', '-'],
+                           capture_output=True, text=True)
+        af = 'loudnorm=' + LOUDNORM_TARGET
+        hit = re.search(r'\{[^{}]*"input_i"[\s\S]*?\}', m.stderr or '')
+        if hit:
+            try:
+                st = json.loads(hit.group(0))
+                af = ('loudnorm=' + LOUDNORM_TARGET +
+                      ':measured_I=%s:measured_TP=%s:measured_LRA=%s:measured_thresh=%s:linear=true'
+                      % (st['input_i'], st['input_tp'], st['input_lra'], st['input_thresh']))
+            except (ValueError, KeyError):
+                pass                       # 측정을 못 읽으면 1-pass 로 떨어진다(소리는 나온다)
+        # 2차: 이어붙이며 단일 게인 적용 → mp3 한 번만 인코딩
+        subprocess.run([ffmpeg(), '-v', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', listfile,
+                        '-af', af, '-ar', '24000', '-ac', '1',
+                        '-codec:a', 'libmp3lame', '-b:a', '48k', '-f', 'mp3', out], check=True)
+    finally:
+        try: os.remove(listfile)
+        except OSError: pass
+    return out
+
+
 def cache_key(voice, text, steps, r=1.0, tag=None):
     # 🔴 worker.mjs 의 키와 같은 꼴(sha1("voice|steps|r|tag|text")) — r 은 소수 둘째 자리까지
     return hashlib.sha1(f'{voice}|{steps}|{fmt_r(r)}|{RC.get(tag).RECIPE_TAG}|{text}'.encode('utf-8')).hexdigest()
@@ -237,13 +339,15 @@ class H(BaseHTTPRequestHandler):
 
     def do_POST(self):
         u = urllib.parse.urlsplit(self.path)
-        if u.path != '/warm':
+        if u.path not in ('/warm', '/render'):
             return self._json({'ok': False, 'error': 'not_found'}, 404)
         try:
             n = int(self.headers.get('Content-Length') or 0)
-            body = json.loads(self.rfile.read(min(n, 200000)).decode('utf-8') or '{}')
+            body = json.loads(self.rfile.read(min(n, 2000000)).decode('utf-8') or '{}')
         except Exception:
             return self._json({'ok': False, 'error': 'bad_json'}, 400)
+        if u.path == '/render':
+            return self._render(body)
         voice = body.get('v') or 'female'
         if voice not in VOICES:
             return self._json({'ok': False, 'error': 'bad_voice'}, 400)
@@ -257,6 +361,36 @@ class H(BaseHTTPRequestHandler):
         r = parse_r(body.get('r', 1.0))
         tag = RC.get(body.get('k')).RECIPE_TAG
         return self._json({'ok': True, 'queued': warm(voice, texts[:400], steps, r, tag), 'queue': _warm_q.qsize()})
+
+    def _render(self, body):
+        """POST /render {v, s?, k?, items:[{t, r, pause}]} → audio/mpeg (대본 전체 · 계획된 쉼 포함)"""
+        voice = body.get('v') or 'female'
+        if voice not in VOICES:
+            return self._json({'ok': False, 'error': 'bad_voice'}, 400)
+        items = body.get('items') or []
+        if not isinstance(items, list) or not items:
+            return self._json({'ok': False, 'error': 'empty_items'}, 400)
+        if len(items) > RENDER_MAX_ITEMS:
+            return self._json({'ok': False, 'error': 'too_many_items'}, 400)
+        chars = sum(len(clean_text(it.get('t') if isinstance(it, dict) else '')) for it in items)
+        if chars > RENDER_MAX_CHARS:
+            return self._json({'ok': False, 'error': 'too_many_chars', 'chars': chars}, 400)
+        tag = RC.get(body.get('k')).RECIPE_TAG
+        try:
+            steps = max(4, min(32, int(body.get('s') or RC.steps_for(tag))))
+        except (TypeError, ValueError):
+            steps = RC.steps_for(tag)
+        try:
+            path = render(voice, [it for it in items if isinstance(it, dict)], steps, tag)
+        except ValueError:
+            return self._json({'ok': False, 'error': 'empty_items'}, 400)
+        except Exception as e:
+            return self._json({'ok': False, 'error': 'synthesis_failed', 'reason': str(e)[:300]}, 502)
+        try:
+            self._send_file(path, tag)
+        finally:
+            try: os.remove(path)      # 대본은 이용자의 것이다 — 서버에 남기지 않는다(조각 캐시만 남는다)
+            except OSError: pass
 
     def do_HEAD(self):
         self.do_GET()

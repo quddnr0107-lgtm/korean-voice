@@ -11,9 +11,10 @@
 import { Container, getContainer } from '@cloudflare/containers';
 import { DurableObject } from 'cloudflare:workers';
 import { handleTts, json } from './lib/melotts.mjs';
-import { cacheKey, parseR, RECIPE_TAG, FALLBACK, TAGS, tagOf } from './lib/tts-key.mjs';
+import { cacheKey, parseR, RECIPE_TAG, FALLBACK, TAGS, tagOf, sha1 } from './lib/tts-key.mjs';
 import { makeBaker } from './lib/bake.mjs';
 import { prune } from './lib/prune.mjs';
+import { normalizeItems, renderKey, dayStamp, quota, FREE_DAILY_CHARS, GLOBAL_DAILY_CHARS, globalCap, LIMITS } from './lib/render.mjs';
 import { verifyGithubOidc } from './lib/oidc.mjs';
 export { handleTts, MODEL, LANGS, MAX_CHARS, _reset } from './lib/melotts.mjs';
 
@@ -30,6 +31,26 @@ export class TtsContainer extends Container {
    GET  /bake                                              상태(열려 있다 · 읽기만)
    🔴 BAKE_TOKEN(비밀값)이 안 심겨 있으면 POST 는 503 — 아무나 컨테이너 시간을 못 태운다. */
 export class BakeQueue extends DurableObject {
+  /* ── 무료 한도 계량기 ── 같은 클래스의 **다른 오브젝트**(이름 'meter|sha1(IP)')로 센다.
+     🔴 왜 전용 클래스를 안 쓰나: 새 Durable Object 클래스 + migration 을 넣은 배포가 2026-09-13 에
+        3회 연속 13초 안에 거부됐고, 그 설정을 되돌리자 바로 성공했다(c0bd069). 이미 등록된 클래스를
+        나눠 쓰면 migration 이 필요 없다. 굽기 쪽 키와 섞이지 않게 'meter:' 를 붙인다.
+     이름이 sha1(IP) 라 원본 주소를 저장하지 않고, 날짜(UTC)가 바뀌면 전날 기록은 버린다.
+     R2 에 이미 있는 대본(= 합성이 없는 요청)은 한도를 쓰지 않는다 — handleRender 가 R2 miss 뒤에 부른다. */
+  async use(day, chars, limit) {
+    const stored = (await this.ctx.storage.get('meter:day')) || '';
+    let used = (await this.ctx.storage.get('meter:used')) || 0;
+    if (stored !== day) { used = 0; await this.ctx.storage.put({ 'meter:day': day, 'meter:used': 0 }); }
+    const q = quota(used, chars, limit);
+    if (q.ok) await this.ctx.storage.put({ 'meter:day': day, 'meter:used': q.after });
+    return q;
+  }
+  async peek(day, limit) {
+    const stored = (await this.ctx.storage.get('meter:day')) || '';
+    const used = stored === day ? ((await this.ctx.storage.get('meter:used')) || 0) : 0;
+    return quota(used, 0, limit);
+  }
+
   constructor(ctx, env) {
     super(ctx, env);
     this.baker = makeBaker({
@@ -87,8 +108,12 @@ async function handleBakeHas(request, env) {
   return json({ ok: true, has: out }, 200, CORS);
 }
 /* POST /bake/prune {items:[{t,r}…], s?, dry?, force?} — 옛 조각 폐기 (2026-09-05 yebijun 사용자 「이전 꺼 다 폐기해」)
-   지금 조각 목록으로 목소리 전부의 키를 만들고, R2 tts/ 아래에서 그 집합에 없는 것을 지운다(lib/prune.mjs). 인증은 /bake/put 과 같은 GitHub OIDC(main).
-   🔴 dry 가 기본 — 지우려면 dry:false 를 명시한다. 목록이 1,000키 미만이면 거부한다(빈 목록으로 전부 지우는 사고 차단). */
+   지금 조각 목록으로 키를 만들고, 그 집합에 없는 것을 지운다(lib/prune.mjs). 인증은 /bake/put 과 같은 GitHub OIDC(main).
+   🔴 **구운 목소리의 우리(tts/<목소리>/) 안에서만 지운다.** 옛날처럼 tts/ 전체를 훑으면, 굽지 않고 주문형으로
+      쌓인 나머지 목소리(f1…m5)의 조각이 보존 집합에 없다는 이유로 **폐기 때마다 통째로 지워진다** — 들을 때마다
+      다시 합성돼 합성 비용이 반복해서 나가고 첫 청취자가 매번 기다린다. 키가 tts/<목소리>/<sha1>.mp3 라
+      우리를 목소리별로 좁히면 구조적으로 손이 닿지 않는다.
+   🔴 dry 가 기본 — 지우려면 dry:false 를 명시한다. 목소리마다 1,000키 미만이면 거부한다(빈 목록으로 전부 지우는 사고 차단). */
 async function handleBakePrune(request, env) {
   if (!env.TTS_CACHE) return json({ ok: false, error: 'no_r2' }, 503, CORS);
   const tok = (request.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
@@ -97,11 +122,19 @@ async function handleBakePrune(request, env) {
   let body = {}; try { body = await request.json(); } catch (_) { body = {}; }
   const items = Array.isArray(body.items) ? body.items : [];
   const s = Math.max(4, Math.min(32, parseInt(body.s || DEFAULT_STEPS, 10) || DEFAULT_STEPS));
-  const keep = new Set();
-  for (const it of items) { const t = cleanText(it && it.t); if (!t) continue; const r = parseR(it.r == null ? 1 : it.r); for (const voice of VOICES) keep.add(await cacheKey(voice, s, r, t)); }
+  const keepBy = new Map(BAKED_VOICES.map((voice) => [voice, new Set()]));
+  for (const it of items) { const t = cleanText(it && it.t); if (!t) continue; const r = parseR(it.r == null ? 1 : it.r); for (const voice of BAKED_VOICES) keepBy.get(voice).add(await cacheKey(voice, s, r, t)); }
+  const dry = body.dry !== false, force = body.force === true;
   try {
-    const out = await prune({ r2: env.TTS_CACHE, keep, dry: body.dry !== false, force: body.force === true });
-    return json(out, out.ok ? 200 : 400, CORS);
+    const per = [];
+    for (const voice of BAKED_VOICES) {
+      const out = await prune({ r2: env.TTS_CACHE, keep: keepBy.get(voice), prefix: `tts/${voice}/`, dry, force });
+      per.push({ voice, ...out });
+      if (!out.ok) return json({ ok: false, dry, voice, ...out, per }, 400, CORS);
+    }
+    const sum = (f) => per.reduce((a, o) => a + (o[f] || 0), 0);
+    return json({ ok: true, dry, voices: BAKED_VOICES, total: sum('total'), keep: sum('keep'), hit: sum('hit'),
+                  drop: sum('drop'), deleted: sum('deleted'), truncated: per.some((o) => o.truncated), per }, 200, CORS);
   } catch (e) { return json({ ok: false, error: 'prune_failed', reason: String((e && e.message) || e).slice(0, 400) }, 500, CORS); }
 }
 async function handleBake(request, env) {
@@ -124,8 +157,30 @@ async function handleBake(request, env) {
   }
 }
 
+/* 보안 헤더. 브라우저 합성(우리 비용 0)을 켜기 위해 정확히 필요한 것만 넓혔다:
+   - script-src cdn.jsdelivr.net : onnxruntime-web 1.17.0 (ESM) — 25MB 를 저장소에 넣지 않는다
+   - 'wasm-unsafe-eval'          : WebAssembly 컴파일. 없으면 ORT 가 조용히 죽는다
+   - worker-src blob: + script-src blob: : ORT 가 스레드용 워커를 blob: 로 만들고, 그 워커가
+                                    blob: 스크립트를 importScripts 로 읽는다(둘 다 없으면 워커가 죽는다)
+   - connect-src huggingface·hf.co: 모델 384MB(리다이렉트 대상이 *.hf.co 다)
+   - media-src blob:             : 만든 소리를 <audio> 로 들려준다
+   COOP/COEP 는 SharedArrayBuffer 를 켜 WASM 멀티스레드를 쓰기 위한 것이다(교차출처 격리).
+   credentialless 는 교차출처 자원을 CORP 헤더 없이도 받게 해 준다(require-corp 면 CDN·HF 가 막힌다). */
 const SECURITY = {
-  'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'",
+  'Content-Security-Policy': [
+    "default-src 'self'",
+    // blob: 은 ORT 가 만드는 워커 때문에 필요하다 — 워커가 blob: 스크립트를 importScripts 로 읽는다
+    // (없으면 "Failed to execute 'importScripts'" 로 조용히 죽는다 · 2026-09-13 헤드리스 실측)
+    "script-src 'self' 'wasm-unsafe-eval' blob: https://cdn.jsdelivr.net",
+    "worker-src 'self' blob:",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data:",
+    "connect-src 'self' blob: https://cdn.jsdelivr.net https://huggingface.co https://*.huggingface.co https://*.hf.co",
+    "media-src 'self' blob:",
+    "object-src 'none'", "base-uri 'self'", "frame-ancestors 'none'",
+  ].join('; '),
+  'Cross-Origin-Opener-Policy': 'same-origin',
+  'Cross-Origin-Embedder-Policy': 'credentialless',
   'X-Content-Type-Options': 'nosniff',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
 };
@@ -133,12 +188,20 @@ const SECURITY = {
 /* ── 즉시 합성 서버(컨테이너) — server/server.py 가 Supertonic 3 를 돌린다 ─────────────────────────
    GET  /tts?v=female|male&t=문장[&s=16][&r=1.0]  → R2 캐시(korean-voice-tts) 적중이면 바로, 아니면 컨테이너가 합성 → R2 저장
    POST /warm {v, texts:[…][, r]}         → 컨테이너 대기열(앞서 굽기)
+   POST /render {v, items:[{t,r,pause}]}  → 대본 전체를 하나의 mp3 로(조각 캐시 재사용 · 결과도 R2 에 둔다 · lib/render.mjs)
+   GET  /render                           → 오늘 남은 무료 글자 수(Meter DO)
    GET  /meta                             → 워커 메타데이터(recipe·voice_sets·R2)만, 컨테이너 접근 0
    GET  /health                           → 관리자/진단용 컨테이너 상태(잠들어 있으면 깨울 수 있다)
    캐시 키는 server.py 의 cache_key 와 같다(lib/tts-key.mjs): sha1("voice|steps|r|조합표식|text") · text 는 공백 정리·400자.
    🔴 r(합성 속도 배수)과 조합표식(voice_shape.RECIPE_TAG)이 키에 들어간다 — 다듬기 조합이 바뀌면 옛 R2 캐시는 자연히 안 맞는다. */
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, OPTIONS', 'Access-Control-Allow-Headers': 'Range, Content-Type', 'Access-Control-Expose-Headers': 'Content-Length, Content-Range, Accept-Ranges' };
-const VOICES = ['female', 'male'];
+/* 고를 수 있는 목소리 — server.py 의 VOICES 와 같아야 한다(test/render-audio-invariants.test.cjs 가 잰다).
+   조합 2개 + 공개 스타일 원본 10개. 원본을 추가해도 기존 두 목소리의 캐시는 무효화되지 않는다(키에 이름이 들어간다). */
+const VOICES = ['female', 'male', 'f1', 'f2', 'f3', 'f4', 'f5', 'm1', 'm2', 'm3', 'm4', 'm5'];
+/* 🔴 **굽는 목소리는 둘뿐이다.** 폐기(prune)의 보존 키를 VOICES 전체로 만들면 조각 5만8천 × 12 = 70만 개
+   sha1 을 워커 메모리(128MB)에 쌓고 crypto 를 70만 번 돌린다 — 강의는 female·male 만 굽기 때문에
+   나머지 키는 R2 에 **애초에 없어서 계산할 이유도 없다**. 그래서 폐기는 이 목록만 본다. */
+const BAKED_VOICES = ['female', 'male'];
 /* 🔴 스텝은 캐시 키(v|s|r|표식|글)에 들어간다 — 바꾸면 구운 것이 전부 무효가 되고 전량 재굽기다.
    16 → 8 (2026-09-08): 실측으로 품질이 안 떨어지는 것을 확인하고 내렸다.
      조각당 5.31s → 2.97s (절반) · HNR 15.46 → 15.55 (오히려 미세 상승) · 사용자 청취 「소리는 똑같아」
@@ -218,6 +281,92 @@ async function handleLiveTts(request, env, ctx) {
   }
   return audioResponse(bytes, bytes.length, 200, cacheable ? { 'X-TTS-Cache': 'miss' } : { 'X-TTS-Cache': 'miss-nocache', 'X-TTS-Recipe-Mismatch': `${recipe || 'none'}!=${RECIPE_TAG}`, 'Cache-Control': 'no-store' });
 }
+/* POST /render {v, k?, s?, items:[{t, r, pause}]} → audio/mpeg — 대본 전체를 하나의 파일로.
+   문장 나누기·쉼은 브라우저의 ko-voice.js 가 정한다(정본 하나). 조각은 /tts 와 같은 캐시를 쓰므로
+   대본을 고쳐 다시 만들면 바뀐 문장만 새로 합성된다. 결과도 R2 에 키(대본 해시)로 두어 두 번째는 즉시 나간다. */
+async function handleRender(request, env, ctx) {
+  if (request.method !== 'POST') return json({ ok: false, error: 'method' }, 405, CORS);
+  let body = {};
+  try { body = await request.json(); } catch (_) { return json({ ok: false, error: 'bad_json' }, 400, CORS); }
+  const v = body.v || 'female';
+  if (!VOICES.includes(v)) return json({ ok: false, error: 'bad_voice' }, 400, CORS);
+  const norm = normalizeItems(body.items);
+  if (!norm.ok) return json({ ok: false, error: norm.error, limits: LIMITS }, 400, CORS);
+  const tag = tagOf(body.k);
+  const steps = body.s ? Math.max(4, Math.min(32, parseInt(body.s, 10) || TAGS[tag].steps)) : TAGS[tag].steps;
+  const key = await renderKey(v, steps, tag, norm.items);
+  // 1) 같은 대본을 이미 만든 적이 있다 — 합성도, 한도도 쓰지 않는다
+  if (env.TTS_CACHE) {
+    try {
+      const obj = await env.TTS_CACHE.get(key);
+      if (obj) return audioResponse(obj.body, obj.size, 200, { 'X-TTS-Cache': 'r2', 'X-Render-Chars': String(norm.chars) });
+    } catch (_) { /* 캐시가 없어도 합성으로 간다 */ }
+  }
+  // 2) 무료 한도 — 전역 천장을 먼저 보고(세지 않고), 개인 한도를 세고, 그 다음 전역을 센다.
+  //    순서가 이렇게 된 이유: 전역이 이미 찼으면 개인 한도를 깎지 않고 돌려보낸다.
+  const day = dayStamp();
+  const g0 = await meterGlobal(env, day, 0);
+  if (g0 && g0.remaining < norm.chars) {
+    return json({ ok: false, error: 'global_cap_reached', day, limit: g0.limit, remaining: g0.remaining,
+                  reason: '오늘 전체 무료 분량이 소진되었습니다' }, 429, CORS);
+  }
+  const q = await meterUse(env, request, day, norm.chars);
+  if (q && !q.ok) return json({ ok: false, error: 'quota_exceeded', ...q, day }, 429, CORS);
+  await meterGlobal(env, day, norm.chars);
+  // 3) 컨테이너에서 만든다
+  const c = container(env);
+  if (!c) return json({ ok: false, error: 'tts_unavailable', reason: '컨테이너 바인딩 없음' }, 503, CORS);
+  let res;
+  try {
+    res = await c.fetch(new Request('http://container/render', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ v, s: steps, k: tag, items: norm.items }),
+    }));
+  } catch (e) {
+    return json({ ok: false, error: 'container_failed', reason: String((e && e.message) || e).slice(0, 300) }, 502, CORS);
+  }
+  if (!res.ok || !(res.headers.get('Content-Type') || '').startsWith('audio/')) {
+    const text = await res.text().catch(() => '');
+    return json({ ok: false, error: 'synthesis_failed', status: res.status, reason: text.slice(0, 300) }, 502, CORS);
+  }
+  const bytes = new Uint8Array(await res.arrayBuffer());
+  const recipe = res.headers.get('X-TTS-Recipe') || '';
+  if (env.TTS_CACHE && recipe === tag) {
+    const put = env.TTS_CACHE.put(key, bytes, { httpMetadata: { contentType: 'audio/mpeg', cacheControl: 'public, max-age=31536000, immutable' } }).catch(() => {});
+    if (ctx && ctx.waitUntil) ctx.waitUntil(put); else await put;
+  }
+  return audioResponse(bytes, bytes.length, 200, { 'X-TTS-Cache': 'miss', 'X-Render-Chars': String(norm.chars) });
+}
+/** 전역 계량기 — 같은 BakeQueue 클래스의 **하나뿐인 오브젝트**('meter|global')로 센다.
+ *  chars=0 이면 세지 않고 남은 양만 본다. 지출 천장은 여기 하나로 고정된다. */
+async function meterGlobal(env, day, chars) {
+  if (!env.BAKE) return null;
+  const stub = env.BAKE.get(env.BAKE.idFromName('meter|global'));
+  const cap = globalCap(env);
+  try { return chars > 0 ? await stub.use(day, chars, cap) : await stub.peek(day, cap); } catch (_) { return null; }
+}
+/** 계량기 호출 — 바인딩이 없으면(로컬·미배포) 한도를 걸지 않는다. */
+async function meterUse(env, request, day, chars) {
+  if (!env.BAKE) return null;                  // 계량기는 BakeQueue 클래스의 다른 오브젝트다(migration 불필요)
+  const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+  const name = 'meter|' + await sha1('meter|' + ip);   // 원본 주소는 저장하지 않는다
+  try { return await env.BAKE.get(env.BAKE.idFromName(name)).use(day, chars, FREE_DAILY_CHARS); } catch (_) { return null; }
+}
+/** GET /render — 오늘 남은 무료 글자 수(화면이 미리 알려 주기 위한 것). */
+async function handleRenderQuota(env, request) {
+  const day = dayStamp();
+  if (!env.BAKE) return json({ ok: true, metered: false, limit: FREE_DAILY_CHARS, day, limits: LIMITS }, 200, CORS);
+  const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+  const name = 'meter|' + await sha1('meter|' + ip);
+  try {
+    const q = await env.BAKE.get(env.BAKE.idFromName(name)).peek(day, FREE_DAILY_CHARS);
+    const g = await meterGlobal(env, day, 0);
+    return json({ ok: true, metered: true, ...q, day, limits: LIMITS,
+                  global: g ? { limit: g.limit, remaining: g.remaining } : null }, 200, CORS);
+  } catch (_) {
+    return json({ ok: true, metered: false, limit: FREE_DAILY_CHARS, day, limits: LIMITS }, 200, CORS);
+  }
+}
 async function handleWarm(request, env) {
   let body = {};
   try { body = await request.json(); } catch (_) { body = {}; }
@@ -281,9 +430,11 @@ async function handleHealth(request, env) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    if (request.method === 'OPTIONS' && ['/tts', '/warm', '/meta', '/health', '/api/tts', '/bake'].includes(url.pathname)) return new Response(null, { status: 204, headers: { ...CORS, 'Access-Control-Max-Age': '86400', 'Access-Control-Allow-Headers': 'Range, Content-Type, Authorization' } });
+    if (request.method === 'OPTIONS' && ['/tts', '/warm', '/meta', '/health', '/api/tts', '/bake', '/render'].includes(url.pathname)) return new Response(null, { status: 204, headers: { ...CORS, 'Access-Control-Max-Age': '86400', 'Access-Control-Allow-Headers': 'Range, Content-Type, Authorization' } });
     if (url.pathname === '/tts') return handleLiveTts(request, env, ctx);
     if (url.pathname === '/warm' && request.method === 'POST') return handleWarm(request, env);
+    if (url.pathname === '/render' && request.method === 'POST') return handleRender(request, env, ctx);
+    if (url.pathname === '/render' && request.method === 'GET') return handleRenderQuota(env, request);
     if (url.pathname === '/bake' && (request.method === 'GET' || request.method === 'POST')) return handleBake(request, env);
     if (url.pathname === '/bake/put' && (request.method === 'PUT' || request.method === 'POST')) return handleBakePut(request, env);   // PUT 이 엣지에서 403 이 난 적이 있어 POST 도 받는다
     if (url.pathname === '/bake/has' && request.method === 'POST') return handleBakeHas(request, env);

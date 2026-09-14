@@ -1,0 +1,14 @@
+{
+  "date": "2026-09-13",
+  "question": "사용자가 올린 문서에서 한국어 대본을 뽑을 수 있는가",
+  "sample": "한국어 3줄(숫자·법령·전화·시각 포함)을 담은 docx(python-docx)와 pdf(fpdf2 + Noto Sans KR)",
+  "results": {
+    "mammoth (docx)": { "ms": 237, "lines_exact": "3/3", "license": "BSD-2-Clause", "verdict": "채택" },
+    "unpdf (pdf)": { "ms": 131, "lines_exact": "3/3", "license": "MIT", "workers": "동작", "verdict": "채택" },
+    "pdfjs-dist 직접 import": { "error": "API 6.3.289 vs Worker 6.1.200 버전 불일치", "verdict": "직접 쓰지 않는다 — unpdf 가 감싼 경로를 쓴다" }
+  },
+  "unverified": {
+    "hwpx": "지방자치단체 공문서 HWPX 의무화(2026-05-18)로 한국 공공·교육 수요가 있다. JSZip + XML 직접 파싱이 후보이나 이 세션에서 검증하지 않았다.",
+    "tesseract.js": "스캔 PDF OCR. 브라우저 전용(Workers 불가)이고 kor.traineddata 5~15MB — 사용자 동의 후 지연 로딩 대상."
+  }
+}

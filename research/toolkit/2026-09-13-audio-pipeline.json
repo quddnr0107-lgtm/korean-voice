@@ -1,0 +1,27 @@
+{
+  "date": "2026-09-13",
+  "machine": "4-core x86_64 CPU · 16GB · GPU 없음",
+  "engine": "Supertonic 3 ONNX (steps 8) · server/server.py 경로 그대로 · voice_shape u5 · female",
+  "synthesis": {
+    "model_load_s": 3.9,
+    "sentences": 5,
+    "synth_s": [3.49, 2.36, 2.64, 1.72, 2.11],
+    "audio_s": 23.66,
+    "rtf": 0.521,
+    "piece_lufs": [-17.19, -18.16, -18.21, -18.29, -17.29],
+    "piece_lufs_spread_lu": 1.1,
+    "note": "조각 간 편차가 1.1 LU 라 문장별 라우드니스 정규화는 불필요하다(강조·감정의 셈여림을 뭉갠다)."
+  },
+  "join": {
+    "input": "조각 5개 + 계획된 쉼 5개(480·240·480·200·480ms) · 기대 길이 25.54초",
+    "A_concat_copy": { "s": 26.04, "drift_ms": 500.0, "cpu_s": 0.02, "lufs": -17.85, "verdict": "탈락" },
+    "B_reencode": { "s": 25.54, "drift_ms": 0.0, "cpu_s": 0.20, "lufs": -18.31, "verdict": "통과" },
+    "C_reencode_loudnorm_1pass": { "s": 25.54, "drift_ms": 0.0, "cpu_s": 0.62, "lufs": -16.71, "seg_gain_spread_lu": 0.85, "verdict": "통과(동적)" },
+    "D_pcm_join": { "s": 25.54, "drift_ms": 0.0, "cpu_s": 0.25, "lufs": -18.31, "verdict": "통과(우리가 디코드 관리)" },
+    "E_loudnorm_2pass_linear": { "s": 25.54, "drift_ms": 0.0, "cpu_s": 0.88, "lufs": -16.48, "seg_gain_spread_lu": 0.91, "verdict": "채택" },
+    "why_copy_fails": "조각마다 mp3 프레임 1개(1152샘플 = 24kHz 에서 48ms) 패딩이 남는다. 조각 10개 → +500ms.",
+    "why_2pass": "1-pass 와 구간 게인 편차가 0.85 vs 0.91 LU 로 이 표본에서는 가릴 수 없었다. 비용 차이가 0.26초뿐이라 구조적으로 단일 게인이 보장되는 2-pass linear=true 를 쓴다."
+  },
+  "adopted": ["ffmpeg concat 디먹서 + 디코드 후 1회 인코딩", "loudnorm 2-pass linear=true (I=-16 TP=-1.5 LRA=11)", "pyloudnorm 으로 결과 LUFS 검증"],
+  "rejected": { "sox": "GPL 전염", "librosa": "numba/scipy 수백MB · 분석용 과잉", "pydub": "3.13 에서 audioop 제거 · ffmpeg 재호출 다발", "concat -c copy": "+48ms/조각" }
+}

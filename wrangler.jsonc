@@ -28,6 +28,8 @@
       { "name": "TTS_CONTAINER", "class_name": "TtsContainer" },
       // 굽기 대기열 — 전편을 컨테이너가 스스로 굽고 R2 에 넣는다(lib/bake.mjs). POST /bake 는 비밀값 BAKE_TOKEN 이 있어야 한다:
       //   npx wrangler secret put BAKE_TOKEN   (아무 긴 문자열 · yebijun 의 bake-live-tts.mjs 가 같은 값을 보낸다)
+      // 굽기 대기열 + **무료 한도 계량기**. 계량기는 같은 클래스의 다른 오브젝트('meter|sha1(IP)')다 —
+      // 새 DO 클래스 + migration 을 넣은 배포가 2026-09-13 에 3회 거부됐고 되돌리자 성공했다(c0bd069).
       { "name": "BAKE", "class_name": "BakeQueue" }
     ]
   },
@@ -35,6 +37,8 @@
     { "tag": "v1", "new_sqlite_classes": ["TtsContainer"] },
     { "tag": "v2", "new_sqlite_classes": ["BakeQueue"] }
   ],
+  // 하루 전역 합성 상한(글자). 지출 천장 = 이 값 × 약 $0.011/1,000자. 20만 자 ≈ $2.2/일.
+  "vars": { "DAILY_CHAR_CAP": "200000" },
   "r2_buckets": [
     { "binding": "TTS_CACHE", "bucket_name": "korean-voice-tts" }
   ],

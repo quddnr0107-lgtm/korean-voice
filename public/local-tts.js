@@ -1,0 +1,229 @@
+/* 브라우저에서 낭독 만들기 — **우리 비용 0**. 합성이 사용자 기기에서 돌아 서버·컨테이너를 쓰지 않는다.
+   읽는 방식(정규화·쉼·감정)은 ko-voice.js 가 정하고, 소리는 Supertonic 3 ONNX 가 만든다.
+
+   같은 목소리를 내기 위해 서버(server/server.py · voice_shape u5)와 **같은 값**을 쓴다:
+     u5(기본·스텝 8)  여성 F4:0.6+F2:0.4 · 남성 M1:0.7+M3:0.3 · speed 1.05
+   🔴 vendor 의 loadVoiceStyle 은 스타일을 **배치로 쌓기만** 한다(가중 평균이 아니다). 그래서 섞는 것은
+      여기서 직접 한다(blendStyle) — 안 그러면 서버와 다른 목소리가 난다.
+
+   모델은 384MB 다. 한 번 받으면 Cache API 에 두고 다시 받지 않는다(navigator.storage.persist()).
+   기기가 느리면(첫 문장 RTF 가 한계를 넘으면) 서버 경로로 물러난다 — speedGate 를 보라. */
+import * as ort from './vendor/ort-cdn.js';
+import { ORT_WASM_PATHS } from './vendor/ort-cdn.js';
+import { TextToSpeech, UnicodeProcessor, Style, loadOnnx } from './vendor/supertonic-helper.js';
+import { shape } from './voice-shape.mjs';   // 서버의 U5 다듬기를 옮긴 것(PSOLA 만 빠진다)
+
+/** 모델 출처. R2 에 올리면 window.KO_MODEL_BASE 로 갈아탄다(egress 무료 · 우리 도메인).
+ *  그때까지는 Hugging Face CDN 을 쓴다(IP 당 5분 3,000 요청 제한이 있다). */
+export const MODEL_BASE = (typeof window !== 'undefined' && window.KO_MODEL_BASE) ||
+  'https://huggingface.co/Supertone/supertonic-3/resolve/main';
+const CACHE_NAME = 'ko-voice-model-v1';
+/* 공개 스타일 원본은 이름이 곧 조합이다 — 벌(u5·k2)에 상관없이 같다. 조합 두 개만 벌마다 다르다.
+   server.py 의 VOICES 와 이름이 같아야 한다(test/render-audio-invariants.test.cjs 가 잰다). */
+const PURE = { f1: 'F1', f2: 'F2', f3: 'F3', f4: 'F4', f5: 'F5', m1: 'M1', m2: 'M2', m3: 'M3', m4: 'M4', m5: 'M5' };
+const RECIPES = {
+  u5: { steps: 8, female: 'F4:0.6,F2:0.4', male: 'M1:0.7,M3:0.3', ...PURE },
+  k2: { steps: 16, female: 'F2', male: 'M1:0.7,M3:0.3', ...PURE },
+};
+const SPEED = 1.05;                 // server.py VOICES[*].speed 와 같다
+export const SPEED_GATE_RTF = 3.0;  // 첫 문장이 이보다 느리면 서버로 물러난다(레포 실측: 단일 스레드 1.65~2.28)
+
+/* ── 받아 두기 — Cache API 에 두고 두 번째부터는 네트워크를 쓰지 않는다 ── */
+async function cached(url, onProgress) {
+  let cache = null;
+  try { cache = await caches.open(CACHE_NAME); } catch (_) { /* 사생활 보호 모드 등 */ }
+  if (cache) {
+    const hit = await cache.match(url).catch(() => null);
+    if (hit) return await hit.arrayBuffer();
+  }
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('모델을 받지 못했습니다: ' + url.split('/').pop() + ' (' + res.status + ')');
+  const total = +(res.headers.get('Content-Length') || 0);
+  if (!res.body || !onProgress) {
+    const buf = await res.arrayBuffer();
+    if (cache) await cache.put(url, new Response(buf.slice(0))).catch(() => {});
+    return buf;
+  }
+  const reader = res.body.getReader(); const parts = []; let got = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    parts.push(value); got += value.length; onProgress(got, total);
+  }
+  const buf = new Uint8Array(got); let at = 0;
+  for (const p of parts) { buf.set(p, at); at += p.length; }
+  if (cache) await cache.put(url, new Response(buf.slice(0))).catch(() => {});
+  return buf.buffer;
+}
+
+/** 'F4:0.6,F2:0.4' → 가중 평균한 Style 하나(bsz=1). 가중치 합은 1 로 맞춘다(server.py 와 같다). */
+async function blendStyle(spec) {
+  const parts = spec.split(',').map((s) => { const [n, w] = s.split(':'); return { n: n.trim(), w: w == null || w === '' ? 1 : parseFloat(w) }; });
+  const sum = parts.reduce((a, p) => a + p.w, 0) || 1;
+  let ttl = null, dp = null, ttlDims = null, dpDims = null;
+  for (const p of parts) {
+    const json = await (await fetch(`${MODEL_BASE}/voice_styles/${p.n}.json`)).json();
+    const w = p.w / sum;
+    const t = Float32Array.from(json.style_ttl.data.flat(Infinity));
+    const d = Float32Array.from(json.style_dp.data.flat(Infinity));
+    if (!ttl) {
+      ttl = new Float32Array(t.length); dp = new Float32Array(d.length);
+      ttlDims = json.style_ttl.dims; dpDims = json.style_dp.dims;
+    }
+    for (let i = 0; i < t.length; i++) ttl[i] += t[i] * w;
+    for (let i = 0; i < d.length; i++) dp[i] += d[i] * w;
+  }
+  return new Style(new ort.Tensor('float32', ttl, [1, ttlDims[1], ttlDims[2]]),
+                   new ort.Tensor('float32', dp, [1, dpDims[1], dpDims[2]]));
+}
+
+/* ── 엔진 ── */
+let engine = null;
+export function ready() { return !!engine; }
+
+export async function load({ tag = 'u5', voice = 'female', onStatus = () => {} } = {}) {
+  if (engine && engine.tag === tag && engine.voice === voice) return engine;
+  /* 🔴 1 스레드로 고정한다. 교차출처 격리(COOP/COEP)는 켜 뒀고 SharedArrayBuffer 도 쓸 수 있지만
+     (헤드리스 실측: crossOriginIsolated true), onnxruntime-web 1.17.0 **ESM 빌드**에서 numThreads>1 로
+     두면 pthread 워커가 `importScripts` 에 실패하며 세션 생성이 **영구 대기**한다(1.17 dist 에는
+     .worker.js 파일이 아예 없다 · 2026-09-13 Chromium 141 실측). 레포의 앞선 브라우저 실측도 1 스레드였다.
+     스레드를 켜는 것은 실제 브라우저에서 확인한 뒤에 한다 — 그때 쓸 헤더는 이미 워커가 보내고 있다.
+     지금은 SIMD 로만 돈다(그래도 실시간의 절반쯤은 나온다: 레포 실측 RTF 1.65~2.28). */
+  ort.env.wasm.numThreads = 1;
+  const threads = 1;
+  ort.env.wasm.simd = true;
+  ort.env.wasm.wasmPaths = ORT_WASM_PATHS;   // 페이지 기준 상대경로로 찾으면 404 (실측 2026-09-13)
+  /* WebGPU 는 있으면 훨씬 빠르지만 ORT 의 EP 가 아직 실험적이고 기기마다 깨진다
+     (헤드리스 실측: 어댑터는 잡히는데 컨텍스트 생성이 실패하고 세션이 내부 오류로 무너졌다).
+     그래서 ① 어댑터를 **실제로** 요청해 보고 ② 그래도 실패하면 wasm 으로 통째로 다시 만든다. */
+  let providers = ['wasm'];
+  if (navigator.gpu) {
+    try { if (await navigator.gpu.requestAdapter()) providers = ['webgpu', 'wasm']; } catch (_) { /* 없는 셈 친다 */ }
+  }
+  onStatus('모델 받는 중', 0);
+  const names = ['duration_predictor', 'text_encoder', 'vector_estimator', 'vocoder'];
+  const files = {};
+  for (let i = 0; i < names.length; i++) {
+    files[names[i]] = await cached(`${MODEL_BASE}/onnx/${names[i]}.onnx`,
+      (got, total) => onStatus(`모델 받는 중 (${i + 1}/4)`, total ? got / total : 0));
+  }
+  for (const f of ['tts.json', 'unicode_indexer.json']) {
+    files[f] = await cached(`${MODEL_BASE}/onnx/${f}`);
+  }
+  onStatus('엔진 준비 중', 1);
+  /* vendor 의 loadTextToSpeech 는 경로를 받아 스스로 fetch 한다 — 우리는 이미 캐시에서 바이트를 들고 있으므로
+     그 함수를 쓰지 않고 **부품으로 직접 조립**한다(같은 384MB 를 두 번 받지 않는다).
+     조립 순서는 vendor 의 loadTextToSpeech 와 같다: 설정 → 모델 4개 → 글자 처리기. */
+  const make = (eps) => Promise.all(names.map((n) => loadOnnx(new Uint8Array(files[n]), { executionProviders: eps })));
+  let sessions;
+  try {
+    sessions = await make(providers);
+  } catch (e) {
+    if (providers[0] === 'wasm') throw e;
+    onStatus('WebGPU 실패 — wasm 으로 다시 만드는 중', 1);   // 기기의 WebGPU 가 깨져 있어도 소리는 나와야 한다
+    providers = ['wasm'];
+    sessions = await make(providers);
+  }
+  const [dpOrt, textEncOrt, vectorEstOrt, vocoderOrt] = sessions;
+  const text = (k) => JSON.parse(new TextDecoder().decode(new Uint8Array(files[k])));
+  const cfgs = text('tts.json');
+  const tts = new TextToSpeech(cfgs, new UnicodeProcessor(text('unicode_indexer.json')),
+                               dpOrt, textEncOrt, vectorEstOrt, vocoderOrt);
+  const recipe = RECIPES[tag] || RECIPES.u5;
+  const style = await blendStyle(recipe[voice] || recipe.female);
+  try { if (navigator.storage && navigator.storage.persist) await navigator.storage.persist(); } catch (_) { /* */ }
+  engine = { tts, style, tag, voice, steps: recipe.steps, sampleRate: tts.sampleRate,
+             threads: ort.env.wasm.numThreads, providers };
+  onStatus('준비 끝', 1);
+  return engine;
+}
+
+/** 조각(ko-voice 의 buildItems 결과)을 합성해 계획된 쉼과 함께 잇는다 → Float32Array PCM.
+ *  쉼은 **정확한 샘플 수**로 넣는다(mp3 이어붙이기의 48ms 오차가 여기서는 없다). */
+export async function synth(items, { onItem = () => {}, signal } = {}) {
+  if (!engine) throw new Error('엔진이 준비되지 않았습니다');
+  const sr = engine.sampleRate;
+  const chunks = [];
+  let audio = 0, spent = 0, firstRtf = null;
+  for (let i = 0; i < items.length; i++) {
+    if (signal && signal.aborted) throw new Error('멈췄습니다');
+    const it = items[i];
+    const t0 = performance.now();
+    const { wav } = await engine.tts._infer([it.t], ['ko'], engine.style, engine.steps, SPEED * (it.r || 1));
+    const took = (performance.now() - t0) / 1000;
+    // 🔴 서버와 같은 다듬기를 건다 — 안 걸면 앞뒤 무음·첫 음절 크기·꼬리 공백이 서버와 달라진다
+    const pcm = shape(wav, engine.sampleRate);
+    chunks.push(pcm); audio += pcm.length / sr; spent += took;
+    if (it.pause) chunks.push(new Float32Array(Math.round(sr * it.pause / 1000)));
+    if (firstRtf == null) firstRtf = took / (pcm.length / sr);
+    onItem(i + 1, items.length, { rtf: took / (pcm.length / sr), firstRtf });
+  }
+  let n = 0; for (const c of chunks) n += c.length;
+  const out = new Float32Array(n); let at = 0;
+  for (const c of chunks) { out.set(c, at); at += c.length; }
+  /* 전체에 단일 게인 — 조각은 이미 다듬기에서 피크 0.89 로 맞춰졌고(서버와 같다), 여기서는 이어붙인
+     결과를 한 번만 손댄다. 조각별로 다르게 걸면 강조·감정의 셈여림이 뭉개진다(서버 loudnorm linear 와 같은 취지). */
+  let peak = 0; for (let i = 0; i < out.length; i++) { const a = Math.abs(out[i]); if (a > peak) peak = a; }
+  const target = 0.84;                       // 약 -1.5 dBFS
+  if (peak > 0) { const g = target / peak; for (let i = 0; i < out.length; i++) out[i] *= g; }
+  return { pcm: out, sampleRate: sr, audioSeconds: audio, synthSeconds: spent, rtf: spent / (audio || 1), firstRtf };
+}
+
+/** 첫 문장만 만들어 기기 속도를 잰다. 느리면 서버 경로를 권한다. */
+export async function speedGate(item) {
+  const t0 = performance.now();
+  const { wav } = await engine.tts._infer([item.t], ['ko'], engine.style, engine.steps, SPEED);
+  const rtf = ((performance.now() - t0) / 1000) / (wav.length / engine.sampleRate);
+  return { rtf, ok: rtf <= SPEED_GATE_RTF };
+}
+
+/* WAV 쓰기 — vendor 의 writeWavFile 대신 우리 것을 쓴다. 이유 하나: **파일 안에 AI 생성 고지를 남기려고**.
+   OpenRAIL-M Attachment A 는 "기계가 만든 것임을 명시적으로 밝히지 않은 채 생성·배포"하는 것을 금지한다 —
+   화면 배지는 파일이 떠돌기 시작하면 사라지므로, RIFF LIST/INFO 청크에 같은 문장을 심는다.
+   (vendor 것은 헤더 44바이트 + 데이터뿐이다.) */
+const AI_NOTICE = 'AI로 생성된 음성입니다 (AI-generated speech). Model: Supertonic 3, BigScience OpenRAIL-M.';
+function infoChunk(fields) {
+  const enc = new TextEncoder();
+  const parts = [];
+  for (const [id, value] of fields) {
+    const bytes = enc.encode(value + '\0');
+    const padded = bytes.length + (bytes.length % 2);          // 청크는 짝수 바이트로 맞춘다
+    const buf = new Uint8Array(8 + padded);
+    buf.set(enc.encode(id), 0);
+    new DataView(buf.buffer).setUint32(4, bytes.length, true);
+    buf.set(bytes, 8);
+    parts.push(buf);
+  }
+  let n = 4; for (const p of parts) n += p.length;             // 'INFO' + 항목들
+  const list = new Uint8Array(8 + n);
+  list.set(enc.encode('LIST'), 0);
+  new DataView(list.buffer).setUint32(4, n, true);
+  list.set(enc.encode('INFO'), 8);
+  let at = 12; for (const p of parts) { list.set(p, at); at += p.length; }
+  return list;
+}
+/** −1~1 실수 PCM → WAV(16bit 모노) + AI 생성 고지 메타데이터. */
+export function wavBlob(pcm, sampleRate, { title = '낭독' } = {}) {
+  const info = infoChunk([['INAM', title], ['ICMT', AI_NOTICE], ['ISFT', 'korean-voice']]);
+  const dataSize = pcm.length * 2;
+  const buf = new ArrayBuffer(12 + 24 + info.length + 8 + dataSize);
+  const view = new DataView(buf);
+  const enc = new TextEncoder();
+  const put = (off, s) => { const b = enc.encode(s); for (let i = 0; i < b.length; i++) view.setUint8(off + i, b[i]); };
+  put(0, 'RIFF'); view.setUint32(4, buf.byteLength - 8, true); put(8, 'WAVE');
+  put(12, 'fmt '); view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+  view.setUint32(24, sampleRate, true); view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true); view.setUint16(34, 16, true);
+  new Uint8Array(buf).set(info, 36);
+  const dataAt = 36 + info.length;
+  put(dataAt, 'data'); view.setUint32(dataAt + 4, dataSize, true);
+  let at = dataAt + 8;
+  for (let i = 0; i < pcm.length; i++) {
+    const s = Math.max(-1, Math.min(1, pcm[i]));
+    view.setInt16(at, Math.round(s * 32767), true); at += 2;
+  }
+  return new Blob([buf], { type: 'audio/wav' });
+}
+export const info = () => engine && { tag: engine.tag, voice: engine.voice, steps: engine.steps,
+  sampleRate: engine.sampleRate, threads: engine.threads, providers: engine.providers };
