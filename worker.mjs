@@ -206,10 +206,12 @@ const BAKED_VOICES = ['female', 'male'];
    두 저장소에 이름을 따로 적으면 갈라진다(yebijun 이 /health·/meta 의 voice_list 를 그대로 그린다).
    baked=true 는 전편을 구워 둔 목소리라 기다림이 0 이다. 나머지는 처음 듣는 조각만 합성을 기다린다(조각당 약 3초). */
 const VOICE_LABELS = {
-  female: '여자 (기본)', male: '남자 (기본)',
-  f1: '여자 1', f2: '여자 2', f3: '여자 3', f4: '여자 4', f5: '여자 5',
-  m1: '남자 1', m2: '남자 2', m3: '남자 3', m4: '남자 4', m5: '남자 5',
+  female: '하은', male: '준호',
+  f1: '지우', f2: '서연', f3: '예린', f4: '다인', f5: '소율',
+  m1: '도현', m2: '시우', m3: '태윤', m4: '민재', m5: '건우',
 };
+/* 이름만으로는 남녀가 안 갈리는 이름이 있다 — 화면이 묶음으로 갈라 보여 줄 수 있게 성별도 함께 내준다. */
+const VOICE_SEX = { female: 'f', male: 'm', f1: 'f', f2: 'f', f3: 'f', f4: 'f', f5: 'f', m1: 'm', m2: 'm', m3: 'm', m4: 'm', m5: 'm' };
 /* 🔴 스텝은 캐시 키(v|s|r|표식|글)에 들어간다 — 바꾸면 구운 것이 전부 무효가 되고 전량 재굽기다.
    16 → 8 (2026-09-08): 실측으로 품질이 안 떨어지는 것을 확인하고 내렸다.
      조각당 5.31s → 2.97s (절반) · HNR 15.46 → 15.55 (오히려 미세 상승) · 사용자 청취 「소리는 똑같아」
@@ -408,7 +410,7 @@ async function handleWarm(request, env) {
    사이트에 필요한 것(무엇을 고를 수 있나·표식·R2 있나)은 전부 워커가 아는 값이라 컨테이너와 무관하다. */
 function workerMeta(env) {
   const voice_sets = Object.entries(TAGS).map(([tag, v]) => ({ id: `${tag}.${v.rev}`, tag, label: v.label, steps: v.steps }));
-  const voice_list = VOICES.map((id) => ({ id, label: VOICE_LABELS[id] || id, baked: BAKED_VOICES.includes(id) }));
+  const voice_list = VOICES.map((id) => ({ id, label: VOICE_LABELS[id] || id, sex: VOICE_SEX[id] || 'f', baked: BAKED_VOICES.includes(id) }));
   return { cache: env.TTS_CACHE ? 'r2' : 'none', recipe_worker: RECIPE_TAG, voice_sets, voice_list, worker_ok: true };
 }
 function handleMeta(env) {

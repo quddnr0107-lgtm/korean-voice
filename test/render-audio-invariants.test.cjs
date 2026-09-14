@@ -81,11 +81,14 @@ test('폐기는 구운 목소리 우리(tts/<목소리>/) 안에서만 지운다
 test('voice_list — VOICES 전부에 화면 이름이 있다 · 남는 이름도 없다', () => {
   const worker = readFileSync(join(__dirname, '..', 'worker.mjs'), 'utf8');
   const voices = worker.match(/const VOICES = \[([^\]]+)\]/)[1].match(/'([^']+)'/g).map((x) => x.slice(1, -1));
-  const labels = worker.slice(worker.indexOf('const VOICE_LABELS = {'), worker.indexOf('/* 🔴 스텝은 캐시 키'));
+  const labels = worker.slice(worker.indexOf('const VOICE_LABELS = {'), worker.indexOf('const VOICE_SEX'));
   const named = [...labels.matchAll(/(\w+):\s*'([^']+)'/g)].map((m) => m[1]);
   assert.deepEqual(named.slice().sort(), voices.slice().sort(), 'VOICES 와 VOICE_LABELS 가 어긋난다');
   for (const m of labels.matchAll(/(\w+):\s*'([^']+)'/g)) assert.ok(!/^[fm]\d$/.test(m[2]), `원시 키가 이름으로 새어 나온다: ${m[2]}`);
   assert.match(worker, /voice_list = VOICES\.map/, 'voice_list 를 VOICES 에서 만들지 않는다 — 목록이 갈린다');
+  const sex = worker.slice(worker.indexOf('const VOICE_SEX'), worker.indexOf('const VOICE_SEX') + 400);
+  const sexed = [...sex.matchAll(/(\w+):\s*'([fm])'/g)].map((m) => m[1]);
+  assert.deepEqual(sexed.slice().sort(), voices.slice().sort(), 'VOICES 와 VOICE_SEX 가 어긋난다 — 화면이 남녀를 못 가른다');
 });
 
 /* 🔴 컨테이너 이미지는 한 걸음에 전부 바꾼다 — 단계식이면 워커는 새 코드인데 컨테이너는 옛 이미지인 창이 생긴다. */
