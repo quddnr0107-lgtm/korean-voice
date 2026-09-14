@@ -59,9 +59,15 @@ test('목소리 목록이 워커와 서버에서 같다 — 어긋나면 400 나
   for (const n of names) assert.match(html, new RegExp('value="' + n + '"'), `app.html 선택지에 ${n} 이 없다`);
 });
 
-test('굽는 목소리는 둘뿐이다 — 폐기 보존 키가 목소리 수에 비례해 터지면 안 된다', () => {
+/* 🔴 굽는 목소리는 실제로 구운 것만이어야 한다. 2026-09-14 확인: 굽기(yebijun bake-live-tts.yml)는
+   2026-09-04 에 기본값 voice=female 로 딱 한 번 성공했고 male 은 구워진 적이 없다.
+   보존 키를 목소리 수에 비례해 만들면 조각 5만8천 × 목소리 수만큼 sha1 을 워커 메모리(128MB)에 쌓는다. */
+test('굽는 목소리는 VOICES 의 부분집합이고, 폐기 보존 키는 그것만으로 만든다', () => {
   const worker = readFileSync(join(__dirname, '..', 'worker.mjs'), 'utf8');
-  assert.match(worker, /const BAKED_VOICES = \['female', 'male'\]/);
+  const 뽑기 = (이름) => worker.match(new RegExp(`const ${이름} = \\[([^\\]]*)\\]`))[1].match(/'([^']+)'/g).map((x) => x.slice(1, -1));
+  const voices = 뽑기('VOICES'), baked = 뽑기('BAKED_VOICES');
+  assert.ok(baked.length >= 1, '굽는 목소리가 하나도 없다');
+  for (const b of baked) assert.ok(voices.includes(b), `굽는 목소리 ${b} 가 VOICES 에 없다 — 아무도 못 고른다`);
   const prune = worker.slice(worker.indexOf('async function handleBakePrune'), worker.indexOf('async function handleMeta'));
   assert.match(prune, /for \(const voice of BAKED_VOICES\)/, '폐기가 VOICES 전체를 돌면 조각 수 × 목소리 수만큼 sha1 을 쌓는다');
   assert.ok(!/for \(const voice of VOICES\)/.test(prune), '폐기에서 VOICES 전체를 쓰고 있다');
