@@ -13,7 +13,7 @@ import { DurableObject } from 'cloudflare:workers';
 import { handleTts, json } from './lib/melotts.mjs';
 import { cacheKey, parseR, RECIPE_TAG, FALLBACK, TAGS, tagOf, sha1, stepsFor, keepKeysFor } from './lib/tts-key.mjs';
 import { makeBaker } from './lib/bake.mjs';
-import { prune, retireVoices } from './lib/prune.mjs';
+import { prune, retireVoices, MAX_DELETE } from './lib/prune.mjs';
 import { normalizeItems, renderKey, dayStamp, quota, FREE_DAILY_CHARS, GLOBAL_DAILY_CHARS, globalCap, LIMITS } from './lib/render.mjs';
 import { verifyGithubOidc } from './lib/oidc.mjs';
 export { handleTts, MODEL, LANGS, MAX_CHARS, _reset } from './lib/melotts.mjs';
@@ -140,16 +140,21 @@ async function handleBakePrune(request, env) {
      그대로 돌렸으면 구운 음성을 통째로 지웠다. 폐기가 지우는 것은 **목록에서 빠진 글**이지 벌이 아니다. */
   const keepBy = await keepKeysFor(BAKED_VOICES, items.map((it) => ({ t: cleanText(it && it.t), r: it && it.r })));
   const dry = body.dry !== false, force = body.force === true;
+  /* 🔴 한 요청에서 다 지우면 러너의 fetch 가 헤더 타임아웃(5분)으로 끊긴다 — 워커는 **다 지운 뒤에야**
+     응답을 보내기 때문이다(2026-09-15 실측: 57,904개를 걸었더니 14,500개에서 끊겼다).
+     한 번에 지울 수를 묶고, 부르는 쪽이 `남음` 이 0 이 될 때까지 다시 부른다. */
+  const maxDelete = Number.isFinite(+body.maxDelete) && +body.maxDelete > 0 ? Math.min(+body.maxDelete, 50000) : MAX_DELETE;
   try {
     const per = [];
     for (const voice of BAKED_VOICES) {
-      const out = await prune({ r2: env.TTS_CACHE, keep: keepBy.get(voice), prefix: `tts/${voice}/`, dry, force });
+      const out = await prune({ r2: env.TTS_CACHE, keep: keepBy.get(voice), prefix: `tts/${voice}/`, dry, force, maxDelete });
       per.push({ voice, ...out });
       if (!out.ok) return json({ ok: false, dry, voice, ...out, per }, 400, CORS);
     }
     const sum = (f) => per.reduce((a, o) => a + (o[f] || 0), 0);
     return json({ ok: true, dry, voices: BAKED_VOICES, total: sum('total'), keep: sum('keep'), hit: sum('hit'),
-                  drop: sum('drop'), deleted: sum('deleted'), truncated: per.some((o) => o.truncated), per }, 200, CORS);
+                  drop: sum('drop'), deleted: sum('deleted'), 남음: sum('남음'), done: per.every((o) => o.done),
+                  truncated: per.some((o) => o.truncated), per }, 200, CORS);
   } catch (e) { return json({ ok: false, error: 'prune_failed', reason: String((e && e.message) || e).slice(0, 400) }, 500, CORS); }
 }
 async function handleBake(request, env) {
