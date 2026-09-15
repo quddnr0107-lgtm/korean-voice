@@ -10,7 +10,7 @@
 import test from 'node:test';
 import assert from 'node:assert';
 import fs from 'node:fs';
-import { cacheKey, stepsFor, keepKeysFor, RECIPE_TAG, TAGS, tagOf } from '../lib/tts-key.mjs';
+import { cacheKey, stepsFor, keepKeysFor, 닿는벌, RECIPE_TAG, FALLBACK, TAGS, tagOf } from '../lib/tts-key.mjs';
 
 /* 🔴 worker.mjs 는 `@cloudflare/containers` 를 import 한다 — CI 는 node_modules 없이 돌므로
    여기서 불러오면 **자가 아니라 검사기가 죽는다**(R100). 그래서 순수 함수는 직접 재고,
@@ -64,16 +64,29 @@ test('/tts 는 여전히 주소의 s 를 존중한다 — 벌의 스텝은 s 가
     '/tts 의 스텝 규칙이 바뀌었다 — 나머지 엔드포인트가 그 규칙을 따라가는 것이 이 자의 전제다');
 });
 
-test('🔴 폐기가 남길 키 — **모든 벌**을 담는다(한 벌만 담으면 다른 벌을 통째로 지운다)', async () => {
+/* 🔴 남길 벌은 **지금 닿을 수 있는 것**이다 — 지금 벌 + (있으면) 폴백 벌.
+   모든 벌을 담으면 은퇴한 벌이 영영 안 지워지고, 한 벌만 담으면 폴백이 읽는 벌을 지운다. */
+test('🔴 폐기가 남길 키 — 닿을 수 있는 벌만 담는다', async () => {
   const t = '통합방위사태는 갑종·을종·병종으로 나뉜다.', r = 0.92;
   const keep = await keepKeysFor(['female'], [{ t, r }]);
   const 집합 = keep.get('female');
-  for (const tag of Object.keys(TAGS)) {
+  for (const tag of 닿는벌()) {
     assert.ok(집합.has(await cacheKey('female', TAGS[tag].steps, r, t, tag)), `${tag} 벌의 키가 남길 목록에 없다 — 폐기가 그 벌을 지운다`);
   }
-  assert.strictEqual(집합.size, Object.keys(TAGS).length, '벌 수만큼만 있어야 한다');
-  // 음성 대조군 — 목록에 없는 글은 남기지 않는다(그게 폐기의 목적이다)
+  assert.strictEqual(집합.size, 닿는벌().length, '닿는 벌 수만큼만 있어야 한다');
+  // 🔬 음성 대조군 둘 — ① 닿지 않는 벌은 안 남긴다(그래야 은퇴한 벌을 치울 수 있다)
+  for (const tag of Object.keys(TAGS)) {
+    if (닿는벌().includes(tag)) continue;
+    assert.ok(!집합.has(await cacheKey('female', TAGS[tag].steps, r, t, tag)), `${tag} 은 안 닿는 벌인데 남겼다 — 은퇴한 벌이 영영 안 지워진다`);
+  }
+  // ② 목록에 없는 글은 남기지 않는다(그게 폐기의 목적이다)
   assert.ok(!집합.has(await cacheKey('female', TAGS[RECIPE_TAG].steps, r, '목록에 없는 글', RECIPE_TAG)));
+});
+
+test('닿는벌 — 폴백이 있으면 둘, 없으면 지금 벌 하나', () => {
+  assert.ok(닿는벌().includes(RECIPE_TAG), '지금 벌이 빠졌다');
+  assert.strictEqual(닿는벌().length, FALLBACK && FALLBACK.tag !== RECIPE_TAG ? 2 : 1);
+  if (FALLBACK) assert.ok(닿는벌().includes(FALLBACK.tag), '폴백이 읽는 벌을 안 남기면 그 소리가 사라진다');
 });
 
 test('tagOf — 밖에서 온 값은 지금 벌로 떨어진다', () => {
