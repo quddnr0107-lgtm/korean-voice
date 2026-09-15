@@ -6,9 +6,14 @@ import { RECIPE_TAG, TAGS, tagOf, R_MIN, R_MAX, parseR, fmtR, keyString, cacheKe
 
 const py = (f) => fs.readFileSync(new URL('../server/' + f, import.meta.url), 'utf8');
 
-test('조합 표식 — voice_shape.py 의 RECIPE_TAG 와 글자까지 같다', () => {
-  const m = py('voice_shape.py').match(/^RECIPE_TAG\s*=\s*'([a-z0-9]+)'/m);
-  assert.ok(m, 'voice_shape.py 에 RECIPE_TAG 가 없다');
+/* 🔴 「지금 벌」의 정본은 **recipes.py 의 DEFAULT** 다 — 파일 이름(voice_shape.py)이 아니다.
+   2026-09-15 에 지금 벌이 u5 → k2 로 바뀌었는데, 옛 자는 voice_shape.py 만 봐서
+   **바꿀 수 없는 자**였다(파일을 통째로 갈아엎어야 통과한다). 등록부를 따라가게 고쳤다. */
+test('조합 표식 — 서버가 기본으로 쓰는 벌(recipes.py DEFAULT)과 글자까지 같다', () => {
+  const d = py('recipes.py').match(/^DEFAULT\s*=\s*(voice_shape\w*)\.RECIPE_TAG/m);
+  assert.ok(d, 'recipes.py 에 DEFAULT 가 없다');
+  const m = py(d[1] + '.py').match(/^RECIPE_TAG\s*=\s*'([a-z0-9]+)'/m);
+  assert.ok(m, `${d[1]}.py 에 RECIPE_TAG 가 없다`);
   assert.strictEqual(m[1], RECIPE_TAG);
 });
 
