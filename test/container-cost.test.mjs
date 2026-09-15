@@ -11,6 +11,8 @@ function handlers() {
     URL, Response, Request, Uint8Array, CORS: {}, VOICES: ['female'], DEFAULT_STEPS: 16,
     RECIPE_TAG: 'current', FALLBACK: null, TAGS: { current: { steps: 16 } },
     tagOf: () => 'current', cleanText: text => text || '', parseR: Number, cacheKey: async () => 'key',
+    /* 스텝은 벌에서 나온다(2026-09-15) — 워커가 stepsFor 를 부르므로 샌드박스도 줘야 한다 */
+    stepsFor: () => 16, keepKeysFor: async () => new Map(),
     json: (data, status, headers) => Response.json(data, { status, headers }),
     container: () => { calls++; return { fetch: async request => request.url.includes('/warm')
       ? Response.json({ queued: 1 }) : new Response(new Uint8Array([1]), { headers: { 'Content-Type': 'audio/mpeg', 'X-TTS-Recipe': 'current' } }) }; }

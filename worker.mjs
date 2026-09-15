@@ -11,7 +11,7 @@
 import { Container, getContainer } from '@cloudflare/containers';
 import { DurableObject } from 'cloudflare:workers';
 import { handleTts, json } from './lib/melotts.mjs';
-import { cacheKey, parseR, RECIPE_TAG, FALLBACK, TAGS, tagOf, sha1 } from './lib/tts-key.mjs';
+import { cacheKey, parseR, RECIPE_TAG, FALLBACK, TAGS, tagOf, sha1, stepsFor, keepKeysFor } from './lib/tts-key.mjs';
 import { makeBaker } from './lib/bake.mjs';
 import { prune, retireVoices } from './lib/prune.mjs';
 import { normalizeItems, renderKey, dayStamp, quota, FREE_DAILY_CHARS, GLOBAL_DAILY_CHARS, globalCap, LIMITS } from './lib/render.mjs';
@@ -80,12 +80,14 @@ async function handleBakePut(request, env) {
   const url = new URL(request.url);
   const voice = url.searchParams.get('v') || 'female';
   const t = cleanText(url.searchParams.get('t'));
-  const s = Math.max(4, Math.min(32, parseInt(url.searchParams.get('s') || DEFAULT_STEPS, 10) || DEFAULT_STEPS));
   const r = parseR(url.searchParams.get('r') || 1);
   if (!VOICES.includes(voice) || !t) return json({ ok: false, error: 'bad_input' }, 400, CORS);
   /* 벌(조합)은 허용목록 안이어야 한다 — 러너가 어느 벌을 구웠는지 이 머리로 말한다(목소리 두 벌 · 2026-09-08) */
   const putTag = request.headers.get('X-TTS-Recipe') || '';
   if (!Object.prototype.hasOwnProperty.call(TAGS, putTag)) return json({ ok: false, error: 'recipe_mismatch', want: Object.keys(TAGS) }, 409, CORS);
+  /* 🔴 스텝 기본값도 **그 벌 것**이다 — 상수(8)로 두면 러너가 s 를 안 보낸 날 k2 조각이 8 자리에 박혀
+     재생(16)이 영영 못 찾는다. 키는 voice|steps|r|벌|글 이라 스텝이 어긋나면 통째로 안 맞는다. */
+  const s = url.searchParams.get('s') ? Math.max(4, Math.min(32, parseInt(url.searchParams.get('s'), 10) || stepsFor(putTag))) : stepsFor(putTag);
   if (!(request.headers.get('Content-Type') || '').startsWith('audio/')) return json({ ok: false, error: 'not_audio' }, 400, CORS);
   const bytes = new Uint8Array(await request.arrayBuffer());
   if (bytes.length < 500 || bytes.length > 5_000_000) return json({ ok: false, error: 'bad_size', size: bytes.length }, 400, CORS);
@@ -97,8 +99,12 @@ async function handleBakePut(request, env) {
 async function handleBakeHas(request, env) {
   let body = {}; try { body = await request.json(); } catch (_) { body = {}; }
   const items = Array.isArray(body.items) ? body.items.slice(0, 400) : [];
-  const v = body.v || 'female', s = Math.max(4, Math.min(32, parseInt(body.s || DEFAULT_STEPS, 10) || DEFAULT_STEPS));
+  const v = body.v || 'female';
   const hTag = tagOf(body.k);   // 🔴 벌을 안 받으면 옛 벌 재굽기 때 「전부 없다」로 오판해 이미 있는 걸 다시 굽는다
+  /* 🔴 스텝도 **그 벌 것**이어야 한다(2026-09-15) — DEFAULT_STEPS(8)를 쓰고 있었다.
+     지금 벌이 u5(8)일 때는 우연히 맞아 안 드러났고, k2(16)로 바꾸자 커버리지가
+     「57,897개 전부 없다」를 냈다. 러너도 이미 구운 것을 다시 굽게 된다. */
+  const s = body.s ? Math.max(4, Math.min(32, parseInt(body.s, 10) || stepsFor(hTag))) : stepsFor(hTag);
   const out = [];
   for (let i = 0; i < items.length; i += 50) {
     const part = items.slice(i, i + 50);
@@ -121,7 +127,6 @@ async function handleBakePrune(request, env) {
   if (!v.claims) return json({ ok: false, error: 'oidc_' + v.error }, 401, CORS);
   let body = {}; try { body = await request.json(); } catch (_) { body = {}; }
   const items = Array.isArray(body.items) ? body.items : [];
-  const s = Math.max(4, Math.min(32, parseInt(body.s || DEFAULT_STEPS, 10) || DEFAULT_STEPS));
   /* 🔴 물러난 목소리의 우리를 통째로 비운다. 남길 목록은 **요청이 아니라 코드의 VOICES** 다 —
      요청이 정하게 하면 한 번의 실수로 쓰고 있는 목소리가 날아간다. dry 가 기본인 것은 아래와 같다. */
   if (body.retire === true) {
@@ -130,8 +135,10 @@ async function handleBakePrune(request, env) {
       return json(out, out.ok ? 200 : 400, CORS);
     } catch (e) { return json({ ok: false, error: 'retire_failed', reason: String((e && e.message) || e).slice(0, 400) }, 500, CORS); }
   }
-  const keepBy = new Map(BAKED_VOICES.map((voice) => [voice, new Set()]));
-  for (const it of items) { const t = cleanText(it && it.t); if (!t) continue; const r = parseR(it.r == null ? 1 : it.r); for (const voice of BAKED_VOICES) keepBy.get(voice).add(await cacheKey(voice, s, r, t)); }
+  /* 🔴 남길 키는 **벌마다 제 스텝으로 · 모든 벌**을 담는다(2026-09-15). 옛 판은 `DEFAULT_STEPS`(8) 하나로
+     만들어서, 지금 벌이 k2(16)가 된 순간 **실재하지 않는 조합의 키**가 되어 남길 것이 하나도 없어졌다 —
+     그대로 돌렸으면 구운 음성을 통째로 지웠다. 폐기가 지우는 것은 **목록에서 빠진 글**이지 벌이 아니다. */
+  const keepBy = await keepKeysFor(BAKED_VOICES, items.map((it) => ({ t: cleanText(it && it.t), r: it && it.r })));
   const dry = body.dry !== false, force = body.force === true;
   try {
     const per = [];
@@ -390,13 +397,15 @@ async function handleWarm(request, env) {
   const v = body.v || 'female';
   if (!VOICES.includes(v)) return json({ ok: false, error: 'bad_voice' }, 400, CORS);
   const texts = Array.isArray(body.texts) ? body.texts.map(cleanText).filter(Boolean).slice(0, 400) : [];
-  const s = Math.max(4, Math.min(32, parseInt(body.s || DEFAULT_STEPS, 10) || DEFAULT_STEPS));
+  /* 🔴 여기도 벌의 스텝이다 — 아니면 이미 구운 조각을 「없다」로 보고 컨테이너를 쓸데없이 깨운다(위와 같은 병). */
+  const wTag = tagOf(body.k);
+  const s = body.s ? Math.max(4, Math.min(32, parseInt(body.s, 10) || stepsFor(wTag))) : stepsFor(wTag);
   const r = parseR(body.r == null ? 1 : body.r);
   // R2 에 이미 있는 것은 뺀다(컨테이너 대기열을 아낀다)
   const todo = [];
   if (!env.TTS_CACHE) return json({ ok: false, error: 'cache_unavailable' }, 503, CORS);
   try {
-    for (const t of texts) { const key = await cacheKey(v, s, r, t); if (!(await env.TTS_CACHE.head(key))) todo.push(t); }
+    for (const t of texts) { const key = await cacheKey(v, s, r, t, wTag); if (!(await env.TTS_CACHE.head(key))) todo.push(t); }
   } catch (_) { return json({ ok: false, error: 'cache_unavailable' }, 503, CORS); }
   if (!todo.length) return json({ ok: true, queued: 0, cached: texts.length }, 200, CORS);
   const c = container(env);
