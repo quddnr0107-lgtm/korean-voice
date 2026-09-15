@@ -116,3 +116,20 @@ test('server.py /warm — 스텝을 상수 STEPS 가 아니라 벌에서 얻는�
   assert.ok(!/int\(body\.get\('s'\)\s*or\s*STEPS\)/.test(블록), 'warm 이 아직 상수 STEPS 로 스텝을 잡는다');
   assert.match(블록, /RC\.steps_for\(/, 'warm 이 벌에서 스텝을 얻지 않는다');
 });
+
+/* 🔴 **판(rev)을 올려도 R2 키는 그대로여야 한다** — rev 는 주소에만 들어간다.
+   만약 키에 섞이면, 판을 올리는 순간 구운 조각 5만8천 개가 **통째로 「목록 밖」이 되어 폐기 대상**이 된다.
+   2026-09-15 에 실제로 그 폐기를 돌렸으므로, 이 불변식이 깨지면 다음 판 올림이 음성을 지운다. */
+test('🔴 판(rev)을 올려도 R2 키가 안 바뀐다 — 안 그러면 폐기가 구운 조각을 지운다', async () => {
+  const t = '국방부장관은 예비군을 지휘·감독한다.', r = 0.91;
+  const 키 = await cacheKey('female', TAGS[RECIPE_TAG].steps, r, t, RECIPE_TAG);
+  for (const rev of [1, 2, 7]) {
+    const id = `${RECIPE_TAG}.${rev}`;
+    assert.strictEqual(await cacheKey('female', stepsFor(id), r, t, tagOf(id)), 키, `${id} 에서 키가 갈렸다 — rev 가 키에 샜다`);
+  }
+  // 그리고 그 키는 폐기가 남길 목록 안에 있어야 한다(여기가 진짜 사고 지점이다)
+  const keep = await keepKeysFor(['female'], [{ t, r }]);
+  assert.ok(keep.get('female').has(키), '폐기가 남길 목록에 없다 — 판을 올리면 지워진다');
+  // 🔬 음성 대조군 — 스텝이 갈리면 키는 당연히 갈려야 한다(자가 아무거나 같다고 하는 게 아니다)
+  assert.notStrictEqual(await cacheKey('female', TAGS[RECIPE_TAG].steps + 1, r, t, RECIPE_TAG), 키);
+});
