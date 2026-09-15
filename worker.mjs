@@ -257,7 +257,9 @@ async function handleLiveTts(request, env, ctx) {
   /* 갈아타는 동안은 두 벌을 본다 — 고른 벌 먼저, 없으면 옛 벌로 즉시 답한다.
      이렇게 하지 않으면 표식을 올린 순간 5만8천 조각이 한꺼번에 안 잡혀 전부 컨테이너 합성이 된다(= 대기 폭발).
      🔴 학생이 옛 벌을 **직접 고른** 요청에는 폴백을 안 쓴다 — 고른 것과 다른 소리를 주면 안 된다.
-     u5 전량 굽기가 끝나면 lib/tts-key.mjs 의 FALLBACK 을 null 로 만든다. */
+     🔴 지금은 FALLBACK 이 null 이라 이 줄이 안 돈다(2026-09-15 · k2 전편 굽기 끝 · 빠진 조각 0/57,897).
+        벌을 또 갈아탈 때만 lib/tts-key.mjs 에서 다시 켠다 — 켜져 있는 동안은 「그 벌이 있나」를 묻는
+        모든 자가 「둘 중 하나라도 있나」로 답한다는 것을 잊지 마라(R334). */
   const keys = [[key, tag]];
   if (FALLBACK && tag === RECIPE_TAG && FALLBACK.tag !== tag) keys.push([await cacheKey(v, FALLBACK.steps, r, t, FALLBACK.tag), FALLBACK.tag]);
   // 1) R2 캐시
