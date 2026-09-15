@@ -1,7 +1,7 @@
 """조합 등록부 — 사이트가 목소리를 두 벌 동시에 내준다(2026-09-08 사용자 「음성 2개를 고를수있게」).
 
-  u5  지금 목소리   F4:0.6+F2:0.4 · Praat PSOLA 억양       스텝 8
-  k2  옛 목소리     F2 순수 · 실측 억양 궤적 · 어절 층      스텝 16
+  k2  지금 목소리   F2 순수 · 실측 억양 궤적 · 어절 층      스텝 16
+  u5  옛 목소리     F4:0.6+F2:0.4 · Praat PSOLA 억양       스텝 8
 
 🔴 스텝이 조합에 딸려 있다 — 캐시 키가 `voice|steps|r|표식|글` 이라, 표식만 바꾸고 스텝을 안 맞추면
    이미 구워 둔 벌을 통째로 못 찾는다(실측: k2 를 스텝 8 로 찾으면 전량 miss).
@@ -14,7 +14,9 @@ TAGS = {
     voice_shape.RECIPE_TAG:    {'mod': voice_shape,    'steps': 8},
     voice_shape_k2.RECIPE_TAG: {'mod': voice_shape_k2, 'steps': 16},
 }
-DEFAULT = voice_shape.RECIPE_TAG
+# 🔴 지금 벌 — 2026-09-15 에 u5 → k2 로 되돌렸다(yebijun 사용자 「2. k2하고」).
+#    워커의 lib/tts-key.mjs RECIPE_TAG 와 글자까지 같아야 한다(test/tts-key.test.mjs 가 잰다).
+DEFAULT = voice_shape_k2.RECIPE_TAG
 
 
 def get(tag):
