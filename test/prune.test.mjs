@@ -115,3 +115,46 @@ test('지울 것이 없으면 조용히 0 — 이미 정리된 상태를 사고�
   const r = await retireVoices({ r2, keep: ['female'], dry: false });
   assert.equal(r.ok, true); assert.deepEqual(r.retired, []); assert.equal(r.deleted, 0);
 });
+
+/* 🔴 한 요청에서 다 지우면 러너의 fetch 가 헤더 타임아웃(5분)으로 끊긴다 — 워커가 **다 지운 뒤에야**
+   응답을 보내기 때문이다(2026-09-15 실측: 57,904개를 걸었더니 14,500개에서 끊겼다).
+   그래서 회차마다 묶어서 지우고, 부르는 쪽이 `남음` 이 0 이 될 때까지 다시 부른다. */
+test('🔴 maxDelete — 한 회차에 그만큼만 지우고 「남음」을 돌려준다', async () => {
+  const keep = many(MIN_KEEP);
+  const 버릴것 = many(10, 'tts/female/old-');
+  const r2 = fakeR2([...keep, ...버릴것], 1000);
+  const r = await prune({ r2, keep, dry: false, maxDelete: 4 });
+  assert.equal(r.drop, 10, '목록 밖 수는 전부를 말해야 한다');
+  assert.equal(r.deleted, 4, '이번 회차에 지운 수');
+  assert.equal(r.남음, 6);
+  assert.equal(r.done, false, '남았는데 done 이면 부르는 쪽이 멈춘다');
+  assert.equal(r2.deleted.length, 4, '실제로 지운 것도 4개여야 한다(세기만 하면 안 된다)');
+});
+
+test('🔴 다시 부르면 이어서 지운다 — 끝나면 done', async () => {
+  const keep = many(MIN_KEEP);
+  const r2 = fakeR2([...keep, ...many(10, 'tts/female/old-')], 1000);
+  let 회 = 0, 합 = 0, r;
+  do { r = await prune({ r2, keep, dry: false, maxDelete: 4 }); 회++; 합 += r.deleted; } while (!r.done && 회 < 10);
+  assert.equal(r.done, true);
+  assert.equal(합, 10, '이어 부른 합이 처음 목록 밖 수와 같아야 한다');
+  assert.equal(회, 3, '4+4+2 = 세 회차');
+  for (const k of keep) assert.ok(r2.m.has(k), '남길 키를 지웠다');
+});
+
+/* 🔬 음성 대조군 — 마른 실행은 회차를 나눠도 **하나도 안 지운다**(그리고 done 이 아니다) */
+test('[음성] dry 는 maxDelete 와 무관하게 안 지운다', async () => {
+  const keep = many(MIN_KEEP);
+  const r2 = fakeR2([...keep, ...many(10, 'tts/female/old-')], 1000);
+  const r = await prune({ r2, keep, dry: true, maxDelete: 4 });
+  assert.equal(r.deleted, 0); assert.deepEqual(r2.deleted, []);
+  assert.equal(r.남음, 10); assert.equal(r.done, false);
+});
+
+/* 🔬 음성 대조군 — maxDelete 0 은 「묶지 마라」다(옛 동작). 이걸 안 두면 무제한 길이 막힌다. */
+test('[음성] maxDelete 0 이면 한 번에 다 지운다(옛 동작)', async () => {
+  const keep = many(MIN_KEEP);
+  const r2 = fakeR2([...keep, ...many(10, 'tts/female/old-')], 1000);
+  const r = await prune({ r2, keep, dry: false, maxDelete: 0 });
+  assert.equal(r.deleted, 10); assert.equal(r.done, true); assert.equal(r.남음, 0);
+});
