@@ -93,3 +93,26 @@ test('tagOf — 밖에서 온 값은 지금 벌로 떨어진다', () => {
   assert.strictEqual(tagOf('k2.1'), 'k2');
   assert.strictEqual(tagOf('없는것'), RECIPE_TAG);
 });
+
+/* 🔴 컨테이너에 「벌」을 안 넘기면 컨테이너가 **제 기본 벌**로 굽는다 (2026-09-15)
+   지금은 워커의 RECIPE_TAG 와 recipes.py 의 DEFAULT 가 같아서 안 드러난다 — 그것이 위험한 이유다(R335).
+   갈라지는 날 warm 이 구운 조각은 **재생이 영영 못 찾는 자리**에 쌓인다. */
+test('/warm — 워커가 컨테이너에 벌(k)을 넘긴다', () => {
+  const src = 핸들러('handleWarm');
+  const i = src.indexOf("target.pathname = '/warm'");
+  assert.ok(i >= 0, 'handleWarm 이 컨테이너 /warm 을 안 부른다 — 자가 낡았다');
+  const 몸통 = src.slice(i, i + 500);
+  assert.match(몸통, /JSON\.stringify\(\{[^}]*\bk:\s*wTag\b/, '컨테이너로 보내는 몸통에 벌(k)이 없다 — 컨테이너가 제 기본 벌로 굽는다');
+});
+
+/* 컨테이너 쪽도 같은 규칙이다 — 스텝은 상수 STEPS 가 아니라 벌에서 나온다.
+   여기만 STEPS 였다(2026-09-15). `/tts` 는 이미 RC.steps_for 를 쓰고 있었다. */
+test('server.py /warm — 스텝을 상수 STEPS 가 아니라 벌에서 얻는다', () => {
+  const py = fs.readFileSync(new URL('../server/server.py', import.meta.url), 'utf8')
+    .split('\n').filter((l) => !/^\s*#/.test(l)).join('\n');
+  const i = py.indexOf("if u.path == '/render'");
+  assert.ok(i >= 0, 'warm 블록을 못 찾았다 — 자가 낡았다');
+  const 블록 = py.slice(i, py.indexOf('def _render', i));
+  assert.ok(!/int\(body\.get\('s'\)\s*or\s*STEPS\)/.test(블록), 'warm 이 아직 상수 STEPS 로 스텝을 잡는다');
+  assert.match(블록, /RC\.steps_for\(/, 'warm 이 벌에서 스텝을 얻지 않는다');
+});
