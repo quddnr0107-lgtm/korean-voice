@@ -339,16 +339,19 @@ class H(BaseHTTPRequestHandler):
         voice = body.get('v') or 'female'
         if voice not in VOICES:
             return self._json({'ok': False, 'error': 'bad_voice'}, 400)
+        tag_w = RC.get(body.get('k')).RECIPE_TAG
+        # 🔴 스텝은 벌에서 나온다 — 상수 STEPS 에서 나오면 안 된다(2026-09-15 · R335).
+        #    /tts 는 이미 RC.steps_for 를 쓰는데 여기만 STEPS 였다. 지금은 두 값이 우연히 같아서
+        #    안 드러나지만, 갈라지는 날 warm 이 구운 조각을 **재생이 영영 못 찾는다**.
         try:
-            steps = max(4, min(32, int(body.get('s') or STEPS)))
+            steps = max(4, min(32, int(body.get('s') or RC.steps_for(tag_w))))
         except (TypeError, ValueError):
-            steps = STEPS
+            steps = RC.steps_for(tag_w)
         texts = body.get('texts') or []
         if not isinstance(texts, list):
             return self._json({'ok': False, 'error': 'bad_texts'}, 400)
         r = parse_r(body.get('r', 1.0))
-        tag = RC.get(body.get('k')).RECIPE_TAG
-        return self._json({'ok': True, 'queued': warm(voice, texts[:400], steps, r, tag), 'queue': _warm_q.qsize()})
+        return self._json({'ok': True, 'queued': warm(voice, texts[:400], steps, r, tag_w), 'queue': _warm_q.qsize()})
 
     def _render(self, body):
         """POST /render {v, s?, k?, items:[{t, r, pause}]} → audio/mpeg (대본 전체 · 계획된 쉼 포함)"""
@@ -387,7 +390,7 @@ class H(BaseHTTPRequestHandler):
         u = urllib.parse.urlsplit(self.path); q = urllib.parse.parse_qs(u.query)
         if u.path == '/health':
             cached = sum(len([f for f in os.listdir(os.path.join(CACHE, v)) if f.endswith('.mp3')]) for v in VOICES)
-            return self._json({'ok': True, 'voices': list(VOICES), 'cached': cached, 'steps': STEPS, 'recipe': RC.DEFAULT, 'recipes': {t: {'steps': v['steps'], 'style': v['mod'].RECIPE['style']} for t, v in RC.TAGS.items()}, 'queue': _warm_q.qsize(), 'stats': _stats})
+            return self._json({'ok': True, 'voices': list(VOICES), 'cached': cached, 'steps': RC.steps_for(RC.DEFAULT), 'recipe': RC.DEFAULT, 'recipes': {t: {'steps': v['steps'], 'style': v['mod'].RECIPE['style']} for t, v in RC.TAGS.items()}, 'queue': _warm_q.qsize(), 'stats': _stats})
         if u.path == '/voices':
             return self._json({k: {'label': v['label']} for k, v in VOICES.items()})
         if u.path != '/tts':

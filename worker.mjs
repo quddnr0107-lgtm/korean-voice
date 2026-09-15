@@ -399,7 +399,9 @@ async function handleWarm(request, env) {
   const v = body.v || 'female';
   if (!VOICES.includes(v)) return json({ ok: false, error: 'bad_voice' }, 400, CORS);
   const texts = Array.isArray(body.texts) ? body.texts.map(cleanText).filter(Boolean).slice(0, 400) : [];
-  /* 🔴 여기도 벌의 스텝이다 — 아니면 이미 구운 조각을 「없다」로 보고 컨테이너를 쓸데없이 깨운다(위와 같은 병). */
+  /* 🔴 여기도 벌의 스텝이다 — 아니면 이미 구운 조각을 「없다」로 보고 컨테이너를 쓸데없이 깨운다(위와 같은 병).
+     🔴 그리고 **벌 자체를 컨테이너에 넘겨야 한다**(2026-09-15). 안 넘기면 컨테이너가 제 기본 벌로 굽는데,
+        지금은 그 기본이 우연히 같아서 안 드러난다 — 갈라지는 날 그 조각은 **아무도 못 읽는 자리**에 쌓인다(R335). */
   const wTag = tagOf(body.k);
   const s = body.s ? Math.max(4, Math.min(32, parseInt(body.s, 10) || stepsFor(wTag))) : stepsFor(wTag);
   const r = parseR(body.r == null ? 1 : body.r);
@@ -414,7 +416,7 @@ async function handleWarm(request, env) {
   if (!c) return json({ ok: false, error: 'tts_unavailable' }, 503, CORS);
   try {
     const target = new URL(request.url); target.pathname = '/warm'; target.search = '';
-    const res = await c.fetch(new Request(target.toString(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ v, s, r, texts: todo }) }));
+    const res = await c.fetch(new Request(target.toString(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ v, s, r, k: wTag, texts: todo }) }));
     const j = await res.json().catch(() => ({}));
     return json({ ok: true, ...j, skipped: texts.length - todo.length }, 200, CORS);
   } catch (e) {
