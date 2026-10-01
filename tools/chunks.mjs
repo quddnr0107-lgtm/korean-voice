@@ -35,7 +35,7 @@ function 개념글(content) {
   return parts.join(' ');
 }
 const [liveSrc, koSrc, stSrc, epSrc, eeSrc, sdSrc] = await Promise.all([get('/live-tts.js'), get('/ko-voice.js'), get('/speech-text.js'), get('/exam_prep.json'), get('/easy_explain.json'), get('/study_data.json')]);
-/* 별표 낭독·숨김 줄 — 공개 파일(없으면 null · 옛 사이트와 같은 결과) */
+/* 별표 낭독·숨김 줄 — 공개 파일. 없으면 null — 옛 사이트(줄글 없음)면 원문, 새 사이트면 회독글들 이 멈춘다(빈 근거로 굽지 않는다) */
 const [apxSrc, spSrc] = await Promise.all([get('/appendix_data.json').catch(() => null), get('/appendix-speech.json').catch(() => null)]);
 const seg = 조각기(liveSrc, koSrc);
 const S = require서로(stSrc); if (!S || typeof S.읽기용 !== 'function') throw new Error('SpeechText.읽기용 을 못 꺼냈다');

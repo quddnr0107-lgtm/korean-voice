@@ -33,3 +33,11 @@ test('근거만들기 — 파일이 없거나 깨져도 멈추지 않는다', ()
   assert.deepEqual(근거만들기(null, '{깨짐'), { studySpeech: null, studyHideLineIds: null });
   assert.deepEqual(근거만들기('{"studyHideLineIds":["a"]}', '{"studySpeech":{"k":[]}}'), { studySpeech: { k: [] }, studyHideLineIds: ['a'] });
 });
+test('새 사이트(줄글 있음)인데 근거를 못 받았으면 멈춘다 — 깨진 표 글자를 조용히 굽지 않는다', () => {
+  assert.throws(() => 회독글들(sd, 새S, null), /못 받았다/);
+  assert.throws(() => 회독글들(sd, 새S, 근거만들기(null, null)), /못 받았다/);
+  assert.throws(() => 회독글들(sd, 새S, { studySpeech: 근거.studySpeech, studyHideLineIds: null }), /못 받았다/);
+});
+test('옛 사이트(줄글 없음)는 근거가 없어도 원문으로 간다(호환)', () => {
+  assert.deepEqual(회독글들(sd, { 읽기용: (t) => t }, null).map((x) => x.t), ['보통 줄', '[별표 23] 깨진 표 글자 구 분P-999K', '숨긴 표 조각']);
+});
