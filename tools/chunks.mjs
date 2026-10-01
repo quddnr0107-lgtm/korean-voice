@@ -7,6 +7,7 @@
    사용: node chunks.mjs --site https://yebijun.drillstudy.com --out chunks.json */
 import fs from 'node:fs';
 import { makeSourceReader } from './private-source.mjs';
+import { 회독글들, 근거만들기 } from './study-lines.mjs';
 import vm from 'node:vm';
 const 인자 = process.argv.slice(2);
 const 값 = (k, d) => { const i = 인자.indexOf(k); return i >= 0 && 인자[i + 1] ? 인자[i + 1] : d; };
@@ -34,8 +35,10 @@ function 개념글(content) {
   return parts.join(' ');
 }
 const [liveSrc, koSrc, stSrc, epSrc, eeSrc, sdSrc] = await Promise.all([get('/live-tts.js'), get('/ko-voice.js'), get('/speech-text.js'), get('/exam_prep.json'), get('/easy_explain.json'), get('/study_data.json')]);
+/* 별표 낭독·숨김 줄 — 공개 파일(없으면 null · 옛 사이트와 같은 결과) */
+const [apxSrc, spSrc] = await Promise.all([get('/appendix_data.json').catch(() => null), get('/appendix-speech.json').catch(() => null)]);
 const seg = 조각기(liveSrc, koSrc);
-const 읽기용 = (() => { const S = require서로(stSrc); if (!S || typeof S.읽기용 !== 'function') throw new Error('SpeechText.읽기용 을 못 꺼냈다'); return S.읽기용; })();
+const S = require서로(stSrc); if (!S || typeof S.읽기용 !== 'function') throw new Error('SpeechText.읽기용 을 못 꺼냈다');
 const 글들 = [];
 const ep = JSON.parse(epSrc);
 for (const period of Object.keys(ep)) for (const it of (ep[period] || [])) { const t = 출제핵심글(it); if (t) 글들.push({ k: 'exam', t, w: 법정규(it.law) }); }
@@ -43,9 +46,8 @@ const ee = JSON.parse(eeSrc);
 for (const period of Object.keys(ee)) { if (period.startsWith('_')) continue; for (const law of Object.keys(ee[period] || {})) { if (law.startsWith('_')) continue; for (const a of Object.keys(ee[period][law] || {})) { const t = 개념글(ee[period][law][a] && ee[period][law][a].content); if (t) 글들.push({ k: 'easy', t, w: 법정규(law) }); } } }
 const st = ee._standalone || {};
 for (const period of Object.keys(st)) for (const law of Object.keys(st[period] || {})) for (const type of Object.keys(st[period][law] || {})) for (const a of Object.keys(st[period][law][type] || {})) { const t = 개념글(st[period][law][type][a] && st[period][law][type][a].content); if (t) 글들.push({ k: 'easy', t, w: 법정규(law) }); }
-/* 따라읽기 — 줄 original(머리줄 포함 · 2자 이상)을 읽기용에 통과시킨 것. original 은 안 건드린다(yebijun bake-live-tts.mjs 회독줄들 과 같다) */
-const sd = JSON.parse(sdSrc); const 본줄 = new Set();
-for (const b of (sd.blanks || [])) { const t = String(b.original || '').trim(); if (t.length < 2 || 본줄.has(t)) continue; 본줄.add(t); 글들.push({ k: 'study', t: 읽기용(t) || t, w: 법정규(b.law) }); }
+/* 따라읽기 — 줄 → 읽을 글은 SpeechText.줄글(yebijun 화면 · bake-live-tts.mjs 회독줄들 과 같은 함수) 뒤에 읽기용 */
+for (const x of 회독글들(JSON.parse(sdSrc), S, 근거만들기(apxSrc, spSrc))) 글들.push({ k: 'study', t: x.t, w: 법정규(x.law) });
 const map = new Map();
 for (const { k: 갈래, t: 글, w: 법 } of 글들) for (const c of seg(글)) { const r = Math.round((c.r || 1) * 100) / 100; const k = c.text + '|' + r.toFixed(2); if (!map.has(k)) map.set(k, { t: c.text, r, k: 갈래, w: 법 }); }
 const 목록 = [...map.values()];
