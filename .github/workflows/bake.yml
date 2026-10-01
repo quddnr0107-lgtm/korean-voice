@@ -37,6 +37,9 @@ on:
       prune:
         description: '굽기가 끝난 뒤 지금 목록에 없는 옛 조각을 R2 에서 지운다(true/false · 마른 실행 뒤 실제 삭제 · tools/prune.mjs)'
         default: 'false'
+      hum_recheck:
+        description: 'R2 에 이미 있는 조각을 받아 끝 「우웅」을 다시 재고 걸린 것만 다시 굽는다(true/false · tools/hum.py · 로그가 글을 가려 어느 조각인지 모를 때)'
+        default: 'false'
 
 permissions:
   id-token: write   # OIDC — 워커가 이 토큰으로 「이 저장소의 main」임을 확인한다
@@ -113,11 +116,13 @@ jobs:
           for f in config.json onnx/duration_predictor.onnx onnx/text_encoder.onnx onnx/tts.json onnx/unicode_indexer.json onnx/vector_estimator.onnx onnx/vocoder.onnx; do curl -sL -o supertonic3/$f "$B/$f"; done
           for s in F1 F2 F3 F4 F5 M1 M2 M3 M4 M5; do curl -sL -o supertonic3/voice_styles/$s.json "$B/voice_styles/$s.json"; done
           for f in helper.py example_onnx.py; do curl -sL -o supertonic3/py/$f https://raw.githubusercontent.com/supertone-inc/supertonic/main/py/$f; done
+      - name: 우웅 자 시험(mp3 를 거쳐도 잡히나 · 양성·음성)
+        run: python3 test/hum_test.py
       - name: 굽기
         env:
           SUPERTONIC_DIR: ${{ github.workspace }}/supertonic3
           PYTHONPATH: ${{ github.workspace }}/supertonic3/py
-        run: python3 tools/bake.py --chunks chunks.json --shard ${{ matrix.job.shard }} --shards ${{ matrix.job.shards }} --limit ${{ inputs.limit }} --start ${{ inputs.start }} --kind ${{ matrix.job.k }} --law ${{ matrix.job.w }} ${{ inputs.tag && format('--tag {0}', inputs.tag) || '' }} ${{ inputs.force == 'true' && '--force' || '' }}
+        run: python3 tools/bake.py --chunks chunks.json --shard ${{ matrix.job.shard }} --shards ${{ matrix.job.shards }} --limit ${{ inputs.limit }} --start ${{ inputs.start }} --kind ${{ matrix.job.k }} --law ${{ matrix.job.w }} ${{ inputs.tag && format('--tag {0}', inputs.tag) || '' }} ${{ inputs.force == 'true' && '--force' || '' }} ${{ inputs.hum_recheck == 'true' && '--hum-recheck' || '' }}
 
   # 옛 조각 폐기 — 모든 샤드가 끝난 뒤, 지금 조각 목록(plan 의 chunks.json)에 없는 R2 조각을 지운다(2026-09-05 yebijun 사용자 「이전 꺼 다 폐기해」).
   # 🔴 kind 가 all 이 아니어도 목록은 all 이다(chunks.mjs 가 전 갈래를 만든다) — 다른 갈래 조각이 지워지지 않는다.

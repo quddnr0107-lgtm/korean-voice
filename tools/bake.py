@@ -21,6 +21,8 @@ ap.add_argument('--kind', default='all', choices=['all', 'exam', 'easy', 'study'
 ap.add_argument('--tag', default='', help='구울 조합(벌) — 비우면 기본 벌. 벌마다 스텝이 다르므로 --steps 를 안 주면 그 벌의 스텝을 쓴다')
 ap.add_argument('--law', default='all', help="과목(조각의 w 필드) — 통합방위법·예비군법·훈령·병역법·기타·all. 뭉탱이(갈래×과목) 단위로 굽고 갈아타기 위한 것")
 ap.add_argument('--force', action='store_true', help='R2 에 이미 있어도 다시 굽어 덮어쓴다(배치 패딩 우웅 재굽기 · L280)')
+ap.add_argument('--hum-tries', type=int, default=4, help='끝 우웅이 잡히면 단건으로 이만큼까지 다시 뽑는다(합성은 뽑기다 · 한 번으로는 5/253 이 남았다 · 2026-10-01)')
+ap.add_argument('--hum-recheck', action='store_true', help='R2 에 이미 있는 조각을 받아 우웅을 다시 재고, 걸린 것만 다시 굽는다(로그가 글을 가려 어느 조각인지 모를 때)')
 a = ap.parse_args()
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -28,6 +30,8 @@ os.environ.setdefault('SUPERTONIC_DIR', os.path.join(HERE, '..', 'supertonic3'))
 os.environ.setdefault('CACHE_DIR', os.path.join(HERE, '..', 'cache'))
 sys.path.insert(0, os.path.join(HERE, '..', 'server'))
 import server  # noqa: E402  (server/server.py · voice_shape.py 는 같은 디렉터리)
+sys.path.insert(0, HERE)
+import hum as HUM  # noqa: E402  (다시 뽑기·다시 재기 — 모델 없이 시험한다: test/hum_test.py)
 import helper  # noqa: E402
 TAG = server.RC.get(a.tag or None).RECIPE_TAG      # 구울 벌(조합) — 기본은 지금 벌
 VS = server.RC.get(TAG)                            # 그 벌의 다듬기·억양 자
@@ -60,7 +64,7 @@ def http(method, path, body=None, headers=None, raw=False):
         return data if raw else json.loads(data.decode('utf-8') or '{}')
 
 # 이미 있는 것 건너뛰기
-todo = []
+todo = []; 있음 = []
 for i in range(0, len(mine), 400):
     part = mine[i:i + 400]
     try:
@@ -68,8 +72,26 @@ for i in range(0, len(mine), 400):
         has = j.get('has') or [False] * len(part)
     except Exception as e:
         print('has 실패(전부 굽는다):', str(e)[:100]); has = [False] * len(part)
-    todo += [it for it, h in zip(part, has) if a.force or not h]
+    for it, h in zip(part, has):
+        (todo if a.force or not h else 있음).append(it)
 print(f'이미 R2 에 있음 {len(mine) - len(todo)} · 구울 것 {len(todo)}', flush=True)
+
+# 다시 재기 — 이미 올라간 조각을 **재생 주소 그대로**(/tts · 같은 벌·스텝·r) 받아 같은 자로 잰다. 걸린 것만 굽기에 더한다(덮어쓴다)
+못받음 = 0
+if a.hum_recheck and 있음:
+    ff0 = server.ffmpeg(); 걸림 = []; 못잼 = 0
+    for it in 있음:
+        q = urllib.parse.urlencode({'v': a.voice, 's': a.steps, 'r': server.fmt_r(it['r']), 't': it['t'], 'k': TAG})
+        try:
+            h = VS.hum_tail(HUM.mp3_소리(ff0, http('GET', '/tts?' + q, raw=True), 24000), 24000)
+        except Exception as e:
+            못받음 += 1; print('다시 재기 실패:', HUM.조각이름(it['t']), type(e).__name__, flush=True); continue
+        if h is None: 못잼 += 1
+        elif h: 걸림.append(it)
+    print(f'다시 잰 것 {len(있음)} · 우웅 {len(걸림)} · 못 받음 {못받음} · 못 잼 {못잼}', flush=True)
+    for it in 걸림: print('   우웅 걸림:', HUM.조각이름(it['t']), flush=True)
+    if 못잼: print('🔴 우웅 자(parselmouth)가 없다 — 잰 것이 아니다', flush=True); sys.exit(2)   # R139
+    todo += 걸림
 
 _tok = {'v': None, 'at': 0}
 def oidc():
@@ -97,7 +119,7 @@ def upload(it, mp3):
     return False
 
 if not todo:
-    print('할 것이 없다'); sys.exit(0)
+    print('할 것이 없다'); sys.exit(1 if 못받음 else 0)   # 못 받은 조각은 잰 것이 아니다(R139)
 t0 = time.time(); server.load(); print(f'모델 로드 {time.time() - t0:.1f}s', flush=True)
 sr = server._tts.sample_rate; style = server._styles[(TAG, a.voice)]
 ff = server.ffmpeg()
@@ -158,12 +180,14 @@ for (speed, hard), lst in groups.items():
             try:
                 # 🔴 배치 합성은 가장 긴 항목 길이로 패딩되고, 그 패딩 자리에서 모델이 낮은 순음(「우웅」 · ~120Hz · 수백 ms)을 낸다(L280).
                 #    각 항목은 위에서 **자기 예측 길이(dur · 이미 speed 로 나눈 값)** 로 이미 잘랐다. 그래도 잡히면 단건으로 다시 굽는다(패딩 없음).
-                y = VS.shape(w, sr, t, hard)
-                if VS.hum_tail(y, sr) is True:
+                #    합성은 뽑기라 단건 한 번으로는 남는다(2026-10-01 · 253 중 5) — 깨끗한 것이 나올 때까지 --hum-tries 번까지 뽑는다.
+                def _단건(t=t, hard=hard):
                     with server._lock:
                         w1, d1 = server._tts._infer([t], ['ko'], style, a.steps, speed)
-                    y = VS.shape(np.asarray(w1, dtype=np.float32).reshape(-1)[:int(float(np.asarray(d1).reshape(-1)[0]) * sr)], sr, t, hard); redo += 1
-                    if VS.hum_tail(y, sr) is True: print('🔴 우웅 남음(단건 재굽기 뒤에도):', 'redacted', flush=True); hum_left += 1
+                    return VS.shape(np.asarray(w1, dtype=np.float32).reshape(-1)[:int(float(np.asarray(d1).reshape(-1)[0]) * sr)], sr, t, hard)
+                y, n_redo, 남음 = HUM.다시뽑기(VS.shape(w, sr, t, hard), _단건, lambda z: VS.hum_tail(z, sr), a.hum_tries)
+                redo += n_redo
+                if 남음: print(f'🔴 우웅 남음(단건 {n_redo}번 뒤에도):', HUM.조각이름(it['t']), flush=True); hum_left += 1
                 tmp = os.path.join(os.environ['CACHE_DIR'], f'b{a.shard}.tmp.wav'); os.makedirs(os.environ['CACHE_DIR'], exist_ok=True)
                 sf.write(tmp, y, sr)
                 mp3 = subprocess.run([ff, '-v', 'error', '-i', tmp, '-ar', '24000', '-codec:a', 'libmp3lame', '-b:a', '48k', '-f', 'mp3', 'pipe:1'], check=True, capture_output=True).stdout
@@ -179,5 +203,5 @@ if hnr_all:
     print(f'뽑기 {takes} / 조각 {items_n} = 조각당 {takes / max(1, items_n):.2f}회 · '
           f'HNR p10 {q[0]:.2f} 중앙 {q[1]:.2f} p90 {q[2]:.2f} · 바닥 {a.hnr_floor}', flush=True)
 print(f'끝 — 구움 {done} · 실패 {fail} · 우웅으로 단건 재굽기 {redo} · 그래도 남음 {hum_left} · {(time.time() - t0) / 60:.1f}분', flush=True)
-sys.exit(1 if fail and not done else 0)
+sys.exit(1 if (fail and not done) or 못받음 else 0)
 
