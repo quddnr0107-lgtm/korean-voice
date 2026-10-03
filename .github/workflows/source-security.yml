@@ -16,6 +16,10 @@ jobs:
         run: node --test test/private-source.test.mjs test/container-cost.test.mjs test/meta-no-container.test.mjs test/ko-voice.test.cjs test/frontend-invariants.test.cjs test/tts-arena.test.cjs test/voice-diversity.test.cjs test/browser-supertonic-evidence.test.cjs test/tts-key.test.mjs test/bake-steps.test.mjs test/hum-selection.test.mjs
       - name: Python selftests
         run: python3 server/singleflight.py --selftest && python3 test/judge_test.py && python3 -m py_compile server/singleflight.py server/server.py research/judge.py tools/bake.py tools/hum.py test/hum_test.py
+      - name: Tail-hum regression dependencies (no voice model)
+        run: python3 -m pip install --quiet numpy soundfile imageio-ffmpeg praat-parselmouth
+      - name: Tail-hum and MP3 regressions
+        run: python3 test/hum_test.py
       - name: No private-text artifact or Container bulk queue
         run: |
           node --input-type=module <<'NODE'
