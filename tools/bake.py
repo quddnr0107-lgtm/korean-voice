@@ -10,7 +10,6 @@
 - OIDC 토큰은 ACTIONS_ID_TOKEN_REQUEST_URL 에서 audience=korean-voice-bake 로 받고 4분마다 새로 받는다.
 """
 import argparse, io, json, os, subprocess, sys, time, urllib.request, urllib.parse, urllib.error
-import numpy as np, soundfile as sf
 
 ap = argparse.ArgumentParser()
 ap.add_argument('--chunks', required=True); ap.add_argument('--shard', type=int, default=0); ap.add_argument('--shards', type=int, default=1)
@@ -23,38 +22,35 @@ ap.add_argument('--law', default='all', help="과목(조각의 w 필드) — 통
 ap.add_argument('--force', action='store_true', help='R2 에 이미 있어도 다시 굽어 덮어쓴다(배치 패딩 우웅 재굽기 · L280)')
 ap.add_argument('--hum-tries', type=int, default=4, help='끝 우웅이 잡히면 단건으로 이만큼까지 다시 뽑는다(합성은 뽑기다 · 한 번으로는 5/253 이 남았다 · 2026-10-01)')
 ap.add_argument('--hum-recheck', action='store_true', help='R2 에 이미 있는 조각을 받아 우웅을 다시 재고, 걸린 것만 다시 굽는다(로그가 글을 가려 어느 조각인지 모를 때)')
+ap.add_argument('--chunk-ids', default='', help='로그의 정확한 10자리 조각이름을 쉼표로 지정한다. 없거나 중복되는 ID면 굽기 전에 중단한다')
 a = ap.parse_args()
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+import hum as HUM  # noqa: E402
+
+# 범위 검증은 모델 의존성 import 및 원격 조회보다 먼저 한다.
+try:
+    HUM.validate_target_options(a.chunk_ids, a.start, a.limit)
+    with open(a.chunks, encoding='utf-8') as source:
+        items = HUM.select_chunks(json.load(source), a.chunk_ids, a.kind, a.law)
+except ValueError as exc:
+    ap.error(str(exc))
+mine = [it for i, it in enumerate(items) if i >= a.start and (i - a.start) % a.shards == a.shard]
+if a.limit: mine = mine[:a.limit]
+print(f'조각 전체 {len(items)} · 내 몫(shard {a.shard}/{a.shards}) {len(mine)}', flush=True)
+
+import numpy as np, soundfile as sf  # noqa: E402
 os.environ.setdefault('SUPERTONIC_DIR', os.path.join(HERE, '..', 'supertonic3'))
 os.environ.setdefault('CACHE_DIR', os.path.join(HERE, '..', 'cache'))
 sys.path.insert(0, os.path.join(HERE, '..', 'server'))
 import server  # noqa: E402  (server/server.py · voice_shape.py 는 같은 디렉터리)
-sys.path.insert(0, HERE)
-import hum as HUM  # noqa: E402  (다시 뽑기·다시 재기 — 모델 없이 시험한다: test/hum_test.py)
 import helper  # noqa: E402
 TAG = server.RC.get(a.tag or None).RECIPE_TAG      # 구울 벌(조합) — 기본은 지금 벌
 VS = server.RC.get(TAG)                            # 그 벌의 다듬기·억양 자
 if not a.steps:
     a.steps = server.RC.steps_for(TAG)             # 🔴 벌마다 스텝이 다르다 — 안 맞추면 그 벌의 키가 안 된다
 _HNR = server.VS.hnr                               # 거칠기 자는 재는 도구일 뿐이라 벌과 무관하다
-
-items = json.load(open(a.chunks, encoding='utf-8'))
-if a.kind != 'all':
-    # 갈래로 거른 뒤 샤드를 나눈다. k 가 없는 옛 목록이면 거르지 않고 소리 낸다(조용히 전부 굽지 않게)
-    if items and 'k' not in items[0]:
-        print('🔴 조각 목록에 k(갈래)가 없다 — chunks.mjs 가 옛 판이다. --kind 를 못 지킨다', flush=True); sys.exit(2)
-    n0 = len(items); items = [it for it in items if it.get('k') == a.kind]
-    print(f'갈래 {a.kind}: {len(items)}/{n0}', flush=True)
-if a.law != 'all':
-    # 과목(뭉탱이)으로 한 번 더 거른다 — 굽기를 갈래×과목 단위로 끊어 그 뭉탱이만 새 목소리로 갈아탄다
-    if items and 'w' not in items[0]:
-        print('🔴 조각 목록에 w(과목)가 없다 — chunks.mjs 가 옛 판이다. --law 를 못 지킨다', flush=True); sys.exit(2)
-    n0 = len(items); items = [it for it in items if it.get('w') == a.law]
-    print(f'과목 {a.law}: {len(items)}/{n0}', flush=True)
-mine = [it for i, it in enumerate(items) if i >= a.start and (i - a.start) % a.shards == a.shard]
-if a.limit: mine = mine[:a.limit]
-print(f'조각 전체 {len(items)} · 내 몫(shard {a.shard}/{a.shards}) {len(mine)}', flush=True)
 
 UA = 'korean-voice-bake/1 (+https://github.com/quddnr0107-lgtm/korean-voice)'   # 🔴 기본 Python-urllib UA 는 Cloudflare 엣지가 403 으로 막는다(1회차 실측)
 def http(method, path, body=None, headers=None, raw=False):
@@ -204,4 +200,3 @@ if hnr_all:
           f'HNR p10 {q[0]:.2f} 중앙 {q[1]:.2f} p90 {q[2]:.2f} · 바닥 {a.hnr_floor}', flush=True)
 print(f'끝 — 구움 {done} · 실패 {fail} · 우웅으로 단건 재굽기 {redo} · 그래도 남음 {hum_left} · {(time.time() - t0) / 60:.1f}분', flush=True)
 sys.exit(1 if (fail and not done) or 못받음 else 0)
-

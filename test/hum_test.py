@@ -54,6 +54,37 @@ try:
     t('[양성] wav 에서 잡히는 우웅 꼬리', VS.hum_tail(꼬리, sr) is True)
     t('[양성] mp3(굽기와 같은 꼴)를 거쳐 다시 풀어도 잡힌다', VS.hum_tail(HUM.mp3_소리(ff, mp3(꼬리), sr), sr) is True)
     t('[음성] 말소리만이면 mp3 를 거쳐도 안 잡힌다', VS.hum_tail(HUM.mp3_소리(ff, mp3(speech), sr), sr) is False)
+
+    # run 28: 마지막 유성음 뒤에 무성 발음이 이어지는데 앞의 모음만 재던 오탐.
+    # 실제 원고/음원은 넣지 않는다. 미수정 u5 검출기는 변경 전 k2와 같아 재현 대조로만 쓴다.
+    import voice_shape as OLD_VS
+    release_rng = np.random.default_rng(1703)
+    vt = np.arange(int(sr * 0.4)) / sr
+    phase = 2 * np.pi * (260 * vt - 125 * vt * vt)
+    vowel = (0.2 * np.sin(phase) + 0.035 * np.sin(2 * phase)).astype(np.float32)
+    release = (0.05 * release_rng.standard_normal(int(sr * 0.18))).astype(np.float32)
+    voiced_release = np.concatenate([speech, np.zeros(sr // 20), vowel, release, np.zeros(sr // 10)]).astype(np.float32)
+    unchanged = True
+    for label, w in [('wav', voiced_release), ('mp3', HUM.mp3_소리(ff, mp3(voiced_release), sr))]:
+        before = w.copy()
+        t(f'[오탐 재현 {label}] 모음 뒤 무성 발음 — 기존 True, 보강 후 False',
+          OLD_VS.hum_tail(w, sr) is True and VS.hum_tail(w, sr) is False)
+        unchanged = unchanged and np.array_equal(w, before)
+
+    weak_noise = release * 0.01
+    click = np.concatenate([np.zeros(sr // 20), release[:sr // 100], np.zeros(sr // 10)])
+    positive_cases = [
+        ('약한 잡음', np.concatenate([꼬리, weak_noise])),
+        ('10ms 클릭', np.concatenate([꼬리, click])),
+        ('무성 발음 뒤 실제 우웅', np.concatenate([voiced_release, humw])),
+    ]
+    for label, raw in positive_cases:
+        for codec, w in [('wav', raw), ('mp3', HUM.mp3_소리(ff, mp3(raw), sr))]:
+            before = w.copy()
+            t(f'[양성 유지 {codec}] {label} 때문에 실제 우웅을 놓치지 않는다', VS.hum_tail(w, sr) is True)
+            unchanged = unchanged and np.array_equal(w, before)
+    t('검출은 wav·mp3 양성·음성 입력을 한 샘플도 바꾸지 않는다', unchanged)
+
     try:
         HUM.mp3_소리(ff, b'not mp3', sr); t('깨진 mp3 는 예외(조용히 빈 소리로 안 넘어간다)', False)
     except subprocess.CalledProcessError:

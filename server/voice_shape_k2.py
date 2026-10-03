@@ -273,10 +273,41 @@ def praat_shape(w, sr, text, hard, r=RECIPE):
 def unit_speed_mult(idx_in_sentence, hard, r=RECIPE):
     a, b = r['contrast']; return b if hard else a
 
+
+def _release_after_voicing(w, sr, last):
+    """유성음 뒤에도 뚜렷한 무성 발음이 이어지면 그 유성음은 '끝 우웅'이 아니다.
+
+    pitch(75Hz)의 약 40ms 분석창 여유 뒤, 20ms 프레임 네 개(80ms)가 연속으로
+    최고 프레임 RMS 대비 -30dB 이상이며 400Hz 아래 에너지가 25% 미만인지 본다.
+    짧은 클릭·약한 잔향·MP3 패딩은 근거로 쓰지 않는다. 소리는 절대 자르지 않는다.
+    """
+    frame = max(1, int(sr * 0.02))
+    tail = w[int((last + 0.04) * sr):]
+    n = len(tail) // frame
+    if n < 4:
+        return False
+    full = w[:len(w) // frame * frame].reshape(-1, frame)
+    peak_power = float(np.max(np.mean(full * full, axis=1)))
+    parts = tail[:n * frame].reshape(n, frame)
+    power = np.mean(parts * parts, axis=1)
+    sp = np.abs(np.fft.rfft(parts * np.hanning(frame), axis=1)) ** 2
+    fq = np.fft.rfftfreq(frame, 1 / sr)
+    low = sp[:, fq < 400].sum(axis=1) / np.maximum(sp.sum(axis=1), 1e-30)
+    release = (power > peak_power * 0.001) & (low < 0.25)
+    consecutive = 0
+    for active in release:
+        consecutive = consecutive + 1 if active else 0
+        if consecutive >= 4:
+            return True
+    return False
+
+
 def hum_tail(w, sr):
     """끝 「우웅」 검출 — 배치 합성의 패딩 자리에서 모델이 낮은 순음(~120Hz · HNR 높음 · 400Hz 아래 에너지)을 수백 ms 낸다(L280).
     마지막 유성 구간이 200ms 를 넘고 그 끝 0.3초가 HNR 12dB 초과 · 저역비 0.5 초과이면 True. 실측(라이브 조각 · 사용자 판정):
-    우웅 O → 725ms · HNR 18.5 · 저역 0.71 / 우웅 X → 40~70ms · HNR 3~8 · 저역 0.06~0.13. parselmouth 가 없으면 None(못 잰 것을 통과로 세지 않는다 · R139)."""
+    우웅 O → 725ms · HNR 18.5 · 저역 0.71 / 우웅 X → 40~70ms · HNR 3~8 · 저역 0.06~0.13.
+    단, 그 유성 구간 뒤에 무성 발음이 이어지면 제외한다(run 28 세 조각의 말끝 오검출).
+    parselmouth 가 없으면 None(못 잰 것을 통과로 세지 않는다 · R139)."""
     try:
         import parselmouth
     except ImportError:
@@ -293,7 +324,7 @@ def hum_tail(w, sr):
     if len(x) < sr // 20: return False
     sp = np.abs(np.fft.rfft(x * np.hanning(len(x)))) ** 2; fq = np.fft.rfftfreq(len(x), 1 / sr); low = float(sp[fq < 400].sum() / (sp.sum() or 1))
     hnr = parselmouth.praat.call(parselmouth.praat.call(snd.extract_part(max(0, last - 0.3), last), "To Harmonicity (cc)", 0.01, 75, 0.1, 1.0), "Get mean", 0, 0)
-    return bool(hnr > 12 and low > 0.5)
+    return bool(hnr > 12 and low > 0.5 and not _release_after_voicing(w, sr, last))
 
 
 def tail_trim(w, sr, drop_db=40.0, keep_ms=60):
