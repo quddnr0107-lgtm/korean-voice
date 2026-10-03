@@ -40,6 +40,9 @@ on:
       hum_recheck:
         description: 'R2 에 이미 있는 조각을 받아 끝 「우웅」을 다시 재고 걸린 것만 다시 굽는다(true/false · tools/hum.py · 로그가 글을 가려 어느 조각인지 모를 때)'
         default: 'false'
+      chunk_ids:
+        description: '지정한 조각만: 로그의 정확한 10자리 ID를 쉼표로 입력. 미일치·중복이면 중단. start=0, limit=0, prune=false 필요'
+        default: ''
 
 permissions:
   id-token: write   # OIDC — 워커가 이 토큰으로 「이 저장소의 main」임을 확인한다
@@ -60,6 +63,14 @@ jobs:
         run: node tools/chunks.mjs --out chunks.json
       - id: hash
         run: echo "sha=$(sha256sum chunks.json | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+      - name: Select exact chunks before planning (no model)
+        env:
+          CHUNK_IDS: ${{ inputs.chunk_ids }}
+          KIND: ${{ inputs.kind || 'all' }}
+          START: ${{ inputs.start || '0' }}
+          LIMIT: ${{ inputs.limit || '0' }}
+          PRUNE: ${{ inputs.prune || 'false' }}
+        run: python3 tools/hum.py --select-chunks chunks.json --out bake-chunks.json --chunk-ids "$CHUNK_IDS" --kind "$KIND" --start "$START" --limit "$LIMIT" --prune "$PRUNE"
       - id: m
         env:
           ORDER: ${{ inputs.order || 'true' }}
@@ -67,9 +78,9 @@ jobs:
           SHARDS: ${{ inputs.shards }}
           PER: ${{ inputs.per || '300' }}
         run: |
-          echo "matrix=$(node tools/plan.mjs chunks.json)" >> "$GITHUB_OUTPUT"
+          echo "matrix=$(node tools/plan.mjs bake-chunks.json)" >> "$GITHUB_OUTPUT"
       - name: 계획 사람말로
-        run: node tools/plan.mjs chunks.json --설명
+        run: node tools/plan.mjs bake-chunks.json --설명
         env:
           ORDER: ${{ inputs.order || 'true' }}
           KIND: ${{ inputs.kind || 'all' }}
@@ -97,6 +108,14 @@ jobs:
         env:
           EXPECTED_SOURCE_HASH: ${{ needs.plan.outputs.source_hash }}
         run: test "$(sha256sum chunks.json | cut -d' ' -f1)" = "$EXPECTED_SOURCE_HASH"
+      - name: Select the same exact chunks before model setup
+        env:
+          CHUNK_IDS: ${{ inputs.chunk_ids }}
+          KIND: ${{ inputs.kind || 'all' }}
+          START: ${{ inputs.start || '0' }}
+          LIMIT: ${{ inputs.limit || '0' }}
+          PRUNE: ${{ inputs.prune || 'false' }}
+        run: python3 tools/hum.py --select-chunks chunks.json --out bake-chunks.json --chunk-ids "$CHUNK_IDS" --kind "$KIND" --start "$START" --limit "$LIMIT" --prune "$PRUNE"
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
@@ -122,13 +141,13 @@ jobs:
         env:
           SUPERTONIC_DIR: ${{ github.workspace }}/supertonic3
           PYTHONPATH: ${{ github.workspace }}/supertonic3/py
-        run: python3 tools/bake.py --chunks chunks.json --shard ${{ matrix.job.shard }} --shards ${{ matrix.job.shards }} --limit ${{ inputs.limit }} --start ${{ inputs.start }} --kind ${{ matrix.job.k }} --law ${{ matrix.job.w }} ${{ inputs.tag && format('--tag {0}', inputs.tag) || '' }} ${{ inputs.force == 'true' && '--force' || '' }} ${{ inputs.hum_recheck == 'true' && '--hum-recheck' || '' }}
+        run: python3 tools/bake.py --chunks bake-chunks.json --shard ${{ matrix.job.shard }} --shards ${{ matrix.job.shards }} --limit ${{ inputs.limit }} --start ${{ inputs.start }} --kind ${{ matrix.job.k }} --law ${{ matrix.job.w }} ${{ inputs.tag && format('--tag {0}', inputs.tag) || '' }} ${{ inputs.force == 'true' && '--force' || '' }} ${{ inputs.hum_recheck == 'true' && '--hum-recheck' || '' }}
 
   # 옛 조각 폐기 — 모든 샤드가 끝난 뒤, 지금 조각 목록(plan 의 chunks.json)에 없는 R2 조각을 지운다(2026-09-05 yebijun 사용자 「이전 꺼 다 폐기해」).
   # 🔴 kind 가 all 이 아니어도 목록은 all 이다(chunks.mjs 가 전 갈래를 만든다) — 다른 갈래 조각이 지워지지 않는다.
   prune:
     needs: [plan, bake]
-    if: ${{ inputs.prune == 'true' }}
+    if: ${{ inputs.prune == 'true' && inputs.chunk_ids == '' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -146,4 +165,3 @@ jobs:
         run: test "$(sha256sum chunks.json | cut -d' ' -f1)" = "$EXPECTED_SOURCE_HASH"
       - name: 폐기 (마른 실행 → 실제)
         run: node tools/prune.mjs --chunks chunks.json
-
