@@ -3,7 +3,7 @@
    🔴 여기서 새로 나누지 않는다 — 화면이 쓰는 그 함수(LiveTTS.segment)를 vm 으로 꺼내 쓴다. 원고 규칙은 yebijun app.js 의 셋을 베낀 것
    (출제핵심 (lectureScript||bodyText).trim() · 개념강의 빈 줄→문장→`**` 제거→' ' 이음 + _standalone · 따라읽기 SpeechText.읽기용(original)).
    yebijun 의 .github/scripts/bake-live-tts.mjs 와 같은 논리다 — 그쪽 check-bake-list-live · check-follow-live-tts-live 가 화면과 같은지 잰다.
-   갈래 k — exam(출제핵심강의) · easy(개념강의) · study(따라읽기 · 원문회독·눈회독·타이핑 줄 · 2026-09-04). bake.py --kind 가 이 값으로 거른다.
+   갈래 k — exam(출제핵심강의) · easy(개념강의) · study(따라읽기 · 원문회독·눈회독·타이핑 줄 · 2026-09-04) · bundle(헷갈림 묶음 강의 /bundle · 2026-10-19). bake.py --kind 가 이 값으로 거른다.
    사용: node chunks.mjs --site https://yebijun.drillstudy.com --out chunks.json */
 import fs from 'node:fs';
 import { makeSourceReader } from './private-source.mjs';
@@ -37,6 +37,18 @@ function 개념글(content) {
 const [liveSrc, koSrc, stSrc, epSrc, eeSrc, sdSrc] = await Promise.all([get('/live-tts.js'), get('/ko-voice.js'), get('/speech-text.js'), get('/exam_prep.json'), get('/easy_explain.json'), get('/study_data.json')]);
 /* 별표 낭독·숨김 줄 — 공개 파일. 없으면 null — 옛 사이트(줄글 없음)면 원문, 새 사이트면 회독글들 이 멈춘다(빈 근거로 굽지 않는다) */
 const [apxSrc, spSrc] = await Promise.all([get('/appendix_data.json').catch(() => null), get('/appendix-speech.json').catch(() => null)]);
+/* 헷갈림 묶음 강의(/bundle) — 공개 파일 둘. 읽을 글 = 편.강의.map(읽을글).join('\n\n') (yebijun bundle.html 소리달기).
+   🔴 읽을글 은 베끼지 않는다 — bundle.html 에서 그 함수를 꺼낸다. 옛 사이트(파일 없음)면 이 갈래만 건너뛴다. */
+const [bdSrc, bhSrc] = await Promise.all([get('/bundle-lectures.json').catch(() => null), get('/bundle.html').catch(() => null)]);
+export function 묶음읽을글(html) {
+  const i = html.indexOf('function 읽을글(');
+  if (i < 0) throw new Error('bundle.html 에서 function 읽을글( 을 못 찾았다');
+  let d = 0, k = html.indexOf('{', i);
+  for (; k < html.length; k++) { if (html[k] === '{') d++; else if (html[k] === '}' && --d === 0) break; }
+  const g = {}; vm.createContext(g); vm.runInContext(html.slice(i, k + 1), g);
+  if (typeof g.읽을글 !== 'function') throw new Error('읽을글 을 꺼내지 못했다');
+  return g.읽을글;
+}
 const seg = 조각기(liveSrc, koSrc);
 const S = require서로(stSrc); if (!S || typeof S.읽기용 !== 'function') throw new Error('SpeechText.읽기용 을 못 꺼냈다');
 const 글들 = [];
@@ -48,11 +60,12 @@ const st = ee._standalone || {};
 for (const period of Object.keys(st)) for (const law of Object.keys(st[period] || {})) for (const type of Object.keys(st[period][law] || {})) for (const a of Object.keys(st[period][law][type] || {})) { const t = 개념글(st[period][law][type][a] && st[period][law][type][a].content); if (t) 글들.push({ k: 'easy', t, w: 법정규(law) }); }
 /* 따라읽기 — 줄 → 읽을 글은 SpeechText.줄글(yebijun 화면 · bake-live-tts.mjs 회독줄들 과 같은 함수) 뒤에 읽기용 */
 for (const x of 회독글들(JSON.parse(sdSrc), S, 근거만들기(apxSrc, spSrc))) 글들.push({ k: 'study', t: x.t, w: 법정규(x.law) });
+if (bdSrc && bhSrc) { const 읽을글 = 묶음읽을글(bhSrc); for (const p of (JSON.parse(bdSrc).편 || [])) { const t = (p.강의 || []).map(읽을글).join('\n\n'); if (t) 글들.push({ k: 'bundle', t, w: 법정규(p.과목) }); } }
 const map = new Map();
 for (const { k: 갈래, t: 글, w: 법 } of 글들) for (const c of seg(글)) { const r = Math.round((c.r || 1) * 100) / 100; const k = c.text + '|' + r.toFixed(2); if (!map.has(k)) map.set(k, { t: c.text, r, k: 갈래, w: 법 }); }
 const 목록 = [...map.values()];
 fs.writeFileSync(OUT, JSON.stringify(목록));
 const 세기 = (갈래) => 목록.filter((c) => c.k === 갈래).length;
 const 법세기 = 법들.concat('기타').map((l) => `${l} ${목록.filter((c) => c.w === l).length}`).join(' · ');
-console.log(`원고 ${글들.length}편 · 고유 조각 ${목록.length}개(exam ${세기('exam')} · easy ${세기('easy')} · study ${세기('study')} | ${법세기}) · ${목록.reduce((a, c) => a + c.t.length, 0).toLocaleString()}자 → ${OUT}`);
+console.log(`원고 ${글들.length}편 · 고유 조각 ${목록.length}개(exam ${세기('exam')} · easy ${세기('easy')} · study ${세기('study')} · bundle ${세기('bundle')} | ${법세기}) · ${목록.reduce((a, c) => a + c.t.length, 0).toLocaleString()}자 → ${OUT}`);
 

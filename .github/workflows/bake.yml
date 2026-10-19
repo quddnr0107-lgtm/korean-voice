@@ -20,7 +20,7 @@ on:
         description: '목록의 이 번호부터(시험용 · 앞쪽은 컨테이너가 이미 구웠을 수 있다)'
         default: '0'
       kind:
-        description: '갈래 — all · exam(출제핵심강의) · easy(개념강의) · study(따라읽기 · 원문회독·눈회독·타이핑 줄)'
+        description: '갈래 — all · exam(출제핵심강의) · easy(개념강의) · study(따라읽기 · 원문회독·눈회독·타이핑 줄) · bundle(헷갈림 묶음 강의)'
         default: 'all'
       order:
         description: '뭉탱이 순서로 굽는다 — 개념→출제핵심→회독 × 통합방위법→예비군법→훈령→병역법 (true/false). 큐가 이 차례로 처리돼 끝난 뭉탱이부터 새 목소리가 나온다'
