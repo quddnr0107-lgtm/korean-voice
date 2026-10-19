@@ -16,7 +16,7 @@ ap.add_argument('--chunks', required=True); ap.add_argument('--shard', type=int,
 ap.add_argument('--base', default='https://korean-voice.quddnr0107.workers.dev'); ap.add_argument('--voice', default='female'); ap.add_argument('--steps', type=int, default=0, help='0 = 그 벌의 스텝(server/recipes.py)'); ap.add_argument('--best', type=int, default=3); ap.add_argument('--hnr-floor', type=float, default=12.5)
 ap.add_argument('--batch', type=int, default=16); ap.add_argument('--limit', type=int, default=0); ap.add_argument('--no-upload', action='store_true')
 ap.add_argument('--start', type=int, default=0, help='목록의 이 번호부터(시험용 · 앞쪽은 컨테이너 대기열이 이미 구웠을 수 있다)')
-ap.add_argument('--kind', default='all', choices=['all', 'exam', 'easy', 'study'], help='갈래 — exam 출제핵심강의 · easy 개념강의 · study 따라읽기(원문회독·눈회독·타이핑 줄) · all (조각의 k 필드)')
+ap.add_argument('--kind', default='all', choices=['all', 'exam', 'easy', 'study', 'bundle'], help='갈래 — exam 출제핵심강의 · easy 개념강의 · study 따라읽기(원문회독·눈회독·타이핑 줄) · bundle 헷갈림 묶음 강의 · all (조각의 k 필드)')
 ap.add_argument('--tag', default='', help='구울 조합(벌) — 비우면 기본 벌. 벌마다 스텝이 다르므로 --steps 를 안 주면 그 벌의 스텝을 쓴다')
 ap.add_argument('--law', default='all', help="과목(조각의 w 필드) — 통합방위법·예비군법·훈령·병역법·기타·all. 뭉탱이(갈래×과목) 단위로 굽고 갈아타기 위한 것")
 ap.add_argument('--force', action='store_true', help='R2 에 이미 있어도 다시 굽어 덮어쓴다(배치 패딩 우웅 재굽기 · L280)')

@@ -92,7 +92,7 @@ def _main():
     ap.add_argument('--select-chunks', required=True)
     ap.add_argument('--out')
     ap.add_argument('--chunk-ids', default='')
-    ap.add_argument('--kind', default='all', choices=['all', 'exam', 'easy', 'study'])
+    ap.add_argument('--kind', default='all', choices=['all', 'exam', 'easy', 'study', 'bundle'])
     ap.add_argument('--law', default='all')
     ap.add_argument('--start', type=int, default=0)
     ap.add_argument('--limit', type=int, default=0)

@@ -14,9 +14,9 @@ const SHARDS = Math.max(1, parseInt(process.env.SHARDS || '40', 10) || 40);
 const PER0 = Math.max(20, parseInt(process.env.PER || '300', 10) || 300);
 const 최대잡 = 240;
 
-const 갈래차례 = ['easy', 'exam', 'study'];
+const 갈래차례 = ['easy', 'exam', 'study', 'bundle'];
 const 과목차례 = ['통합방위법', '예비군법', '훈령', '병역법', '기타'];
-const 갈래이름 = { easy: '개념강의', exam: '출제핵심강의', study: '회독' };
+const 갈래이름 = { easy: '개념강의', exam: '출제핵심강의', study: '회독', bundle: '묶음강의' };
 
 const items = JSON.parse(fs.readFileSync(파일, 'utf8'));
 const 걸러 = KIND === 'all' ? items : items.filter((c) => c.k === KIND);
