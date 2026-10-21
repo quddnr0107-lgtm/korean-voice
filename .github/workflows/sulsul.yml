@@ -1,0 +1,54 @@
+name: Sulsul Bible female B
+on:
+  push:
+    branches: [codex/sulsul-female-b-v1]
+    paths: ['sulsul/**', '.github/workflows/sulsul.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: sulsul-female-b-v1
+  cancel-in-progress: false
+env:
+  ORT_DISABLE_TELEMETRY: '1'
+  HF_HUB_OFFLINE: '1'
+  TRANSFORMERS_OFFLINE: '1'
+  OMP_NUM_THREADS: '2'
+  OPENBLAS_NUM_THREADS: '2'
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: plan
+        run: echo "matrix=$(python3 sulsul/bake.py --matrix)" >> "$GITHUB_OUTPUT"
+  bake:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      max-parallel: 32
+      matrix: ${{ fromJson(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: pip install onnxruntime==1.31.0 numpy==2.5.4 soundfile==0.14.0 imageio-ffmpeg==0.6.0 PyYAML==6.0.3
+      - uses: actions/cache@v4
+        with:
+          path: supertonic3
+          key: sulsul-supertonic3-3cadd1ee
+      - run: python3 sulsul/assets.py
+      - name: Render, validate and publish each completed chapter
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 sulsul/bake.py --job '${{ matrix.job }}' --publish
