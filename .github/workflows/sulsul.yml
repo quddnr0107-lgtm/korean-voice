@@ -1,11 +1,29 @@
 name: Sulsul Bible female B
 on:
   push:
-    branches: [codex/sulsul-female-b-v1]
+    branches: [main, codex/sulsul-female-b-v1]
+    paths: ['sulsul/**', '.github/workflows/sulsul.yml']
+  pull_request:
     paths: ['sulsul/**', '.github/workflows/sulsul.yml']
   workflow_dispatch:
+    inputs:
+      operation:
+        description: Audit only, or restore missing original ZIPs (never synthesize)
+        type: choice
+        options: [audit, retry-missing, retry-failed]
+        default: audit
+        required: true
+      job_ids:
+        description: Optional comma-separated job IDs, for example 000,014
+        type: string
+        default: ''
+      failed_run_id:
+        description: Failed Sulsul run ID (required for retry-failed); original ZIP checkpoint source
+        type: string
+        default: ''
 permissions:
   contents: read
+  actions: read
 concurrency:
   group: sulsul-female-b-v1
   cancel-in-progress: false
@@ -18,18 +36,50 @@ env:
 jobs:
   plan:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     outputs:
       matrix: ${{ steps.plan.outputs.matrix }}
+      has_work: ${{ steps.plan.outputs.has_work }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install PyYAML==6.0.3
+      - run: python3 -m unittest discover -s sulsul -p 'test_*.py'
       - id: plan
-        run: echo "matrix=$(python3 sulsul/bake.py --matrix)" >> "$GITHUB_OUTPUT"
+        name: Inventory pinned release assets and select missing work
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OPERATION: ${{ inputs.operation || 'audit' }}
+          JOB_IDS: ${{ inputs.job_ids }}
+          FAILED_RUN: ${{ inputs.failed_run_id }}
+        shell: bash
+        run: |
+          python3 sulsul/bake.py --mode "$OPERATION" --job-ids "$JOB_IDS" --failed-run-id "$FAILED_RUN" --report sulsul-inventory.json
+          python3 - <<'PY'
+          import json,os
+          report=json.load(open('sulsul-inventory.json'))
+          with open(os.environ['GITHUB_OUTPUT'],'a') as out:
+              out.write('matrix='+json.dumps(report['matrix'],separators=(',',':'))+'\n')
+              out.write('has_work='+str(bool(report['matrix']['job'])).lower()+'\n')
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as out:
+              out.write(f"Verified complete: {report['complete']} / 1189; missing: {len(report['missing'])}; selected jobs: {len(report['matrix']['job'])}. No synthesis is enabled.\n")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sulsul-inventory
+          path: sulsul-inventory.json
+          retention-days: 14
   bake:
+    name: bake (${{ matrix.job }})
     needs: plan
+    if: github.event_name == 'workflow_dispatch' && needs.plan.outputs.has_work == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 350
     permissions:
       contents: write
+      actions: read
     strategy:
       fail-fast: false
       max-parallel: 32
@@ -39,16 +89,25 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - run: pip install onnxruntime==1.31.0 numpy==2.5.4 soundfile==0.14.0 imageio-ffmpeg==0.6.0 PyYAML==6.0.3
-      - uses: actions/cache@v4
-        with:
-          path: supertonic3
-          key: sulsul-supertonic3-3cadd1ee
-      - run: python3 sulsul/assets.py
-      - name: Render, validate and publish each completed chapter
+      - name: Recover scoped original ZIP checkpoint when supplied
+        if: inputs.failed_run_id != ''
         env:
           GH_TOKEN: ${{ github.token }}
-        run: python3 sulsul/bake.py --job '${{ matrix.job }}' --publish
+          SOURCE_RUN: ${{ inputs.failed_run_id }}
+          JOB: ${{ matrix.job }}
+        run: gh run download "$SOURCE_RUN" --repo "$GITHUB_REPOSITORY" --name "sulsul-checkpoint-$JOB" --dir sulsul-output
+      - name: Revalidate and restore exact original archives only
+        env:
+          GH_TOKEN: ${{ github.token }}
+          JOB: ${{ matrix.job }}
+          OPERATION: ${{ inputs.operation }}
+          JOB_IDS: ${{ inputs.job_ids }}
+          FAILED_RUN: ${{ inputs.failed_run_id }}
+        run: python3 sulsul/bake.py --job "$JOB" --mode "$OPERATION" --job-ids "$JOB_IDS" --failed-run-id "$FAILED_RUN" --budget-minutes 320 --publish
+      - uses: actions/upload-artifact@v4
+        if: failure() || cancelled()
+        with:
+          name: sulsul-checkpoint-${{ matrix.job }}
+          path: sulsul-output/
+          if-no-files-found: ignore
+          retention-days: 3
