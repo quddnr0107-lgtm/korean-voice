@@ -1,0 +1,18 @@
+{
+  "observedAt": "2026-10-22T00:08:07.684Z",
+  "url": "https://github.com/quddnr0107-lgtm/korean-voice/pull/77",
+  "number": 77,
+  "state": "open",
+  "draft": true,
+  "merged": false,
+  "mergeable": true,
+  "head": {
+    "sha": "bce2be53f45c21938e8e959775c462ea869f0d83",
+    "ref": "codex/sulsul-female-b-v1"
+  },
+  "base": {
+    "sha": "f4dc475987907d3c9b20970041a5bf3ee9813adb",
+    "ref": "main"
+  },
+  "updatedAt": "2026-10-21T01:18:58Z"
+}
