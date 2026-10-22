@@ -1,0 +1,27 @@
+{
+  "observedAt": "2026-10-22T00:02:00.148Z",
+  "runId": 39526515759,
+  "url": "https://github.com/quddnr0107-lgtm/korean-voice/actions/runs/39526515759",
+  "jobs": 96,
+  "bakeJobs": 95,
+  "successJobs": 96,
+  "bakeRunnerMinutes": 3639.3,
+  "bakeMeanMinutes": 38.30842105263158,
+  "bakeMedianMinutes": 42.333333333333336,
+  "bakeP95NearestRankMinutes": 47.21666666666667,
+  "bakeMaximumMinutes": 47.78333333333333,
+  "observedMaximumConcurrency": 32,
+  "jobTimeoutMinutes": 350,
+  "softBudgetMinutes": 320,
+  "configuredMaxParallel": 32,
+  "maximum95JobTimeoutMinutes": 33250,
+  "coldModelBytesPerRunner": 398945433,
+  "coldModelUpperBound95RunnersBytes": 37899816135,
+  "notes": [
+    "Runner minutes are measured elapsed job time, not a billing statement.",
+    "Cold download total is an upper bound assuming 95 uncached runners; actual cache/network usage was not measured.",
+    "No failed jobs or missing assets currently exist; no retry or synthesis was executed."
+  ],
+  "jobExecutionSpanMinutes": 132.91666666666666,
+  "runWallMinutes": 132.98333333333332
+}
