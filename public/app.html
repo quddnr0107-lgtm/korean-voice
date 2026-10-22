@@ -3,8 +3,18 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>한국어 낭독 만들기 — 숫자·단위·법령 용어를 틀리지 않게</title>
-<meta name="description" content="대본을 붙이면 숫자·단위·날짜·약어를 사람이 읽는 대로 고쳐 읽고, 문장별 쉼과 억양을 넣어 mp3로 만들어 줍니다.">
+<title>한국어 낭독 만들기 — 대본 읽기와 MP3 음성 합성</title>
+<meta name="description" content="숫자·단위·날짜·약어를 읽기 형태로 바꾸어 확인하고, 목소리와 속도를 고른 뒤 미리듣기와 MP3 만들기를 이용하는 한국어 음성 도구입니다.">
+<link rel="canonical" href="https://korean-voice.quddnr0107.workers.dev/app">
+<meta property="og:type" content="website">
+<meta property="og:title" content="한국어 낭독 만들기 — 대본 읽기와 MP3 음성 합성">
+<meta property="og:description" content="숫자·단위·날짜·약어를 읽기 형태로 바꾸어 확인하고, 목소리와 속도를 고른 뒤 미리듣기와 MP3 만들기를 이용하는 한국어 음성 도구입니다.">
+<meta property="og:url" content="https://korean-voice.quddnr0107.workers.dev/app">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="한국어 낭독 만들기 — 대본 읽기와 MP3 음성 합성">
+<meta name="twitter:description" content="숫자·단위·날짜·약어를 읽기 형태로 바꾸어 확인하고, 목소리와 속도를 고른 뒤 미리듣기와 MP3 만들기를 이용하는 한국어 음성 도구입니다.">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","@id":"https://korean-voice.quddnr0107.workers.dev/app#webpage","url":"https://korean-voice.quddnr0107.workers.dev/app","name":"한국어 낭독 만들기 — 대본 읽기와 MP3 음성 합성","description":"숫자·단위·날짜·약어를 읽기 형태로 바꾸어 확인하고, 목소리와 속도를 고른 뒤 미리듣기와 MP3 만들기를 이용하는 한국어 음성 도구입니다.","inLanguage":"ko"}</script>
 <style>
   :root {
     --bg: #fbfaf8; --fg: #1a1a19; --dim: #6b6b66; --line: #e3e1dc; --card: #ffffff;
@@ -51,6 +61,7 @@
   footer a { color: inherit; }
   .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 </style>
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebApplication","@id":"https://korean-voice.quddnr0107.workers.dev/app#application","url":"https://korean-voice.quddnr0107.workers.dev/app","name":"한국어 낭독 만들기","applicationCategory":"MultimediaApplication","operatingSystem":"Web browser","inLanguage":"ko","description":"대본의 읽기 형태를 확인하고 목소리와 속도를 선택해 미리듣기와 MP3 음성 합성을 이용하는 한국어 도구입니다.","featureList":["한국어 숫자·단위·날짜·약어 읽기 변환","변환된 대본 표시","목소리와 속도 선택","미리듣기","MP3 음성 만들기"],"mainEntityOfPage":{"@id":"https://korean-voice.quddnr0107.workers.dev/app#webpage"}},{"@type":"FAQPage","@id":"https://korean-voice.quddnr0107.workers.dev/app#faq","mainEntity":[{"@type":"Question","name":"한국어 낭독 만들기는 어떤 도구인가요?","acceptedAnswer":{"@type":"Answer","text":"대본의 숫자·단위·날짜·약어를 읽기 형태로 바꾸어 보여 주고, 선택한 목소리와 속도로 AI 음성을 만드는 도구입니다. 고쳐 읽는 부분은 노란색으로 표시되므로 음성을 만들기 전에 대본과 비교할 수 있습니다."}},{"@type":"Question","name":"서버와 내 브라우저에서 만들기는 어떻게 다른가요?","acceptedAnswer":{"@type":"Answer","text":"서버 방식은 하루 3,000자 무료 범위를 안내합니다. 내 브라우저 방식은 처음에 약 384MB의 음성 모델을 기기로 내려받아 실행하며, 다운로드 전에 모델 이용 조건에 동의해야 합니다. 기기의 성능과 사용 가능한 저장 공간을 확인해 주세요."}},{"@type":"Question","name":"낭독 결과를 사용하기 전에 무엇을 확인해야 하나요?","acceptedAnswer":{"@type":"Answer","text":"이름, 숫자, 날짜, 단위와 문장 구분이 의도한 대로 읽히는지 화면의 변환 결과와 미리듣기로 확인하세요. 결과는 AI로 생성된 음성이며, 사용 제한과 표시 조건은 이용약관과 라이선스 페이지에서 확인할 수 있습니다."}}]}]}</script>
 </head>
 <body>
 <header><div class="wrap">
@@ -107,9 +118,9 @@
     <div class="notice" id="consent" hidden style="margin:10px 0">
       <p style="margin:0 0 8px"><strong>모델을 내려받기 전에 확인해 주세요.</strong>
       「내 브라우저에서 만들기」는 음성 합성 모델(Supertonic 3, 약 384MB)을 <strong>이 기기로 내려받아</strong> 실행합니다.
-      이 모델은 BigScience Open RAIL-M 조건으로 제공되며, <a href="/terms.html">이용약관 제1조</a>의 사용 제한이
+      이 모델은 BigScience Open RAIL-M 조건으로 제공되며, <a href="/terms">이용약관 제1조</a>의 사용 제한이
       여러분에게도 적용됩니다 — 특히 <strong>실존 인물의 동의 없는 음성 모사</strong>와
-      <strong>AI 생성 사실을 숨기는 것</strong>이 금지됩니다. 원문은 <a href="/licenses.html">라이선스 페이지</a>에 있습니다.</p>
+      <strong>AI 생성 사실을 숨기는 것</strong>이 금지됩니다. 원문은 <a href="/licenses">라이선스 페이지</a>에 있습니다.</p>
       <label style="display:flex;gap:8px;align-items:flex-start">
         <input type="checkbox" id="consentCheck">
         <span>위 내용을 읽었고, 모델을 다시 배포할 때 라이선스 사본과 같은 제한을 함께 전달하겠습니다.</span>
@@ -124,14 +135,20 @@
   <section>
     <p class="notice">이 음성은 <strong>AI로 생성</strong>되었습니다. 실제 사람의 녹음이 아닙니다.
     실존 인물의 목소리를 동의 없이 모사하는 데 쓸 수 없고, 만들어진 음성을 사람이 직접 발화한 것처럼 제시할 수 없습니다.
-    자세한 조건은 <a href="/terms.html">이용약관</a>에 있습니다.</p>
+    자세한 조건은 <a href="/terms">이용약관</a>에 있습니다.</p>
+  </section>
+<section aria-labelledby="voice-faq">
+    <h2 id="voice-faq">이용 전 자주 묻는 질문</h2>
+    <details class="card" style="margin-bottom:10px"><summary>한국어 낭독 만들기는 어떤 도구인가요?</summary><p>대본의 숫자·단위·날짜·약어를 읽기 형태로 바꾸어 보여 주고, 선택한 목소리와 속도로 AI 음성을 만드는 도구입니다. 고쳐 읽는 부분은 노란색으로 표시되므로 음성을 만들기 전에 대본과 비교할 수 있습니다.</p></details>
+    <details class="card" style="margin-bottom:10px"><summary>서버와 내 브라우저에서 만들기는 어떻게 다른가요?</summary><p>서버 방식은 하루 3,000자 무료 범위를 안내합니다. 내 브라우저 방식은 처음에 약 384MB의 음성 모델을 기기로 내려받아 실행하며, 다운로드 전에 모델 이용 조건에 동의해야 합니다. 기기의 성능과 사용 가능한 저장 공간을 확인해 주세요.</p></details>
+    <details class="card" style="margin-bottom:10px"><summary>낭독 결과를 사용하기 전에 무엇을 확인해야 하나요?</summary><p>이름, 숫자, 날짜, 단위와 문장 구분이 의도한 대로 읽히는지 화면의 변환 결과와 미리듣기로 확인하세요. 결과는 AI로 생성된 음성이며, 사용 제한과 표시 조건은 이용약관과 라이선스 페이지에서 확인할 수 있습니다.</p></details>
   </section>
 </main>
 
 <footer class="wrap">
   <p><strong>음성 기술 출처</strong> — 음성 합성: Supertonic 3 (Supertone, BigScience OpenRAIL-M) · 한국어 정규화·운율 엔진: ko-voice (Apache-2.0)</p>
   <p>운율 통계 측정에 쓴 공개 코퍼스: Zeroth-Korean (CC BY 4.0) · FLEURS (CC BY 4.0) · Mozilla Common Voice (CC0) · YODAS (CC BY 3.0). 이 서비스는 위 코퍼스의 음성을 재배포하지 않고 측정된 통계 수치만 사용합니다.</p>
-  <p><a href="/terms.html">이용약관</a> · <a href="/licenses.html">라이선스</a> · <a href="/">실험실</a></p>
+  <p><a href="/terms">이용약관</a> · <a href="/licenses">라이선스</a> · <a href="/">실험실</a></p>
 </footer>
 
 <script src="/ko-voice.js"></script>

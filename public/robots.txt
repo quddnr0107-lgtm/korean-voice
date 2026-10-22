@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /tts
+Disallow: /render
+Disallow: /warm
+Disallow: /bake
+Disallow: /api/
+
+Sitemap: https://korean-voice.quddnr0107.workers.dev/sitemap.xml
