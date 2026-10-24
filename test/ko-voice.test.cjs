@@ -506,3 +506,15 @@ test('ChatGPT·OpenAI 는 한국어로 읽는다 — 영단어로 남으면 엔�
   assert.match(K.normalize('ChatGPT와 API 연동'), /챗지피티와 에이피아이/);
   assert.match(K.normalize('OpenAI 발표'), /오픈에이아이/);
 });
+
+test('훈련 유형 Roman I/II are spoken as numbers and preserve source offsets', () => {
+  for (const input of ['동원훈련Ⅰ형과 Ⅱ형으로 구분합니다.', 'I형과 II형', 'Ⅰ 형과 Ⅱ 형']) {
+    const spoken = K.normalizeTrainingType(input);
+    assert.equal(spoken.length, input.length);
+    assert.ok(spoken.includes('일') && spoken.includes('이'));
+    assert.ok(!K.normalize(input).includes('아이'));
+    assert.ok(!K.prepare(input).normalized.includes('아이'));
+  }
+  assert.equal(K.normalizeTrainingType('Ⅰ형과 Ⅱ형'), '일형과 이형');
+  assert.equal(K.normalizeTrainingType('AI형 CCTV II급 Ⅲ형'), 'AI형 CCTV II급 Ⅲ형');
+});

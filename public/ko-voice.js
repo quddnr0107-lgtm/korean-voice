@@ -194,8 +194,15 @@
   }
 
   /* ───────────────────────── 4. normalize ───────────────────────── */
+  function normalizeTrainingType(text) {
+    return String(text == null ? '' : text).replace(/(?<![A-Za-zⅠⅡⅢ])(?:Ⅱ|II|Ⅰ|I)([ \t]*)형/g, function (match) {
+      const spoken = /^(?:Ⅱ|II)/.test(match) ? '이' : '일';
+      return spoken + ' '.repeat(match.length - 2) + '형';
+    });
+  }
+
   function normalize(text) {
-    let t = String(text == null ? '' : text);
+    let t = normalizeTrainingType(text);
     // 마크다운·이모지·URL 등 소리로 낼 수 없는 것부터 제거
     t = t.replace(/https?:\/\/\S+/g, '링크').replace(/www\.\S+/g, '링크');
     const LEADING_MARKER_RE = /^[ \t]*["'“”‘’/\\]*[ \t]*(#{1,6}|[-*•]|(?!\d{4}\.\s+\d{1,2}\.)\d+[.)])\s+/gm;
@@ -892,7 +899,7 @@
   }
 
   return {
-    normalize, prepare, pronounce, toSSML, speak, stop, koVoices, parseTags,
+    normalizeTrainingType, normalize, prepare, pronounce, toSSML, speak, stop, koVoices, parseTags,
     speakNeural, stopNeural, stopAll, speakAuto, neuralStatus,
     splitSentences, phraseSentence, joinSpokenChunks, sentenceType, detectEmotion,
     readSino, readNative, readWithUnit, EMOTIONS, PAUSE, TUNE, JITTER, jitterPause, seedJitter, seedForText,
