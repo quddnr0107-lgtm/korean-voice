@@ -263,7 +263,7 @@
         return readClock(h1, m1, s1) + '부터 ' + readClock(h2, m2, s2) + '까지' + (focus ? focus[0] : '');
       });
     // 시각: 10:30 → 열 시 삼십 분, 09:00 → 아홉 시
-    t = t.replace(/\b(\d{1,2}):(\d{2})(?::(\d{2}))?\b(?:[ \t]*시)?/g, (m, h, mi, s) => readClock(h, mi, s));
+    t = t.replace(/\b(\d{1,2}):(\d{2})(?::(\d{2}))?\b(?:[ \t]*시(?=$|[\s,.!?)]|까지|부터|에|로|를|는|가|도|만))?/g, (m, h, mi, s) => readClock(h, mi, s));
     // 비율: 2.5:1 → 이 점 오 대 일 (시각 hh:mm은 위에서 이미 처리됨)
     t = t.replace(/(\d+(?:\.\d+)?)\s*:\s*(\d+(?:\.\d+)?)(?![\d:])/g, (m, a, b) => readNumber(a) + ' 대 ' + readNumber(b));
     // 영하: 영하 -3도처럼 접두어가 이미 있는 표기도 중복하지 않는다.

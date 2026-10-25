@@ -530,6 +530,7 @@ test('훈련 거리·시간 약어와 시각 접미어', () => {
   assert.equal(K.normalize('100Km이상은 1∼2H 조기에'), '백 킬로미터이상은 한 시간에서 두 시간 조기에');
   assert.equal(K.normalize('100km 1.5KM 2h'), '백 킬로미터 일 점 오 킬로미터 두 시간');
   assert.equal(K.normalize('10:00시 범위'), '열 시 범위');
+  assert.equal(K.normalize('10:00 시행, 09:00 시작'), '열 시 시행, 아홉 시 시작');
   assert.equal(K.normalize('09:30 12:00:15'), '아홉 시 삼십 분 열두 시 십오 초');
   assert(!K.normalize('H1 2Hz').includes('시간'));
 });
