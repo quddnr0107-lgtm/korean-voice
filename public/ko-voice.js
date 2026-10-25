@@ -369,7 +369,13 @@
       for (let i = 0; i < words.length; i++) {
         const w = words[i];
         buf += (buf ? ' ' : '') + w;
-        const punct = /[.!?]$/.test(w);
+        // Dots inside a date are not sentence ends. Keep the original text/offsets.
+        const dateYear = /^(?:['’]\d{2}|\d{4})\.$/;
+        const dateNumber = /^\d{1,2}\.$/;
+        const dateDay = /^\d{1,2}\.?$/;
+        const insideDate = (dateYear.test(w) && dateNumber.test(words[i + 1] || '') && dateDay.test(words[i + 2] || ''))
+          || (dateNumber.test(w) && dateYear.test(words[i - 1] || '') && dateDay.test(words[i + 1] || ''));
+        const punct = /[.!?]$/.test(w) && !insideDate;
         const bare = w.replace(/[.!?,]+$/, '');
         if (punct || (SENT_END.test(bare) && bare.length >= 3)) { out.push(buf.trim()); buf = ''; }
       }
