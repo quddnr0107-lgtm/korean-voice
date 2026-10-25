@@ -1,0 +1,46 @@
+# Small fixed public-law pronunciation comparison. No private source or artifacts.
+name: Training type pronunciation probe
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build exactly nine fixed public-law phrases
+        run: node tools/type-pronunciation-probe.mjs --out type-pronunciation-probe.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: 의존
+        run: pip install --quiet onnxruntime numpy soundfile PyYAML imageio-ffmpeg praat-parselmouth
+      - name: Supertonic 3 자산 (캐시)
+        id: assets
+        uses: actions/cache@v4
+        with:
+          path: supertonic3
+          key: supertonic3-v1
+      - name: Supertonic 3 자산 받기
+        if: steps.assets.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p supertonic3/onnx supertonic3/voice_styles supertonic3/py
+          B=https://huggingface.co/Supertone/supertonic-3/resolve/main
+          for f in config.json onnx/duration_predictor.onnx onnx/text_encoder.onnx onnx/tts.json onnx/unicode_indexer.json onnx/vector_estimator.onnx onnx/vocoder.onnx; do curl -sL -o supertonic3/$f "$B/$f"; done
+          for s in F1 F2 F3 F4 F5 M1 M2 M3 M4 M5; do curl -sL -o supertonic3/voice_styles/$s.json "$B/voice_styles/$s.json"; done
+          for f in helper.py example_onnx.py; do curl -sL -o supertonic3/py/$f https://raw.githubusercontent.com/supertone-inc/supertonic/main/py/$f; done
+      - name: 우웅 자 시험(mp3 를 거쳐도 잡히나 · 양성·음성)
+        run: python3 test/hum_test.py
+      - name: Bake missing probes with the production recipe
+        env:
+          SUPERTONIC_DIR: ${{ github.workspace }}/supertonic3
+          PYTHONPATH: ${{ github.workspace }}/supertonic3/py
+        run: python3 tools/bake.py --chunks type-pronunciation-probe.json --tag k2 --voice female --steps 16
+      - name: Verify every probe exists without triggering synthesis
+        run: node tools/type-pronunciation-probe.mjs --verify
