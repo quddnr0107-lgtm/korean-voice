@@ -557,3 +557,13 @@ test('military-service family generations use Sino-Korean numbers without changi
  assert.equal(K.normalize('병역명문가의 3대째 가족'),'병역명문가의 삼 대째 가족');
  assert.equal(K.normalize('차량 3대와 버스 1대'),'차량 세 대와 버스 한 대');
 });
+
+test('speech-only training type boundaries preserve the raw normalization API',()=>{
+ assert.equal(K.normalize('동원훈련Ⅰ형과 Ⅱ형'),'동원훈련 일 형과 이 형');
+ assert.equal(K.normalize('일형은 이형과 다릅니다.'),'일 형은 이 형과 다릅니다.');
+ assert.equal(K.normalize('I형과 II형'),'일 형과 이 형');
+ assert.equal(K.normalize('동일형 및 골수이형성증후군'),'동일형 및 골수이형성증후군');
+ for(const raw of ['동원훈련Ⅰ형과 Ⅱ형','I형과 II형','Ⅰ 형과 Ⅱ 형'])assert.equal(K.normalizeTrainingType(raw).length,raw.length);
+ assert.equal(K.normalizeTrainingType('Ⅰ형과 Ⅱ형'),'일형과 이형');
+ assert.equal(K.normalize(K.normalize('동원훈련Ⅰ형과 Ⅱ형')),K.normalize('동원훈련Ⅰ형과 Ⅱ형'));
+});
