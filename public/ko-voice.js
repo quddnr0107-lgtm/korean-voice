@@ -100,6 +100,9 @@
   const UNIT_ALIASES = { km: '킬로미터', kg: '킬로그램', cm: '센티미터', mm: '밀리미터', ml: '밀리리터', kcal: '킬로칼로리', m: '미터', g: '그램', l: '리터', '%': '퍼센트', '℃': '도', '°': '도' };
   const ALL_UNITS = Array.from(new Set(NATIVE_UNITS.concat(SINO_UNITS))).sort((a, b) => b.length - a.length);
   const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // Only repeat a known unit, never its following particle or noun (년차를/년차예비군).
+  const RANGE_UNITS = Array.from(new Set(['년차', '점대', '문장', '만원'].concat(ALL_UNITS))).sort((a, b) => b.length - a.length);
+  const RANGE_RE = new RegExp('(\\d+(?:,\\d{3})*(?:\\.\\d+)?)\\s*[~∼～]\\s*(\\d+(?:,\\d{3})*(?:\\.\\d+)?)(?:\\s*(' + RANGE_UNITS.map(esc).join('|') + '))?', 'g');
   const UNIT_RE = new RegExp('(\\d+(?:,\\d{3})*(?:\\.\\d+)?)\\s*(' + ALL_UNITS.map(esc).join('|') + ')(?![A-Za-z])', 'g');
   // 어절 하나가 '단위(+조사)' 뿐인지 — 수량과 단위 사이를 끊지 않기 위해 쓴다.
   const UNIT_ONLY_RE = new RegExp('^(?:' + ALL_UNITS.map(esc).join('|') + ')(?:이|가|은|는|을|를|으로|로|에|의|과|와|도|만|부터|까지)?$');
@@ -203,6 +206,10 @@
 
   function normalize(text) {
     let t = normalizeTrainingType(text);
+    // Apostrophe years retain their written two digits; do not infer a century.
+    t = t.replace(/(?<![A-Za-z\d])['’](\d{2})\.\s*(\d{1,2})\.\s*(\d{1,2})\.?(?!\d)/g, (m, y, mo, d) =>
+      +mo >= 1 && +mo <= 12 && +d >= 1 && +d <= 31
+        ? readSino(y) + ' 년 ' + readWithUnit(mo, '월') + ' ' + readSino(d) + ' 일' : m);
     // 마크다운·이모지·URL 등 소리로 낼 수 없는 것부터 제거
     t = t.replace(/https?:\/\/\S+/g, '링크').replace(/www\.\S+/g, '링크');
     const LEADING_MARKER_RE = /^[ \t]*["'“”‘’/\\]*[ \t]*(#{1,6}|[-*•]|(?!\d{4}\.\s+\d{1,2}\.)\d+[.)])\s+/gm;
@@ -263,7 +270,10 @@
         return readClock(h1, m1, s1) + '부터 ' + readClock(h2, m2, s2) + '까지' + (focus ? focus[0] : '');
       });
     // 시각: 10:30 → 열 시 삼십 분, 09:00 → 아홉 시
-    t = t.replace(/\b(\d{1,2}):(\d{2})(?::(\d{2}))?\b(?:[ \t]*시(?=$|[\s,.!?)]|까지|부터|에|로|를|는|가|도|만))?/g, (m, h, mi, s) => readClock(h, mi, s));
+    t = t.replace(/\b(\d{1,2}):(\d{2})(?::(\d{2}))?\b(?:[ \t]*시(?=$|[\s,.!?)]|까지|부터|에|로|를|는|가|도|만))?/g, (m, h, mi, s, offset, source) => {
+      const spoken = readClock(h, mi, s);
+      return spoken + (spoken.endsWith('분') && source.slice(offset + m.length).startsWith('로') ? '으' : '');
+    });
     // 비율: 2.5:1 → 이 점 오 대 일 (시각 hh:mm은 위에서 이미 처리됨)
     t = t.replace(/(\d+(?:\.\d+)?)\s*:\s*(\d+(?:\.\d+)?)(?![\d:])/g, (m, a, b) => readNumber(a) + ' 대 ' + readNumber(b));
     // 영하: 영하 -3도처럼 접두어가 이미 있는 표기도 중복하지 않는다.
@@ -290,14 +300,7 @@
         const right = (negB || /^-/.test(b)) ? '영하 ' : '';
         return p + '영하 ' + readNumber(a) + ' ' + unit + '에서 ' + right + readNumber(b.replace(/^-/, '')) + ' ' + unit;
       });
-    t = t.replace(/(\d+(?:,\d{3})*(?:\.\d+)?)\s*[~∼～]\s*(\d+(?:,\d{3})*(?:\.\d+)?)\s*([가-힣%a-z℃°]{1,4})?/g, (m, a, b, u) => {
-      if (!u) return a + '에서 ' + b;
-      // '0~120 사이로'의 '사이'는 단위가 아니라 범위 관계어다. 왼쪽 끝에 복제하지 않는다.
-      if (/^사이(?:로|에|의|에서|까지)?$/.test(u)) return a + '에서 ' + b + ' ' + u;
-      const k = RANGE_PREDICATE.exec(u);           // '18~21개월이다' 의 '이다'까지 단위로 먹으면 서술어가 복제된다
-      if (k && k[1]) return a + k[1] + '에서 ' + b + k[1] + k[2];
-      return a + u + '에서 ' + b + u;
-    });
+    t = t.replace(RANGE_RE, (m, a, b, u) => u ? a + u + '에서 ' + b + u : a + '에서 ' + b);
     /* 🔴 약어·숫자보다 먼저 — 여기서 한국어로 바꿔 두지 않으면 **합성 엔진이 영어를 심는다.**
        Supertonic 의 전처리(py/helper.py · web/helper.js 의 preprocessText)가 '@'→' at ',
        'e.g.,'→'for example, ', 'i.e.,'→'that is, ' 로 치환한다 — 한국어 낭독 중간에 영어가 나온다
