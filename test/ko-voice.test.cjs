@@ -535,3 +535,18 @@ test('훈련 거리·시간 약어와 시각 접미어', () => {
   assert(!K.normalize('H1 2Hz').includes('시간'));
 });
 
+
+
+test('abbreviated dotted years retain year month and day without inferring a century',()=>{
+ for(const s of ["'11. 12. 31 이전",'’11.12.31. 이전'])assert.equal(K.normalize(s),'십일 년 십이 월 삼십일 일 이전');
+ assert.equal(K.normalize("'99. 6. 3 이전"),'구십구 년 유월 삼 일 이전');
+ assert.equal(K.normalize('2011. 12. 31 이전'),'이천십일 년 십이 월 삼십일 일 이전');
+ assert(!K.normalize("'11. 13. 31 이전").includes('년'));
+});
+test('range units preserve particles predicates and adjacent nouns',()=>{
+ for(const [s,e]of [['1∼6년차와 1∼4년차를','일 년차에서 육 년차와 일 년차에서 사 년차를'],['1∼4년차입니다.','일 년차에서 사 년차입니다.'],['5∼6년차예비군','오 년차에서 육 년차예비군'],['3~6문장으로','삼문장에서 육문장으로'],['68~70점대까지','육십팔 점대에서 칠십 점대까지'],['4~5만원이','사만 원에서 오만 원이']])assert.equal(K.normalize(s),e);
+});
+test('clock particles follow the spoken minute or second unit',()=>{
+ assert.equal(K.normalize('12:30로 적용'),'열두 시 삼십 분으로 적용');
+ assert.equal(K.normalize('12:30:15로 적용'),'열두 시 삼십 분 십오 초로 적용');
+});
