@@ -334,6 +334,9 @@
     t = t.replace(/[→⇒]/g, ' 에서 ').replace(/[※▶▷■□◆◇○●★☆✓✔]/g, '');
     t = t.replace(/…/g, '.').replace(/\.{2,}/g, '.');
     t = t.replace(/[ \t]+/g, ' ').replace(/ +([,.!?])/g, '$1').replace(/\s*,\s*(,\s*)+/g, ', ').replace(/^\s*,\s*|\s*,\s*$/gm, '').replace(/\s*,\s*([.!?])/g, '$1').trim();
+    // Keep an audible boundary inside training-type names; raw highlight positions use normalizeTrainingType.
+    t = t.replace(/(동원훈련)\s*(일|이)\s*형/g, '$1 $2 형');
+    t = t.replace(/(^|[^가-힣A-Za-z])(일|이)\s*형(?=$|[\s,.;:!?()]|은|는|을|를|의|과|와|에|이|가|도|만|으로|부터|까지)/g, '$1$2 형');
     return t;
   }
 
