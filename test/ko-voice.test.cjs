@@ -550,3 +550,10 @@ test('clock particles follow the spoken minute or second unit',()=>{
  assert.equal(K.normalize('12:30로 적용'),'열두 시 삼십 분으로 적용');
  assert.equal(K.normalize('12:30:15로 적용'),'열두 시 삼십 분 십오 초로 적용');
 });
+
+test('military-service family generations use Sino-Korean numbers without changing vehicle counters',()=>{
+ assert.equal(K.normalize('병무청장은 3대(1대부터 3대까지의 직계비속 남성)를 본다.'),'병무청장은 삼 대, 일 대부터 삼 대까지의 직계비속 남성, 를 본다.');
+ assert.equal(K.normalize('병역명문가는 3대의 복무요건을 본다.'),'병역명문가는 삼 대의 복무요건을 본다.');
+ assert.equal(K.normalize('병역명문가의 3대째 가족'),'병역명문가의 삼 대째 가족');
+ assert.equal(K.normalize('차량 3대와 버스 1대'),'차량 세 대와 버스 한 대');
+});

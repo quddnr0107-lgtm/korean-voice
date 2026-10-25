@@ -206,6 +206,10 @@
 
   function normalize(text) {
     let t = normalizeTrainingType(text);
+    // In military-service families, 대 counts generations rather than vehicles.
+    if (/(?:병역명문가|직계비속)/.test(t)) {
+      t = t.replace(/(\d+)\s*대(?=$|[\s(]|부터|까지|째|의)/g, (m, n) => readSino(n) + ' 대');
+    }
     // Apostrophe years retain their written two digits; do not infer a century.
     t = t.replace(/(?<![A-Za-z\d])['’](\d{2})\.\s*(\d{1,2})\.\s*(\d{1,2})\.?(?!\d)/g, (m, y, mo, d) =>
       +mo >= 1 && +mo <= 12 && +d >= 1 && +d <= 31
