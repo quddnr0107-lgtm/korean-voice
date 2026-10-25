@@ -518,3 +518,10 @@ test('훈련 유형 Roman I/II are spoken as numbers and preserve source offsets
   assert.equal(K.normalizeTrainingType('Ⅰ형과 Ⅱ형'), '일형과 이형');
   assert.equal(K.normalizeTrainingType('AI형 CCTV II급 Ⅲ형'), 'AI형 CCTV II급 Ⅲ형');
 });
+
+// A dotted legal date must reach normalization as one date, not three sentences.
+test('dotted dates preserve complete year/month/day through segmentation', () => {
+  const s = '기준일은 2027. 2. 2. 입니다.';
+  const joined = K.splitSentences(s).map(x => K.normalize(x)).join(' ');
+  assert(joined.includes('이천이십칠 년 이 월 이 일'));
+});
