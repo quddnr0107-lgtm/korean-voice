@@ -15,6 +15,32 @@ const SAMPLE = Math.max(0, parseInt(값('--sample', '5'), 10) || 0);
 const FAIL_OVER = parseInt(값('--fail-over', '-1'), 10);   // 빠진 것이 이 수를 넘으면 exit 1 (-1 = 안 막는다)
 const UA = 'korean-voice-bake/1 (+https://github.com/quddnr0107-lgtm/korean-voice)';
 const BATCH = 400;   // /bake/has 가 한 번에 받는 최대치
+const 재시도 = Math.max(0, parseInt(값('--retries', '6'), 10) || 0);       // 끊기면 다시 묻는 횟수
+const 첫대기 = Math.max(0, parseInt(값('--retry-wait', '2000'), 10) || 0);  // ms · 2 → 4 → 8 … 배로 늘린다
+
+/* 🔴 한 번 끊겼다고 통째로 죽지 않는다 — 2026-10-26 굽기 직후 워커가 연결을 끊어(ECONNRESET) 점검이 두 번 다 중간에 죽었다.
+   끊김·429·5xx 는 일시적이라 다시 묻는다. 다 써도 안 되면 **소리 내며 멈춘다**(빠진 0 으로 넘어가지 않는다). */
+async function 묻기(part) {
+  for (let n = 0; ; n++) {
+    let 이유;
+    try {
+      const r = await fetch(BASE + '/bake/has', { method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'User-Agent': UA },
+        body: JSON.stringify({ items: part.map((c) => ({ t: c.t, r: c.r })) }) });
+      const j = await r.json().catch(() => ({}));
+      if (r.ok && j.ok && Array.isArray(j.has)) return j.has;
+      if (r.status !== 429 && r.status < 500) throw new Error(`/bake/has ${r.status} ${JSON.stringify(j).slice(0, 200)}`);
+      이유 = `HTTP ${r.status}`;
+    } catch (e) {
+      if (String(e.message).startsWith('/bake/has ')) throw e;
+      이유 = (e.cause && e.cause.code) || e.message;
+    }
+    if (n >= 재시도) throw new Error(`/bake/has ${재시도 + 1}번 다 실패 — ${이유}`);
+    const w = 첫대기 * 2 ** n;
+    console.log(`  ↻ ${이유} — ${w}ms 뒤 다시 묻는다 (${n + 1}/${재시도})`);
+    await new Promise((ok) => setTimeout(ok, w));
+  }
+}
 
 const 목록 = JSON.parse(fs.readFileSync(값('--chunks', 'chunks.json'), 'utf8'));
 console.log(`조각 ${목록.length}개 → ${BASE}/bake/has`);
@@ -22,12 +48,8 @@ console.log(`조각 ${목록.length}개 → ${BASE}/bake/has`);
 const 빠짐 = [];
 for (let i = 0; i < 목록.length; i += BATCH) {
   const part = 목록.slice(i, i + BATCH);
-  const r = await fetch(BASE + '/bake/has', { method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'User-Agent': UA },
-    body: JSON.stringify({ items: part.map((c) => ({ t: c.t, r: c.r })) }) });
-  const j = await r.json().catch(() => ({}));
-  if (!r.ok || !j.ok || !Array.isArray(j.has)) throw new Error(`/bake/has ${r.status} ${JSON.stringify(j).slice(0, 200)}`);
-  j.has.forEach((있나, n) => { if (!있나) 빠짐.push(part[n]); });
+  const has = await 묻기(part);
+  has.forEach((있나, n) => { if (!있나) 빠짐.push(part[n]); });
   if ((i / BATCH) % 25 === 24) console.log(`  …${Math.min(i + BATCH, 목록.length)}/${목록.length} (지금까지 빠짐 ${빠짐.length})`);
 }
 

@@ -9,9 +9,10 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
 /** 없는 것으로 칠 글 집합을 받아 /bake/has 를 흉내 내는 서버 */
-function 가짜워커(없는글) {
+function 가짜워커(없는글, 끊기 = 0) {
   let 요청수 = 0, 최대묶음 = 0;
   const s = createServer((q, res) => {
+    if (끊기 > 0) { 끊기--; 요청수++; q.socket.destroy(); return; }   // ECONNRESET 흉내
     let body = '';
     q.on('data', (c) => { body += c; });
     q.on('end', () => {
@@ -24,9 +25,9 @@ function 가짜워커(없는글) {
   return { s, 센것: () => ({ 요청수, 최대묶음 }) };
 }
 
-function 돌려(chunks, 없는글, 더 = []) {
+function 돌려(chunks, 없는글, 더 = [], 끊기 = 0) {
   return new Promise((ok) => {
-    const { s, 센것 } = 가짜워커(없는글);
+    const { s, 센것 } = 가짜워커(없는글, 끊기);
     s.listen(0, () => {
       const dir = mkdtempSync(join(tmpdir(), 'cov-'));
       const f = join(dir, 'chunks.json');
@@ -66,4 +67,17 @@ test('--fail-over 를 넘으면 빨갛게 끝낸다 · 안 넘으면 초록', as
   assert.equal((await 돌려(chunks, 없음, ['--fail-over', '1'])).code, 1);
   assert.equal((await 돌려(chunks, 없음, ['--fail-over', '2'])).code, 0);
   assert.equal((await 돌려(chunks, 없음)).code, 0, '기본값은 막지 않는다(보고용)');
+});
+
+test('연결이 끊겨도 다시 물어 끝까지 잰다 (2026-10-26 ECONNRESET 두 번)', async () => {
+  const r = await 돌려(조각(5, '예비군법', 'exam'), new Set(['예비군법exam문장2']), ['--retry-wait', '10'], 2);
+  assert.equal(r.code, 0);
+  assert.match(r.out, /빠진 조각 1개 \/ 5/);
+  assert.match(r.out, /다시 묻는다/);
+});
+
+test('[음성] 계속 끊기면 「빠짐 0」으로 넘어가지 않고 멈춘다', async () => {
+  const r = await 돌려(조각(5, '예비군법', 'exam'), new Set(), ['--retry-wait', '10', '--retries', '2'], 99);
+  assert.notEqual(r.code, 0);
+  assert.doesNotMatch(r.out, /빠진 조각이 없다/);
 });
