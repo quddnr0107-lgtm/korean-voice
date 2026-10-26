@@ -1,0 +1,15 @@
+/* Scoped, script-free consultation banner. Publication requires the insurer's ad review. */
+.insurance-consultation{box-sizing:border-box;width:100%;max-width:960px;margin:32px auto;border:1px solid #c5dfd1;border-radius:20px;overflow:hidden;background:#fffaf0;color:#12382b;text-align:left;font:inherit;line-height:1.6;color-scheme:light}
+.insurance-consultation *{box-sizing:border-box}
+.insurance-consultation__image-link{display:block;color:#12382b;text-decoration:none}
+.insurance-consultation__image{display:block;width:100%;height:auto;aspect-ratio:3/2}
+.insurance-consultation__body{padding:18px 20px}
+.insurance-consultation__label{margin:0 0 8px;font-size:12px;color:#365b49}
+.insurance-consultation__identity{margin:0;font-size:16px;font-weight:700;word-break:keep-all;overflow-wrap:anywhere}
+.insurance-consultation__phone{display:inline-flex;align-items:center;min-height:44px;color:#145c3b;font-size:16px;font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.insurance-consultation__cta{display:flex;align-items:center;justify-content:center;min-height:48px;width:100%;margin:8px 0 12px;padding:12px 16px;border:2px solid transparent;border-radius:12px;background:#fee500;color:#251b00;font-size:16px;font-weight:800;text-decoration:none;text-align:center;overflow-wrap:anywhere}
+.insurance-consultation a:focus-visible{outline:3px solid #164f38;outline-offset:3px}
+.insurance-consultation__notes{padding-top:12px;border-top:1px solid #d8e5dd;font-size:12px;line-height:1.7;color:#365346}
+.insurance-consultation__notes p{margin:0 0 8px;overflow-wrap:anywhere;word-break:keep-all}
+.insurance-consultation__notes p:last-child{margin-bottom:0}
+@media(max-width:480px){.insurance-consultation{margin:24px auto;border-radius:14px}.insurance-consultation__body{padding:16px}.insurance-consultation__identity{font-size:15px}}
