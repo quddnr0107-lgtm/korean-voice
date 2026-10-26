@@ -1,0 +1,111 @@
+# LOCAL DRAFT. Scope frozen=false; cannot execute until reviewed approval.
+name: Admin law approved numeric diagnosis only
+on:
+  push:
+    branches: [admin-law-v2-premium-20261026]
+    paths: ['premium-diagnostic-v2/**', '.github/workflows/admin-law-premium-diagnostic.yml']
+permissions:
+  contents: read
+concurrency:
+  group: admin-law-v2-premium-encrypted
+  cancel-in-progress: false
+jobs:
+  scope:
+    if: github.run_attempt == 1
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      matrix: ${{ steps.scope.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Frozen failed-only scope and original run terminal gate
+        id: scope
+        env:
+          GH_TOKEN: ${{ github.token }}
+          APPROVED_DIAGNOSTIC_SHA: ${{ vars.ADMIN_LAW_PREMIUM_DIAGNOSTIC_APPROVED_SHA }}
+        run: |
+          set -euo pipefail
+          M=$(python3 premium-diagnostic-v2/retry_scope.py --scope premium-diagnostic-v2/scope.json)
+          echo "matrix=$M" >> "$GITHUB_OUTPUT"
+  render:
+    if: github.run_attempt == 1
+    needs: scope
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: admin-law-premium-production
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix: ${{ fromJSON(needs.scope.outputs.matrix) }}
+    env:
+      PYTHONPATH: ${{ github.workspace }}/premium-v2/renderer:${{ github.workspace }}/premium-v2
+      APPROVED_DIAGNOSTIC_SHA: ${{ vars.ADMIN_LAW_PREMIUM_DIAGNOSTIC_APPROVED_SHA }}
+      OMP_NUM_THREADS: '2'
+      OPENBLAS_NUM_THREADS: '2'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.11'
+      - run: python -m pip install --disable-pip-version-check -r premium-v2/requirements-pinned.txt
+      - name: Download pinned public assets without keys
+        run: |
+          set -euo pipefail
+          A="$RUNNER_TEMP/assets"
+          mkdir -p "$A"/{onnx,voice_styles,py} "$RUNNER_TEMP/checkpoints" "$RUNNER_TEMP/plain-temp"
+          B=https://huggingface.co/Supertone/supertonic-3/resolve/3cadd1ee6394adea1bd021217a0e650ede09a323
+          for f in config.json onnx/duration_predictor.onnx onnx/text_encoder.onnx onnx/tts.json onnx/unicode_indexer.json onnx/vector_estimator.onnx onnx/vocoder.onnx voice_styles/F2.json LICENSE; do curl --fail --location --retry 2 --max-time 180 -o "$A/$f" "$B/$f"; done
+          curl --fail --location --retry 2 --max-time 60 -o "$A/py/helper.py" https://raw.githubusercontent.com/supertone-oss-archive/supertonic/1e9799e964ea4c0dad7cde993b65c3c813a7b373/py/helper.py
+          echo '907f5ec81b4f7302ffbdadedd37a0d6c283b2d85696fa2f59a62cdf44dcd44a8  premium-v2/server/voice_shape_k2.py' | sha256sum -c -
+      - name: Reject existing success or orphan immediately before keys
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LESSON: ${{ matrix.id }}
+        run: python premium-diagnostic-v2/retry_scope.py --scope premium-diagnostic-v2/scope.json --id "$LESSON"
+      - name: Protected render and encrypt only
+        id: synth
+        continue-on-error: true
+        env:
+          ADMIN_LAW_PREMIUM_SOURCE_KEY_B64: ${{ secrets.ADMIN_LAW_PREMIUM_SOURCE_KEY_B64 }}
+          ADMIN_LAW_PREMIUM_MEDIA_KEY_B64: ${{ secrets.ADMIN_LAW_PREMIUM_MEDIA_KEY_B64 }}
+          LESSONS: ${{ matrix.id }}
+          BATCH: ${{ matrix.batch }}
+        run: python premium-diagnostic-v2/diagnostic_render_premium.py --lessons "$LESSONS" --batch-index "$BATCH" --input-dir premium-v2/inputs --output-dir "$RUNNER_TEMP/cipher-output" --assets "$RUNNER_TEMP/assets" --server-dir premium-v2/server --temp-root "$RUNNER_TEMP/plain-temp" > "$RUNNER_TEMP/status.json"
+      - name: Keyless output allowlist gate
+        if: always() && steps.synth.outcome != 'skipped'
+        env:
+          LESSONS: ${{ matrix.id }}
+        run: python premium-v2/publish_cipher.py gate --source "$RUNNER_TEMP/cipher-output" --destination "$RUNNER_TEMP/cipher-verified" --status "$RUNNER_TEMP/status.json" --lessons "$LESSONS"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: success()
+        with:
+          name: premium-numeric-diagnostic-cipher-${{ matrix.id }}
+          path: ${{ runner.temp }}/cipher-verified/
+          if-no-files-found: ignore
+          retention-days: 3
+          overwrite: true
+      - name: Sanitize diagnostic status separately
+        id: diagnostic
+        if: always() && steps.synth.outcome != 'skipped'
+        env:
+          LESSON: ${{ matrix.id }}
+        run: python premium-diagnostic-v2/sanitize_diagnostic_status.py --source "$RUNNER_TEMP/status.json" --output "$RUNNER_TEMP/diagnostic/status.json" --lessons "$LESSON"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always() && steps.diagnostic.outcome == 'success'
+        with:
+          name: premium-numeric-diagnostic-status-${{ matrix.id }}
+          path: ${{ runner.temp }}/diagnostic/status.json
+          retention-days: 3
+          if-no-files-found: error
+      - name: Remove plaintext temporary directory
+        if: always()
+        run: rm -rf -- "$RUNNER_TEMP/plain-temp"
+      - name: Preserve failed render status
+        if: steps.synth.outcome == 'failure'
+        run: exit 1

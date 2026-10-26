@@ -1,0 +1,40 @@
+{
+  "version": "admin-law-numeric-diagnostic/v1",
+  "frozen": true,
+  "initial_run": 40317503106,
+  "initial_sha": "5404426cc5eaad73da9b6538c6a89c4843230ac7",
+  "failed": [
+    {
+      "id": "AL-019",
+      "original_batch": 1
+    },
+    {
+      "id": "AL-033",
+      "original_batch": 2
+    },
+    {
+      "id": "AL-037",
+      "original_batch": 3
+    }
+  ],
+  "pins": {
+    "premium-v2/renderer/render_premium.py": "a612f5955acf0fc1cdbc2892ed1ecab2692dca718bffb8aa5508502d0108aeef",
+    "premium-v2/renderer/crypto_chunks.py": "8629f247467755aadf9a7f9ccca9212ffde15eed28a00d2bd33b32ec00339281",
+    "premium-v2/renderer/private_pipeline.py": "c1d933f64b7fa5a8d9a178f234f097d2ab3adc8a424202c50f9153ab1c17e248",
+    "premium-v2/renderer/match_segments.py": "557a73fb9cee2857591a31f6401b00aabfe2573348e064ee10a306eff75f3c91",
+    "premium-v2/requirements-pinned.txt": "13e8aeac3532f95457ee22f8e40134885119727c4217f4a6fe2b4e18f5d0c611",
+    "premium-v2/server/voice_shape_k2.py": "907f5ec81b4f7302ffbdadedd37a0d6c283b2d85696fa2f59a62cdf44dcd44a8",
+    "premium-v2/publish_cipher.py": "4acf7b2fc48378ada4129385ba4239566b99259b6b1fc537d85857965e296e81",
+    "premium-v2/checkpoints.py": "e609ed1aa64b4fb5089ebe4a1e4501cd09c9fcbd2a409f9564b28f33dea529e7",
+    "premium-v2/inputs/AL-019.source.json": "a82ea332851fe5a1bc617c09b510c753386173b4dc3aa5c722cc4a864cbabab0",
+    "premium-v2/inputs/AL-019.source.bin": "9e259b2a68bd3d5e783fea9556aa1b3e978538b491c9317195a52cd12bdfa80d",
+    "premium-v2/inputs/AL-033.source.json": "a468d502d4693989aade51800a8a55c96b9abfcc2c2416e1cc458e38438e116c",
+    "premium-v2/inputs/AL-033.source.bin": "74b1add0a35ab28d02576942150468ecdbd8eddad3874dbaa9ab6e274c388ec9",
+    "premium-v2/inputs/AL-037.source.json": "8e5b3d15076a9e0777b7f2d139c1bf71d792c5d2467af554699c5c3c49468629",
+    "premium-v2/inputs/AL-037.source.bin": "5cb2a0d3369fc2ff820dba9917ca6bb53fea1378d8bdcca169b267751af79b35",
+    "premium-diagnostic-v2/validate_quality_record.py": "30e89a6a126a642944bd6201c27712dc841d604fc3d8c8a8762ad5ad725850a3",
+    "premium-diagnostic-v2/retry_scope.py": "b3631507fa8dbeafef91e7033110630f1df6b5ea01d8f159295884b0eb6ebab5",
+    "premium-diagnostic-v2/sanitize_diagnostic_status.py": "64c5c67d4cd5337d3ad7c501680a3b8f30686e04779ad3987b3918fa20c9aa75",
+    "premium-diagnostic-v2/diagnostic_render_premium.py": "acf1f6f500852cec272ad326b66d3a1f24a57eb12f08aa7856ac11ab4355ef8b"
+  }
+}
