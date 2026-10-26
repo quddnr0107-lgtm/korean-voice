@@ -1,0 +1,130 @@
+# LOCAL REVIEW DRAFT; not installed or executed.
+name: Admin law premium encrypted 68 only
+on:
+  push:
+    branches: [admin-law-v2-premium-20261026]
+    paths: ['premium-v2/**']
+permissions:
+  contents: read
+concurrency:
+  group: admin-law-v2-premium-encrypted
+  cancel-in-progress: false
+jobs:
+  prepare-release:
+    if: github.run_attempt <= 2
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          COMMIT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          test "$REPO" = quddnr0107-lgtm/korean-voice
+          gh release view admin-law-v2-premium-20261026 --repo "$REPO" >/dev/null 2>&1 || gh release create admin-law-v2-premium-20261026 --repo "$REPO" --target "$COMMIT" --title 'Admin law premium encrypted' --notes 'Encrypted AL-011 through AL-078. Not complete until index.json exists.' --latest=false
+  render:
+    if: github.run_attempt <= 2
+    needs: prepare-release
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: admin-law-premium-production
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include:
+          - {batch: 0, lessons: 'AL-011,AL-012,AL-013,AL-014,AL-015,AL-016,AL-017,AL-018'}
+          - {batch: 1, lessons: 'AL-019,AL-020,AL-021,AL-022,AL-023,AL-024,AL-025,AL-026'}
+          - {batch: 2, lessons: 'AL-027,AL-028,AL-029,AL-030,AL-031,AL-032,AL-033,AL-034'}
+          - {batch: 3, lessons: 'AL-035,AL-036,AL-037,AL-038,AL-039,AL-040,AL-041,AL-042'}
+          - {batch: 4, lessons: 'AL-043,AL-044,AL-045,AL-046,AL-047,AL-048,AL-049,AL-050'}
+          - {batch: 5, lessons: 'AL-051,AL-052,AL-053,AL-054,AL-055,AL-056,AL-057,AL-058'}
+          - {batch: 6, lessons: 'AL-059,AL-060,AL-061,AL-062,AL-063,AL-064,AL-065,AL-066'}
+          - {batch: 7, lessons: 'AL-067,AL-068,AL-069,AL-070,AL-071,AL-072,AL-073,AL-074'}
+          - {batch: 8, lessons: 'AL-075,AL-076,AL-077,AL-078'}
+    env:
+      OMP_NUM_THREADS: '2'
+      OPENBLAS_NUM_THREADS: '2'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.11'
+      - run: python -m pip install --disable-pip-version-check -r premium-v2/requirements-pinned.txt
+      - name: Download pinned public assets without keys
+        run: |
+          set -euo pipefail
+          A="$RUNNER_TEMP/assets"
+          mkdir -p "$A"/{onnx,voice_styles,py} "$RUNNER_TEMP/checkpoints" "$RUNNER_TEMP/plain-temp"
+          B=https://huggingface.co/Supertone/supertonic-3/resolve/3cadd1ee6394adea1bd021217a0e650ede09a323
+          for f in config.json onnx/duration_predictor.onnx onnx/text_encoder.onnx onnx/tts.json onnx/unicode_indexer.json onnx/vector_estimator.onnx onnx/vocoder.onnx voice_styles/F2.json LICENSE; do curl --fail --location --retry 2 --max-time 180 -o "$A/$f" "$B/$f"; done
+          curl --fail --location --retry 2 --max-time 60 -o "$A/py/helper.py" https://raw.githubusercontent.com/supertone-oss-archive/supertonic/1e9799e964ea4c0dad7cde993b65c3c813a7b373/py/helper.py
+          echo '907f5ec81b4f7302ffbdadedd37a0d6c283b2d85696fa2f59a62cdf44dcd44a8  premium-v2/server/voice_shape_k2.py' | sha256sum -c -
+      - name: Download existing ciphertext checkpoints without keys
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LESSONS: ${{ matrix.lessons }}
+        run: python premium-v2/checkpoints.py "$RUNNER_TEMP/checkpoints" "$LESSONS"
+      - name: Protected render and encrypt only
+        id: synth
+        continue-on-error: true
+        env:
+          ADMIN_LAW_PREMIUM_SOURCE_KEY_B64: ${{ secrets.ADMIN_LAW_PREMIUM_SOURCE_KEY_B64 }}
+          ADMIN_LAW_PREMIUM_MEDIA_KEY_B64: ${{ secrets.ADMIN_LAW_PREMIUM_MEDIA_KEY_B64 }}
+          LESSONS: ${{ matrix.lessons }}
+          BATCH: ${{ matrix.batch }}
+        run: python premium-v2/renderer/render_premium.py --lessons "$LESSONS" --batch-index "$BATCH" --input-dir premium-v2/inputs --output-dir "$RUNNER_TEMP/cipher-output" --assets "$RUNNER_TEMP/assets" --server-dir premium-v2/server --temp-root "$RUNNER_TEMP/plain-temp" --checkpoint-dir "$RUNNER_TEMP/checkpoints" > "$RUNNER_TEMP/status.json"
+      - name: Keyless output allowlist gate
+        if: always() && steps.synth.outcome != 'skipped'
+        env:
+          LESSONS: ${{ matrix.lessons }}
+        run: python premium-v2/publish_cipher.py gate --source "$RUNNER_TEMP/cipher-output" --destination "$RUNNER_TEMP/cipher-verified" --status "$RUNNER_TEMP/status.json" --lessons "$LESSONS"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: success()
+        with:
+          name: premium-cipher-${{ matrix.batch }}
+          path: ${{ runner.temp }}/cipher-verified/
+          if-no-files-found: ignore
+          retention-days: 3
+          overwrite: true
+      - name: Remove plaintext temporary directory
+        if: always()
+        run: rm -rf -- "$RUNNER_TEMP/plain-temp"
+      - name: Preserve failed render status
+        if: steps.synth.outcome == 'failure'
+        run: exit 1
+  publish:
+    if: always() && needs.prepare-release.result == 'success'
+    needs: [prepare-release, render]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.11'
+      - run: python -m pip install --disable-pip-version-check cryptography==50.0.0
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: premium-cipher-*
+          merge-multiple: true
+          path: ${{ runner.temp }}/incoming
+      - name: Publish only validated ciphertext
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/incoming" "$RUNNER_TEMP/existing"
+          python premium-v2/checkpoints.py "$RUNNER_TEMP/existing" all --allow-orphans-for-publisher
+          python premium-v2/publish_cipher.py publish --source "$RUNNER_TEMP/incoming" --destination "$RUNNER_TEMP/existing" --repo "$GITHUB_REPOSITORY"
