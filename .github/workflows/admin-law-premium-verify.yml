@@ -1,0 +1,27 @@
+name: Verify public premium ciphertext
+on:
+  push:
+    branches: [admin-law-v2-premium-verify-20261026]
+    paths: ['.github/workflows/admin-law-premium-verify.yml', 'premium-public-verify/verify_public.py']
+permissions:
+  contents: read
+concurrency:
+  group: admin-law-premium-public-verify
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          sparse-checkout: premium-public-verify
+      - name: Verify public downloads without credentials
+        run: python3 premium-public-verify/verify_public.py
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: premium-public-verification
+          path: proof/
+          retention-days: 7
+          if-no-files-found: error
