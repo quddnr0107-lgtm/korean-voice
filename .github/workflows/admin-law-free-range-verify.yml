@@ -1,0 +1,50 @@
+name: Admin law free - HTTP Range verification
+on:
+  push:
+    branches: [admin-law-v2-free-20261026]
+    paths: ['.github/workflows/admin-law-free-range-verify.yml']
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify two bounded public byte ranges - no synthesis
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,pathlib,re,subprocess
+          out=pathlib.Path('range-proof');out.mkdir()
+          url='https://github.com/quddnr0107-lgtm/korean-voice/releases/download/admin-law-v2-free-20261026/admin-law-v2-AL-001.mp3'
+          expected={"0":"c25d2dadd3d084a7525f0e5267216b024df0777875d16291407352e823e9d38b","65536":"a682fd1069c32334a10d60f6e3381fbe35a8b992ff34b0e2b6525e7929f2b88f"}
+          rows=[]
+          for start in (0,65536):
+           end=start+15
+           body=out/f'{start}.bin'; headers=out/f'{start}.raw'
+           p=subprocess.run(['curl','--silent','--show-error','--location','--max-redirs','5','--connect-timeout','15','--max-time','60','--max-filesize','1024','--header',f'Range: bytes={start}-{end}','--dump-header',str(headers),'--output',str(body),'--write-out','%{http_code}',url],capture_output=True,text=True)
+           raw=headers.read_text() if headers.exists() else ''
+           blocks=[b for b in re.split(r'\r?\n\r?\n',raw) if b.startswith('HTTP/')]
+           final=blocks[-1] if blocks else ''
+           h={}
+           for line in final.splitlines()[1:]:
+            if ':' in line:
+             k,v=line.split(':',1);h[k.lower().strip()]=v.strip()
+           data=body.read_bytes() if body.exists() else b''
+           # Signed redirect URLs are not included in uploaded headers.
+           safe='\n\n'.join('\n'.join(l for l in b.splitlines() if l.startswith('HTTP/') or l.split(':',1)[0].lower() in ('content-range','content-length','content-type','accept-ranges','age','x-cache','cache-control','etag')) for b in blocks)
+           (out/f'{start}.headers.txt').write_text(safe);headers.unlink(missing_ok=True)
+           row={'range':f'bytes={start}-{end}','curl_returncode':p.returncode,'http_status':p.stdout.strip(),'content_range':h.get('content-range'),'content_length':h.get('content-length'),'body_length':len(data),'body_sha256':hashlib.sha256(data).hexdigest(),'expected_local_sha256':expected[str(start)]}
+           row['passed']=p.returncode==0 and row['http_status']=='206' and row['content_range']==f'bytes {start}-{end}/2551148' and len(data)==16 and row['body_sha256']==expected[str(start)]
+           rows.append(row)
+          report={'url':url,'asset_size':2551148,'tests':rows,'all_passed':all(x['passed'] for x in rows)}
+          (out/'report.json').write_text(json.dumps(report,indent=2));print(json.dumps(report,indent=2))
+          
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: admin-law-free-range-proof
+          path: range-proof/
+          retention-days: 3
+          if-no-files-found: error
+      - name: Require correct partial content and bytes
+        run: python3 -c "import json; assert json.load(open('range-proof/report.json'))['all_passed']"
