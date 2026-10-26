@@ -15,11 +15,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      ADMIN_SAMPLE_ASSETS: ${{ runner.temp }}/admin-law-v2-assets
-      ADMIN_SAMPLE_OUT: ${{ runner.temp }}/admin-law-v2-output
       OMP_NUM_THREADS: '2'
       OPENBLAS_NUM_THREADS: '2'
     steps:
+      - name: Set isolated temporary directories
+        run: |
+          echo "ADMIN_SAMPLE_ASSETS=$RUNNER_TEMP/admin-law-v2-assets" >> "$GITHUB_ENV"
+          echo "ADMIN_SAMPLE_OUT=$RUNNER_TEMP/admin-law-v2-output" >> "$GITHUB_ENV"
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
