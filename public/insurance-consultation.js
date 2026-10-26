@@ -48,6 +48,16 @@
     dialog.append(link, controls);
     today.addEventListener("click", () => { write("localStorage", prefix + "hidden-day", dayKey()); close(); });
     dismiss.addEventListener("click", close);
+    dialog.addEventListener("keydown", event => {
+      if (event.key !== "Tab") return;
+      if (event.shiftKey && document.activeElement === link) {
+        event.preventDefault();
+        dismiss.focus({ preventScroll: true });
+      } else if (!event.shiftKey && document.activeElement === dismiss) {
+        event.preventDefault();
+        link.focus({ preventScroll: true });
+      }
+    });
     dialog.addEventListener("cancel", event => { event.preventDefault(); close(); });
     dialog.addEventListener("click", event => { if (event.target === dialog) close(); });
     dialog.addEventListener("close", () => {
