@@ -1,0 +1,83 @@
+name: Publish approved free reader sidecar only
+on:
+  push:
+    branches: [admin-law-v2-free-reader-20261026]
+    paths: ['.github/workflows/admin-law-free-reader-publish.yml']
+permissions:
+  contents: write
+concurrency:
+  group: admin-law-free-reader-publication
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Validate free-only exact spans and publish one new release asset
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,re,subprocess
+          SHA='6aab7289b835742d45aef004483c8b9cfe2f0ff4197cc09774fb26539a3eb5d9'
+          MH='9efbf66c10ca629af5090595ecdd86123accbd64ec934c0814d4940eac310071'
+          REPO='quddnr0107-lgtm/korean-voice';TAG='admin-law-v2-free-20261026'
+          out=pathlib.Path('reader-proof');out.mkdir()
+          source=pathlib.Path('reader-sidecars/free-reader-sidecar.json')
+          digest=lambda b:hashlib.sha256(b).hexdigest()
+          assert digest(source.read_bytes())==SHA
+          s=json.loads(source.read_bytes());assert set(s)=={'namespace','source_manifest_sha256','lessons'}
+          assert s['namespace']=='admin-law/v2/free-reader' and s['source_manifest_sha256']==MH
+          assert [x['id'] for x in s['lessons']]==[f'AL-{n:03}' for n in range(1,11)]
+          def gh(*args): return subprocess.check_output(['gh',*args],text=True)
+          before=json.loads(gh('api',f'repos/{REPO}/releases/tags/{TAG}'))
+          gh('release','download',TAG,'--repo',REPO,'--pattern','manifest.json','--dir',str(out))
+          assert digest((out/'manifest.json').read_bytes())==MH
+          m=json.loads((out/'manifest.json').read_bytes())
+          mapped=segments=0
+          for row,lesson in zip(s['lessons'],m['lessons']):
+           assert lesson['id']=='admin-law-v2-'+row['id']
+           assert row['narration_sha256']==lesson['narration_sha256'] and row['audio_sha256']==lesson['audio_sha256']
+           assert row['timeline_provenance']=='measured_chunk_boundaries'
+           assert set(re.findall(r'AL-\d{3}',json.dumps(row)))=={row['id']}
+           text=lesson['narration_text']; assert digest(text.encode())==row['narration_sha256']
+           paragraphs={p['id']:p for p in row['paragraphs']}
+           assert len(row['segments'])==len(lesson['segments'])
+           for p in paragraphs.values(): assert digest(p['text'].encode())==p['textSha256']
+           for seg,original in zip(row['segments'],lesson['segments']):
+            segments+=1
+            for key in ('index','text','start_s','end_s'):assert seg[key]==original[key]
+            assert text[seg['char_start_cp']:seg['char_end_cp']]==seg['text']
+            assert text.encode('utf-16-le')[2*seg['char_start_utf16']:2*seg['char_end_utf16']].decode('utf-16-le')==seg['text']
+            assert digest(seg['text'].encode())==seg['text_sha256']
+            if seg['index']==0:assert not seg['sourceSpans'] and seg['source_mapping_status']=='unmapped'
+            else:assert seg['sourceSpans'] and seg['source_mapping_status']=='verified'
+            for span in seg['sourceSpans']:
+             p=paragraphs[span['paragraph_id']]
+             assert digest(p['text'].encode())==span['paragraph_text_sha256']
+             t=p['text'].encode('utf-16-le')[2*span['start_utf16']:2*span['end_utf16']].decode('utf-16-le')
+             assert t==span['text'] and digest(t.encode())==span['text_sha256']
+             mapped+=1
+          assert segments==411 and mapped==401
+          # Never clobber an existing asset. An identical prior publication is idempotent.
+          existing=next((a for a in before['assets'] if a['name']=='free-reader-sidecar.json'),None)
+          if not existing:gh('release','upload',TAG,'--repo',REPO,str(source))
+          url=f'https://github.com/{REPO}/releases/download/{TAG}/free-reader-sidecar.json'
+          subprocess.run(['curl','--fail','--silent','--show-error','--location','--max-time','90','--max-filesize','1048576',url,'-o',str(out/'free-reader-sidecar.json')],check=True)
+          assert digest((out/'free-reader-sidecar.json').read_bytes())==SHA
+          after=json.loads(gh('api',f'repos/{REPO}/releases/tags/{TAG}'))
+          def inventory(j):return {a['name']:{k:a.get(k) for k in ('id','size','digest')} for a in j['assets'] if a['name']!='free-reader-sidecar.json'}
+          assert inventory(before)==inventory(after),'Existing release assets changed'
+          proof={'passed':True,'url':url,'sha256':SHA,'bytes':(out/'free-reader-sidecar.json').stat().st_size,'source_manifest_sha256':MH,'lessons':10,'segments':segments,'verified_source_spans':mapped,'unmapped_heading_segments':10,'existing_release_assets_unchanged':True,'premium_included':False,'commit':os.environ['GITHUB_SHA']}
+          (out/'publication-proof.json').write_text(json.dumps(proof,indent=2));print(json.dumps(proof,indent=2))
+          
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: admin-law-free-reader-publication-proof
+          path: reader-proof/
+          retention-days: 3
+          if-no-files-found: error
