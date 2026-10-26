@@ -1,0 +1,15 @@
+# Exact versions from validated free10 Actions run40284310673, render0 job121444322435
+cffi==2.1.1
+flatbuffers==25.12.19
+imageio-ffmpeg==0.6.0
+numpy==2.4.6
+onnxruntime==1.31.0
+packaging==26.3
+praat-parselmouth==0.4.7
+protobuf==7.36.2
+pycparser==3.12
+soundfile==0.14.0
+typing-extensions==4.16.0
+
+# Exact cryptography version used by local encrypted-contract regression suite
+cryptography==50.0.0
