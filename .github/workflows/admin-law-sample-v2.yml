@@ -1,0 +1,56 @@
+name: Admin law v2 - two isolated samples
+on:
+  push:
+    branches: [admin-law-v2-sample-20261026]
+    paths:
+      - '.github/workflows/admin-law-sample-v2.yml'
+      - 'samples/admin-law-v2/**'
+permissions:
+  contents: read
+concurrency:
+  group: admin-law-v2-two-samples
+  cancel-in-progress: false
+jobs:
+  samples:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      ADMIN_SAMPLE_ASSETS: ${{ runner.temp }}/admin-law-v2-assets
+      ADMIN_SAMPLE_OUT: ${{ runner.temp }}/admin-law-v2-output
+      OMP_NUM_THREADS: '2'
+      OPENBLAS_NUM_THREADS: '2'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: CPU dependencies only
+        run: python -m pip install --disable-pip-version-check onnxruntime numpy soundfile imageio-ffmpeg praat-parselmouth
+      - name: Download official pinned model and helper - no inference API
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$ADMIN_SAMPLE_ASSETS"/{onnx,voice_styles,py} "$ADMIN_SAMPLE_OUT/licenses"
+          B=https://huggingface.co/Supertone/supertonic-3/resolve/3cadd1ee6394adea1bd021217a0e650ede09a323
+          for f in config.json onnx/duration_predictor.onnx onnx/text_encoder.onnx onnx/tts.json onnx/unicode_indexer.json onnx/vector_estimator.onnx onnx/vocoder.onnx voice_styles/F2.json LICENSE; do
+            curl --fail --location --retry 2 --max-time 180 -o "$ADMIN_SAMPLE_ASSETS/$f" "$B/$f"
+          done
+          H=https://raw.githubusercontent.com/supertone-oss-archive/supertonic/1e9799e964ea4c0dad7cde993b65c3c813a7b373
+          curl --fail --location --retry 2 --max-time 60 -o "$ADMIN_SAMPLE_ASSETS/py/helper.py" "$H/py/helper.py"
+          curl --fail --location --retry 2 --max-time 60 -o "$ADMIN_SAMPLE_OUT/licenses/helper-MIT.txt" "$H/LICENSE"
+          cp "$ADMIN_SAMPLE_ASSETS/LICENSE" "$ADMIN_SAMPLE_OUT/licenses/model-OpenRAIL-M.txt"
+          cp LICENSE "$ADMIN_SAMPLE_OUT/licenses/repository-LICENSE.txt"
+          cp docs/CREDITS.md "$ADMIN_SAMPLE_OUT/licenses/CREDITS.md"
+          find "$ADMIN_SAMPLE_ASSETS" -type f -print0 | sort -z | xargs -0 sha256sum > "$ADMIN_SAMPLE_OUT/asset-sha256.txt"
+          python -m pip freeze > "$ADMIN_SAMPLE_OUT/dependencies.txt"
+      - name: Render exactly two approved samples offline - k2 F2 16 steps
+        run: python samples/admin-law-v2/render.py
+      - name: Upload only two audio samples and quality report
+        uses: actions/upload-artifact@v4
+        with:
+          name: admin-law-v2-two-samples
+          path: ${{ env.ADMIN_SAMPLE_OUT }}/
+          retention-days: 3
+          if-no-files-found: error
