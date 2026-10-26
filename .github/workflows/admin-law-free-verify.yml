@@ -10,6 +10,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install imageio-ffmpeg==0.6.0
       - name: Fetch without authentication and verify all public bytes
         shell: bash
         run: |
@@ -19,7 +23,7 @@ jobs:
           B=https://github.com/quddnr0107-lgtm/korean-voice/releases/download/admin-law-v2-free-20261026
           curl --fail --location --retry 2 --max-time 60 -o manifest.json "$B/manifest.json"
           python3 - <<'PY'
-          import json,hashlib,subprocess,pathlib
+          import json,hashlib,subprocess,pathlib,imageio_ffmpeg
           m=json.loads(pathlib.Path('manifest.json').read_text());assert m['status']=='complete' and m['count']==10
           assert [x['number'] for x in m['lessons']]==list(range(1,11))
           for x in m['lessons']:
@@ -27,7 +31,7 @@ jobs:
               p=pathlib.Path(x['id']+'.mp3')
               subprocess.run(['curl','--fail','--location','--retry','2','--max-time','60','-o',str(p),x['audio_url']],check=True)
               assert hashlib.sha256(p.read_bytes()).hexdigest()==x['audio_sha256']
-              subprocess.run(['ffmpeg','-v','error','-i',str(p),'-f','null','-'],check=True)
+              subprocess.run([imageio_ffmpeg.get_ffmpeg_exe(),'-v','error','-i',str(p),'-f','null','-'],check=True)
           pathlib.Path('public-url-verification.json').write_text(json.dumps({'count':10,'unauthenticated_download':True,'all_sha256_match':True,'all_mp3_decode':True,'premium_included':False}))
           PY
       - uses: actions/upload-artifact@v4
