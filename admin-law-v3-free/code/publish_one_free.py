@@ -14,7 +14,10 @@ def main():
  expected=private_metadata(data,audio,[{k:s[k] for k in measured} for s in meta['segments']],meta['validation'])
  expected.update(access='free',source_commit=os.environ['GITHUB_SHA'],chunk_policy='contiguous-max180-v1',seed=20261026+data['lesson']['number']-1)
  if expected!=meta or meta['validation']['clipped_samples']!=0 or meta['validation']['tail_hum_chunks']!=0 or meta['validation']['max_silence_s']>=4:raise ValueError('metadata validation')
- tag='admin-law-v3-'+track+'-free-20261027'
+ revision=data['lineage']['revision']
+ if track=='easy' and revision=='easy-r2-20261027':tag='admin-law-v3-easy-r2-free-20261027'
+ elif track=='source' and revision=='rebuild-r1-20261027':tag='admin-law-v3-source-free-20261027'
+ else:raise ValueError('unapproved new revision publication')
  try:release=json.loads(gh('release','view',tag,'--json','assets'))
  except subprocess.CalledProcessError:
   try:gh('release','create',tag,'--target',os.environ['GITHUB_SHA'],'--title','Admin law '+track+' free','--notes','Additive track. Partial until final exact10 manifest is published. Legacy unchanged.','--latest=false')
