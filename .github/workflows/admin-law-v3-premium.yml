@@ -53,13 +53,8 @@ jobs:
       OPENBLAS_NUM_THREADS: '2'
       TRACK: ${{ matrix.track }}
       LESSON_ID: ${{ matrix.id }}
-      INPUT_ROOT: ${{ runner.temp }}/sealed-input
       QUEUE_PATH: premium-v3/inputs/${{ matrix.track }}/queue.json
       QUEUE_SHA256: ${{ needs.plan.outputs.queue_sha }}
-      CHECKPOINT_DIR: ${{ runner.temp }}/checkpoint
-      ADMIN_OUTPUT: ${{ runner.temp }}/cipher-output
-      PLAIN_TEMP: ${{ runner.temp }}
-      ADMIN_ASSETS: ${{ runner.temp }}/assets
       SERVER_DIR: premium-v3/server
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
@@ -70,6 +65,15 @@ jobs:
         with:
           python-version: '3.11'
       - run: sha256sum -c premium-v3/CODE_SHA256.txt
+      - name: Initialize nonsecret runner-local paths
+        run: |
+          {
+            echo "INPUT_ROOT=$RUNNER_TEMP/sealed-input"
+            echo "CHECKPOINT_DIR=$RUNNER_TEMP/checkpoint"
+            echo "ADMIN_OUTPUT=$RUNNER_TEMP/cipher-output"
+            echo "PLAIN_TEMP=$RUNNER_TEMP"
+            echo "ADMIN_ASSETS=$RUNNER_TEMP/assets"
+          } >> "$GITHUB_ENV"
       - run: python -m pip install --disable-pip-version-check -r premium-v3/requirements-pinned.txt
       - name: Pinned public model and recipe, no secrets
         run: |
