@@ -22,7 +22,7 @@ jobs:
         with:
           python-version: '3.11'
       - name: Verify reviewed verifier code
-        run: echo '90558f3f19f75cb4260f0f430b9eb770122bdf722aed4a2c3bd94a9d4e75d22d  premium-verification/verify_public.py' | sha256sum -c -
+        run: echo '1bd29951e66293e6bbc507c1886ac9d756bf0a81197da1adeac7bc02dcee1bab  premium-verification/verify_public.py' | sha256sum -c -
       - name: Anonymous index, ciphertext and Range validation
         env:
           VERIFY_OUTPUT: ${{ runner.temp }}/premium-public-verification.json
