@@ -2,6 +2,7 @@
 import json,os,re,socket,sys,tempfile
 from pathlib import Path
 from production_input_gate import load_entry
+from chunk_policy import for_attempt
 from retry_policy import generation,attach,check_descriptor
 from sealed_ingress import open_input
 from private_pipeline import validate_input,private_metadata,checkpoint_hash,encoded,sha,RECIPE
@@ -36,7 +37,7 @@ def main():
  track,ident=sys.argv[1:3]
  if track not in ('easy','source') or not re.fullmatch(r'AL-0(?:1[1-9]|[2-6][0-9]|7[0-8])',ident):raise ValueError('premium scope')
  attempt_raw=os.environ.get('GENERATION_ATTEMPT','1')
- if attempt_raw not in ('1','2'):raise ValueError('generation attempt')
+ if attempt_raw not in ('1','2','3'):raise ValueError('generation attempt')
  attempt=int(attempt_raw);generation(track,ident,attempt)
  p,w,r,ct=load_entry(Path(os.environ['INPUT_ROOT']),Path(os.environ['QUEUE_PATH']),os.environ['QUEUE_SHA256'],track,ident)
  source_key,media_key=consume_keys();backend=None;stage='decrypt-input'
@@ -46,6 +47,7 @@ def main():
   plain=open_input(source_key,p,w,r,ct,expected_track=track,expected_id=ident);source_key=None;data=json.loads(plain);plain=None
   if validate_input(data)!=ident or data['track']!=track or data['lineage']['revision']!={'source':'rebuild-r1-20261027','easy':'easy-r2-20261027'}[track]:raise ValueError('input identity')
   data,seed=attach(data,attempt)
+  plan=for_attempt(data,attempt)
   stage='model-init'
   with suppress_native_output():
    backend=Backend(Path(os.environ['ADMIN_ASSETS']),Path(os.environ['SERVER_DIR']),seed,track)
@@ -53,7 +55,7 @@ def main():
    if cached:descriptor,blobs,meta=cached;state='reused'
    else:
     stage='synthesis'
-    with tempfile.TemporaryDirectory(prefix='admin-law-private-',dir=os.environ['PLAIN_TEMP']) as td:audio,segments,metrics=backend.render(data['lesson']['narration_text'],td)
+    with tempfile.TemporaryDirectory(prefix='admin-law-private-',dir=os.environ['PLAIN_TEMP']) as td:audio,segments,metrics=backend.render(data['lesson']['narration_text'],td,planned_chunks=plan)
     stage='metadata';meta=private_metadata(data,audio,segments,metrics);validate_checkpoint_metrics(meta,validate_audio(audio,backend.ff,track));validate_timeline(track,segments,metrics['decoded_duration_s'])
     stage='encrypt-output';descriptor={'id':ident};blobs={}
     if 'generation' in data['lineage']:descriptor['generation']=data['lineage']['generation']

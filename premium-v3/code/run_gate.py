@@ -2,12 +2,13 @@
 import hashlib,json,os,re,subprocess,sys,zipfile
 from pathlib import Path
 from retry_policy import launch_attempt,generation,check_descriptor
-PINS={'source':'05c4ac85b25e3f6dcb4451e6b16f352f50b16269e84d1b7ab1687e637b16daa7','easy':'9b90d1d32b9d66a96f396efcef03d4905f3f7b062a36ca8de2f29b43c8faf4bc'}
+PINS={'source':'dd1742cad5a5e6bffad29c4fd006dd8fff9db488668f182ab756740544894bc2','easy':'9b90d1d32b9d66a96f396efcef03d4905f3f7b062a36ca8de2f29b43c8faf4bc'}
 sha=lambda b:hashlib.sha256(b).hexdigest()
 def context():
  if os.environ['GITHUB_REPOSITORY']!='quddnr0107-lgtm/korean-voice' or os.environ['GITHUB_REF']!='refs/heads/admin-law-v2-premium-20261026' or os.environ['GITHUB_RUN_ATTEMPT']!='1':raise ValueError('scope')
  root=Path('premium-v3');launch=json.loads((root/'launch.json').read_bytes())
  if set(launch) not in ({'track','ids','queue_sha256'},{'track','ids','queue_sha256','generation_attempt'}) or launch['track'] not in PINS or launch['queue_sha256']!=PINS[launch['track']]:raise ValueError('launch')
+ if not re.fullmatch(r'[a-f0-9]{64}',PINS[launch['track']]):raise ValueError('draft source queue unset')
  ids=launch['ids']
  if not isinstance(ids,list) or not 1<=len(ids)<=68 or len(set(ids))!=len(ids) or any(not re.fullmatch(r'AL-0(?:1[1-9]|[2-6][0-9]|7[0-8])',i) for i in ids):raise ValueError('ids')
  launch_attempt(launch)

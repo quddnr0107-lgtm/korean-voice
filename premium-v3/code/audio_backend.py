@@ -62,10 +62,14 @@ class Backend:
   self.np=np;self.sf=sf;self.recipe=recipe;self.ff=imageio_ffmpeg.get_ffmpeg_exe()
   self.tts=helper.load_text_to_speech(str(assets/'onnx'),False)
   self.style=helper.load_voice_style([str(assets/'voice_styles/F2.json')]);self.sr=self.tts.sample_rate;np.random.seed(seed)
- def render(self,text,temp_dir):
+ def render(self,text,temp_dir,planned_chunks=None):
   np=self.np;sr=self.sr;recipe=self.recipe;self.stage='chunk-planning'
   from chunk_plan import chunks
-  chunks=chunks(text)
+  if planned_chunks is None:chunks=chunks(text)
+  else:
+   from chunk_plan import verify
+   if type(planned_chunks)!=list:raise ValueError('planned chunks type')
+   verify(text,planned_chunks);chunks=list(planned_chunks)
   waves=[];segments=[];cursor=0
   for i,t in enumerate(chunks):
    self.stage='chunk-infer';self.chunk_index=i
