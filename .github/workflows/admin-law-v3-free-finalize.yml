@@ -1,0 +1,33 @@
+name: Admin law v3 free final manifest verification
+on:
+  push:
+    branches: [admin-law-v3-free-finalize-20261027]
+    paths: ['free-finalize/**']
+permissions:
+  contents: write
+concurrency:
+  group: admin-law-v3-free-finalize
+  cancel-in-progress: false
+jobs:
+  finalize:
+    if: github.run_attempt == 1 && github.repository == 'quddnr0107-lgtm/korean-voice'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.11'
+      - name: Check anonymous bytes and publish exact free manifest
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERIFY_OUTPUT: ${{ runner.temp }}/public-free-verification.json
+        run: python free-finalize/publish_manifest.py free-finalize/manifest.json free-finalize/scope.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: public-free-verification
+          path: ${{ runner.temp }}/public-free-verification.json
+          if-no-files-found: error
+          retention-days: 7
