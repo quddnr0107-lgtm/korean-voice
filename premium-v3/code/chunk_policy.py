@@ -54,17 +54,17 @@ def planned(data):
 def for_attempt(data,attempt):
  if 'chunk_policy' in data['lesson']:raise ValueError('policy must not alter lesson')
  has='chunk_policy' in data['lineage'] or 'chunk_policy_sha256' in data['lineage']
- if attempt==3:
+ if attempt in (3,4):
   if not has or 'chunk_policy' not in data['lineage'] or 'chunk_policy_sha256' not in data['lineage']:raise ValueError('boundary policy required')
   return planned(data)
  if has:raise ValueError('custom chunks only attempt3')
  return None
 
 def validate_segments(data,segments):
- if data['lineage'].get('generation',{}).get('attempt')==3:for_attempt(data,3)
+ if data['lineage'].get('generation',{}).get('attempt') in (3,4):for_attempt(data,data['lineage']['generation']['attempt'])
  if 'chunk_policy' in data['lineage'] or 'chunk_policy_sha256' in data['lineage']:
   from retry_policy import validate_generation
   g=data['lineage'].get('generation')
-  if not g or g.get('attempt')!=3:raise ValueError('policy metadata generation')
+  if not g or g.get('attempt') not in (3,4):raise ValueError('policy metadata generation')
   validate_generation(g,data['track'],data['lesson']['id'])
   if [s['text'] for s in segments]!=planned(data):raise ValueError('actual segments policy mismatch')

@@ -62,7 +62,7 @@ class Backend:
   self.np=np;self.sf=sf;self.recipe=recipe;self.ff=imageio_ffmpeg.get_ffmpeg_exe()
   self.tts=helper.load_text_to_speech(str(assets/'onnx'),False)
   self.style=helper.load_voice_style([str(assets/'voice_styles/F2.json')]);self.sr=self.tts.sample_rate;np.random.seed(seed)
- def render(self,text,temp_dir,planned_chunks=None):
+ def render(self,text,temp_dir,planned_chunks=None,inference_data=None):
   np=self.np;sr=self.sr;recipe=self.recipe;self.stage='chunk-planning'
   from chunk_plan import chunks
   if planned_chunks is None:chunks=chunks(text)
@@ -70,18 +70,30 @@ class Backend:
    from chunk_plan import verify
    if type(planned_chunks)!=list:raise ValueError('planned chunks type')
    verify(text,planned_chunks);chunks=list(planned_chunks)
+  budget=None
+  if inference_data is not None:
+   from inference_policy import Budget
+   budget=Budget(inference_data)
   waves=[];segments=[];cursor=0
   for i,t in enumerate(chunks):
    self.stage='chunk-infer';self.chunk_index=i
    hard=recipe.is_sentence_end(t);speed=float(np.clip(1.05*recipe.unit_speed_mult(0,hard),.7,1.6));hum=True
-   for attempt in range(2):
-    w,d=self.tts._infer([t],['ko'],self.style,16,speed)
-    y=recipe.shape(np.asarray(w,dtype=np.float32).reshape(-1)[:int(float(np.asarray(d).reshape(-1)[0])*sr)],sr,t,hard)
-    hum=bool(recipe.hum_tail(y,sr))
-    if not hum:break
+   if budget is None:
+    for attempt in range(2):
+     w,d=self.tts._infer([t],['ko'],self.style,16,speed)
+     y=recipe.shape(np.asarray(w,dtype=np.float32).reshape(-1)[:int(float(np.asarray(d).reshape(-1)[0])*sr)],sr,t,hard)
+     hum=bool(recipe.hum_tail(y,sr))
+     if not hum:break
+   else:
+    def infer_once():
+     w,d=self.tts._infer([t],['ko'],self.style,16,speed)
+     value=recipe.shape(np.asarray(w,dtype=np.float32).reshape(-1)[:int(float(np.asarray(d).reshape(-1)[0])*sr)],sr,t,hard)
+     return value,bool(recipe.hum_tail(value,sr))
+    y,hum,used,accepted_seed=budget.infer(i,t,infer_once,np.random.seed);attempt=used-1
    self.stage='chunk-quality';self.chunk_diagnostic={'chunk_index':i,'finite':bool(np.isfinite(y).all()),'samples':len(y),'sample_rate':sr,'tail_hum':hum}
    if hum or not np.isfinite(y).all() or len(y)<=.15*sr:raise ValueError('chunk quality')
    waves.append(y);duration=len(y)/sr;segments.append({'index':i,'text':t,'start_s':round(cursor,5),'end_s':round(cursor+duration,5),'speed':speed,'tail_hum':hum,'attempts':attempt+1});cursor+=duration
+   if budget is not None:segments[-1]['accepted_seed']=accepted_seed
    if i<len(chunks)-1:waves.append(np.zeros(int(sr*.48),dtype=np.float32));cursor+=int(sr*.48)/sr
   wav=Path(temp_dir)/'audio.wav';mp3=Path(temp_dir)/'audio.mp3'
   try:

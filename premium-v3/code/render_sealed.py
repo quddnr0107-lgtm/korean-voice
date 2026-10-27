@@ -20,7 +20,9 @@ def unpack_existing(data,root,key,ff):
  for k,kind in [('audio','audio'),('content','private-metadata')]:
   m=d[k]
   if m['namespace']!=data['namespace'] or m['lesson_id']!=ident or m['kind']!=kind or m['key_id']!='admin-law-premium-media-v1':raise ValueError('checkpoint context')
- audio=open_range(key,d['audio'],blobs['audio'])[0];meta=json.loads(open_range(key,d['content'],blobs['content'])[0]);fields=('index','text','start_s','end_s','speed','tail_hum','attempts');segments=[{k:s[k] for k in fields} for s in meta['segments']]
+ audio=open_range(key,d['audio'],blobs['audio'])[0];meta=json.loads(open_range(key,d['content'],blobs['content'])[0]);fields=('index','text','start_s','end_s','speed','tail_hum','attempts')
+ if data['lineage'].get('generation',{}).get('attempt')==4:fields=fields+('accepted_seed',)
+ segments=[{k:s[k] for k in fields} for s in meta['segments']]
  expected=private_metadata(data,audio,segments,meta['validation'])
  if meta!=expected:raise ValueError('checkpoint content')
  validate_checkpoint_metrics(meta,validate_audio(audio,ff,data['track']));validate_timeline(data['track'],meta['segments'],meta['duration_s']);return d,blobs,meta
@@ -37,7 +39,7 @@ def main():
  track,ident=sys.argv[1:3]
  if track not in ('easy','source') or not re.fullmatch(r'AL-0(?:1[1-9]|[2-6][0-9]|7[0-8])',ident):raise ValueError('premium scope')
  attempt_raw=os.environ.get('GENERATION_ATTEMPT','1')
- if attempt_raw not in ('1','2','3'):raise ValueError('generation attempt')
+ if attempt_raw not in ('1','2','3','4'):raise ValueError('generation attempt')
  attempt=int(attempt_raw);generation(track,ident,attempt)
  p,w,r,ct=load_entry(Path(os.environ['INPUT_ROOT']),Path(os.environ['QUEUE_PATH']),os.environ['QUEUE_SHA256'],track,ident)
  source_key,media_key=consume_keys();backend=None;stage='decrypt-input'
@@ -55,7 +57,7 @@ def main():
    if cached:descriptor,blobs,meta=cached;state='reused'
    else:
     stage='synthesis'
-    with tempfile.TemporaryDirectory(prefix='admin-law-private-',dir=os.environ['PLAIN_TEMP']) as td:audio,segments,metrics=backend.render(data['lesson']['narration_text'],td,planned_chunks=plan)
+    with tempfile.TemporaryDirectory(prefix='admin-law-private-',dir=os.environ['PLAIN_TEMP']) as td:audio,segments,metrics=backend.render(data['lesson']['narration_text'],td,planned_chunks=plan,inference_data=data if attempt==4 else None)
     stage='metadata';meta=private_metadata(data,audio,segments,metrics);validate_checkpoint_metrics(meta,validate_audio(audio,backend.ff,track));validate_timeline(track,segments,metrics['decoded_duration_s'])
     stage='encrypt-output';descriptor={'id':ident};blobs={}
     if 'generation' in data['lineage']:descriptor['generation']=data['lineage']['generation']

@@ -97,6 +97,8 @@ def source_spans(data,meta):
 def private_metadata(data,audio,segments,metrics):
  from chunk_policy import validate_segments
  validate_segments(data,segments)
+ from inference_policy import validate_segments as validate_inference_segments
+ validate_inference_segments(data,segments)
  ident=validate_input(data);l=data['lesson'];p=data['panel']
  meta={'version':'admin-law-private-metadata/v1','track':data['track'],'namespace':data['namespace'],'lineage':data['lineage'],'id':ident,'number':l['number'],'title':l['title'],'topic_ids':l['topic_ids'],'narration_text':l['narration_text'],'narration_sha256':l['narration_sha256'],'audio_sha256':sha(audio),'checkpoint_hash':checkpoint_hash(data),'voice':RECIPE,'duration_s':metrics['decoded_duration_s'],'segments':segments,'validation':metrics,'listening_verified':False,'timeline_provenance':'measured_chunk_boundaries','paragraphs':p['paragraphs'],'sources':p.get('sources',[]),'diagrams':p.get('diagrams',[]),'relatedQuestions':p.get('relatedQuestions',[]),'relatedMockExams':p.get('relatedMockExams',[]),'panel':p}
  for key in ('printQuestions','printQuestionsStatus','relatedPractice','relatedQuestionsStatus','relatedMockExamsStatus','diagramsStatus','diagramsUnavailableReason','mappingStatus','unmappedParagraphCount','syncMode','sourceDraftSha256','sourceTrackScope','revision'):
