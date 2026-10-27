@@ -19,6 +19,7 @@ jobs:
       matrix: ${{ steps.plan.outputs.matrix }}
       track: ${{ steps.plan.outputs.track }}
       queue_sha: ${{ steps.plan.outputs.queue_sha }}
+      generation_attempt: ${{ steps.plan.outputs.generation_attempt }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -52,6 +53,7 @@ jobs:
       OMP_NUM_THREADS: '2'
       OPENBLAS_NUM_THREADS: '2'
       TRACK: ${{ matrix.track }}
+      GENERATION_ATTEMPT: ${{ needs.plan.outputs.generation_attempt }}
       LESSON_ID: ${{ matrix.id }}
       QUEUE_PATH: premium-v3/inputs/${{ matrix.track }}/queue.json
       QUEUE_SHA256: ${{ needs.plan.outputs.queue_sha }}

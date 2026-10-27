@@ -4,6 +4,7 @@ Single publisher per track is REQUIRED (workflow concurrency). No clobber/delete
 import argparse,hashlib,json,os,re,shutil,subprocess,sys,tempfile
 from pathlib import Path
 from crypto_chunks_v3 import validate
+from retry_policy import check_descriptor
 REPO='quddnr0107-lgtm/korean-voice'
 TRACKS={'source':('admin-law/v3/source','admin-law-v3-source-premium-20261027'),'easy':('admin-law/v3/easy','admin-law-v3-easy-r2-premium-20261027')}
 IDS={f'AL-{i:03}' for i in range(11,79)}
@@ -38,7 +39,7 @@ def checked(directory,ident,track):
  namespace,_=track_scope(track)
  if ident not in IDS:raise ValueError('id')
  d=loads(read(directory/(ident+'.descriptor.json'),MAX_JSON))
- if type(d)!=dict or set(d)!={'id','audio','content'} or d['id']!=ident:raise ValueError('descriptor')
+ check_descriptor(d,track,ident)
  for k,kind in [('audio','audio'),('content','private-metadata')]:
   m=d[k]
   if type(m)!=dict or set(m)!=MKEYS:raise ValueError('manifest schema')
