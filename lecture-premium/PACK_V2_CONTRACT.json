@@ -1,0 +1,86 @@
+{
+  "contract": "integrated-lectures-pack-contract/v2",
+  "release_tag": "integrated-lectures-v2-20261028",
+  "index_version": "integrated-lecture-index/v2",
+  "descriptor_version": "integrated-lecture-output/v2",
+  "pack_version": "integrated-lecture-pack/v2",
+  "part_version": "integrated-lecture-audio-part/v2",
+  "content_media_version": "integrated-lectures-media/v1",
+  "key_id": "integrated-lectures-media-v1",
+  "namespaces": {
+    "TB": "integrated-lectures/v1/tongbang",
+    "DR": "integrated-lectures/v1/directive",
+    "RL": "integrated-lectures/v1/reserve-law"
+  },
+  "lesson_counts": {
+    "TB": 25,
+    "DR": 78,
+    "RL": 34
+  },
+  "files": {
+    "audio": "<ID>.audio.<pack.object_id>.bin",
+    "content": "<ID>.content.<content.object_id>.bin",
+    "descriptor": "<ID>.descriptor.json"
+  },
+  "context_order": [
+    "PART_VERSION",
+    "key_id",
+    "namespace",
+    "lesson_id",
+    "kind",
+    "object_id",
+    "pack_id",
+    "part_index",
+    "start_sample",
+    "end_sample",
+    "sample_rate",
+    "pack_offset",
+    "cipher_bytes",
+    "plain_bytes"
+  ],
+  "hkdf": "SHA256, salt decoded32, info UTF8(compact JSON context), output32",
+  "aad": "UTF8(compact JSON context + [chunk_index,chunk_bytes])",
+  "iv": "decoded nonce_prefix8 || uint32BE(chunk_index)",
+  "sample_rate": 44100,
+  "max_part_seconds": 60,
+  "max_part_plain_bytes": 2097152,
+  "max_pack_bytes": 134217728,
+  "part_decode_sample_delta_max": 1,
+  "mp3_encoding": "Each part separately encoded from a contiguous whole-chunk PCM interval, libmp3lame128k with Xing header; full part decode verified",
+  "input_text": "original text/tts_text unchanged; spoken_text reversible pronunciation mapping",
+  "metadata_full_audio_sha256": "removed: no full MP3 exists",
+  "metadata_audio_pack_sha256": "SHA256 of encrypted pack bytes",
+  "client_audio_parts": "fetch pinned descriptor via root row, verify raw descriptor SHA256, then project descriptor audio.parts; derive seconds from sample offsets, never trust browser offsets",
+  "client_buffering": "current/next only; per-part authenticated POST",
+  "release_asset_budget": {
+    "per_lesson_max_including_orphans_checkpoints": 7,
+    "max_total_including_index": 960,
+    "github_limit": 1000,
+    "base_lesson_assets": 411,
+    "root_index_assets": 1
+  },
+  "AI_label_required": "AI 합성 음성",
+  "real_audio_status": "not generated; execution gates false pending approvals",
+  "max_parts_per_lesson": 1440,
+  "max_total_samples": 3810240000,
+  "max_index_bytes": 131072,
+  "max_source_chunk_seconds": 55,
+  "max_private_metadata_bytes": 8388608,
+  "max_descriptor_bytes": 524288,
+  "root_index": {
+    "outer_keys": [
+      "version",
+      "release_tag",
+      "count",
+      "lessons"
+    ],
+    "lesson_row_keys": [
+      "id",
+      "descriptor_url",
+      "sha256"
+    ],
+    "descriptor_url_template": "https://github.com/quddnr0107-lgtm/korean-voice/releases/download/integrated-lectures-v2-20261028/<ID>.descriptor.json",
+    "sha256_basis": "exact raw descriptor bytes, not parsed/re-serialized JSON",
+    "completion_gate": "all 137 descriptors and referenced audio/content binaries verified before root publication"
+  }
+}
