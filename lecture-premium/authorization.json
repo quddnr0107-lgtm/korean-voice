@@ -1,0 +1,15 @@
+{
+  "version": "integrated-lecture-authorization/v1",
+  "approved": true,
+  "approval_reference": "owner-approval-20261028T1036Z",
+  "repository": "quddnr0107-lgtm/korean-voice",
+  "environment": "admin-law-premium-production",
+  "courses": {
+    "TB": 25,
+    "DR": 78,
+    "RL": 34
+  },
+  "source_key_name": "ADMIN_LAW_PREMIUM_SOURCE_KEY_B64",
+  "media_key_name": "ADMIN_LAW_PREMIUM_MEDIA_KEY_B64",
+  "branch": "integrated-lectures-premium-20261028"
+}

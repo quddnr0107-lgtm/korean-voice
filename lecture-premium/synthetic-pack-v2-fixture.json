@@ -1,0 +1,62 @@
+{
+  "test_only": true,
+  "purpose": "Public deterministic synthetic crypto vector; no operational key or real audio",
+  "master_key_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+  "plaintext_b64": "cHVibGljIHN5bnRoZXRpYyBpbnRlcm9wZXJhYmlsaXR5IHZlY3Rvcjsgbm90IHJlYWwgYXVkaW8=",
+  "cipher_b64": "04Fnlbdz6kDUx5jydSbrMPohZGIsApft57c19wEh13Ew1iUw+zozR3wf/ETyJtGK4spR55iggrOtOy9Zy7Z8xHFvXoc+W6Fn",
+  "context": [
+    "integrated-lecture-audio-part/v2",
+    "integrated-lectures-media-v1",
+    "integrated-lectures/v1/tongbang",
+    "TB-001",
+    "audio-part",
+    "11111111111111111111111111111111",
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    0,
+    0,
+    44100,
+    44100,
+    0,
+    72,
+    56
+  ],
+  "hkdf_info_utf8": "[\"integrated-lecture-audio-part/v2\",\"integrated-lectures-media-v1\",\"integrated-lectures/v1/tongbang\",\"TB-001\",\"audio-part\",\"11111111111111111111111111111111\",\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",0,0,44100,44100,0,72,56]",
+  "aad_chunk0_utf8": "[\"integrated-lecture-audio-part/v2\",\"integrated-lectures-media-v1\",\"integrated-lectures/v1/tongbang\",\"TB-001\",\"audio-part\",\"11111111111111111111111111111111\",\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",0,0,44100,44100,0,72,56,0,65536]",
+  "derived_part_key_hex": "9350524324d4f026c0d665de03ad3237178548c9fb741f36b2551eb46b2fbdc8",
+  "pack_manifest": {
+    "version": "integrated-lecture-pack/v2",
+    "kind": "audio-pack",
+    "key_id": "integrated-lectures-media-v1",
+    "namespace": "integrated-lectures/v1/tongbang",
+    "lesson_id": "TB-001",
+    "object_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "sample_rate": 44100,
+    "total_samples": 44100,
+    "pack_bytes": 72,
+    "pack_sha256": "a2eb28fab27769c246f2291466589821ab858a76d4a502d213feeafb7486cb5d",
+    "parts": [
+      {
+        "version": "integrated-lecture-audio-part/v2",
+        "kind": "audio-part",
+        "key_id": "integrated-lectures-media-v1",
+        "namespace": "integrated-lectures/v1/tongbang",
+        "lesson_id": "TB-001",
+        "object_id": "11111111111111111111111111111111",
+        "pack_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "part_index": 0,
+        "start_sample": 0,
+        "end_sample": 44100,
+        "sample_rate": 44100,
+        "pack_offset": 0,
+        "cipher_bytes": 72,
+        "plain_bytes": 56,
+        "chunk_bytes": 65536,
+        "salt_b64": "IiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiI=",
+        "nonce_prefix_b64": "MzMzMzMzMzM=",
+        "cipher_sha256": [
+          "a2eb28fab27769c246f2291466589821ab858a76d4a502d213feeafb7486cb5d"
+        ]
+      }
+    ]
+  }
+}
