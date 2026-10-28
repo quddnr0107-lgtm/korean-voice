@@ -4,6 +4,12 @@ from unittest.mock import patch
 import render_sealed as r
 from lecture_crypto import enc,digest
 class Contract(unittest.TestCase):
+ def test_workflow_python_matches_numpy_minimum(self):
+  workflow=(r.ROOT.parent/'.github/workflows/integrated-lectures-premium.yml').read_text()
+  import re
+  versions=re.findall(r"python-version: ['\"]([0-9.]+)['\"]",workflow)
+  self.assertEqual(versions,['3.12']*3)
+  self.assertIn('numpy==2.5.4',(r.ROOT/'requirements.txt').read_text())
  def payload(self):
   txt='가상의 예시 문장입니다. '
   c={'index':0,'id':'TB-001-c0001','sentence_id':'TB-001-s0001','text':txt,'tts_text':txt.strip(),'start_cp':0,'end_cp':len(txt),'source_start_cp':10,'source_end_cp':10+len(txt),'sha256':digest(txt.encode()),'tts_sha256':digest(txt.strip().encode())}
