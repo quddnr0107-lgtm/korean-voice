@@ -9,7 +9,7 @@ class Preflight(unittest.TestCase):
    p=Path(td);(p/'authorization.json').write_text(json.dumps(a))
    with patch.object(preflight,'ROOT',p),self.assertRaises(ValueError):preflight.require_approval()
  def test_exact_approved_scope(self):
-  a=json.loads((preflight.ROOT/'authorization.json').read_text());a.update(approved=True,approval_reference='Sentinel_synthetic_test')
+  a=json.loads((preflight.ROOT/'authorization.json').read_text());a.update(approved=True,approval_reference='owner-approval-20261028T1036Z')
   with tempfile.TemporaryDirectory() as td:
    p=Path(td);(p/'authorization.json').write_text(json.dumps(a))
    with patch.object(preflight,'ROOT',p):self.assertEqual(preflight.require_approval()['courses'],{'TB':25,'DR':78,'RL':34})

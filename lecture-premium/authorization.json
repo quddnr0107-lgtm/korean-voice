@@ -1,7 +1,7 @@
 {
   "version": "integrated-lecture-authorization/v1",
-  "approved": false,
-  "approval_reference": null,
+  "approved": true,
+  "approval_reference": "owner-approval-20261028T1036Z",
   "repository": "quddnr0107-lgtm/korean-voice",
   "environment": "admin-law-premium-production",
   "courses": {
