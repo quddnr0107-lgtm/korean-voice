@@ -7,9 +7,9 @@ from transfer_protocol import TransferError,validate_header,unique_object,canoni
 PUBLIC_REPO='quddnr0107-lgtm/korean-voice'
 PUBLIC_REF='refs/heads/integrated-lectures-premium-20261028'
 # Set only in a separately reviewed one-shot arming commit, before private receiver starts.
-EXPECTED_RECEIVER_WORKFLOW_SHA='d67f72bd41551fa5fbe84f20aada4d0d0096e36a'
-WINDOW_START=1793228220
-WINDOW_END=1793229120
+EXPECTED_RECEIVER_WORKFLOW_SHA='658c84b028132bba80b62612732a68b57f2714c6'
+WINDOW_START=1793231220
+WINDOW_END=1793232120
 
 def prepare_packet(env,now=None):
     now=int(time.time()) if now is None else now
