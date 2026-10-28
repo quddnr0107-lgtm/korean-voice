@@ -1,0 +1,75 @@
+name: One-shot MEDIA sealer for approved yebijun receiver
+on:
+  workflow_dispatch:
+    inputs:
+      reviewed_sealer_sha:
+        description: Exact reviewed sealer commit SHA
+        type: string
+        required: true
+      owner_verified_private_run:
+        description: Owner checked official private run, pinned workflow SHA, run ID, nonce, recipient public key and destination
+        type: boolean
+        default: false
+        required: true
+      public_receiver_header:
+        description: Public header copied only from the verified private receiver job
+        type: string
+        required: true
+      verified_receiver_run_id:
+        description: Run ID independently checked in the official private Actions UI
+        type: string
+        required: true
+      verified_header_sha256:
+        description: PUBLIC_RECEIVER_HEADER_SHA256 from the verified private run
+        type: string
+        required: true
+permissions:
+  contents: write
+concurrency:
+  group: one-shot-yebijun-media-sealer
+  cancel-in-progress: false
+jobs:
+  seal:
+    if: >-
+      inputs.owner_verified_private_run == true &&
+      github.actor == 'quddnr0107-lgtm' &&
+      github.triggering_actor == 'quddnr0107-lgtm' &&
+      github.run_attempt == 1 &&
+      github.repository == 'quddnr0107-lgtm/korean-voice' &&
+      github.ref == 'refs/heads/integrated-lectures-premium-20261028' &&
+      github.sha == inputs.reviewed_sealer_sha
+    environment: admin-law-premium-production
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --disable-pip-version-check --no-cache-dir cryptography==50.0.0 cffi==2.1.1 pycparser==3.12
+      - name: Seal only for owner-verified one-shot receiver
+        env:
+          ADMIN_LAW_PREMIUM_MEDIA_KEY_B64: ${{ secrets.ADMIN_LAW_PREMIUM_MEDIA_KEY_B64 }}
+          REVIEWED_SEALER_SHA: ${{ inputs.reviewed_sealer_sha }}
+          OWNER_VERIFIED_PRIVATE_RUN: ${{ inputs.owner_verified_private_run }}
+          PUBLIC_RECEIVER_HEADER: ${{ inputs.public_receiver_header }}
+          VERIFIED_RECEIVER_RUN_ID: ${{ inputs.verified_receiver_run_id }}
+          VERIFIED_HEADER_SHA256: ${{ inputs.verified_header_sha256 }}
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          set +x
+          ulimit -c 0
+          python -u .github/scripts/integrated-key-transfer/sealer.py
+      - name: Publish only sealed packet, never overwrite a packet
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag=yebijun-media-transfer-20261028
+          gh release view "$tag" >/dev/null 2>&1 || gh release create "$tag" --target "$GITHUB_SHA" --title 'One-shot encrypted yebijun key transport' --notes 'Encrypted recipient-bound packets only. No plaintext credentials. Expired receiver private keys are not retained.'
+          gh release upload "$tag" .sealed-transfer/receiver-*.json
+# No SOURCE secret, CF token, key artifact, cache, plaintext file, secret output or clobber.
+# The wrapper is disabled until a separately reviewed fixed <=15-minute window and
+# exact private receiver workflow SHA are set; close it again after this one attempt.
