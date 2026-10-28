@@ -32,7 +32,7 @@ jobs:
       - run: python -m unittest discover -s lecture-premium/code -p 'test_*.py'
       - name: Verify offline namespace support before queueing any secret-bearing job
         run: |
-          sudo unshare --net --setgid "$(id -g)" --setuid "$(id -u)" -- "$(which python)" -c 'import os,sys; assert os.getuid()==int(sys.argv[1]); assert len(open("/proc/net/route").read().splitlines())==1; print("offline_namespace_verified")' "$(id -u)"
+          sudo unshare --net --setgid "$(id -g)" --setuid "$(id -u)" -- "$(which python)" -c 'import os,sys,json,socket; routes=open("/proc/net/route").read().splitlines(); print(json.dumps({"uid":os.getuid(),"expected_uid":int(sys.argv[1]),"gid":os.getgid(),"interfaces":socket.if_nameindex(),"ipv4_route_lines":len(routes)}),flush=True); assert os.getuid()==int(sys.argv[1]), "namespace UID mismatch"; assert len(routes)==1, "namespace IPv4 routes present"; print("offline_namespace_verified")' "$(id -u)"
       - run: python lecture-premium/code/preflight.py
       - id: plan
         env:
