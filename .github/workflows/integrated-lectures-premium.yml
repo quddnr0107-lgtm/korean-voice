@@ -32,7 +32,7 @@ jobs:
       - run: python -m unittest discover -s lecture-premium/code -p 'test_*.py'
       - name: Verify offline namespace support before queueing any secret-bearing job
         run: |
-          sudo unshare --net --setgid "$(id -g)" --setuid "$(id -u)" -- "$(which python)" -c 'import os,sys,json,socket; routes=open("/proc/net/route").read().splitlines(); print(json.dumps({"uid":os.getuid(),"expected_uid":int(sys.argv[1]),"gid":os.getgid(),"interfaces":socket.if_nameindex(),"ipv4_route_lines":len(routes)}),flush=True); assert os.getuid()==int(sys.argv[1]), "namespace UID mismatch"; assert len(routes)==1, "namespace IPv4 routes present"; print("offline_namespace_verified")' "$(id -u)"
+          sudo unshare --net --setgid "$(id -g)" --setuid "$(id -u)" -- "$(which python)" lecture-premium/code/namespace_guard.py --uid "$(id -u)" --host-netns "$(readlink /proc/self/ns/net)"
       - run: python lecture-premium/code/preflight.py
       - id: plan
         env:
@@ -91,7 +91,7 @@ jobs:
         run: |
           umask 077
           sudo --preserve-env=ADMIN_LAW_PREMIUM_SOURCE_KEY_B64,ADMIN_LAW_PREMIUM_MEDIA_KEY_B64,LECTURE_JOB_STARTED_AT,LECTURE_MODEL_ROOT,LECTURE_RECEIVER_DIR,LECTURE_CHECKPOINT_DIR,LECTURE_OUTPUT,ORT_DISABLE_TELEMETRY,OMP_NUM_THREADS,OPENBLAS_NUM_THREADS,GITHUB_REPOSITORY,GITHUB_EVENT_NAME,GITHUB_REF,GITHUB_WORKFLOW_REF,GITHUB_RUN_ID,GITHUB_RUN_ATTEMPT,RUNNER_TEMP \
-            unshare --net --setgid "$(id -g)" --setuid "$(id -u)" -- "$(which python)" lecture-premium/code/render_sealed.py "$LESSON_ID"
+            unshare --net --setgid "$(id -g)" --setuid "$(id -u)" -- "$(which python)" lecture-premium/code/namespace_guard.py --uid "$(id -u)" --host-netns "$(readlink /proc/self/ns/net)" --render "$LESSON_ID"
       - name: Ciphertext-only immutable release delivery or failure checkpoint
         if: always() && steps.synth.outcome != 'skipped'
         env:
