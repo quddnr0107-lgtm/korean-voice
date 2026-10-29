@@ -106,7 +106,7 @@ def render_lesson(lesson):
   target=ROOT/'audio'/f'{lid}.part-{part_index:04d}.mp3';tmp=target.with_suffix('.tmp.mp3')
   subprocess.run(['ffmpeg','-v','error','-y','-i',str(temp),'-map_metadata','-1','-c:a','libmp3lame','-b:a','128k','-write_xing','1',str(tmp)],env=child_env(),stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,check=True);temp.unlink()
   decoded=np.frombuffer(subprocess.check_output(['ffmpeg','-v','error','-i',str(tmp),'-f','f32le','-ac','1','-ar',str(sr),'pipe:1'],env=child_env(),stderr=subprocess.DEVNULL),dtype='<f4');pm=metrics(decoded)
-  if not pm['finite'] or pm['clipped_samples'] or pm['max_silence_s']>=3 or abs(len(decoded)-(end-begin))>1:raise ValueError('independent part decode validation')
+  if not pm['finite'] or pm['clipped_samples'] or pm['max_silence_s']>=3 or abs(len(decoded)-(end-begin))>1:raise ValueError(f"part_decode_validation part={part_index} finite={int(pm['finite'])} clipped={pm['clipped_samples']} silence_ms={round(pm['max_silence_s']*1000)} sample_delta={len(decoded)-(end-begin)}")
   if not 0<tmp.stat().st_size<=2*1024*1024 or end-begin>60*sr:raise ValueError('part bounds')
   tmp.replace(target)
   parts.append({'index':part_index,'start_sample':begin,'end_sample':end,'start_s':begin/sr,'end_s':end/sr,'sample_rate':sr,'plain_bytes':target.stat().st_size,'audio_sha256':sha(target.read_bytes()),'file_name':target.name,'validation':pm})

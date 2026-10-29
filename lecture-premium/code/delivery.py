@@ -162,6 +162,7 @@ class Release:
             for a in page:
                 n=a['name']
                 if n in self.assets:raise ValueError('duplicate asset')
+                if a.get('state','uploaded')!='uploaded' or a['size']==0:raise ValueError('asset upload incomplete')
                 if type(a['size']) is not int or not 0<a['size']<=cap_for(n):raise ValueError('asset cap')
                 self.assets[n]=a
         validate_asset_capacity(self.assets)
@@ -368,6 +369,17 @@ def main():
         kind,files=output_gate(args.directory,args.id,run_id=os.environ.get('GITHUB_RUN_ID'),attempt=os.environ.get('GITHUB_RUN_ATTEMPT'));result={'kind':kind,'files':files}
     print(json.dumps(result,separators=(',',':')))
     return 1 if result.get('status')=='incomplete' else 0
+def safe_delivery_failure(exc):
+    # No stderr, command arguments, arbitrary exception messages or local values.
+    import traceback
+    kind=type(exc).__name__
+    if kind not in {'ValueError','OSError','TimeoutExpired','CalledProcessError','KeyError','TypeError'}:kind='OtherError'
+    result={'status':'failed','stage':'cipher-delivery','error_type':kind,'code_locations':[{'file':Path(f.filename).name,'line':f.lineno} for f in traceback.extract_tb(exc.__traceback__) if Path(f.filename).name in {'delivery.py','lecture_pack.py','lecture_crypto.py'}][-4:]}
+    reasons={'asset upload incomplete','duplicate asset','asset cap','asset integrity','missing assets','download allowlist','immutable asset','immutable object conflict','pre-commit object mismatch','immutable descriptor conflict','post-upload mismatch','lesson asset capacity; explicit cleanup authorization required','release asset capacity; explicit cleanup authorization required'}
+    if type(exc) is ValueError and str(exc) in reasons:result['reason']=str(exc)
+    if isinstance(exc,subprocess.CalledProcessError):result['exit_code']=int(exc.returncode)
+    return result
+
 if __name__=='__main__':
     try:raise SystemExit(main())
-    except Exception:print('{"status":"failed","stage":"cipher-delivery"}');raise SystemExit(1)
+    except Exception as exc:print(json.dumps(safe_delivery_failure(exc),separators=(',',':')));raise SystemExit(1)

@@ -13,3 +13,9 @@ class SafeFailure(unittest.TestCase):
   try:raise ValueError('private manuscript')
   except ValueError as exc:result=safe_failure(exc)
   self.assertEqual(result['code_locations'],[])
+ def test_part_numeric_diagnostics(self):
+  r=safe_failure(ValueError('part_decode_validation part=2 finite=1 clipped=3 silence_ms=120 sample_delta=-4'))
+  self.assertEqual(r['reason'],'independent_part_decode');self.assertEqual(r['clipped_samples'],3);self.assertEqual(r['sample_delta'],-4)
+ def test_part_message_injection_hidden(self):
+  r=safe_failure(ValueError('part_decode_validation part=2 finite=1 clipped=3 silence_ms=120 sample_delta=-4 SECRET'))
+  self.assertNotIn('reason',r);self.assertNotIn('SECRET',json.dumps(r))

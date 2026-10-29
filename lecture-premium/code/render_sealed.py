@@ -90,6 +90,9 @@ def safe_failure(exc):
  if m:
   result['reason']='chunk_audio_quality';result['chunk_index']=int(m[1])
   result['quality_flags']=[flag for flag in ('nonfinite_or_clipped','unusually_short','unusually_long','long_internal_silence','empty') if flag in m[2]]
+ m=re.fullmatch(r'part_decode_validation part=([0-9]+) finite=([01]) clipped=([0-9]+) silence_ms=([0-9]+) sample_delta=(-?[0-9]+)',str(exc))
+ if m:
+  result.update(reason='independent_part_decode',part_index=int(m[1]),finite=bool(int(m[2])),clipped_samples=int(m[3]),max_silence_ms=int(m[4]),sample_delta=int(m[5]))
  return result
 
 def main():
@@ -155,7 +158,7 @@ def main():
    mm,mc=seal(media_key,enc(meta),ident,'private-metadata',KEY_ID)
    (out/f"{ident}.audio.{am['object_id']}.bin").write_bytes(ac);(out/f"{ident}.content.{mm['object_id']}.bin").write_bytes(mc)
    (out/f'{ident}.descriptor.json').write_bytes(enc({'version':'integrated-lecture-output/v2','lesson_id':ident,'audio':am,'content':mm}))
-   print(json.dumps({'id':ident,'status':'completed','duration_s':meta['validation']['duration_s'],'chunks':len(meta['segments']),'parts':len(meta['audio_parts']),'clipped_samples':0,'wall_s':meta['wall_s']}))
+   print(json.dumps({'id':ident,'status':'completed','duration_s':meta['validation']['duration_s'],'chunks':len(meta['segments']),'parts':len(meta['audio_parts']),'clipped_samples':0,'cache_hits':meta.get('cache_hits',0),'cache_rejected_count':len(meta.get('cache_rejected_indices',[])),'wall_s':meta['wall_s']}))
   except BaseException as exc:
    for f in out.iterdir():f.unlink()
    cached=save_checkpoint(media_key,ident,work,out,payload_hash)
