@@ -1,7 +1,7 @@
 """Keyless ciphertext-only delivery. CLI calls are explicit; imports never do IO.
 Workflow serializes runs and same-ID publishers; distinct IDs may publish concurrently. Never clobber/delete.
 """
-import argparse, hashlib, io, json, os, re, shutil, subprocess, tempfile, zipfile
+import argparse, hashlib, io, json, os, re, shutil, subprocess, tempfile, zipfile, time
 from pathlib import Path
 import lecture_crypto as crypto
 import lecture_pack as pack
@@ -144,6 +144,34 @@ def gh(*args,json_output=False,bytes_output=False,timeout=180):
     r=subprocess.run(['gh',*args],env=env,check=True,stdout=subprocess.PIPE if json_output or bytes_output else subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=timeout)
     return loads(r.stdout) if json_output else (r.stdout if bytes_output else None)
 
+def inventory_from_pages(pages):
+    assets={}
+    for page in pages:
+        for a in page:
+            n=a['name']
+            if n in assets:raise ValueError('duplicate asset')
+            cap=cap_for(n)  # Unknown names remain a permanent failure, even while uploading.
+            size=a['size'];state=a.get('state','uploaded')
+            if type(size) is not int or size<0 or size>cap:raise ValueError('asset cap')
+            if state=='starter' or (state=='uploaded' and size==0):raise ValueError('asset upload incomplete')
+            if state!='uploaded':raise ValueError('asset state')
+            assets[n]=a
+    validate_asset_capacity(assets)
+    if 'index.json' in assets and not all(descriptor_name(i) in assets for i in IDS):raise ValueError('premature index')
+    return assets
+
+def stable_asset_inventory(release_id):
+    # GET-only bounded retry for explicitly observed concurrent inventory states.
+    # Never retry an upload, immutable conflict, HTTP error, digest mismatch or cap.
+    delays=(2,4,8,16,30)
+    for attempt in range(len(delays)+1):
+        pages=gh('api',f'repos/{REPO}/releases/{release_id}/assets?per_page=100','--paginate','--slurp',json_output=True,timeout=60)
+        try:return inventory_from_pages(pages)
+        except ValueError as exc:
+            if str(exc) not in {'duplicate asset','asset upload incomplete'} or attempt==len(delays):raise
+            print(json.dumps({'status':'inventory_retry','reason':str(exc),'attempt':attempt+1}),flush=True)
+            time.sleep(delays[attempt])
+
 class Release:
     def __init__(self,prepare=False):
         if prepare:
@@ -156,14 +184,7 @@ class Release:
                 gh('release','create',TAG,'--repo',REPO,'--title',TAG,'--notes','Encrypted AI-generated premium lecture audio (AI 합성 음성). No plaintext manuscripts or publicly playable MP3 files.','--target',target,'--latest=false')
         r=gh('api',f'repos/{REPO}/releases/tags/{TAG}',json_output=True)
         if r['tag_name']!=TAG or r['draft'] or type(r['id']) is not int:raise ValueError('release scope')
-        pages=gh('api',f'repos/{REPO}/releases/{r["id"]}/assets?per_page=100','--paginate','--slurp',json_output=True)
-        self.assets={}
-        for page in pages:
-            for a in page:
-                n=a['name']
-                if n in self.assets:raise ValueError('duplicate asset')
-                if type(a['size']) is not int or not 0<a['size']<=cap_for(n):raise ValueError('asset cap')
-                self.assets[n]=a
+        self.assets=stable_asset_inventory(r['id'])
         validate_asset_capacity(self.assets)
         if 'index.json' in self.assets and not all(descriptor_name(i) in self.assets for i in IDS):raise ValueError('premature index')
     def download(self,selected,out):
@@ -326,10 +347,23 @@ def finalize(remote,queue):
         if read(verify/'index.json',MAX_INDEX)!=raw:raise ValueError('index verification')
     return {'status':'published','complete':137}
 
+def selected_ids(queue, remote, only_id=''):
+    if not only_id:return [row['id'] for row in queue['lessons']]
+    if only_id not in IDS:raise ValueError('diagnostic lesson scope')
+    if descriptor_name(only_id) in remote.assets:raise ValueError('diagnostic refuses completed lesson')
+    candidates=[]
+    for name in remote.assets:
+        if name.startswith(only_id+'.checkpoint.') and name.endswith('.json'):
+            checkpoint_name(name)
+            if name[:-5]+'.bin' in remote.assets:candidates.append(name)
+    if not candidates:raise ValueError('diagnostic requires existing encrypted checkpoint')
+    return [only_id]
+
 def main():
     p=argparse.ArgumentParser();sub=p.add_subparsers(dest='mode',required=True)
     for mode in ['prepare','finalize']:
         a=sub.add_parser(mode);a.add_argument('--queue',required=True)
+        if mode=='prepare':a.add_argument('--only-id',default='')
     a=sub.add_parser('fetch');a.add_argument('--id',required=True);a.add_argument('--destination','--directory',dest='directory',required=True)
     for mode in ['publish','gate']:
         a=sub.add_parser(mode);a.add_argument('--id',required=True);a.add_argument('--directory',required=True)
@@ -337,12 +371,13 @@ def main():
     args=p.parse_args()
     if os.environ.get('GITHUB_REPOSITORY')!=REPO:raise ValueError('repository scope')
     if args.mode=='prepare':
-        queue=validate_queue(args.queue);Release(prepare=True)
-        matrix={'include':[{'id':row['id']} for row in queue['lessons']]}
+        queue=validate_queue(args.queue);remote=Release(prepare=True)
+        ids=selected_ids(queue,remote,args.only_id)
+        matrix={'include':[{'id':ident} for ident in ids]}
         output=os.environ.get('GITHUB_OUTPUT')
         if not output:raise ValueError('missing workflow output')
-        with open(output,'a',encoding='utf-8') as f:f.write('matrix='+json.dumps(matrix,separators=(',',':'))+'\ncount=137\nqueue_sha256='+sha(read(Path(args.queue),MAX_JSON))+'\n')
-        result={'status':'prepared','lessons':137}
+        with open(output,'a',encoding='utf-8') as f:f.write('matrix='+json.dumps(matrix,separators=(',',':'))+'\ncount='+str(len(ids))+'\nqueue_sha256='+sha(read(Path(args.queue),MAX_JSON))+'\n')
+        result={'status':'prepared','lessons':len(ids),'diagnostic':bool(args.only_id)}
     elif args.mode=='finalize':result=finalize(Release(),args.queue)
     elif args.mode in ('receiver','fetchreceiver'):result=fetch_receiver(args.directory)
     elif args.mode=='fetch':result=fetch(Release(),args.id,args.directory)
@@ -354,6 +389,17 @@ def main():
         kind,files=output_gate(args.directory,args.id,run_id=os.environ.get('GITHUB_RUN_ID'),attempt=os.environ.get('GITHUB_RUN_ATTEMPT'));result={'kind':kind,'files':files}
     print(json.dumps(result,separators=(',',':')))
     return 1 if result.get('status')=='incomplete' else 0
+def safe_delivery_failure(exc):
+    # No stderr, command arguments, arbitrary exception messages or local values.
+    import traceback
+    kind=type(exc).__name__
+    if kind not in {'ValueError','OSError','TimeoutExpired','CalledProcessError','KeyError','TypeError'}:kind='OtherError'
+    result={'status':'failed','stage':'cipher-delivery','error_type':kind,'code_locations':[{'file':Path(f.filename).name,'line':f.lineno} for f in traceback.extract_tb(exc.__traceback__) if Path(f.filename).name in {'delivery.py','lecture_pack.py','lecture_crypto.py'}][-4:]}
+    reasons={'asset upload incomplete','duplicate asset','asset cap','asset integrity','missing assets','download allowlist','immutable asset','immutable object conflict','pre-commit object mismatch','immutable descriptor conflict','post-upload mismatch','lesson asset capacity; explicit cleanup authorization required','release asset capacity; explicit cleanup authorization required'}
+    if type(exc) is ValueError and str(exc) in reasons:result['reason']=str(exc)
+    if isinstance(exc,subprocess.CalledProcessError):result['exit_code']=int(exc.returncode)
+    return result
+
 if __name__=='__main__':
     try:raise SystemExit(main())
-    except Exception:print('{"status":"failed","stage":"cipher-delivery"}');raise SystemExit(1)
+    except Exception as exc:print(json.dumps(safe_delivery_failure(exc),separators=(',',':')));raise SystemExit(1)
