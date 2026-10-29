@@ -326,10 +326,23 @@ def finalize(remote,queue):
         if read(verify/'index.json',MAX_INDEX)!=raw:raise ValueError('index verification')
     return {'status':'published','complete':137}
 
+def selected_ids(queue, remote, only_id=''):
+    if not only_id:return [row['id'] for row in queue['lessons']]
+    if only_id not in IDS:raise ValueError('diagnostic lesson scope')
+    if descriptor_name(only_id) in remote.assets:raise ValueError('diagnostic refuses completed lesson')
+    candidates=[]
+    for name in remote.assets:
+        if name.startswith(only_id+'.checkpoint.') and name.endswith('.json'):
+            checkpoint_name(name)
+            if name[:-5]+'.bin' in remote.assets:candidates.append(name)
+    if not candidates:raise ValueError('diagnostic requires existing encrypted checkpoint')
+    return [only_id]
+
 def main():
     p=argparse.ArgumentParser();sub=p.add_subparsers(dest='mode',required=True)
     for mode in ['prepare','finalize']:
         a=sub.add_parser(mode);a.add_argument('--queue',required=True)
+        if mode=='prepare':a.add_argument('--only-id',default='')
     a=sub.add_parser('fetch');a.add_argument('--id',required=True);a.add_argument('--destination','--directory',dest='directory',required=True)
     for mode in ['publish','gate']:
         a=sub.add_parser(mode);a.add_argument('--id',required=True);a.add_argument('--directory',required=True)
@@ -337,12 +350,13 @@ def main():
     args=p.parse_args()
     if os.environ.get('GITHUB_REPOSITORY')!=REPO:raise ValueError('repository scope')
     if args.mode=='prepare':
-        queue=validate_queue(args.queue);Release(prepare=True)
-        matrix={'include':[{'id':row['id']} for row in queue['lessons']]}
+        queue=validate_queue(args.queue);remote=Release(prepare=True)
+        ids=selected_ids(queue,remote,args.only_id)
+        matrix={'include':[{'id':ident} for ident in ids]}
         output=os.environ.get('GITHUB_OUTPUT')
         if not output:raise ValueError('missing workflow output')
-        with open(output,'a',encoding='utf-8') as f:f.write('matrix='+json.dumps(matrix,separators=(',',':'))+'\ncount=137\nqueue_sha256='+sha(read(Path(args.queue),MAX_JSON))+'\n')
-        result={'status':'prepared','lessons':137}
+        with open(output,'a',encoding='utf-8') as f:f.write('matrix='+json.dumps(matrix,separators=(',',':'))+'\ncount='+str(len(ids))+'\nqueue_sha256='+sha(read(Path(args.queue),MAX_JSON))+'\n')
+        result={'status':'prepared','lessons':len(ids),'diagnostic':bool(args.only_id)}
     elif args.mode=='finalize':result=finalize(Release(),args.queue)
     elif args.mode in ('receiver','fetchreceiver'):result=fetch_receiver(args.directory)
     elif args.mode=='fetch':result=fetch(Release(),args.id,args.directory)

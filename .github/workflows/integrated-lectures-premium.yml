@@ -6,6 +6,11 @@ on:
         description: 'Type BAKE-137-PREMIUM to run the approved sealed 137-lesson batch'
         required: true
         type: string
+      diagnostic_lesson:
+        description: 'Optional existing failed lesson ID for checkpoint-only diagnosis; blank runs all 137'
+        required: false
+        default: ''
+        type: string
 permissions:
   contents: read
 concurrency:
@@ -36,8 +41,9 @@ jobs:
       - run: python lecture-premium/code/preflight.py
       - id: plan
         env:
+          DIAGNOSTIC_LESSON: ${{ inputs.diagnostic_lesson }}
           GH_TOKEN: ${{ github.token }}
-        run: python lecture-premium/code/delivery.py prepare --queue lecture-premium/queue.json
+        run: python lecture-premium/code/delivery.py prepare --queue lecture-premium/queue.json --only-id "$DIAGNOSTIC_LESSON"
   render:
     needs: plan
     runs-on: ubuntu-latest
@@ -98,7 +104,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: python lecture-premium/code/delivery.py publish --id "$LESSON_ID" --directory "$LECTURE_OUTPUT"
   verify:
-    if: needs.plan.result == 'success' && needs.render.result == 'success'
+    if: needs.plan.result == 'success' && needs.render.result == 'success' && inputs.diagnostic_lesson == ''
     needs: [plan, render]
     runs-on: ubuntu-latest
     timeout-minutes: 60
