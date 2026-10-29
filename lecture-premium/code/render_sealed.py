@@ -75,6 +75,23 @@ def save_checkpoint(key,ident,work,out,input_hash):
  name=f"{ident}.checkpoint.{os.environ['GITHUB_RUN_ID']}.{os.environ['GITHUB_RUN_ATTEMPT']}"
  (out/(name+'.bin')).write_bytes(ct);(out/(name+'.json')).write_bytes(enc(m));return True
 
+def safe_failure(exc):
+ """Public code location only. Never log exception messages, source text or locals."""
+ import traceback
+ allowed={'render_sealed.py','audio_engine.py','lecture_pack.py','lecture_crypto.py','namespace_guard.py'}
+ frames=[{'file':Path(f.filename).name,'line':f.lineno} for f in traceback.extract_tb(exc.__traceback__) if Path(f.filename).name in allowed]
+ kind=type(exc).__name__
+ if kind not in {'ValueError','RuntimeError','AssertionError','OSError','FileNotFoundError','KeyError','TypeError','TimeoutError','CalledProcessError','MemoryError'}:kind='OtherError'
+ result={'error_type':kind,'code_locations':frames[-4:]}
+ # A specific renderer error contains only fixed flags and numeric chunk index.
+ # Do not include or interpolate arbitrary exception strings in any log.
+ import re
+ m=re.fullmatch(r'(?:TB|DR|RL)-[0-9]{3} chunk ([0-9]+) failed audio checks: (.*)',str(exc))
+ if m:
+  result['reason']='chunk_audio_quality';result['chunk_index']=int(m[1])
+  result['quality_flags']=[flag for flag in ('nonfinite_or_clipped','unusually_short','unusually_long','long_internal_silence','empty') if flag in m[2]]
+ return result
+
 def main():
  from preflight import require_approval
  require_approval()
@@ -139,10 +156,10 @@ def main():
    (out/f"{ident}.audio.{am['object_id']}.bin").write_bytes(ac);(out/f"{ident}.content.{mm['object_id']}.bin").write_bytes(mc)
    (out/f'{ident}.descriptor.json').write_bytes(enc({'version':'integrated-lecture-output/v2','lesson_id':ident,'audio':am,'content':mm}))
    print(json.dumps({'id':ident,'status':'completed','duration_s':meta['validation']['duration_s'],'chunks':len(meta['segments']),'parts':len(meta['audio_parts']),'clipped_samples':0,'wall_s':meta['wall_s']}))
-  except BaseException:
+  except BaseException as exc:
    for f in out.iterdir():f.unlink()
    cached=save_checkpoint(media_key,ident,work,out,payload_hash)
-   print(json.dumps({'id':ident,'status':'failed','encrypted_checkpoint_saved':cached}));raise
+   print(json.dumps({'id':ident,'status':'failed','encrypted_checkpoint_saved':cached,**safe_failure(exc)}),flush=True);raise
 if __name__=='__main__':
  try:main()
  except BaseException:
