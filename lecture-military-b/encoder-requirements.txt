@@ -1,0 +1,2 @@
+# Official PyPI Linux x86_64 wheel; no resolver-selected binary or source build.
+imageio-ffmpeg==0.6.0 --hash=sha256:c7e46fcec401dd990405049d2e2f475e2b397779df2519b544b8aab515195282

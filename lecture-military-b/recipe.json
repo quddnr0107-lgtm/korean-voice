@@ -1,0 +1,21 @@
+{
+  "id": "tongbang-rhythm-f2-v1",
+  "model_revision": "3cadd1ee6394adea1bd021217a0e650ede09a323",
+  "style": "F2",
+  "steps": 16,
+  "default_speed": 0.95,
+  "invitation_question_speed": 0.93,
+  "long_speed": 0.98,
+  "definition_speed": 0.92,
+  "silence_threshold_db": -48,
+  "head_keep_s": 0.08,
+  "tail_keep_s": 0.16,
+  "fade_s": 0.008,
+  "peak": 0.86,
+  "pitch_shift": false,
+  "output": "independent-mp3-pack-v2",
+  "max_part_seconds": 60,
+  "max_part_plain_bytes": 2097152,
+  "part_boundary": "next-chunk-start",
+  "normalization_ruleset": "lecture-tts-normalize/v1"
+}

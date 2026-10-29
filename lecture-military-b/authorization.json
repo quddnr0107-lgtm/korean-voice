@@ -1,0 +1,16 @@
+{
+  "approval_reference": "owner-approval-20261029T012349Z",
+  "approved": true,
+  "batch": "b",
+  "branch": "integrated-lectures-premium-20261028",
+  "courses": {
+    "MS": 166
+  },
+  "environment": "admin-law-premium-production",
+  "ids_end": 166,
+  "ids_start": 84,
+  "media_key_name": "ADMIN_LAW_PREMIUM_MEDIA_KEY_B64",
+  "repository": "quddnr0107-lgtm/korean-voice",
+  "source_key_name": "ADMIN_LAW_PREMIUM_SOURCE_KEY_B64",
+  "version": "military-service-authorization/v1"
+}
