@@ -34,6 +34,8 @@ jobs:
           python-version: '3.12'
       - run: python -m pip install --disable-pip-version-check cryptography==50.0.0 numpy==2.5.4
       - run: cd lecture-premium && sha256sum -c CODE_SHA256.txt
+      - name: Keyless encoder availability and exact sample contract
+        run: python lecture-premium/code/encoder_preflight.py
       - run: python -m unittest discover -s lecture-premium/code -p 'test_*.py'
       - name: Verify offline namespace support before queueing any secret-bearing job
         run: |
@@ -69,6 +71,8 @@ jobs:
         with:
           python-version: '3.12'
       - run: cd lecture-premium && sha256sum -c CODE_SHA256.txt
+      - name: Keyless encoder availability and exact sample contract
+        run: python lecture-premium/code/encoder_preflight.py
       - name: Private temporary paths, no secrets
         run: |
           umask 077
