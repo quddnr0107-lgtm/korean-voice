@@ -1,7 +1,7 @@
 """Keyless ciphertext-only delivery. CLI calls are explicit; imports never do IO.
 Workflow serializes runs and same-ID publishers; distinct IDs may publish concurrently. Never clobber/delete.
 """
-import argparse, hashlib, io, json, os, re, shutil, subprocess, tempfile, zipfile
+import argparse, hashlib, io, json, os, re, shutil, subprocess, tempfile, zipfile, time
 from pathlib import Path
 import lecture_crypto as crypto
 import lecture_pack as pack
@@ -144,6 +144,34 @@ def gh(*args,json_output=False,bytes_output=False,timeout=180):
     r=subprocess.run(['gh',*args],env=env,check=True,stdout=subprocess.PIPE if json_output or bytes_output else subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=timeout)
     return loads(r.stdout) if json_output else (r.stdout if bytes_output else None)
 
+def inventory_from_pages(pages):
+    assets={}
+    for page in pages:
+        for a in page:
+            n=a['name']
+            if n in assets:raise ValueError('duplicate asset')
+            cap=cap_for(n)  # Unknown names remain a permanent failure, even while uploading.
+            size=a['size'];state=a.get('state','uploaded')
+            if type(size) is not int or size<0 or size>cap:raise ValueError('asset cap')
+            if state=='starter' or (state=='uploaded' and size==0):raise ValueError('asset upload incomplete')
+            if state!='uploaded':raise ValueError('asset state')
+            assets[n]=a
+    validate_asset_capacity(assets)
+    if 'index.json' in assets and not all(descriptor_name(i) in assets for i in IDS):raise ValueError('premature index')
+    return assets
+
+def stable_asset_inventory(release_id):
+    # GET-only bounded retry for explicitly observed concurrent inventory states.
+    # Never retry an upload, immutable conflict, HTTP error, digest mismatch or cap.
+    delays=(2,4,8,16,30)
+    for attempt in range(len(delays)+1):
+        pages=gh('api',f'repos/{REPO}/releases/{release_id}/assets?per_page=100','--paginate','--slurp',json_output=True,timeout=60)
+        try:return inventory_from_pages(pages)
+        except ValueError as exc:
+            if str(exc) not in {'duplicate asset','asset upload incomplete'} or attempt==len(delays):raise
+            print(json.dumps({'status':'inventory_retry','reason':str(exc),'attempt':attempt+1}),flush=True)
+            time.sleep(delays[attempt])
+
 class Release:
     def __init__(self,prepare=False):
         if prepare:
@@ -156,15 +184,7 @@ class Release:
                 gh('release','create',TAG,'--repo',REPO,'--title',TAG,'--notes','Encrypted AI-generated premium lecture audio (AI 합성 음성). No plaintext manuscripts or publicly playable MP3 files.','--target',target,'--latest=false')
         r=gh('api',f'repos/{REPO}/releases/tags/{TAG}',json_output=True)
         if r['tag_name']!=TAG or r['draft'] or type(r['id']) is not int:raise ValueError('release scope')
-        pages=gh('api',f'repos/{REPO}/releases/{r["id"]}/assets?per_page=100','--paginate','--slurp',json_output=True)
-        self.assets={}
-        for page in pages:
-            for a in page:
-                n=a['name']
-                if n in self.assets:raise ValueError('duplicate asset')
-                if a.get('state','uploaded')!='uploaded' or a['size']==0:raise ValueError('asset upload incomplete')
-                if type(a['size']) is not int or not 0<a['size']<=cap_for(n):raise ValueError('asset cap')
-                self.assets[n]=a
+        self.assets=stable_asset_inventory(r['id'])
         validate_asset_capacity(self.assets)
         if 'index.json' in self.assets and not all(descriptor_name(i) in self.assets for i in IDS):raise ValueError('premature index')
     def download(self,selected,out):
