@@ -1,0 +1,49 @@
+{
+  "schema": "reader-assistance-recovered-figures.v1",
+  "sourceDataSha256": "d5fdeb3cb755635318685b50332012c51cbb3e0ca54ca188ff994b7d7debdd00",
+  "figures": [
+    {
+      "name": "49_p129.png",
+      "url": "https://github.com/quddnr0107-lgtm/yebijun-muhanhoidok234/blob/00c8fcf6474a193b132a9a4a2cfc04a6accf63bd/_deploy/assets/appendix/study-hullyeong-bw/49_p129.png",
+      "sha256": "d76b187fd97bf7dbe48aacc0f5e7081847fb7ca02d19d47a11af0a8161c49d82",
+      "gitBlobSha": "0a7836e48877138ee553f57c5c1d0b545d656a8c"
+    },
+    {
+      "name": "50_p131.png",
+      "url": "https://github.com/quddnr0107-lgtm/yebijun-muhanhoidok234/blob/00c8fcf6474a193b132a9a4a2cfc04a6accf63bd/_deploy/assets/appendix/study-hullyeong-bw/50_p131.png",
+      "sha256": "bb1e18b32262a9db3e0ad09e2f96bf55b8222d6b403fe4b2ce26e480c83f96dd",
+      "gitBlobSha": "7af16a5ab251be1f9340136f20343e81f946c64b"
+    },
+    {
+      "name": "50_p132.png",
+      "url": "https://github.com/quddnr0107-lgtm/yebijun-muhanhoidok234/blob/00c8fcf6474a193b132a9a4a2cfc04a6accf63bd/_deploy/assets/appendix/study-hullyeong-bw/50_p132.png",
+      "sha256": "515d7696cbc34296dfbc2dcc8dfb0c061189314cd47d04806d0daa60949fad4b",
+      "gitBlobSha": "c288be91fedd56a201445e992dfa12305c736a4a"
+    },
+    {
+      "name": "50_p133.png",
+      "url": "https://github.com/quddnr0107-lgtm/yebijun-muhanhoidok234/blob/00c8fcf6474a193b132a9a4a2cfc04a6accf63bd/_deploy/assets/appendix/study-hullyeong-bw/50_p133.png",
+      "sha256": "c4f09166df34d8d29b48791a20cf95bd50e049c914ed518f9ac44950bca09e6e",
+      "gitBlobSha": "8d0c8276e8183f478e5d883fe1db177abb3217c6"
+    },
+    {
+      "name": "51_p134.png",
+      "url": "https://github.com/quddnr0107-lgtm/yebijun-muhanhoidok234/blob/00c8fcf6474a193b132a9a4a2cfc04a6accf63bd/_deploy/assets/appendix/study-hullyeong-bw/51_p134.png",
+      "sha256": "c21f77acfea1317d71db0121e747ac14dcfbf6f3a1c6a0995261ce6ec2cd0a01",
+      "gitBlobSha": "dae1b10226f017175803e395e15010aeabd654ac"
+    },
+    {
+      "name": "52_p145.png",
+      "url": "https://github.com/quddnr0107-lgtm/yebijun-muhanhoidok234/blob/00c8fcf6474a193b132a9a4a2cfc04a6accf63bd/_deploy/assets/appendix/study-hullyeong-bw/52_p145.png",
+      "sha256": "c51270b0a8d3939ca232a288664178c46a7baceee2871336943f9ef918ad47ae",
+      "gitBlobSha": "984052119d261d169cac0f77e286dc604246cb6f"
+    },
+    {
+      "name": "53_p146.png",
+      "url": "https://github.com/quddnr0107-lgtm/yebijun-muhanhoidok234/blob/00c8fcf6474a193b132a9a4a2cfc04a6accf63bd/_deploy/assets/appendix/study-hullyeong-bw/53_p146.png",
+      "sha256": "8d6d4b7eae16a65eeb7e0228bdc3af9949377e994068b5bf2e05d953451b2250",
+      "gitBlobSha": "8feea0f8bcf9ebbee8652b922f8a12312d6c3eb1"
+    }
+  ],
+  "limitation": "These images were recovered from the pinned study repository, not newly retrieved from the official law server. Direct figure inspection is recorded separately in the relevant review."
+}
