@@ -1,0 +1,21 @@
+{
+  "version": "25326e55be85",
+  "units": 61550,
+  "characters": 3574021,
+  "bundles": 1189,
+  "jobs": 95,
+  "recipe": {
+    "id": "sulsul-female-b-v1",
+    "style": "F4:0.6,F2:0.4",
+    "emotion": "calm",
+    "baseSpeed": 1.06,
+    "rate": 1,
+    "steps": 16,
+    "gainDb": -2,
+    "groupChars": 0,
+    "profile": null,
+    "model": "3cadd1ee6394adea1bd021217a0e650ede09a323",
+    "engine": "f4dc475987907d3c9b20970041a5bf3ee9813adb",
+    "approvedSample": "faaef1bd9b77f0be2b65377a218a329f73fbb6c9ceebfe50233ed150115555e2"
+  }
+}

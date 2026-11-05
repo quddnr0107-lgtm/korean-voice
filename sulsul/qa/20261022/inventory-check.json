@@ -1,0 +1,11 @@
+{
+  "version": "25326e55be85",
+  "complete": 1189,
+  "missing": [],
+  "archiveBytes": 6162955606,
+  "observedAt": "2026-10-22T00:02:00.146Z",
+  "source": "GitHub API snapshot release-snapshot.json; inventory logic evaluated against captured complete responses",
+  "matrix": {
+    "job": []
+  }
+}
