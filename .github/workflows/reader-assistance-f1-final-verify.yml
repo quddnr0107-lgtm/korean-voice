@@ -1,0 +1,69 @@
+name: Final reviewed-scope F1 independent CPU ASR
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - codex/reader-assistance-f1-asr-medium-20261105
+    paths:
+      - tools/reader_assistance_final_verify.py
+      - test/reader_assistance_final_verify_test.py
+      - reader-assistance/final-verification-sample.json
+      - .github/workflows/reader-assistance-f1-final-verify.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: reader-assistance-f1-fixed-sample-asr
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    if: github.repository == 'quddnr0107-lgtm/korean-voice'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      HF_HUB_DISABLE_TELEMETRY: '1'
+      DO_NOT_TRACK: '1'
+      OMP_NUM_THREADS: '4'
+      OPENBLAS_NUM_THREADS: '4'
+      PYTHONUNBUFFERED: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Enforce fixed selection and exact cached audio evidence
+        run: |
+          python3 -m unittest discover -s test -p reader_assistance_subset_test.py -v
+          python3 -m unittest discover -s test -p reader_assistance_verify_test.py -v
+          python3 -m unittest discover -s test -p reader_assistance_final_verify_test.py -v
+      - name: Install the previously measured CPU ASR versions
+        run: python3 -m pip install --quiet faster-whisper==1.2.1 ctranslate2==4.8.5
+      - name: Reuse the pilot medium model cache on this same branch
+        id: asr-model
+        uses: actions/cache/restore@v4
+        with:
+          path: reader-assistance-asr-model
+          key: reader-assistance-faster-whisper-medium-v2
+      - name: Transcribe exact selected clips with no target-text prompt
+        id: audit
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tools/reader_assistance_final_verify.py audit --resume --publish
+      - name: Retain the pinned model if the reused cache was missing
+        if: always() && steps.asr-model.outputs.cache-hit != 'true' && hashFiles('reader-assistance-asr-model/medium.ready') != ''
+        uses: actions/cache/save@v4
+        with:
+          path: reader-assistance-asr-model
+          key: reader-assistance-faster-whisper-medium-v2
+      - name: Preserve incomplete or review-required evidence status
+        if: always() && steps.audit.outcome != 'success'
+        run: exit 1

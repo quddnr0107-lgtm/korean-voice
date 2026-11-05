@@ -1,0 +1,3360 @@
+{
+  "approvalGranted": false,
+  "asrProfile": {
+    "assessmentGitBlob": "c4263e5f7d9f66c7782c735370a5f049224cad92",
+    "beamSize": 5,
+    "computeType": "int8",
+    "conditionOnPreviousText": false,
+    "cpuThreads": 4,
+    "ctranslate2Version": "4.8.5",
+    "device": "cpu",
+    "fasterWhisperVersion": "1.2.1",
+    "judgeGitBlob": "13fbe3a17a3eb73907b5454714ec1862aa4741f7",
+    "koVoiceGitBlob": "97aa17cc68369509d69b6517d8b486752ac7aef1",
+    "language": "ko",
+    "modelRepository": "Systran/faster-whisper-medium",
+    "modelRevision": "08e178d48790749d25932bbc082711ddcfdfbc4f",
+    "targetPromptUsed": false,
+    "temperature": 0,
+    "vadFilter": false,
+    "verificationGitBlob": "8843027a72c4f66a945a2b8b68749afc3be84eb0"
+  },
+  "counts": {
+    "normalized_match": 29,
+    "review_required": 29
+  },
+  "coverage": {
+    "allCorpusAssessed": false,
+    "allSelectedClipsAssessed": false,
+    "assessedUniqueClips": 58,
+    "missingAudioKeys": [
+      "16cb20b13b6709db2b96a5e13c964d64a9e8a26e48f062412f0e7ea18afa73fa",
+      "1ac65cb377dd56d207066eecd862d46602cf72da4ec21bafbfc89f2c8f5f72d2",
+      "1c41e47b353b9819c4cd2a9553aa01bfe420514868fab00739e725c481058661",
+      "29408e9cc42c9c6c04ae304612b36a3ef62fbaf9ae6692e32df1f9b296a5c6de",
+      "b9b451b8202bea830bca8b03f98742f277d2d48d40eea3a7d345a1a2d9bb2e0a",
+      "bd401ca1532443d4694833ae6b3ac6774cf612e14081c1858b5820ea4425c60b",
+      "e70afc811756946cb08ed23fa51e91fd4bdda3d91274c96139306c3303b84a15"
+    ],
+    "selectedUniqueClips": 65,
+    "unassessedAudioKeys": [
+      "16cb20b13b6709db2b96a5e13c964d64a9e8a26e48f062412f0e7ea18afa73fa",
+      "1ac65cb377dd56d207066eecd862d46602cf72da4ec21bafbfc89f2c8f5f72d2",
+      "1c41e47b353b9819c4cd2a9553aa01bfe420514868fab00739e725c481058661",
+      "29408e9cc42c9c6c04ae304612b36a3ef62fbaf9ae6692e32df1f9b296a5c6de",
+      "b9b451b8202bea830bca8b03f98742f277d2d48d40eea3a7d345a1a2d9bb2e0a",
+      "bd401ca1532443d4694833ae6b3ac6774cf612e14081c1858b5820ea4425c60b",
+      "e70afc811756946cb08ed23fa51e91fd4bdda3d91274c96139306c3303b84a15"
+    ]
+  },
+  "directListeningCompleted": false,
+  "limitation": "Independent automated transcription of a predeclared sample is evidence, not direct listening, legal review, or permission to activate. All disagreements remain review_required.",
+  "recipeSha256": "325696fa16298826933979aa72f34cebf1aca3c1e473bb5035cd10265097f0b8",
+  "results": {
+    "000092d7a1098d3c02bb209a74a2ade37c8a720177f5a72f96fb16c1d128931a": {
+      "asrSeconds": 10.409,
+      "audioKey": "000092d7a1098d3c02bb209a74a2ade37c8a720177f5a72f96fb16c1d128931a",
+      "canonicalCER": 0.0,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "quantity:20일"
+      ],
+      "criticalTranscript": [
+        "quantity:20일"
+      ],
+      "durationMs": 9340,
+      "literalCER": 0.0,
+      "mp3Sha256": "33cdc885a248e0c71ab999338ad1cce2707cf0ec51d72e8b55729968903b0beb",
+      "normalizedTarget": "상근예비역이근무하는부대기관장은월말기준운영현황서를작성해다음달20일까지소집부대장에게보내야한다",
+      "normalizedTranscript": "상근예비역이근무하는부대기관장은월말기준운영현황서를작성해다음달20일까지소집부대장에게보내야한다",
+      "segments": [
+        {
+          "avgLogProbability": -0.176047,
+          "end": 9.28,
+          "start": 0.0,
+          "text": " 상근예비역이 근무하는 부대, 기관장은 월말 기준 운영 현황서를 작성해 다음달 20일까지 소집 부대장에게 보내야 한다."
+        }
+      ],
+      "status": "normalized_match",
+      "target": "상근예비역이 근무하는 부대·기관장은 월말 기준 운영 현황서를 작성해 다음 달 20일까지 소집부대장에게 보내야 한다.",
+      "textSha256": "4249fe3c448ab59fa8ed070b3a2ecdc3bb889657dd399f2a70e84b1dfa325300",
+      "transcript": "상근예비역이 근무하는 부대, 기관장은 월말 기준 운영 현황서를 작성해 다음달 20일까지 소집 부대장에게 보내야 한다."
+    },
+    "0001a3e06eb7d9a7d1a16ac2c0f34a183e06fea1c99b5cb29d7246161cb66d59": {
+      "asrSeconds": 10.375,
+      "audioKey": "0001a3e06eb7d9a7d1a16ac2c0f34a183e06fea1c99b5cb29d7246161cb66d59",
+      "canonicalCER": 0.0,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "quantity:132호",
+        "quantity:132호"
+      ],
+      "criticalTranscript": [
+        "quantity:132호",
+        "quantity:132호"
+      ],
+      "durationMs": 11140,
+      "literalCER": 0.017857,
+      "mp3Sha256": "ad22d46f8aa00f9030e125e2cdcf926cf6657007e5b0f18c319219050219b6a2",
+      "normalizedTarget": "본인이국외여행허가나기간연장허가를취소하고싶으면별지제132호또는제132호의이신청서를지방병무청장에게내야한다",
+      "normalizedTranscript": "본인이국외여행허가나기간연장허가를취소하고싶으면별지제132호또는제132호의이신청서를지방병무청장에게내야한다",
+      "segments": [
+        {
+          "avgLogProbability": -0.168724,
+          "end": 3.92,
+          "start": 0.0,
+          "text": " 본인이 국외여행 허가나 기간 연장 허가를 취소하고 싶으면"
+        },
+        {
+          "avgLogProbability": -0.168724,
+          "end": 11.120000000000001,
+          "start": 3.92,
+          "text": " 별지 제132호 또는 제132호의 이 신청서를 지방병무청장에게 내야 한다."
+        }
+      ],
+      "status": "normalized_match",
+      "target": "본인이 국외여행 허가나 기간연장 허가를 취소하고 싶으면 별지 제132호 또는 제132호의2 신청서를 지방병무청장에게 내야 한다.",
+      "textSha256": "2d5a97bc2e15a695edbec20f192ec915b541f991b51ee1912233814107a62cf8",
+      "transcript": "본인이 국외여행 허가나 기간 연장 허가를 취소하고 싶으면 별지 제132호 또는 제132호의 이 신청서를 지방병무청장에게 내야 한다."
+    },
+    "07f9b6ca8f8f095bad2bf91bdca686fc1b17e9f500adc0e54d7f5aab04f25479": {
+      "asrSeconds": 10.417,
+      "audioKey": "07f9b6ca8f8f095bad2bf91bdca686fc1b17e9f500adc0e54d7f5aab04f25479",
+      "canonicalCER": 0.017544,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "quantity:10000조"
+      ],
+      "criticalTranscript": [
+        "quantity:10000조"
+      ],
+      "durationMs": 11340,
+      "literalCER": 0.018868,
+      "mp3Sha256": "c3e6defe17002c3fa35ed98d68f84ddd2a90dda39e65e1b9db75e60385af288c",
+      "normalizedTarget": "다10000조사내용을기관장등에게보고하거나관계기관의요청에따라필요한정보를주는경우에는비밀누설금지의예외가됩니다",
+      "normalizedTranscript": "다10000조사내용을기관장등에게보고하거나관계기관의요청에따라필요한정보를주는경우에는비밀누설금지에예외가됩니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.178749,
+          "end": 8.0,
+          "start": 0.0,
+          "text": " 다만 조사 내용을 기관장 등에게 보고하거나 관계기관의 요청에 따라 필요한 정보를 주는 경우에는"
+        },
+        {
+          "avgLogProbability": -0.178749,
+          "end": 12.200000000000001,
+          "start": 8.0,
+          "text": " 비밀 누설 금지에 예외가 됩니다"
+        }
+      ],
+      "status": "review_required",
+      "target": "다만, 조사 내용을 기관장 등에게 보고하거나 관계 기관의 요청에 따라 필요한 정보를 주는 경우에는 비밀 누설 금지의 예외가 됩니다.",
+      "textSha256": "14926336e56e501d4d64d3c5339be6cf21d999897601e9f90fd313cb126f1292",
+      "transcript": "다만 조사 내용을 기관장 등에게 보고하거나 관계기관의 요청에 따라 필요한 정보를 주는 경우에는 비밀 누설 금지에 예외가 됩니다"
+    },
+    "080d0cbb6f2db164a529f364e10812116caa2b912fde43a98ec2088864b84c9d": {
+      "asrSeconds": 14.336,
+      "audioKey": "080d0cbb6f2db164a529f364e10812116caa2b912fde43a98ec2088864b84c9d",
+      "canonicalCER": 0.138614,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "negative",
+        "obligation",
+        "quantity:4명",
+        "permission"
+      ],
+      "criticalTranscript": [
+        "negative",
+        "obligation",
+        "quantity:4명",
+        "permission"
+      ],
+      "durationMs": 19090,
+      "literalCER": 0.138614,
+      "mp3Sha256": "72053402935c7f3a94e9e6e00259f00e35361f8b99cfb0c2111d3d68c018a8e9",
+      "normalizedTarget": "입영부대장은추천자가입영하면입영판정검사를받지않은사람에게입영신체검사를해야합니다그뒤입영자명부와귀가자를포함한미입영자명부병적기록표를지방병무청장에게보내야하며입영자명부는인4명령서로대신할수있습니다",
+      "normalizedTranscript": "이병부대장은추천자가이병하면이병판정검사를받지않은사람에게이병신체검사를해야합니다그뒤이병자명부와귀가자를포함한미이병자명부병적기록표를지방병무청장에게보내야하며이병자명부는인4명령서로대신할수있습니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.155551,
+          "end": 5.16,
+          "start": 0.0,
+          "text": " 이병부대장은 추천자가 이병하면 이병판정검사를 받지 않은 사람에게"
+        },
+        {
+          "avgLogProbability": -0.155551,
+          "end": 7.48,
+          "start": 5.16,
+          "text": " 이병신체검사를 해야 합니다."
+        },
+        {
+          "avgLogProbability": -0.155551,
+          "end": 12.88,
+          "start": 7.48,
+          "text": " 그 뒤 이병자 명부와 귀가자를 포함한 미이병자 명부, 병적기록표를"
+        },
+        {
+          "avgLogProbability": -0.155551,
+          "end": 17.240000000000002,
+          "start": 12.88,
+          "text": " 지방병무청장에게 보내야 하며 이병자 명부는 인사 명령서로"
+        },
+        {
+          "avgLogProbability": -0.155551,
+          "end": 18.44,
+          "start": 17.240000000000002,
+          "text": " 대신할 수 있습니다."
+        }
+      ],
+      "status": "review_required",
+      "target": "입영부대장은 추천자가 입영하면 입영판정검사를 받지 않은 사람에게 입영신체검사를 해야 합니다. 그 뒤 입영자 명부와 귀가자를 포함한 미입영자 명부·병적기록표를 지방병무청장에게 보내야 하며, 입영자 명부는 인사명령서로 대신할 수 있습니다.",
+      "textSha256": "e2c24009d3e7dc9a3075f36f204a38aa82a3daa57c2cc9785e7aeaf8499e8c44",
+      "transcript": "이병부대장은 추천자가 이병하면 이병판정검사를 받지 않은 사람에게 이병신체검사를 해야 합니다. 그 뒤 이병자 명부와 귀가자를 포함한 미이병자 명부, 병적기록표를 지방병무청장에게 보내야 하며 이병자 명부는 인사 명령서로 대신할 수 있습니다."
+    },
+    "0e872c3b33260a0aff15822f8469bdfc4276cc34189284cf55a37773e72a793f": {
+      "asrSeconds": 10.054,
+      "audioKey": "0e872c3b33260a0aff15822f8469bdfc4276cc34189284cf55a37773e72a793f",
+      "canonicalCER": 0.0,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "obligation"
+      ],
+      "criticalTranscript": [
+        "obligation"
+      ],
+      "durationMs": 11340,
+      "literalCER": 0.0,
+      "mp3Sha256": "8e9c3bbbdf26a581a682d4423bc058df2382b5a556d6898475a13eee0a0a2d2f",
+      "normalizedTarget": "발령권자는바로위지휘관에게보고한뒤경계태세를발령해제해야합니다다만통신두절등불가피한사유가있으면예외입니다",
+      "normalizedTranscript": "발령권자는바로위지휘관에게보고한뒤경계태세를발령해제해야합니다다만통신두절등불가피한사유가있으면예외입니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.171586,
+          "end": 6.48,
+          "start": 0.0,
+          "text": " 발령권자는 바로 위 지휘관에게 보고한 뒤 경계태세를 발령 해제해야 합니다."
+        },
+        {
+          "avgLogProbability": -0.171586,
+          "end": 12.48,
+          "start": 6.48,
+          "text": " 다만 통신 두절 등 불가피한 사유가 있으면 예외입니다."
+        }
+      ],
+      "status": "normalized_match",
+      "target": "발령권자는 바로 위 지휘관에게 보고한 뒤 경계태세를 발령·해제해야 합니다. 다만 통신 두절 등 불가피한 사유가 있으면 예외입니다.",
+      "textSha256": "578de3441151b2159b0826b3d23664777daf0f1ac306c23eb2694dfe52fd9771",
+      "transcript": "발령권자는 바로 위 지휘관에게 보고한 뒤 경계태세를 발령 해제해야 합니다. 다만 통신 두절 등 불가피한 사유가 있으면 예외입니다."
+    },
+    "0ee0fd5e0cd240fdcd884f6c20973390c9f9112901a3ad269f7ef8fa6d2fe9cf": {
+      "asrSeconds": 12.548,
+      "audioKey": "0ee0fd5e0cd240fdcd884f6c20973390c9f9112901a3ad269f7ef8fa6d2fe9cf",
+      "canonicalCER": 0.0,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "quantity:4회",
+        "negative",
+        "제외"
+      ],
+      "criticalTranscript": [
+        "quantity:4회",
+        "negative",
+        "제외"
+      ],
+      "durationMs": 15720,
+      "literalCER": 0.0,
+      "mp3Sha256": "fdccc5aa2c9c337e3dbc53df0b2814f0845954fe2be47561abae4c8311447c7f",
+      "normalizedTarget": "4회복무요원과그소집대상보충역은복무희망에따른처분변경대상입니다다만수형으로보충역이된사람과검사없이특정질병장애사유로처분이변경된사람은제외됩니다",
+      "normalizedTranscript": "4회복무요원과그소집대상보충역은복무희망에따른처분변경대상입니다다만수형으로보충역이된사람과검사없이특정질병장애사유로처분이변경된사람은제외됩니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.163696,
+          "end": 6.32,
+          "start": 0.0,
+          "text": " 사회복무요원과 그 소집 대상 보충 역은 복무 희망에 따른 처분 변경 대상입니다."
+        },
+        {
+          "avgLogProbability": -0.163696,
+          "end": 16.68,
+          "start": 6.32,
+          "text": " 다만 수형으로 보충 역이 된 사람과 검사 없이 특정 질병, 장애 사유로 처분이 변경된 사람은 제외됩니다."
+        }
+      ],
+      "status": "normalized_match",
+      "target": "사회복무요원과 그 소집 대상 보충역은 복무 희망에 따른 처분 변경 대상입니다. 다만, 수형으로 보충역이 된 사람과 검사 없이 특정 질병·장애 사유로 처분이 변경된 사람은 제외됩니다.",
+      "textSha256": "43c51d1cc3f14ad90288ddf25cdd50d153109022993e3564c2e1da203f47069a",
+      "transcript": "사회복무요원과 그 소집 대상 보충 역은 복무 희망에 따른 처분 변경 대상입니다. 다만 수형으로 보충 역이 된 사람과 검사 없이 특정 질병, 장애 사유로 처분이 변경된 사람은 제외됩니다."
+    },
+    "1026bc8ae63d955185db9cbe110a833d941611486110a0f4e8b7a0f00809ae08": {
+      "asrSeconds": 10.063,
+      "audioKey": "1026bc8ae63d955185db9cbe110a833d941611486110a0f4e8b7a0f00809ae08",
+      "canonicalCER": 0.058824,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "negative"
+      ],
+      "criticalTranscript": [
+        "negative"
+      ],
+      "durationMs": 9760,
+      "literalCER": 0.058824,
+      "mp3Sha256": "afdee8f3eae7001419b9bc7e4b1970a471be86738ab6c800617fe71bcb4b2a3d",
+      "normalizedTarget": "검사상현역복무가가능하더라도필요한병력규모때문에현역병입영대상으로결정되지않은사람은보충역에해당합니다",
+      "normalizedTranscript": "검사상현역복무가가능하더라도필요한병력규모때문에현역병이병대상으로결정되지않은사람은보충력에해당합니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.165031,
+          "end": 7.640000000000001,
+          "start": 0.0,
+          "text": " 검사상 현역 복무가 가능하더라도 필요한 병력 규모 때문에 현역병 이병 대상으로 결정되지 않은 사람은"
+        },
+        {
+          "avgLogProbability": -0.165031,
+          "end": 10.92,
+          "start": 7.640000000000001,
+          "text": " 보충력에 해당합니다"
+        }
+      ],
+      "status": "review_required",
+      "target": "검사상 현역 복무가 가능하더라도 필요한 병력 규모 때문에 현역병 입영 대상으로 결정되지 않은 사람은 보충역에 해당합니다.",
+      "textSha256": "e322c9a9b357f4887d3f10fb163448c10af1f261b177761e18fceb987b2f2ec2",
+      "transcript": "검사상 현역 복무가 가능하더라도 필요한 병력 규모 때문에 현역병 이병 대상으로 결정되지 않은 사람은 보충력에 해당합니다"
+    },
+    "1027c541d63551e07eb2b306ee9628f002f445b3ebca61334fc9e3c6bc75b2f0": {
+      "asrSeconds": 10.18,
+      "audioKey": "1027c541d63551e07eb2b306ee9628f002f445b3ebca61334fc9e3c6bc75b2f0",
+      "canonicalCER": 0.04878,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "제외"
+      ],
+      "criticalTranscript": [
+        "제외"
+      ],
+      "durationMs": 8700,
+      "literalCER": 0.04878,
+      "mp3Sha256": "43bbf69d9eff1d635c313954fe4531f7bedc67a4bc497ab887461afab56ec530",
+      "normalizedTarget": "장교부사관과공군병의이입영훈련은일정자율선택전국단위훈련휴일훈련대상에서제외됩니다",
+      "normalizedTranscript": "장교부사관과공군병의이이병훈련은일정자율선택전국단위훈련휴일훈련대상에서제외됩니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.19774,
+          "end": 8.08,
+          "start": 0.0,
+          "text": " 장교부사관과 공군병의 이 이병훈련은 일정 자율선택, 전국단위훈련, 휴일훈련 대상에서 제외됩니다."
+        }
+      ],
+      "status": "review_required",
+      "target": "장교·부사관과 공군 병의 이 입영훈련은 일정 자율선택, 전국단위훈련, 휴일훈련 대상에서 제외됩니다.",
+      "textSha256": "ac65a4d8950a5af072635f3f22e6f1d89a32ff22c6081ce2a83a97b7d947bde2",
+      "transcript": "장교부사관과 공군병의 이 이병훈련은 일정 자율선택, 전국단위훈련, 휴일훈련 대상에서 제외됩니다."
+    },
+    "120963d0fcd70dbbb9b624a229791e7ba481c7628fa7a4b2407a4fb681243518": {
+      "asrSeconds": 10.669,
+      "audioKey": "120963d0fcd70dbbb9b624a229791e7ba481c7628fa7a4b2407a4fb681243518",
+      "canonicalCER": 0.078431,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "제외"
+      ],
+      "criticalTranscript": [
+        "제외"
+      ],
+      "durationMs": 10480,
+      "literalCER": 0.078431,
+      "mp3Sha256": "e749fda6701df82f8879a88eb64763556c746b3e662196b979d168f78e864d7d",
+      "normalizedTarget": "부상질병심신장애로보충역전시근로역으로바뀌거나병역면제를받은현역입영대상자는입영판정검사에서제외됩니다",
+      "normalizedTranscript": "부상질병심신장애로보충역전시근로역으로바뀌거나병역면제를받은현역이병대상자는이병판정검사에서제외됩니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.163477,
+          "end": 10.44,
+          "start": 0.0,
+          "text": " 부상, 질병, 심신장애로 보충역, 전시 근로역으로 바뀌거나 병역 면제를 받은 현역이병 대상자는 이병판정검사에서 제외됩니다."
+        }
+      ],
+      "status": "review_required",
+      "target": "부상·질병·심신장애로 보충역·전시근로역으로 바뀌거나 병역면제를 받은 현역입영 대상자는 입영판정검사에서 제외됩니다.",
+      "textSha256": "aabfaf182c4cf233bfeb07d2340f24565c6833d27d942dcf35978c58dc4e7290",
+      "transcript": "부상, 질병, 심신장애로 보충역, 전시 근로역으로 바뀌거나 병역 면제를 받은 현역이병 대상자는 이병판정검사에서 제외됩니다."
+    },
+    "14e02bd7fdcf204874097ee8dc8b99e047ac3f32360e0e0b5c4080ceb94b7d8d": {
+      "asrSeconds": 10.754,
+      "audioKey": "14e02bd7fdcf204874097ee8dc8b99e047ac3f32360e0e0b5c4080ceb94b7d8d",
+      "canonicalCER": 0.0,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "quantity:6개월",
+        "negative",
+        "제외"
+      ],
+      "criticalTranscript": [
+        "quantity:6개월",
+        "negative",
+        "제외"
+      ],
+      "durationMs": 10590,
+      "literalCER": 0.0,
+      "mp3Sha256": "2997bf9bedae7896c577a336c1c73b61424b6b3ae28915c8c941e03f50d63347",
+      "normalizedTarget": "병역준비역에서임기제부사관지원자로선발되기위해신체검사를받은뒤6개월이지나지않은사람도입영판정검사에서제외됩니다",
+      "normalizedTranscript": "병역준비역에서임기제부사관지원자로선발되기위해신체검사를받은뒤6개월이지나지않은사람도입영판정검사에서제외됩니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.152122,
+          "end": 5.82,
+          "start": 0.0,
+          "text": " 병역준비역에서 임기제부사관 지원자로 선발되기 위해 신체검사를 받은 뒤"
+        },
+        {
+          "avgLogProbability": -0.152122,
+          "end": 10.0,
+          "start": 5.82,
+          "text": " 6개월이 지나지 않은 사람도 입영판정검사에서 제외됩니다."
+        }
+      ],
+      "status": "normalized_match",
+      "target": "병역준비역에서 임기제부사관 지원자로 선발되기 위해 신체검사를 받은 뒤 6개월이 지나지 않은 사람도 입영판정검사에서 제외됩니다.",
+      "textSha256": "8a17d2a5df4ab52e53b209007af29801a64cf0c8c64608c260de5f0900fd314d",
+      "transcript": "병역준비역에서 임기제부사관 지원자로 선발되기 위해 신체검사를 받은 뒤 6개월이 지나지 않은 사람도 입영판정검사에서 제외됩니다."
+    },
+    "200314d859ef80526e451770cfba390808e407468cea08b02696f1d0be1b8b1d": {
+      "asrSeconds": 9.388,
+      "audioKey": "200314d859ef80526e451770cfba390808e407468cea08b02696f1d0be1b8b1d",
+      "canonicalCER": 0.04878,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "permission"
+      ],
+      "criticalTranscript": [
+        "permission"
+      ],
+      "durationMs": 7610,
+      "literalCER": 0.04878,
+      "mp3Sha256": "7df08375928333a1e68c3af245e53ccbde8077f4eb15dbfae06588ebf6bf5935",
+      "normalizedTarget": "국가중요시설의직장예비군인원이부족하면직장의장은지원예비군을선발해편입할수있습니다",
+      "normalizedTranscript": "국가중요시설에직장예비군인원이부족하면직장의장은지원예비군을선발에편입할수있습니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.177738,
+          "end": 7.0,
+          "start": 0.0,
+          "text": " 국가중요시설에 직장예비군 인원이 부족하면 직장의 장은 지원예비군을 선발에 편입할 수 있습니다."
+        }
+      ],
+      "status": "review_required",
+      "target": "국가중요시설의 직장예비군 인원이 부족하면 직장의 장은 지원예비군을 선발해 편입할 수 있습니다.",
+      "textSha256": "73156a87330a2638bc346eb7ac88a9285bb635dfac82f69552cfec2bb092cabf",
+      "transcript": "국가중요시설에 직장예비군 인원이 부족하면 직장의 장은 지원예비군을 선발에 편입할 수 있습니다."
+    },
+    "2003f192c1ccf1801e9ae3eda676b620faa6ceed60ae52d653848c8e74a8819d": {
+      "asrSeconds": 8.749,
+      "audioKey": "2003f192c1ccf1801e9ae3eda676b620faa6ceed60ae52d653848c8e74a8819d",
+      "canonicalCER": 0.0,
+      "criticalMatch": true,
+      "criticalTarget": [],
+      "criticalTranscript": [],
+      "durationMs": 5770,
+      "literalCER": 0.0,
+      "mp3Sha256": "465f4d033873458299856a9d6972c6e566b81552a2bad84e55437379195f81c1",
+      "normalizedTarget": "방위협의회회의를소집하고회의를진행할의장이되는사람은협의회의장입니다",
+      "normalizedTranscript": "방위협의회회의를소집하고회의를진행할의장이되는사람은협의회의장입니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.201124,
+          "end": 5.12,
+          "start": 0.0,
+          "text": " 방위협의회 회의를 소집하고 회의를 진행할 의장이 되는 사람은 협의회 의장입니다."
+        }
+      ],
+      "status": "normalized_match",
+      "target": "방위협의회 회의를 소집하고 회의를 진행할 의장이 되는 사람은 협의회 의장입니다.",
+      "textSha256": "31a7a25d8bb882539ad09ac52ef89fc095b0921b8c8c0702049b0fcad83e3e22",
+      "transcript": "방위협의회 회의를 소집하고 회의를 진행할 의장이 되는 사람은 협의회 의장입니다."
+    },
+    "30243790266577dbac0a117367962ab04f116a034462036fa121edd2082ad89f": {
+      "asrSeconds": 11.556,
+      "audioKey": "30243790266577dbac0a117367962ab04f116a034462036fa121edd2082ad89f",
+      "canonicalCER": 0.0,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "quantity:1000000000004년"
+      ],
+      "criticalTranscript": [
+        "quantity:1000000000004년"
+      ],
+      "durationMs": 12660,
+      "literalCER": 0.0,
+      "mp3Sha256": "34f2bf61bda3c661ac3f795fb0a1a58943959c7e60668e997942418155ba8a49",
+      "normalizedTarget": "지방병무청장은전문연구요원산업기능요원과병역지정업체의실태를1000000000004년야한다실제복무여부자격업체요건신상변동보고등을확인한다",
+      "normalizedTranscript": "지방병무청장은전문연구요원산업기능요원과병역지정업체의실태를1000000000004년야한다실제복무여부자격업체요건신상변동보고등을확인한다",
+      "segments": [
+        {
+          "avgLogProbability": -0.143534,
+          "end": 12.0,
+          "start": 0.0,
+          "text": " 지방병무청장은 전문연구요원, 산업기능요원과 병역지정업체의 실태를 조사해야 한다. 실제 복무 여부, 자격, 업체 요건, 신상변동 보고 등을 확인한다."
+        }
+      ],
+      "status": "normalized_match",
+      "target": "지방병무청장은 전문연구요원·산업기능요원과 병역지정업체의 실태를 조사해야 한다. 실제 복무 여부, 자격·업체 요건, 신상변동 보고 등을 확인한다.",
+      "textSha256": "1cc6d37a32587ebae6f4dd9ed500ffb840bbf4da4f4946d2694775e21399c6cf",
+      "transcript": "지방병무청장은 전문연구요원, 산업기능요원과 병역지정업체의 실태를 조사해야 한다. 실제 복무 여부, 자격, 업체 요건, 신상변동 보고 등을 확인한다."
+    },
+    "3024e0d5c1bc2360daa60a42373c385300ee88f49eaf85f6dd3046d556f07a5b": {
+      "asrSeconds": 10.915,
+      "audioKey": "3024e0d5c1bc2360daa60a42373c385300ee88f49eaf85f6dd3046d556f07a5b",
+      "canonicalCER": 0.0,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "quantity:1년",
+        "quantity:6개월",
+        "이상"
+      ],
+      "criticalTranscript": [
+        "quantity:1년",
+        "quantity:6개월",
+        "이상"
+      ],
+      "durationMs": 12170,
+      "literalCER": 0.0,
+      "mp3Sha256": "c6c6afff53d583a965f1f8da6b15dfbd26260ded54fbe157f4a8ae1612913265",
+      "normalizedTarget": "다만보충역편입의형량기준이나징역금고1년6개월이상실형기준에해당하는사람은지방병무청장의사실확인으로처리할수도있습니다",
+      "normalizedTranscript": "다만보충역편입의형량기준이나징역금고1년6개월이상실형기준에해당하는사람은지방병무청장의사실확인으로처리할수도있습니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.173017,
+          "end": 8.1,
+          "start": 0.0,
+          "text": " 다만 보충역 편입의 형량 기준이나 징역, 금고 1년 6개월 이상 실형 기준에 해당하는 사람은"
+        },
+        {
+          "avgLogProbability": -0.173017,
+          "end": 12.1,
+          "start": 8.1,
+          "text": " 지방병무청장의 사실 확인으로 처리할 수도 있습니다."
+        }
+      ],
+      "status": "normalized_match",
+      "target": "다만 보충역 편입의 형량 기준이나 징역·금고 1년 6개월 이상 실형 기준에 해당하는 사람은 지방병무청장의 사실확인으로 처리할 수도 있습니다.",
+      "textSha256": "57bb0ef334f9236f34a8a004fc13e147e525eab8e4ffc4cfab922bb578f4e975",
+      "transcript": "다만 보충역 편입의 형량 기준이나 징역, 금고 1년 6개월 이상 실형 기준에 해당하는 사람은 지방병무청장의 사실 확인으로 처리할 수도 있습니다."
+    },
+    "4010a57034c1ab0424b2fda31b5a6ec844508296d8ed86ed34778357c895efb6": {
+      "asrSeconds": 9.648,
+      "audioKey": "4010a57034c1ab0424b2fda31b5a6ec844508296d8ed86ed34778357c895efb6",
+      "canonicalCER": 0.021277,
+      "criticalMatch": true,
+      "criticalTarget": [],
+      "criticalTranscript": [],
+      "durationMs": 9780,
+      "literalCER": 0.021277,
+      "mp3Sha256": "f93bfeb145d7e4d7b3949de9064de5ce5cbfc769e292a66e78162c932602750f",
+      "normalizedTarget": "전시사변동원령선포때병역법상범죄를저지르면해당조문이정한형의최장기간에그절반까지더해가중합니다",
+      "normalizedTranscript": "전시사변동원령선포때병역법상범죄를저지르면해당조문이정한형의최장기간의그절반까지더해가중합니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.216748,
+          "end": 9.72,
+          "start": 0.0,
+          "text": " 전시 사변, 동원령 선포 때 병역법상 범죄를 저지르면 해당 조문이 정한형의 최장기간의 그 절반까지 더해 가중합니다."
+        }
+      ],
+      "status": "review_required",
+      "target": "전시·사변·동원령 선포 때 병역법상 범죄를 저지르면, 해당 조문이 정한 형의 최장 기간에 그 절반까지 더해 가중합니다.",
+      "textSha256": "3c9cca1a51de167fd6f6137b3dcd8f3ddee49aeb03ebd9ae1d49137312fc669d",
+      "transcript": "전시 사변, 동원령 선포 때 병역법상 범죄를 저지르면 해당 조문이 정한형의 최장기간의 그 절반까지 더해 가중합니다."
+    },
+    "40182bc5f5adfefce2dcad2b7a7f7a21d6c8c53e27292a898ddd1e33f6072263": {
+      "asrSeconds": 8.089,
+      "audioKey": "40182bc5f5adfefce2dcad2b7a7f7a21d6c8c53e27292a898ddd1e33f6072263",
+      "canonicalCER": 0.0,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "quantity:4일",
+        "quantity:417일"
+      ],
+      "criticalTranscript": [
+        "quantity:4일",
+        "quantity:417일"
+      ],
+      "durationMs": 7220,
+      "literalCER": 0.0,
+      "mp3Sha256": "2c8583e720132e55aa733774dd2cfcb673224ca11dcf1c21e1f6c46c3c78a00f",
+      "normalizedTarget": "본인이검4일을선택한경우에는선택한검417일전까지통지서를보내야합니다",
+      "normalizedTranscript": "본인이검4일을선택한경우에는선택한검417일전까지통지서를보내야합니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.180894,
+          "end": 6.44,
+          "start": 0.0,
+          "text": " 본인이 검사일을 선택한 경우에는 선택한 검사일 7일 전까지 통지서를 보내야 합니다."
+        }
+      ],
+      "status": "normalized_match",
+      "target": "본인이 검사일을 선택한 경우에는 선택한 검사일 7일 전까지 통지서를 보내야 합니다.",
+      "textSha256": "ad9f6637d43052b109f0a844bdb86d8aa257637783fa47a001904430af8c6193",
+      "transcript": "본인이 검사일을 선택한 경우에는 선택한 검사일 7일 전까지 통지서를 보내야 합니다."
+    },
+    "47e2ea9a1654a5730fa56742493f671cdc896b51f76675e6b5b1aa432575ae3c": {
+      "asrSeconds": 11.133,
+      "audioKey": "47e2ea9a1654a5730fa56742493f671cdc896b51f76675e6b5b1aa432575ae3c",
+      "canonicalCER": 0.015625,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "quantity:18세",
+        "미만",
+        "quantity:5년",
+        "이상"
+      ],
+      "criticalTranscript": [
+        "quantity:18세",
+        "미만",
+        "quantity:5년",
+        "이상"
+      ],
+      "durationMs": 11820,
+      "literalCER": 0.015625,
+      "mp3Sha256": "852ea21c1e11679b85532350ac486d1d7f1b618e77b690699553887b9374f6b2",
+      "normalizedTarget": "18세미만아동으로서아동양육시설아동보호치료시설공동생활가정학대피해아동쉼터에5년이상보호된사실이있으면전시근로역편입대상입니다",
+      "normalizedTranscript": "18세미만아동으로서아동양육시설아동보호치료시설공동생활가정학대피해아동심터에5년이상보호된사실이있으면전시근로역편입대상입니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.173814,
+          "end": 11.200000000000001,
+          "start": 0.0,
+          "text": " 18세 미만 아동으로서 아동양육시설, 아동보호치료시설, 공동생활가정, 학대피해 아동심터에 5년 이상 보호된 사실이 있으면 전시 근로역 편입대상입니다."
+        }
+      ],
+      "status": "review_required",
+      "target": "18세 미만 아동으로서 아동양육시설·아동보호치료시설·공동생활가정·학대피해아동쉼터에 5년 이상 보호된 사실이 있으면 전시근로역 편입 대상입니다.",
+      "textSha256": "3acc5077b1eef3196d8c5f67585a26dfedf4c287308e84e6d64aee94a72d0c49",
+      "transcript": "18세 미만 아동으로서 아동양육시설, 아동보호치료시설, 공동생활가정, 학대피해 아동심터에 5년 이상 보호된 사실이 있으면 전시 근로역 편입대상입니다."
+    },
+    "5019444863f07d38bf2907a9d2463062c178fc65c86e88b94f9bb65427bab246": {
+      "asrSeconds": 8.694,
+      "audioKey": "5019444863f07d38bf2907a9d2463062c178fc65c86e88b94f9bb65427bab246",
+      "canonicalCER": 0.0,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "quantity:1년",
+        "permission"
+      ],
+      "criticalTranscript": [
+        "quantity:1년",
+        "permission"
+      ],
+      "durationMs": 7350,
+      "literalCER": 0.0,
+      "mp3Sha256": "f4066c99bc4b57c212028a02f961233e2d60ebc6e1dd45c539819189bd92b8bb",
+      "normalizedTarget": "병역인원수급계획상필요하면해당요원들의복무기간을최대1년범위에서조정할수있습니다",
+      "normalizedTranscript": "병역인원수급계획상필요하면해당요원들의복무기간을최대1년범위에서조정할수있습니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.177127,
+          "end": 6.640000000000001,
+          "start": 0.0,
+          "text": " 병역인원 수급 계획상 필요하면 해당 요원들의 복무기간을 최대 1년 범위에서 조정할 수 있습니다."
+        }
+      ],
+      "status": "normalized_match",
+      "target": "병역인원 수급계획상 필요하면 해당 요원들의 복무기간을 최대 1년 범위에서 조정할 수 있습니다.",
+      "textSha256": "28f867cc56a609fab2b33681a559ce9b327b1bf27c1564cd319000241307075c",
+      "transcript": "병역인원 수급 계획상 필요하면 해당 요원들의 복무기간을 최대 1년 범위에서 조정할 수 있습니다."
+    },
+    "50288457342ca42fef2ebec37a978079b584f92dfe2e2ebf017dc420c8ac857c": {
+      "asrSeconds": 8.217,
+      "audioKey": "50288457342ca42fef2ebec37a978079b584f92dfe2e2ebf017dc420c8ac857c",
+      "canonicalCER": 0.0,
+      "criticalMatch": true,
+      "criticalTarget": [],
+      "criticalTranscript": [],
+      "durationMs": 6250,
+      "literalCER": 0.0,
+      "mp3Sha256": "9f466c3743739340a7f5e2e7515cc386556e117fe0169ed0ad17894e38a435a0",
+      "normalizedTarget": "학생예비군의점심은부대여건에맞춰도시락이나부대급식등으로지원합니다",
+      "normalizedTranscript": "학생예비군의점심은부대여건에맞춰도시락이나부대급식등으로지원합니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.205511,
+          "end": 5.6000000000000005,
+          "start": 0.0,
+          "text": " 학생 예비군의 점심은 부대 여건에 맞춰 도시락이나 부대 급식 등으로 지원합니다."
+        }
+      ],
+      "status": "normalized_match",
+      "target": "학생예비군의 점심은 부대 여건에 맞춰 도시락이나 부대급식 등으로 지원합니다.",
+      "textSha256": "1de210101de07bb69e37fc5083e7f188a228808e6ce7b34d3b89d162a0c227b2",
+      "transcript": "학생 예비군의 점심은 부대 여건에 맞춰 도시락이나 부대 급식 등으로 지원합니다."
+    },
+    "600033a4667079f93eed06e583cab6828de6d2ffe37af4a5dc1189a0a4478fbe": {
+      "asrSeconds": 9.57,
+      "audioKey": "600033a4667079f93eed06e583cab6828de6d2ffe37af4a5dc1189a0a4478fbe",
+      "canonicalCER": 0.0,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "permission"
+      ],
+      "criticalTranscript": [
+        "permission"
+      ],
+      "durationMs": 10060,
+      "literalCER": 0.0,
+      "mp3Sha256": "47525abb97655c311193bc9ad2f1bd31206666d898d363020352d306d5fa77ed",
+      "normalizedTarget": "국방부장관은예비군권익보장센터를효율적으로운영하는데필요한지원을관계중앙행정기관장등에게요청할수있습니다",
+      "normalizedTranscript": "국방부장관은예비군권익보장센터를효율적으로운영하는데필요한지원을관계중앙행정기관장등에게요청할수있습니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.14576,
+          "end": 10.0,
+          "start": 0.0,
+          "text": " 국방부장관은 예비군권익보장센터를 효율적으로 운영하는 데 필요한 지원을 관계 중앙행정기관장 등에게 요청할 수 있습니다."
+        }
+      ],
+      "status": "normalized_match",
+      "target": "국방부장관은 예비군권익보장센터를 효율적으로 운영하는 데 필요한 지원을 관계 중앙행정기관장 등에게 요청할 수 있습니다.",
+      "textSha256": "bb018dbba47107904943aeefacce5c378df4610726926ad5af8ee7fd7f419e52",
+      "transcript": "국방부장관은 예비군권익보장센터를 효율적으로 운영하는 데 필요한 지원을 관계 중앙행정기관장 등에게 요청할 수 있습니다."
+    },
+    "60066b7fde003f34212983efa10e21580073e14e6b08d111cc63417d4c71bb70": {
+      "asrSeconds": 10.809,
+      "audioKey": "60066b7fde003f34212983efa10e21580073e14e6b08d111cc63417d4c71bb70",
+      "canonicalCER": 0.0,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "quantity:4회",
+        "quantity:10월",
+        "quantity:31일"
+      ],
+      "criticalTranscript": [
+        "quantity:4회",
+        "quantity:10월",
+        "quantity:31일"
+      ],
+      "durationMs": 11490,
+      "literalCER": 0.0,
+      "mp3Sha256": "d51c17514020579f294d394d2f52fcd147a7d77ac8fef9428bb50e25f5ae49cd",
+      "normalizedTarget": "병무청장은다음해4회복무요원의월별소집인원등을정한소집계획을작성하여매년10월31일까지지방병무청장에게보내야합니다",
+      "normalizedTranscript": "병무청장은다음해4회복무요원의월별소집인원등을정한소집계획을작성하여매년10월31일까지지방병무청장에게보내야합니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.150524,
+          "end": 6.32,
+          "start": 0.0,
+          "text": " 병무청장은 다음해 사회복무요원의 월별 소집인원 등을 정한 소집계획을 작성하여"
+        },
+        {
+          "avgLogProbability": -0.150524,
+          "end": 12.56,
+          "start": 6.32,
+          "text": " 매년 10월 31일까지 지방병무청장에게 보내야 합니다."
+        }
+      ],
+      "status": "normalized_match",
+      "target": "병무청장은 다음 해 사회복무요원의 월별 소집인원 등을 정한 소집계획을 작성하여 매년 10월 31일까지 지방병무청장에게 보내야 합니다.",
+      "textSha256": "c052405e554aebc3f509edf91e6a0f860cea0f9512d69d570cc362b93ec7cb21",
+      "transcript": "병무청장은 다음해 사회복무요원의 월별 소집인원 등을 정한 소집계획을 작성하여 매년 10월 31일까지 지방병무청장에게 보내야 합니다."
+    },
+    "6190751b56b1c9bc84ed43d2205c02187e2652696eba67bee83acd0c3594d72d": {
+      "asrSeconds": 14.975,
+      "audioKey": "6190751b56b1c9bc84ed43d2205c02187e2652696eba67bee83acd0c3594d72d",
+      "canonicalCER": 0.0,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "quantity:30일",
+        "quantity:23일",
+        "quantity:8일",
+        "quantity:22일",
+        "quantity:16일",
+        "quantity:7일",
+        "quantity:15일",
+        "제외",
+        "quantity:7일",
+        "quantity:8일",
+        "quantity:3일"
+      ],
+      "criticalTranscript": [
+        "quantity:30일",
+        "quantity:23일",
+        "quantity:8일",
+        "quantity:22일",
+        "quantity:16일",
+        "quantity:7일",
+        "quantity:15일",
+        "제외",
+        "quantity:7일",
+        "quantity:8일",
+        "quantity:3일"
+      ],
+      "durationMs": 25030,
+      "literalCER": 0.0,
+      "mp3Sha256": "205d7307d671e069b4600493fbeb0e1c635075c7046c761d4be94c60940224fa",
+      "normalizedTarget": "인터넷신청은신청일포함30일전부터23일전까지8일모바일고지는고지일포함22일전부터16일전까지7일입니다이메일우편방문팩스등기는전달일포함15일전부터전달일제외7일전까지8일간진행합니다전국단위훈련신청은신청일을빼고3일전까지입니다",
+      "normalizedTranscript": "인터넷신청은신청일포함30일전부터23일전까지8일모바일고지는고지일포함22일전부터16일전까지7일입니다이메일우편방문팩스등기는전달일포함15일전부터전달일제외7일전까지8일간진행합니다전국단위훈련신청은신청일을빼고3일전까지입니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.127209,
+          "end": 5.12,
+          "start": 0.0,
+          "text": " 인터넷 신청은 신청일 포함 30일 전부터 23일 전까지 8일"
+        },
+        {
+          "avgLogProbability": -0.127209,
+          "end": 11.36,
+          "start": 5.12,
+          "text": " 모바일 고지는 고지일 포함 22일 전부터 16일 전까지 7일입니다."
+        },
+        {
+          "avgLogProbability": -0.127209,
+          "end": 15.6,
+          "start": 11.36,
+          "text": " 이메일, 우편, 방문, 팩스, 등기는 전달일 포함"
+        },
+        {
+          "avgLogProbability": -0.127209,
+          "end": 20.240000000000002,
+          "start": 15.6,
+          "text": " 15일 전부터 전달일 제외 7일 전까지 8일간 진행합니다."
+        },
+        {
+          "avgLogProbability": -0.127209,
+          "end": 25.0,
+          "start": 20.240000000000002,
+          "text": " 전국 단위 훈련 신청은 신청일을 빼고 3일 전까지입니다."
+        }
+      ],
+      "status": "normalized_match",
+      "target": "인터넷 신청은 신청일 포함 30일 전부터 23일 전까지 8일, 모바일 고지는 고지일 포함 22일 전부터 16일 전까지 7일입니다. 이메일·우편·방문·팩스·등기는 전달일 포함 15일 전부터 전달일 제외 7일 전까지 8일간 진행합니다. 전국단위훈련 신청은 신청일을 빼고 3일 전까지입니다.",
+      "textSha256": "1752969f58802c6b8640372ab1c01c0b9a0a67bd07775ba5bae90419c62b786c",
+      "transcript": "인터넷 신청은 신청일 포함 30일 전부터 23일 전까지 8일 모바일 고지는 고지일 포함 22일 전부터 16일 전까지 7일입니다. 이메일, 우편, 방문, 팩스, 등기는 전달일 포함 15일 전부터 전달일 제외 7일 전까지 8일간 진행합니다. 전국 단위 훈련 신청은 신청일을 빼고 3일 전까지입니다."
+    },
+    "6c5a0c244d36d2991f056748b8b956774f7a14d897a28af5afc9cee6ebb18d5f": {
+      "asrSeconds": 34.111,
+      "audioKey": "6c5a0c244d36d2991f056748b8b956774f7a14d897a28af5afc9cee6ebb18d5f",
+      "canonicalCER": 0.0,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "이하",
+        "quantity:2원",
+        "permission",
+        "이상",
+        "negative",
+        "permission",
+        "quantity:5년",
+        "quantity:6년",
+        "quantity:7년",
+        "quantity:8년"
+      ],
+      "criticalTranscript": [
+        "이하",
+        "quantity:2원",
+        "permission",
+        "이상",
+        "negative",
+        "permission",
+        "quantity:5년",
+        "quantity:6년",
+        "quantity:7년",
+        "quantity:8년"
+      ],
+      "durationMs": 51630,
+      "literalCER": 0.035019,
+      "mp3Sha256": "b05d72ea0448341aa2fc1cd21642b908fb639e4286971ad5b72b3ea761836fa8",
+      "normalizedTarget": "소대급이하인원이있는일반직장은직장의장2원하면직장예비군을편성할수있습니다여단은단일복수직장형으로연대는본부경비소대대대로편성하고대대는일반중대편성과동원지정미지정중대편성중직장여건에맞는방안을직장의장이선택합니다같은계열의여러중대나같은구역건물의두개이상직장중대를대대로통합할때에는각직장부대단위를유지하며직장소대분대를섞어혼합중대를만들지않습니다같은규모의두개제대를지휘할상급제대를둘수도있습니다중대는지역예비군기준을따르되직장특성상줄일수있고독립소대는본부동원지정미지정5년차에서6년차7년차에서8년차보류자와기타로나눕니다",
+      "normalizedTranscript": "소대급이하인원이있는일반직장은직장의장2원하면직장예비군을편성할수있습니다여단은단일복수직장형으로연대는본부경비소대대대로편성하고대대는일반중대편성과동원지정미지정중대편성중직장여건에맞는방안을직장의장이선택합니다같은계열의여러중대나같은구역건물의두개이상직장중대를대대로통합할때에는각직장부대단위를유지하며직장소대분대를섞어혼합중대를만들지않습니다같은규모의두개제대를지휘할상급제대를둘수도있습니다중대는지역예비군기준을따르되직장특성상줄일수있고독립소대는본부동원지정미지정5년차에서6년차7년차에서8년차보류자와기타로나눕니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.109016,
+          "end": 6.74,
+          "start": 0.0,
+          "text": " 소대급 이하 인원이 있는 일반 직장은 직장의 장이 원하면 직장예비군을 편성할 수 있습니다."
+        },
+        {
+          "avgLogProbability": -0.109016,
+          "end": 12.8,
+          "start": 6.74,
+          "text": " 여단은 단일 복수 직장형으로 연대는 본부, 경비 소대, 대대로 편성하고"
+        },
+        {
+          "avgLogProbability": -0.109016,
+          "end": 21.04,
+          "start": 12.8,
+          "text": " 대대는 일반 중대 편성과 동원 지정, 미지정 중대 편성 중 직장 여건에 맞는 방안을 직장의 장이 선택합니다."
+        },
+        {
+          "avgLogProbability": -0.109016,
+          "end": 27.48,
+          "start": 21.04,
+          "text": " 같은 계열의 여러 중대나 같은 구역, 건물의 2개 이상 직장 중대를 대대로 통합할 때에는"
+        },
+        {
+          "avgLogProbability": -0.121427,
+          "end": 34.120000000000005,
+          "start": 27.48,
+          "text": " 각 직장 부대 단위를 유지하며 직장 소대, 분대를 섞어 혼합 중대를 만들지 않습니다."
+        },
+        {
+          "avgLogProbability": -0.121427,
+          "end": 38.480000000000004,
+          "start": 34.120000000000005,
+          "text": " 같은 규모의 두 개 제대를 지휘할 상급제대를 둘 수도 있습니다."
+        },
+        {
+          "avgLogProbability": -0.121427,
+          "end": 43.08,
+          "start": 38.480000000000004,
+          "text": " 중대는 지역예비군 기준을 따르되 직장 특성상 줄일 수 있고"
+        },
+        {
+          "avgLogProbability": -0.121427,
+          "end": 51.6,
+          "start": 43.08,
+          "text": " 독립소대는 본부, 동원지정, 미지정, 5년차에서 6년차, 7년차에서 8년차, 보류자와 기타로 나눕니다."
+        }
+      ],
+      "status": "normalized_match",
+      "target": "소대급 이하 인원이 있는 일반 직장은 직장의 장이 원하면 직장예비군을 편성할 수 있습니다. 여단은 단일·복수직장형으로, 연대는 본부·경비소대·대대로 편성하고, 대대는 일반 중대 편성과 동원지정·미지정 중대 편성 중 직장 여건에 맞는 방안을 직장의 장이 선택합니다. 같은 계열의 여러 중대나 같은 구역·건물의 2개 이상 직장중대를 대대로 통합할 때에는 각 직장 부대 단위를 유지하며, 직장 소대·분대를 섞어 혼합중대를 만들지 않습니다. 같은 규모의 2개 제대를 지휘할 상급제대를 둘 수도 있습니다. 중대는 지역예비군 기준을 따르되 직장 특성상 줄일 수 있고, 독립소대는 본부·동원지정·미지정·5~6년차·7~8년차·보류자와 기타로 나눕니다.",
+      "textSha256": "309e69aace588bdbbb91cd1f314a528613202a9bcdb267f4c9193b18b8d42426",
+      "transcript": "소대급 이하 인원이 있는 일반 직장은 직장의 장이 원하면 직장예비군을 편성할 수 있습니다. 여단은 단일 복수 직장형으로 연대는 본부, 경비 소대, 대대로 편성하고 대대는 일반 중대 편성과 동원 지정, 미지정 중대 편성 중 직장 여건에 맞는 방안을 직장의 장이 선택합니다. 같은 계열의 여러 중대나 같은 구역, 건물의 2개 이상 직장 중대를 대대로 통합할 때에는 각 직장 부대 단위를 유지하며 직장 소대, 분대를 섞어 혼합 중대를 만들지 않습니다. 같은 규모의 두 개 제대를 지휘할 상급제대를 둘 수도 있습니다. 중대는 지역예비군 기준을 따르되 직장 특성상 줄일 수 있고 독립소대는 본부, 동원지정, 미지정, 5년차에서 6년차, 7년차에서 8년차, 보류자와 기타로 나눕니다."
+    },
+    "6e3db9b6b715fe7965b38ac655026411d173910b6ba5e693ac3172f2253c8315": {
+      "asrSeconds": 14.815,
+      "audioKey": "6e3db9b6b715fe7965b38ac655026411d173910b6ba5e693ac3172f2253c8315",
+      "canonicalCER": 0.0,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "permission",
+        "negative",
+        "permission"
+      ],
+      "criticalTranscript": [
+        "permission",
+        "negative",
+        "permission"
+      ],
+      "durationMs": 19840,
+      "literalCER": 0.0,
+      "mp3Sha256": "01f06acea812597911711ada0921a6d1e0537385089b560a079c796a28cb9092",
+      "normalizedTarget": "대체역의병역처분을바꾸는절차도안내합니다부상질병등으로병역을감당하기어려우면신체검사를거쳐소집면제해제또는병역면제처분을할수있습니다귀화등병역에적합하지않다고인정되는사유이면소집을면제하거나해제할수있습니다",
+      "normalizedTranscript": "대체역의병역처분을바꾸는절차도안내합니다부상질병등으로병역을감당하기어려우면신체검사를거쳐소집면제해제또는병역면제처분을할수있습니다귀화등병역에적합하지않다고인정되는사유이면소집을면제하거나해제할수있습니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.136503,
+          "end": 13.08,
+          "start": 0.0,
+          "text": " 대체역의 병역 처분을 바꾸는 절차도 안내합니다. 부상, 질병 등으로 병역을 감당하기 어려우면 신체 검사를 거쳐 소집 면제, 해제 또는 병역 면제 처분을 할 수 있습니다."
+        },
+        {
+          "avgLogProbability": -0.136503,
+          "end": 20.92,
+          "start": 13.08,
+          "text": " 귀화 등 병역에 적합하지 않다고 인정되는 사유이면 소집을 면제하거나 해제할 수 있습니다."
+        }
+      ],
+      "status": "normalized_match",
+      "target": "대체역의 병역처분을 바꾸는 절차도 안내합니다. 부상·질병 등으로 병역을 감당하기 어려우면 신체검사를 거쳐 소집면제·해제 또는 병역면제 처분을 할 수 있습니다. 귀화 등 병역에 적합하지 않다고 인정되는 사유이면 소집을 면제하거나 해제할 수 있습니다.",
+      "textSha256": "26757b3c7eee89f5294fbbba4c701c42c470342e52c61cf158807fd6c95e22a1",
+      "transcript": "대체역의 병역 처분을 바꾸는 절차도 안내합니다. 부상, 질병 등으로 병역을 감당하기 어려우면 신체 검사를 거쳐 소집 면제, 해제 또는 병역 면제 처분을 할 수 있습니다. 귀화 등 병역에 적합하지 않다고 인정되는 사유이면 소집을 면제하거나 해제할 수 있습니다."
+    },
+    "70142c23c00fe23a3df67ad320dfc1c6379b348585db02e68c1232d0ae525431": {
+      "asrSeconds": 9.961,
+      "audioKey": "70142c23c00fe23a3df67ad320dfc1c6379b348585db02e68c1232d0ae525431",
+      "canonicalCER": 0.057692,
+      "criticalMatch": false,
+      "criticalTarget": [],
+      "criticalTranscript": [
+        "quantity:0명"
+      ],
+      "durationMs": 10520,
+      "literalCER": 0.019231,
+      "mp3Sha256": "75dd0d22b811705c984dbc02f543e38708503823ff6a6b2277602e1adea53e82",
+      "normalizedTarget": "병역명문가의기본대상은일대부터삼대까지직계비속남성이모두아래의성실복무등의기준중하나에해당하는가문입니다",
+      "normalizedTranscript": "병0명문가의기본대상은한대부터세대까지직계비속남성이모두아래의성실복무등의기준중하나에해당하는가문입니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.200548,
+          "end": 10.0,
+          "start": 0.0,
+          "text": " 병영 명문가의 기본 대상은 1대부터 3대까지 직계 비속 남성이 모두 아래의 성실, 복무 등의 기준 중 하나에 해당하는 가문입니다."
+        }
+      ],
+      "status": "review_required",
+      "target": "병역명문가의 기본 대상은 1대부터 3대까지 직계비속 남성이 모두 아래의 성실복무 등의 기준 중 하나에 해당하는 가문입니다.",
+      "textSha256": "4186d5be6a280bb848e3e72e848e483c9a0706fddd4bded8e254cfd06a9e4f8d",
+      "transcript": "병영 명문가의 기본 대상은 1대부터 3대까지 직계 비속 남성이 모두 아래의 성실, 복무 등의 기준 중 하나에 해당하는 가문입니다."
+    },
+    "70211068a82ab14d5be8ffaaea089d9163b2eb146ab5fcbdaf0912a36e4b1212": {
+      "asrSeconds": 10.932,
+      "audioKey": "70211068a82ab14d5be8ffaaea089d9163b2eb146ab5fcbdaf0912a36e4b1212",
+      "canonicalCER": 0.056604,
+      "criticalMatch": true,
+      "criticalTarget": [],
+      "criticalTranscript": [],
+      "durationMs": 10740,
+      "literalCER": 0.056604,
+      "mp3Sha256": "3221997d964074aa7dc2774784c9e3b98c5d123449fc6942db6ef6808ad7fbc5",
+      "normalizedTarget": "승선근무예비역보충역대체복무를마친사람의근무기간인정범위는징집육군현역병복무기간안에서대통령령으로정합니다",
+      "normalizedTranscript": "승성근무예비역보충역대체복무를마친사람의근무기관인정범위는징집육군현역병복무기관안에서대통령령으로정합니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.153033,
+          "end": 5.96,
+          "start": 0.0,
+          "text": " 승성 근무 예비역 보충역 대체복무를 마친 사람의 근무기관 인정범위는"
+        },
+        {
+          "avgLogProbability": -0.153033,
+          "end": 10.08,
+          "start": 5.96,
+          "text": " 징집 육군현역병 복무기관 안에서 대통령령으로 정합니다."
+        }
+      ],
+      "status": "review_required",
+      "target": "승선근무예비역·보충역·대체복무를 마친 사람의 근무기간 인정 범위는, 징집 육군 현역병 복무기간 안에서 대통령령으로 정합니다.",
+      "textSha256": "4f82332fbcd856742c726b02d471dbed982ab1fee52c05f27fc97b3c6c60eae7",
+      "transcript": "승성 근무 예비역 보충역 대체복무를 마친 사람의 근무기관 인정범위는 징집 육군현역병 복무기관 안에서 대통령령으로 정합니다."
+    },
+    "737003ebef7fa119ac918064a5e9af319ca45462e48a8e0a431f516b03903487": {
+      "asrSeconds": 12.239,
+      "audioKey": "737003ebef7fa119ac918064a5e9af319ca45462e48a8e0a431f516b03903487",
+      "canonicalCER": 0.0,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "negative",
+        "permission",
+        "permission"
+      ],
+      "criticalTranscript": [
+        "negative",
+        "permission",
+        "permission"
+      ],
+      "durationMs": 13900,
+      "literalCER": 0.0,
+      "mp3Sha256": "aebba7d7d12d261e9ad53ba05c4e621c27f9561225dd44f919e0cb0c0181e21b",
+      "normalizedTarget": "대체역이전공상질병장애로복무를감당할수없다면검사후소집면제해제또는병역면제를할수있습니다귀화등법정부적합사유라면소집을면제해제할수있습니다",
+      "normalizedTranscript": "대체역이전공상질병장애로복무를감당할수없다면검사후소집면제해제또는병역면제를할수있습니다귀화등법정부적합사유라면소집을면제해제할수있습니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.150425,
+          "end": 4.48,
+          "start": 0.0,
+          "text": " 대체역이 전공상 질병 장애로 복무를 감당할 수 없다면"
+        },
+        {
+          "avgLogProbability": -0.150425,
+          "end": 9.040000000000001,
+          "start": 4.48,
+          "text": " 검사 후 소집 면제 해제 또는 병역 면제를 할 수 있습니다."
+        },
+        {
+          "avgLogProbability": -0.150425,
+          "end": 13.280000000000001,
+          "start": 9.040000000000001,
+          "text": " 귀화 등 법정 부적합 사유라면 소집을 면제 해제할 수 있습니다."
+        }
+      ],
+      "status": "normalized_match",
+      "target": "대체역이 전공상·질병·장애로 복무를 감당할 수 없다면 검사 후 소집 면제·해제 또는 병역면제를 할 수 있습니다. 귀화 등 법정 부적합 사유라면 소집을 면제·해제할 수 있습니다.",
+      "textSha256": "01f8bb2b5e2412362d31e25b110f298efdb0acc5f87b011bd851b59e6a730ab5",
+      "transcript": "대체역이 전공상 질병 장애로 복무를 감당할 수 없다면 검사 후 소집 면제 해제 또는 병역 면제를 할 수 있습니다. 귀화 등 법정 부적합 사유라면 소집을 면제 해제할 수 있습니다."
+    },
+    "74c7417518a50da667b93505169eb291e71b891b0a1f4d6feb3cef9bb9663025": {
+      "asrSeconds": 45.179,
+      "audioKey": "74c7417518a50da667b93505169eb291e71b891b0a1f4d6feb3cef9bb9663025",
+      "canonicalCER": 0.022801,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "quantity:1년",
+        "quantity:4년",
+        "quantity:1년",
+        "quantity:6년",
+        "quantity:8시간",
+        "quantity:3일",
+        "quantity:2시간",
+        "quantity:4일",
+        "quantity:8시간",
+        "quantity:3일",
+        "quantity:5년",
+        "quantity:6년",
+        "quantity:8시간",
+        "quantity:12시간",
+        "quantity:7년",
+        "quantity:8년",
+        "quantity:7년",
+        "negative",
+        "quantity:8시간",
+        "quantity:2원",
+        "negative",
+        "quantity:1일"
+      ],
+      "criticalTranscript": [
+        "quantity:1년",
+        "quantity:4년",
+        "quantity:1년",
+        "quantity:6년",
+        "quantity:8시간",
+        "quantity:3일",
+        "quantity:2시간",
+        "quantity:4일",
+        "quantity:8시간",
+        "quantity:3일",
+        "quantity:5년",
+        "quantity:6년",
+        "quantity:8시간",
+        "quantity:12시간",
+        "quantity:7년",
+        "quantity:8년",
+        "quantity:7년",
+        "negative",
+        "quantity:8시간",
+        "quantity:2원",
+        "negative",
+        "quantity:1일"
+      ],
+      "durationMs": 64320,
+      "literalCER": 0.110714,
+      "mp3Sha256": "537567ee59e9fd5c6e188b164c24ccb276627900c41a4339bf37828be76cd801",
+      "normalizedTarget": "병1년차에서4년차와간부1년차에서6년차중병력동원소집대상자는일형스물8시간이박3일이며일형미참석병과소집미대상병은이형서른2시간4일미대상간부와공군병은이형스물8시간이박3일입니다병5년차에서6년차는기본8시간작계12시간병7년차에서8년차와간부7년차부터연령정년까지는미이수훈련을받고신규전역자는표에훈련시간이없으며상비예비군은일형스물8시간에반드시참가하고나머지는소집부대가통제합니다이형은비숙2원칙이나간부공군병은숙영하고일형미참가자는입영훈련을원칙으로하되예정훈련이없으면각군지침을따르며미참석간부와육군동원사단동원포병단동원보충대대공군전부대해병대동원지원단은가능1일정안에서일형을최대한다시부과합니다",
+      "normalizedTranscript": "병1년차에서4년차와간부1년차에서6년차중병력동원소집대상자는일형스물8시간이박3일이며일형미참석병과소집미대상병은이형서른2시간4일미대상간부와공군병은이형스물8시간이박3일입니다병5년차에서6년차는기본8시간작게12시간병7년차에서8년차와간부7년차부터연령정년까지는미이수훈련을받고신규전역자는표에훈련시간이없으며상비예비군은일형스물8시간에반드시참가하고나머지는소집부대가통제합니다이형은비수경2원칙이나간부공군병은수경하고일형미참가자는이병훈련을원칙으로하되예정훈련이없으면각군지침을따르며미참석간부와육군동원사단동원포병단동원보충대대공군전부대해병대동원지원단은가능1일정안에서일형을최대한다시부과합니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.123154,
+          "end": 6.0,
+          "start": 0.0,
+          "text": " 병 1년차에서 4년차와 간부 1년차에서 6년차 중 병력 동원소집 대상자는"
+        },
+        {
+          "avgLogProbability": -0.123154,
+          "end": 13.64,
+          "start": 6.0,
+          "text": " 1형 28시간 2박 3일이며 1형 미참석 병과 소집 미대상 병은 2형 32시간"
+        },
+        {
+          "avgLogProbability": -0.123154,
+          "end": 20.0,
+          "start": 13.64,
+          "text": " 4일 미대상 간부와 공군병은 2형 28시간 2박 3일입니다."
+        },
+        {
+          "avgLogProbability": -0.123154,
+          "end": 26.84,
+          "start": 20.0,
+          "text": " 병 5년차에서 6년차는 기본 8시간 작게 12시간 병 7년차에서 8년차"
+        },
+        {
+          "avgLogProbability": -0.162294,
+          "end": 32.24,
+          "start": 26.84,
+          "text": " 와 간부 7년차부터 연령 정년까지 는 미 이수 훈련을 받고 신규 전역"
+        },
+        {
+          "avgLogProbability": -0.162294,
+          "end": 37.76,
+          "start": 32.24,
+          "text": " 자는 표에 훈련 시간이 없으며 상비 예비군은 1형 28시간에 반드시"
+        },
+        {
+          "avgLogProbability": -0.162294,
+          "end": 41.8,
+          "start": 37.76,
+          "text": " 참가하고 나머지는 소집 부대가 통제합니다."
+        },
+        {
+          "avgLogProbability": -0.162294,
+          "end": 47.0,
+          "start": 41.8,
+          "text": " 이형은 비수경이 원칙이나 간부 공군병은 수경하고 1형 미 참가"
+        },
+        {
+          "avgLogProbability": -0.162294,
+          "end": 51.44,
+          "start": 47.0,
+          "text": " 자는 이병훈련을 원칙으로 하되 예정훈련이 없으면 각 군 지침"
+        },
+        {
+          "avgLogProbability": -0.162294,
+          "end": 56.400000000000006,
+          "start": 51.44,
+          "text": " 을 따르며 미 참석 간부와 육군 동원사단 동원포병단 동원"
+        },
+        {
+          "avgLogProbability": -0.184154,
+          "end": 61.739999999999995,
+          "start": 56.4,
+          "text": " 보충대대, 공군 전 부대, 해병대 동원 지원단은 가능한 일정 안에서"
+        },
+        {
+          "avgLogProbability": -0.184154,
+          "end": 63.68,
+          "start": 61.739999999999995,
+          "text": " 일형을 최대한 다시 부과합니다."
+        }
+      ],
+      "status": "review_required",
+      "target": "병 1~4년차와 간부 1~6년차 중 병력동원소집 대상자는 Ⅰ형 28시간·2박 3일이며, Ⅰ형 미참석 병과 소집 미대상 병은 Ⅱ형 32시간·4일, 미대상 간부와 공군 병은 Ⅱ형 28시간·2박 3일입니다. 병 5~6년차는 기본 8시간·작계 12시간, 병 7~8년차와 간부 7년차부터 연령정년까지는 미이수 훈련을 받고, 신규 전역자는 표에 훈련시간이 없으며 상비예비군은 Ⅰ형 28시간에 반드시 참가하고 나머지는 소집부대가 통제합니다. Ⅱ형은 비숙영이 원칙이나 간부·공군 병은 숙영하고, Ⅰ형 미참가자는 입영훈련을 원칙으로 하되 예정 훈련이 없으면 각 군 지침을 따르며, 미참석 간부와 육군 동원사단·동원포병단·동원보충대대, 공군 전 부대, 해병대 동원지원단은 가능한 일정 안에서 Ⅰ형을 최대한 다시 부과합니다.",
+      "textSha256": "6a87f21d99cd7fa506a05673eeb8d7cededeb9dcab78131b26c2841ef16bc2a2",
+      "transcript": "병 1년차에서 4년차와 간부 1년차에서 6년차 중 병력 동원소집 대상자는 1형 28시간 2박 3일이며 1형 미참석 병과 소집 미대상 병은 2형 32시간 4일 미대상 간부와 공군병은 2형 28시간 2박 3일입니다. 병 5년차에서 6년차는 기본 8시간 작게 12시간 병 7년차에서 8년차 와 간부 7년차부터 연령 정년까지 는 미 이수 훈련을 받고 신규 전역 자는 표에 훈련 시간이 없으며 상비 예비군은 1형 28시간에 반드시 참가하고 나머지는 소집 부대가 통제합니다. 이형은 비수경이 원칙이나 간부 공군병은 수경하고 1형 미 참가 자는 이병훈련을 원칙으로 하되 예정훈련이 없으면 각 군 지침 을 따르며 미 참석 간부와 육군 동원사단 동원포병단 동원 보충대대, 공군 전 부대, 해병대 동원 지원단은 가능한 일정 안에서 일형을 최대한 다시 부과합니다."
+    },
+    "7790b0b7ab89bc333ee1fe3522aa156280330699ea550d226391d8f2558ae437": {
+      "asrSeconds": 73.654,
+      "audioKey": "7790b0b7ab89bc333ee1fe3522aa156280330699ea550d226391d8f2558ae437",
+      "canonicalCER": 0.047521,
+      "criticalMatch": false,
+      "criticalTarget": [
+        "quantity:9조",
+        "quantity:2명",
+        "quantity:3명",
+        "quantity:2명",
+        "quantity:2명",
+        "quantity:3명",
+        "quantity:7명",
+        "quantity:3명",
+        "quantity:2일",
+        "quantity:2일",
+        "quantity:7세",
+        "permission",
+        "quantity:2명",
+        "quantity:6명",
+        "quantity:2명",
+        "quantity:2명",
+        "quantity:2명",
+        "quantity:1명",
+        "quantity:2명",
+        "quantity:2명",
+        "quantity:2명",
+        "quantity:6명",
+        "quantity:10명",
+        "quantity:8명",
+        "quantity:12명",
+        "quantity:2명",
+        "quantity:6명",
+        "quantity:1명",
+        "quantity:2명",
+        "quantity:1명",
+        "quantity:2명"
+      ],
+      "criticalTranscript": [
+        "quantity:9조",
+        "quantity:2명",
+        "quantity:3명",
+        "quantity:2명",
+        "quantity:2명",
+        "quantity:3명",
+        "quantity:7명",
+        "quantity:3명",
+        "quantity:30일",
+        "quantity:7세",
+        "permission",
+        "quantity:2명",
+        "quantity:6명",
+        "quantity:2명",
+        "quantity:2명",
+        "quantity:2명",
+        "quantity:1명",
+        "quantity:2명",
+        "quantity:2명",
+        "quantity:2명",
+        "quantity:6명",
+        "quantity:10명",
+        "quantity:8명",
+        "quantity:12명",
+        "quantity:2명",
+        "quantity:6명",
+        "quantity:1명",
+        "quantity:2명",
+        "quantity:1명",
+        "quantity:2명"
+      ],
+      "durationMs": 100660,
+      "literalCER": 0.078091,
+      "mp3Sha256": "26679f8f3908cfdf9834086c079045a38a81e9999c621b181808da2903bb4094",
+      "normalizedTarget": "특전지역대에는본부와구별특전중대산악9조부대를둡니다본부는지휘부2명인소령대위지역대장과중대위부지역대장지원반3명인원상사지원담당관과중상사특전부사관2명통신반중상사특전부사관2명입니다해당계급이부족하면이단계아래까지인원이부족하면3명에서7명으로편성하며3명일때는지역대장지원담당관통신부사관을둡니다본부장비는엠십육에2일또는케2일에이칠정협약에따른동원소형승합차한대쌍안경한개지피에스한대핸드토키세대완전군장7세트와방탄조끼칠착이며피복은육성지원예산으로지원할수있습니다중대는본부2명특전반6명의무반2명통신반2명으로편성합니다중대장은대위중위원사상사부중대장과정작담당관은상중사지원담당관2명과화기부사관1명저격부사관2명의무부사관2명통신부사관2명은중사기준입니다직책별쌍안경무전기지피에스엠이백삼저격수조준경두개구급낭두개통신반무전기두대와개인별소총방탄조끼완전군장을갖춥니다계급부족시이단계아래까지가능하고인원이부족하면팀장부팀장외6명에서10명을더해총8명에서12명으로특전반2명에서6명의무반1명에서2명통신반1명에서2명범위에서특기를고려해편성합니다",
+      "normalizedTranscript": "특전지역대에는본부와구별특전중대산악9조부대를둡니다본부는지휘부2명인소령대위지역대장과중대위부지역대장지원반3명인원상사지원담당관과중상사특전부사관2명통신반중상사특전부사관2명입니다해당계급이부족하면이단계아래까지인원이부족하면3명에서7명으로편성하며3명일때는지역대장지원담당관통신부사관을둡니다본부장비는m30일또는ka칠정협약에따른동원소형승합차한대쌍안경한개gps한대핸드토키세대완전군장7세트와방탄조끼칠차기며피복은육성지원예산으로지원할수있습니다중대는본부2명특전반6명의무반2명통신반2명으로편성합니다중대장은대위중위원사상사부중대장과정작담당관은상중사지원담당관2명과화기부사관1명저격부사관2명의무부사관2명통신부사관2명은중사기준입니다직책별쌍안경무전기gpsm이백삼저격수조준경두개구금낭두개통신반무전기두대와개인별소총방탄조끼완전군장을갖춥니다개급부족시이단계아래까지가능하고인원이부족하면팀장부팀장외6명에서10명을더해총8명에서12명으로특전반2명에서6명의무반1명에서2명통신반1명에서2명범위에서특기를고려해편성합니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.132668,
+          "end": 5.32,
+          "start": 0.0,
+          "text": " 특전 지역대에는 본부와 구별 특전 중대 산악 구조부대를 둡니다."
+        },
+        {
+          "avgLogProbability": -0.132668,
+          "end": 10.24,
+          "start": 5.32,
+          "text": " 본부는 지휘부 2명인 소령 대위 지역대장과 중 대위 부지역대장"
+        },
+        {
+          "avgLogProbability": -0.132668,
+          "end": 15.92,
+          "start": 10.24,
+          "text": " 지원반 3명 인원 상사지원 담당관과 중 상사 특전부사관 2명 통신반"
+        },
+        {
+          "avgLogProbability": -0.132668,
+          "end": 19.2,
+          "start": 15.92,
+          "text": " 중 상사 특전부사관 2명입니다."
+        },
+        {
+          "avgLogProbability": -0.132668,
+          "end": 23.44,
+          "start": 19.2,
+          "text": " 해당 계급이 부족하면 2단계 아래까지 인원이 부족하면 3명"
+        },
+        {
+          "avgLogProbability": -0.132668,
+          "end": 28.76,
+          "start": 23.44,
+          "text": " 에서 7명으로 편성하며 3명일 때는 지역대장 지원 담당관"
+        },
+        {
+          "avgLogProbability": -0.158206,
+          "end": 35.54,
+          "start": 28.76,
+          "text": " 통신부사관을 둡니다. 본부 장비는 m16-21 또는 ka-7정 협약에 따른"
+        },
+        {
+          "avgLogProbability": -0.158206,
+          "end": 41.84,
+          "start": 35.54,
+          "text": " 동원 소형 승합차 1대, 쌍안경 1개, gps 1대, 핸드토키 3대, 완전"
+        },
+        {
+          "avgLogProbability": -0.158206,
+          "end": 46.28,
+          "start": 41.84,
+          "text": " 군장 7세트와 방탄조끼 7차기며 피복은 육성 지원 예산으로 지원"
+        },
+        {
+          "avgLogProbability": -0.158206,
+          "end": 50.3,
+          "start": 46.28,
+          "text": " 할 수 있습니다. 중대는 본부 2명 특전반 6명"
+        },
+        {
+          "avgLogProbability": -0.158206,
+          "end": 54.08,
+          "start": 50.3,
+          "text": " 의무반 2명 통신반 2명으로 편성합니다."
+        },
+        {
+          "avgLogProbability": -0.142609,
+          "end": 61.48,
+          "start": 54.08,
+          "text": " 중대장은 대위 중위원사 상사 부중대장과 정작담당관은 상 중사 지원담당관"
+        },
+        {
+          "avgLogProbability": -0.142609,
+          "end": 66.84,
+          "start": 61.48,
+          "text": " 2명과 화기부사관 1명 저격부사관 2명 의무부사관 2명 통신부사관"
+        },
+        {
+          "avgLogProbability": -0.142609,
+          "end": 72.75999999999999,
+          "start": 66.84,
+          "text": " 2명은 중사기준입니다. 직책별 쌍안경 무전기 gps m203"
+        },
+        {
+          "avgLogProbability": -0.142609,
+          "end": 78.64,
+          "start": 72.75999999999999,
+          "text": " 저격수조준경 2개 구금낭 2개 통신반 무전기 2대와 개인별소총"
+        },
+        {
+          "avgLogProbability": -0.142609,
+          "end": 83.44,
+          "start": 78.64,
+          "text": " 방탄조끼 완전군장을 갖춥니다. 개급부족 시 2단계 아래까지"
+        },
+        {
+          "avgLogProbability": -0.153571,
+          "end": 90.03999999999999,
+          "start": 83.44,
+          "text": " 가능하고 인원이 부족하면 팀장 부팀장 외 6명에서 10명을 더해 총 8명"
+        },
+        {
+          "avgLogProbability": -0.153571,
+          "end": 96.16,
+          "start": 90.03999999999999,
+          "text": " 에서 12명으로 특전반 2명에서 6명 의무반 1명에서 2명 통신반"
+        },
+        {
+          "avgLogProbability": -0.167452,
+          "end": 99.92,
+          "start": 96.16,
+          "text": " 한 명에서 두 명 범위에서 특기를 고려해 편성합니다."
+        }
+      ],
+      "status": "review_required",
+      "target": "특전지역대에는 본부와 구별 특전중대, 산악·구조 부대를 둡니다. 본부는 지휘부 2명인 소령·대위 지역대장과 중·대위 부지역대장, 지원반 3명인 원·상사 지원담당관과 중·상사 특전부사관 2명, 통신반 중·상사 특전부사관 2명입니다. 해당 계급이 부족하면 2단계 아래까지, 인원이 부족하면 3~7명으로 편성하며 3명일 때는 지역대장·지원담당관·통신부사관을 둡니다. 본부 장비는 M16A1 또는 K1A 7정, 협약에 따른 동원 소형승합차 1대, 쌍안경 1개, GPS 1대, 핸드토키 3대, 완전군장 7세트와 방탄조끼 7착이며 피복은 육성지원 예산으로 지원할 수 있습니다. 중대는 본부 2명, 특전반 6명, 의무반 2명, 통신반 2명으로 편성합니다. 중대장은 대위·중위·원사·상사, 부중대장과 정작담당관은 상·중사, 지원담당관 2명과 화기부사관 1명·저격부사관 2명·의무부사관 2명·통신부사관 2명은 중사 기준입니다. 직책별 쌍안경·무전기·GPS·M203·저격수조준경 2개·구급낭 2개·통신반 무전기 2대와 개인별 소총·방탄조끼·완전군장을 갖춥니다. 계급 부족 시 2단계 아래까지 가능하고, 인원이 부족하면 팀장·부팀장 외 6~10명을 더해 총 8~12명으로, 특전반 2~6명·의무반 1~2명·통신반 1~2명 범위에서 특기를 고려해 편성합니다.",
+      "textSha256": "eeff0b854dff9313f71d043c979e336251954fa6e5980db3d8ca2bda8d82d72f",
+      "transcript": "특전 지역대에는 본부와 구별 특전 중대 산악 구조부대를 둡니다. 본부는 지휘부 2명인 소령 대위 지역대장과 중 대위 부지역대장 지원반 3명 인원 상사지원 담당관과 중 상사 특전부사관 2명 통신반 중 상사 특전부사관 2명입니다. 해당 계급이 부족하면 2단계 아래까지 인원이 부족하면 3명 에서 7명으로 편성하며 3명일 때는 지역대장 지원 담당관 통신부사관을 둡니다. 본부 장비는 m16-21 또는 ka-7정 협약에 따른 동원 소형 승합차 1대, 쌍안경 1개, gps 1대, 핸드토키 3대, 완전 군장 7세트와 방탄조끼 7차기며 피복은 육성 지원 예산으로 지원 할 수 있습니다. 중대는 본부 2명 특전반 6명 의무반 2명 통신반 2명으로 편성합니다. 중대장은 대위 중위원사 상사 부중대장과 정작담당관은 상 중사 지원담당관 2명과 화기부사관 1명 저격부사관 2명 의무부사관 2명 통신부사관 2명은 중사기준입니다. 직책별 쌍안경 무전기 gps m203 저격수조준경 2개 구금낭 2개 통신반 무전기 2대와 개인별소총 방탄조끼 완전군장을 갖춥니다. 개급부족 시 2단계 아래까지 가능하고 인원이 부족하면 팀장 부팀장 외 6명에서 10명을 더해 총 8명 에서 12명으로 특전반 2명에서 6명 의무반 1명에서 2명 통신반 한 명에서 두 명 범위에서 특기를 고려해 편성합니다."
+    },
+    "7ad013835889ff5e0aea7321ff95ea9ee7376b72cd4d52a24f4e893e29347a4a": {
+      "asrSeconds": 12.88,
+      "audioKey": "7ad013835889ff5e0aea7321ff95ea9ee7376b72cd4d52a24f4e893e29347a4a",
+      "canonicalCER": 0.051282,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "quantity:4회",
+        "quantity:21개월",
+        "quantity:1년",
+        "quantity:15일",
+        "quantity:1년",
+        "초과",
+        "quantity:34개월",
+        "이상",
+        "quantity:15일",
+        "quantity:16일"
+      ],
+      "criticalTranscript": [
+        "quantity:4회",
+        "quantity:21개월",
+        "quantity:1년",
+        "quantity:15일",
+        "quantity:1년",
+        "초과",
+        "quantity:34개월",
+        "이상",
+        "quantity:15일",
+        "quantity:16일"
+      ],
+      "durationMs": 16690,
+      "literalCER": 0.049383,
+      "mp3Sha256": "0330b74fc0df60f31d86f8c34e565a33e296d948451062a1d116c0a0a5b476bb",
+      "normalizedTarget": "4회복무요원의연가일수는의무복무기간에따라별표일의이로정한다예를들어21개월복무자는소집후1년이내15일과1년초과34개월이상복무자는각각15일과16일이다",
+      "normalizedTranscript": "4회복무요원의영가일수는의무복무기관에따라별표일위로정한다예를들어21개월복무자는소집후1년이내15일과1년초과34개월이상복무자는각각15일과16일이다",
+      "segments": [
+        {
+          "avgLogProbability": -0.186397,
+          "end": 5.74,
+          "start": 0.0,
+          "text": " 사회복무요원의 영가일수는 의무복무기관에 따라 별표 1위로 정한다."
+        },
+        {
+          "avgLogProbability": -0.186397,
+          "end": 12.26,
+          "start": 5.74,
+          "text": " 예를 들어 21개월 복무자는 소집 후, 1년 이내 15일과 1년 초과 13일,"
+        },
+        {
+          "avgLogProbability": -0.186397,
+          "end": 16.66,
+          "start": 12.26,
+          "text": " 24개월 이상 복무자는 각각 15일과 16일이다."
+        }
+      ],
+      "status": "review_required",
+      "target": "사회복무요원의 연가일수는 의무복무기간에 따라 별표 1의2로 정한다. 예를 들어 21개월 복무자는 소집 후 1년 이내 15일과 1년 초과 13일, 24개월 이상 복무자는 각각 15일과 16일이다.",
+      "textSha256": "7ceffbf9102b2604cc2ee816b6105d2e2bcfd9e7960f10b877b31e788edb3031",
+      "transcript": "사회복무요원의 영가일수는 의무복무기관에 따라 별표 1위로 정한다. 예를 들어 21개월 복무자는 소집 후, 1년 이내 15일과 1년 초과 13일, 24개월 이상 복무자는 각각 15일과 16일이다."
+    },
+    "7b8764bb41523ceb016ced971c5284b2cc9f946e08550be545cd0c3a9ef135df": {
+      "asrSeconds": 29.657,
+      "audioKey": "7b8764bb41523ceb016ced971c5284b2cc9f946e08550be545cd0c3a9ef135df",
+      "canonicalCER": 0.019802,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "quantity:1개월",
+        "quantity:6일",
+        "quantity:15일",
+        "quantity:5일",
+        "quantity:8개월",
+        "quantity:4개월",
+        "permission",
+        "quantity:8개월",
+        "미만",
+        "quantity:4시간",
+        "quantity:1일",
+        "quantity:1년",
+        "제외"
+      ],
+      "criticalTranscript": [
+        "quantity:1개월",
+        "quantity:6일",
+        "quantity:15일",
+        "quantity:5일",
+        "quantity:8개월",
+        "quantity:4개월",
+        "permission",
+        "quantity:8개월",
+        "미만",
+        "quantity:4시간",
+        "quantity:1일",
+        "quantity:1년",
+        "제외"
+      ],
+      "durationMs": 40990,
+      "literalCER": 0.019802,
+      "mp3Sha256": "263e8ad7e4d3a39a2d9477cad41ad2248f0ae0ca5e643cc1605fb4079b4f2bea",
+      "normalizedTarget": "일반선박의기본유급휴가는승무1개월당6일연해구역운항15일이내국내항기항선박은5일이며원칙적으로8개월계속근무후4개월안에주되항해중이면항해종료까지미룰수있고8개월미만도쌓인휴가를줍니다주4시간의시간외근로를휴가로대신하는월1일추가규정장기근속가산과일정어선의1년계속근무휴가특례등도적용합니다사용휴가는귀국다음날부터승선전날까지해외에서승선하면출국전날까지계산하되공휴일노동절필수교육기간등은제외합니다",
+      "normalizedTranscript": "일반선박의기본유급휴가는승무1개월당6일연애구역운항15일이내국내양기항선박은5일이며원칙적으로8개월계속근무후4개월안에주대항해중이면항해종료까지미룰수있고8개월미만도쌓인휴가를줍니다주4시간의시간외글로를휴가로대신하는월1일추가규정장기근속가산과일정어선의1년계속근무휴가특례등도적용합니다사용휴가는귀국다음날부터승선전날까지해외에서승선하면출국전날까지계산하되공휴일노동절필수교육기간등은제외합니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.147862,
+          "end": 4.24,
+          "start": 0.0,
+          "text": " 일반 선박의 기본 유급휴가는 승무 1개월당 6일"
+        },
+        {
+          "avgLogProbability": -0.147862,
+          "end": 8.76,
+          "start": 4.24,
+          "text": " 연애구역 운항 15일 이내 국내양 기항 선박은 5일이며"
+        },
+        {
+          "avgLogProbability": -0.147862,
+          "end": 13.36,
+          "start": 8.76,
+          "text": " 원칙적으로 8개월 계속 근무 후 4개월 안에 주대 항해 중이면"
+        },
+        {
+          "avgLogProbability": -0.147862,
+          "end": 17.92,
+          "start": 13.36,
+          "text": " 항해 종료까지 미룰 수 있고 8개월 미만도 쌓인 휴가를 줍니다."
+        },
+        {
+          "avgLogProbability": -0.147862,
+          "end": 22.88,
+          "start": 17.92,
+          "text": " 주 4시간의 시간 외글로를 휴가로 대신하는 월 1일 추가 규정"
+        },
+        {
+          "avgLogProbability": -0.147862,
+          "end": 28.52,
+          "start": 22.88,
+          "text": " 장기근속 가산과 일정 어선의 1년 계속 근무 휴가 특례 등도 적용합니다."
+        },
+        {
+          "avgLogProbability": -0.196391,
+          "end": 40.92,
+          "start": 28.52,
+          "text": " 사용 휴가는 귀국 다음 날부터 승선 전날까지, 해외에서 승선하면 출국 전날까지 계산하되, 공휴일, 노동절, 필수 교육기간 등은 제외합니다."
+        }
+      ],
+      "status": "review_required",
+      "target": "일반 선박의 기본 유급휴가는 승무 1개월당 6일, 연해구역 운항·15일 이내 국내항 기항 선박은 5일이며, 원칙적으로 8개월 계속근무 후 4개월 안에 주되 항해 중이면 항해 종료까지 미룰 수 있고 8개월 미만도 쌓인 휴가를 줍니다. 주 4시간의 시간외근로를 휴가로 대신하는 월 1일 추가 규정, 장기근속 가산과 일정 어선의 1년 계속근무 휴가 특례 등도 적용합니다. 사용 휴가는 귀국 다음 날부터 승선 전날까지, 해외에서 승선하면 출국 전날까지 계산하되 공휴일·노동절·필수교육기간 등은 제외합니다.",
+      "textSha256": "e05c51821dd77339718cc8ff4988cfbbc519bd2dcda7299974b9d75285af497d",
+      "transcript": "일반 선박의 기본 유급휴가는 승무 1개월당 6일 연애구역 운항 15일 이내 국내양 기항 선박은 5일이며 원칙적으로 8개월 계속 근무 후 4개월 안에 주대 항해 중이면 항해 종료까지 미룰 수 있고 8개월 미만도 쌓인 휴가를 줍니다. 주 4시간의 시간 외글로를 휴가로 대신하는 월 1일 추가 규정 장기근속 가산과 일정 어선의 1년 계속 근무 휴가 특례 등도 적용합니다. 사용 휴가는 귀국 다음 날부터 승선 전날까지, 해외에서 승선하면 출국 전날까지 계산하되, 공휴일, 노동절, 필수 교육기간 등은 제외합니다."
+    },
+    "8003c5f37a26aba0117d7628110c750ee0f8cc8c0e4f6935bb534bb2cbc268c0": {
+      "asrSeconds": 9.685,
+      "audioKey": "8003c5f37a26aba0117d7628110c750ee0f8cc8c0e4f6935bb534bb2cbc268c0",
+      "canonicalCER": 0.020833,
+      "criticalMatch": true,
+      "criticalTarget": [],
+      "criticalTranscript": [],
+      "durationMs": 9420,
+      "literalCER": 0.022222,
+      "mp3Sha256": "c7378c190b875dc9393649530d54fb7afd9c5cededb800b1e08aa13d8828d1c3",
+      "normalizedTarget": "도시락납품업체는식품안전관리인증인에이치에이씨씨피인증업체중에서고르거나인증업체를우대해평가한다",
+      "normalizedTranscript": "도시락납품업체는식품안전관리인증인에이치에이씨씨피인증업체중에서고르거나인증업체를우대에평가한다",
+      "segments": [
+        {
+          "avgLogProbability": -0.194942,
+          "end": 8.86,
+          "start": 0.0,
+          "text": " 도시락 납품 업체는 식품 안전관리 인증인 HACCP 인증업체 중에서 고르거나 인증업체를 우대에 평가한다."
+        }
+      ],
+      "status": "review_required",
+      "target": "도시락 납품업체는 식품 안전관리 인증인 HACCP 인증업체 중에서 고르거나, 인증업체를 우대해 평가한다.",
+      "textSha256": "850bb7f97dbda431ea8c89797957c8cfde54bbe447ca8d78ff7b307b59bb13bf",
+      "transcript": "도시락 납품 업체는 식품 안전관리 인증인 HACCP 인증업체 중에서 고르거나 인증업체를 우대에 평가한다."
+    },
+    "80092627716cab98714fe47cae9138d80778719c6e4ce11040a10aea21efd85e": {
+      "asrSeconds": 10.916,
+      "audioKey": "80092627716cab98714fe47cae9138d80778719c6e4ce11040a10aea21efd85e",
+      "canonicalCER": 0.0,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "permission",
+        "permission"
+      ],
+      "criticalTranscript": [
+        "permission",
+        "permission"
+      ],
+      "durationMs": 11150,
+      "literalCER": 0.0,
+      "mp3Sha256": "71a00d61f16af08e1853ad988437504f7438e0df13505cca1f99f311b0a6c50e",
+      "normalizedTarget": "병무청장지방병무청장병무지청장은예산범위에서병역명문가에포상금을줄수있으며부상과증서도함께수여할수있습니다",
+      "normalizedTranscript": "병무청장지방병무청장병무지청장은예산범위에서병역명문가에포상금을줄수있으며부상과증서도함께수여할수있습니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.15096,
+          "end": 7.8,
+          "start": 0.0,
+          "text": " 병무청장, 지방병무청장, 병무지청장은 예산 범위에서 병역명문가에 포상금을 줄 수 있으며"
+        },
+        {
+          "avgLogProbability": -0.15096,
+          "end": 12.0,
+          "start": 7.8,
+          "text": " 부상과 증서도 함께 수여할 수 있습니다."
+        }
+      ],
+      "status": "normalized_match",
+      "target": "병무청장·지방병무청장·병무지청장은 예산 범위에서 병역명문가에 포상금을 줄 수 있으며, 부상과 증서도 함께 수여할 수 있습니다.",
+      "textSha256": "8cbd5d47a1367b013c6817ba37a33ad0a57c4cfa0fffbc497c652bb1489cdb3c",
+      "transcript": "병무청장, 지방병무청장, 병무지청장은 예산 범위에서 병역명문가에 포상금을 줄 수 있으며 부상과 증서도 함께 수여할 수 있습니다."
+    },
+    "900b350194a96a3dc8bc2c35f30d3170d721a16d4b8ab7174ecb56e0dfe25665": {
+      "asrSeconds": 10.363,
+      "audioKey": "900b350194a96a3dc8bc2c35f30d3170d721a16d4b8ab7174ecb56e0dfe25665",
+      "canonicalCER": 0.0,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "permission"
+      ],
+      "criticalTranscript": [
+        "permission"
+      ],
+      "durationMs": 11260,
+      "literalCER": 0.0,
+      "mp3Sha256": "797d77d48afc272720ea1160345aa577600e63aadabded3be6972ab76ec5fada",
+      "normalizedTarget": "중앙지역직장통합방위협의회는대통령령의기준에따라예비군방위협의회나중앙지역민방위협의회와통합하여운영할수있습니다",
+      "normalizedTranscript": "중앙지역직장통합방위협의회는대통령령의기준에따라예비군방위협의회나중앙지역민방위협의회와통합하여운영할수있습니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.15435,
+          "end": 10.64,
+          "start": 0.0,
+          "text": " 중앙, 지역, 직장 통합방위협의회는 대통령령의 기준에 따라 예비군 방위협의회나 중앙, 지역 민방위협의회와 통합하여 운영할 수 있습니다."
+        }
+      ],
+      "status": "normalized_match",
+      "target": "중앙·지역·직장 통합방위협의회는 대통령령의 기준에 따라 예비군 방위협의회나 중앙·지역 민방위협의회와 통합하여 운영할 수 있습니다.",
+      "textSha256": "f137ca9a6fecf4420e9d17abacdd09971acce05902f3a2366a5d210a7c65a840",
+      "transcript": "중앙, 지역, 직장 통합방위협의회는 대통령령의 기준에 따라 예비군 방위협의회나 중앙, 지역 민방위협의회와 통합하여 운영할 수 있습니다."
+    },
+    "900b6c9a9b438050f959d73fcc0ce019c4cfb492216588a12abf3c01b01744e7": {
+      "asrSeconds": 11.033,
+      "audioKey": "900b6c9a9b438050f959d73fcc0ce019c4cfb492216588a12abf3c01b01744e7",
+      "canonicalCER": 0.0,
+      "criticalMatch": true,
+      "criticalTarget": [],
+      "criticalTranscript": [],
+      "durationMs": 13390,
+      "literalCER": 0.0,
+      "mp3Sha256": "087a13495ffc16a2a549f4b66bb4cf6ee0ae97440d717cea1747cb0bdc1c73af",
+      "normalizedTarget": "병역판정재판정입영판정신체검사체력검사확인검사가직접원인이되어치료가필요해진사람은국가부담치료대상입니다재신체검사도포함됩니다",
+      "normalizedTranscript": "병역판정재판정입영판정신체검사체력검사확인검사가직접원인이되어치료가필요해진사람은국가부담치료대상입니다재신체검사도포함됩니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.159165,
+          "end": 11.120000000000001,
+          "start": 0.0,
+          "text": " 병역 판정, 재판정, 입영 판정, 신체 검사, 체력 검사, 확인 검사가 직접 원인이 되어 치료가 필요해진 사람은 국가부담 치료 대상입니다."
+        },
+        {
+          "avgLogProbability": -0.159165,
+          "end": 14.56,
+          "start": 11.120000000000001,
+          "text": " 재신체 검사도 포함됩니다."
+        }
+      ],
+      "status": "normalized_match",
+      "target": "병역판정·재판정·입영판정·신체검사·체력검사·확인검사가 직접 원인이 되어 치료가 필요해진 사람은 국가부담 치료 대상입니다. 재신체검사도 포함됩니다.",
+      "textSha256": "4ace6052bab1f77756e619d3ffa4ba38b7c33f160da0f8eb2b0e44963ca7acd2",
+      "transcript": "병역 판정, 재판정, 입영 판정, 신체 검사, 체력 검사, 확인 검사가 직접 원인이 되어 치료가 필요해진 사람은 국가부담 치료 대상입니다. 재신체 검사도 포함됩니다."
+    },
+    "9018143665980d239d72d7aaad7a1be92b726ea0929679c23e2e7c4b850a2b30": {
+      "asrSeconds": 10.452,
+      "audioKey": "9018143665980d239d72d7aaad7a1be92b726ea0929679c23e2e7c4b850a2b30",
+      "canonicalCER": 0.035088,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "quantity:6년",
+        "이상",
+        "negative",
+        "제외"
+      ],
+      "criticalTranscript": [
+        "quantity:6년",
+        "이상",
+        "negative",
+        "제외"
+      ],
+      "durationMs": 11640,
+      "literalCER": 0.035088,
+      "mp3Sha256": "9800e463e26447e5146e1368dfa9009eb7a6a796fd1d75821af9961011b4700c",
+      "normalizedTarget": "병역의무자가사형무기징역무기금고또는6년이상의징역금고를선고받으면병역에복무할수없습니다이경우병적에서도제외됩니다",
+      "normalizedTranscript": "병역이무자가사형무기직역무기금고또는6년이상의징역금고를선고받으면병역에복무할수없습니다이경우병적에서도제외됩니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.159595,
+          "end": 11.0,
+          "start": 0.0,
+          "text": " 병역이무자가 사형, 무기직역, 무기금고 또는 6년 이상의 징역, 금고를 선고받으면 병역에 복무할 수 없습니다. 이 경우 병적에서도 제외됩니다."
+        }
+      ],
+      "status": "review_required",
+      "target": "병역의무자가 사형, 무기징역·무기금고 또는 6년 이상의 징역·금고를 선고받으면 병역에 복무할 수 없습니다. 이 경우 병적에서도 제외됩니다.",
+      "textSha256": "844356b68f97cf1b65df76705496291245d93d62363aa0d7eb8e750c4b7b6eb0",
+      "transcript": "병역이무자가 사형, 무기직역, 무기금고 또는 6년 이상의 징역, 금고를 선고받으면 병역에 복무할 수 없습니다. 이 경우 병적에서도 제외됩니다."
+    },
+    "95e4067fa31c33ca9a30f7794e0fac4830d49cf7e16dc585356bb0f7c7074b10": {
+      "asrSeconds": 43.028,
+      "audioKey": "95e4067fa31c33ca9a30f7794e0fac4830d49cf7e16dc585356bb0f7c7074b10",
+      "canonicalCER": 0.106227,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "제외"
+      ],
+      "criticalTranscript": [
+        "제외"
+      ],
+      "durationMs": 55480,
+      "literalCER": 0.116105,
+      "mp3Sha256": "78535f9ee51206ac4063bbf9c32bd74c0234aa6de0673471ba3094b8a6e36812",
+      "normalizedTarget": "지역대는쌍안경한개를둡니다기동대의감시정찰반드론은네대이며기동대는저격조준경야간투시경각사쌍안경지피에스엠일나침의각육엠이나침의이구급낭일개인화기조준경고성능확대경각삼십레이저표적지시기여섯개입니다일반중대본부는쌍안경지피에스각일과구급낭이소대는저격조준경야간투시경쌍안경지피에스엠일나침의각한개입니다특전지역대는쌍안경지피에스엠일나침의각일특전중대는이에저격조준경야간투시경구급낭각두개를둡니다기동대에감시정찰반을편성하면드론지피에스쌍안경엠일엠이나침의를추가합니다기동대와전방군단주민이동지역예비군은권총지급자를제외하고대검을일인한개씩둡니다",
+      "normalizedTranscript": "지역대는쌍안경한개를둡니다기동대의감시정찰반드론은네대이며기동대는저격조준경야간투시경각사쌍안경gps에밀라침의각에미나침의이구급랑일개인화기조준경고성능학대경각삼십레이저표적지식이여섯개입니다일반중대본부는쌍안경지피에스각일과구급랑이소대는저격조준경야간투시경쌍안경지피에스에밀나침에각한개입니다특전지역대는쌍안경지피에스에밀나침에각일특전중대는이의저격조준경야간투시경구급랑각두개를둡니다기동대에감시정찰반을편성하면드론지피에스쌍안경에밀에미나침을추가합니다기동대와전방군단주민이동지역예비군은권총지급자를제외하고대검을일인한개씩둡니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.203047,
+          "end": 19.44,
+          "start": 0.0,
+          "text": " 지역대는 쌍안경 1개를 둡니다. 기동대의 감시정찰반 드론은 4대이며, 기동대는 저격조준경, 야간투시경, 각사 쌍안경, gps 에밀라침의 각, 에미나침의 이 구급랑 1, 개인화기조준경, 고성능학대경, 각 30, 레이저표적지식이 6개입니다."
+        },
+        {
+          "avgLogProbability": -0.130667,
+          "end": 30.480000000000004,
+          "start": 19.44,
+          "text": " 일반 중대 본부는 쌍안경, GPS 각 1과 구급랑 2, 소대는 저격조준경, 야간투시경, 쌍안경, GPS, 에밀나침에 각 1개입니다."
+        },
+        {
+          "avgLogProbability": -0.130667,
+          "end": 40.6,
+          "start": 30.480000000000004,
+          "text": " 특전 지역대는 쌍안경, GPS, 에밀나침에 각 1, 특전 중대는 2의 저격조준경, 야간투시경, 구급랑 각 2개를 둡니다."
+        },
+        {
+          "avgLogProbability": -0.130667,
+          "end": 48.040000000000006,
+          "start": 40.6,
+          "text": " 기동대에 감시정찰반을 편성하면 드론, GPS, 쌍안경, 에밀, 에미나침을 추가합니다."
+        },
+        {
+          "avgLogProbability": -0.185865,
+          "end": 54.839999999999996,
+          "start": 48.04,
+          "text": " 기동대와 전방군단 주민 이동 지역 예비군은 권총 지급자를 제외하고 대검을 1인 1개씩 둡니다."
+        }
+      ],
+      "status": "review_required",
+      "target": "지역대는 쌍안경 1개를 둡니다. 기동대의 감시정찰반 드론은 4대이며, 기동대는 저격조준경·야간투시경 각 4, 쌍안경·GPS·M1나침의 각 6, M2나침의 2, 구급낭 1, 개인화기조준경·고성능확대경 각 30, 레이저표적지시기 6개입니다. 일반 중대본부는 쌍안경·GPS 각 1과 구급낭 2, 소대는 저격조준경·야간투시경·쌍안경·GPS·M1나침의 각 1개입니다. 특전지역대는 쌍안경·GPS·M1나침의 각 1, 특전중대는 이에 저격조준경·야간투시경·구급낭 각 2개를 둡니다. 기동대에 감시정찰반을 편성하면 드론·GPS·쌍안경·M1·M2나침의를 추가합니다. 기동대와 전방군단 주민이동지역 예비군은 권총 지급자를 제외하고 대검을 1인 1개씩 둡니다.",
+      "textSha256": "1b9af09916769c3b1dfdbb4d6aac8a9c7157e5d82b264290b8a50b2d026e74ee",
+      "transcript": "지역대는 쌍안경 1개를 둡니다. 기동대의 감시정찰반 드론은 4대이며, 기동대는 저격조준경, 야간투시경, 각사 쌍안경, gps 에밀라침의 각, 에미나침의 이 구급랑 1, 개인화기조준경, 고성능학대경, 각 30, 레이저표적지식이 6개입니다. 일반 중대 본부는 쌍안경, GPS 각 1과 구급랑 2, 소대는 저격조준경, 야간투시경, 쌍안경, GPS, 에밀나침에 각 1개입니다. 특전 지역대는 쌍안경, GPS, 에밀나침에 각 1, 특전 중대는 2의 저격조준경, 야간투시경, 구급랑 각 2개를 둡니다. 기동대에 감시정찰반을 편성하면 드론, GPS, 쌍안경, 에밀, 에미나침을 추가합니다. 기동대와 전방군단 주민 이동 지역 예비군은 권총 지급자를 제외하고 대검을 1인 1개씩 둡니다."
+    },
+    "a01182a412a99735e4d86e1c0be25772ae1c60a91eff6db15ff9174bdc07a9c7": {
+      "asrSeconds": 8.644,
+      "audioKey": "a01182a412a99735e4d86e1c0be25772ae1c60a91eff6db15ff9174bdc07a9c7",
+      "canonicalCER": 0.029412,
+      "criticalMatch": true,
+      "criticalTarget": [],
+      "criticalTranscript": [],
+      "durationMs": 7360,
+      "literalCER": 0.029412,
+      "mp3Sha256": "d3ec55ce2775801f9d48b7ca4222cf1c7d62180651262136cd06bf61cbcfae32",
+      "normalizedTarget": "다만내륙에서이차까지무단불참한훈련은도서지역으로옮겨도다시부과합니다",
+      "normalizedTranscript": "다만내륙에서이차까지무담불참한훈련은도서지역으로옮겨도다시부과합니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.189495,
+          "end": 7.36,
+          "start": 0.0,
+          "text": " 다만 내륙에서 2차까지 무담불참한 훈련은 도서지역으로 옮겨도 다시 부과합니다."
+        }
+      ],
+      "status": "review_required",
+      "target": "다만 내륙에서 2차까지 무단불참한 훈련은 도서지역으로 옮겨도 다시 부과합니다.",
+      "textSha256": "a505def5b85260215a2c8991eb7a8c295bf81bcde85da0e3ddba5fd624bcc3e8",
+      "transcript": "다만 내륙에서 2차까지 무담불참한 훈련은 도서지역으로 옮겨도 다시 부과합니다."
+    },
+    "a01bffca9d4766f22e7597c40e4106046a40130994e55ec8e36bb9021fc578b6": {
+      "asrSeconds": 9.577,
+      "audioKey": "a01bffca9d4766f22e7597c40e4106046a40130994e55ec8e36bb9021fc578b6",
+      "canonicalCER": 0.0,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "quantity:4회",
+        "permission",
+        "quantity:24세"
+      ],
+      "criticalTranscript": [
+        "quantity:4회",
+        "permission",
+        "quantity:24세"
+      ],
+      "durationMs": 8990,
+      "literalCER": 0.0,
+      "mp3Sha256": "846324b6451f51271722c111cd3ce3b7e47c0eabb8d047c209463a21a9589e18",
+      "normalizedTarget": "4회복무소집대상보충역의학력변동에따른병역처분변경을적용할수있는기간은24세까지입니다",
+      "normalizedTranscript": "4회복무소집대상보충역의학력변동에따른병역처분변경을적용할수있는기간은24세까지입니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.192861,
+          "end": 8.4,
+          "start": 0.0,
+          "text": " 사회복무 소집 대상, 보충역의 학력변동에 따른 병역 처분 변경을 적용할 수 있는 기간은 24세까지입니다."
+        }
+      ],
+      "status": "normalized_match",
+      "target": "사회복무 소집 대상 보충역의 학력 변동에 따른 병역처분 변경을 적용할 수 있는 기간은 24세까지입니다.",
+      "textSha256": "704e878e7c8a00e895835abb7b11ae29eab0bd67e38fa9831abd02f29b8ba50a",
+      "transcript": "사회복무 소집 대상, 보충역의 학력변동에 따른 병역 처분 변경을 적용할 수 있는 기간은 24세까지입니다."
+    },
+    "b00990a3f8346a766b82825b90f1fd5dde33778bc7c7460197f57a212579444b": {
+      "asrSeconds": 12.675,
+      "audioKey": "b00990a3f8346a766b82825b90f1fd5dde33778bc7c7460197f57a212579444b",
+      "canonicalCER": 0.0,
+      "criticalMatch": true,
+      "criticalTarget": [],
+      "criticalTranscript": [],
+      "durationMs": 14110,
+      "literalCER": 0.0,
+      "mp3Sha256": "41696a26e2d4ab5d4e852921c64d1703a67689c430b4ca7342b4cee15b5ca0b9",
+      "normalizedTarget": "퇴직전출등으로직장예비군에서빠진대원이있으면직장의장은그사실을관할지방병무청장에게알려야합니다통보받은관할지방병무청장은그대원을지역예비군에편성합니다",
+      "normalizedTranscript": "퇴직전출등으로직장예비군에서빠진대원이있으면직장의장은그사실을관할지방병무청장에게알려야합니다통보받은관할지방병무청장은그대원을지역예비군에편성합니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.119786,
+          "end": 4.16,
+          "start": 0.0,
+          "text": " 퇴직 전출 등으로 직장예비군에서 빠진 대원이 있으면"
+        },
+        {
+          "avgLogProbability": -0.119786,
+          "end": 8.78,
+          "start": 4.16,
+          "text": " 직장의 장은 그 사실을 관할 지방병무청장에게 알려야 합니다."
+        },
+        {
+          "avgLogProbability": -0.119786,
+          "end": 13.48,
+          "start": 8.78,
+          "text": " 통보받은 관할 지방병무청장은 그 대원을 지역예비군에 편성합니다."
+        }
+      ],
+      "status": "normalized_match",
+      "target": "퇴직·전출 등으로 직장예비군에서 빠진 대원이 있으면, 직장의 장은 그 사실을 관할지방병무청장에게 알려야 합니다. 통보받은 관할지방병무청장은 그 대원을 지역예비군에 편성합니다.",
+      "textSha256": "02d7dc069041dc196acfd096dd3effdaa0a74ee9f865dbd27b073a2548bbd747",
+      "transcript": "퇴직 전출 등으로 직장예비군에서 빠진 대원이 있으면 직장의 장은 그 사실을 관할 지방병무청장에게 알려야 합니다. 통보받은 관할 지방병무청장은 그 대원을 지역예비군에 편성합니다."
+    },
+    "b00a5f507dce6fe8640dc28e21f53ca71bc4ea6de6c00ae312de45f58737a36f": {
+      "asrSeconds": 10.57,
+      "audioKey": "b00a5f507dce6fe8640dc28e21f53ca71bc4ea6de6c00ae312de45f58737a36f",
+      "canonicalCER": 0.0,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "permission"
+      ],
+      "criticalTranscript": [
+        "permission"
+      ],
+      "durationMs": 10920,
+      "literalCER": 0.0,
+      "mp3Sha256": "93d9b88ea19513824a98e6b9b13e30b610aa70e4e4ee53cecb31dba80efbac54",
+      "normalizedTarget": "병무청장은병역관련위법행위를예방단속할필요가있으면병역이행여부를확인점검하고위반사실을확인할자료를모을수있습니다",
+      "normalizedTranscript": "병무청장은병역관련위법행위를예방단속할필요가있으면병역이행여부를확인점검하고위반사실을확인할자료를모을수있습니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.139586,
+          "end": 10.200000000000001,
+          "start": 0.0,
+          "text": " 병무청장은 병역 관련 위법행위를 예방, 단속할 필요가 있으면 병역 이행 여부를 확인, 점검하고 위반 사실을 확인할 자료를 모을 수 있습니다."
+        }
+      ],
+      "status": "normalized_match",
+      "target": "병무청장은 병역 관련 위법행위를 예방·단속할 필요가 있으면 병역 이행 여부를 확인·점검하고 위반 사실을 확인할 자료를 모을 수 있습니다.",
+      "textSha256": "85b40585444e097a9fc7f9e384be440cb42bdf14e837a51f03c659d6593ce6ef",
+      "transcript": "병무청장은 병역 관련 위법행위를 예방, 단속할 필요가 있으면 병역 이행 여부를 확인, 점검하고 위반 사실을 확인할 자료를 모을 수 있습니다."
+    },
+    "b1dd4507065b876e908ab5efcdaffc4ba1b28f3444c23572a0086c3f1c1fa1a6": {
+      "asrSeconds": 59.187,
+      "audioKey": "b1dd4507065b876e908ab5efcdaffc4ba1b28f3444c23572a0086c3f1c1fa1a6",
+      "canonicalCER": 0.013123,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "quantity:1000000000000원",
+        "quantity:1명",
+        "quantity:1명",
+        "quantity:1명",
+        "quantity:1명",
+        "quantity:41명",
+        "quantity:6명",
+        "quantity:1명",
+        "quantity:1명",
+        "quantity:2명",
+        "quantity:1명",
+        "quantity:1명",
+        "quantity:1명",
+        "quantity:1명",
+        "quantity:2명",
+        "quantity:1명",
+        "quantity:1명",
+        "quantity:1994년",
+        "quantity:1월",
+        "quantity:1일",
+        "quantity:1993년",
+        "negative"
+      ],
+      "criticalTranscript": [
+        "quantity:1000000000000원",
+        "quantity:1명",
+        "quantity:1명",
+        "quantity:1명",
+        "quantity:1명",
+        "quantity:41명",
+        "quantity:6명",
+        "quantity:1명",
+        "quantity:1명",
+        "quantity:2명",
+        "quantity:1명",
+        "quantity:1명",
+        "quantity:1명",
+        "quantity:1명",
+        "quantity:2명",
+        "quantity:1명",
+        "quantity:1명",
+        "quantity:1994년",
+        "quantity:1월",
+        "quantity:1일",
+        "quantity:1993년",
+        "negative"
+      ],
+      "durationMs": 77290,
+      "literalCER": 0.036011,
+      "mp3Sha256": "afe6b7d2efbb592e063c812222777d49c7251e2482b6c569152990ad5c5100b3",
+      "normalizedTarget": "국가기관국가중요시설직장예비군은경비부대를편성합니다본부요원은직장의장이임명하며여단은병보1000000000000원1명과자원관리방호동원훈련각과의중소령과장1명및병사무원1명을둡니다장비과는유사시에만중소령과장1명통신소령에서중41명병사무원6명을둡니다독립연대는소령참모1명과소령에서중사참모1명병사무원2명이며예속통합직장연대는소령에서중사참모와병사무원각1명입니다대대도참모사무원각1명으로참모직급은독립대대와예속통합직장대대모두과장입니다중대는병사무원1명입니다대학연대는소령에서중사참모1명과병사무원2명독립대대는참모사무원각1명독립중대는사무원1명입니다과장참모병과는예비군지휘관선발병과까지확대하며단일직장참모는예하전담지휘관이겸임합니다이기준은1994년1월1일이후신규통합편성에적용하고1993년말근무인원에게인사상불이익을주지않도록합니다",
+      "normalizedTranscript": "국가기관국가중요시설직장예비군은경비부대를편성합니다본부요원은직장의장위임명하며여단은병보1000000000000원1명과자원관리방호동원훈련각과의중소령과장1명및병사무원1명을둡니다장비과는유사시회만중소령과장1명통신소령에서중41명병사무원6명을둡니다독립연대는소령참모1명과소령에서중사참모1명병사무원2명이며예속통합직장연대는소령에서중사참모와병사무원각1명입니다대대도참모사무원각1명으로참모직급은독립대대와예속통합직장대대모두과장입니다중대는병사무원1명입니다대학연대는소령에서중사참모1명과병사무원2명독립대대는참모사무원각1명독립중대는사무원1명입니다과장참모병관은예비군지휘관선발병과까지확대하며단일직장참모는예하전담지휘관이겸임합니다이기준은1994년1월1일이후신규통합현성에적용하고1993년말근무인원에게인사상불이익을주지않도록합니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.151869,
+          "end": 4.88,
+          "start": 0.0,
+          "text": " 국가기관 국가중요시설 직장예비군 은 경비부대를 편성합니다."
+        },
+        {
+          "avgLogProbability": -0.151869,
+          "end": 10.44,
+          "start": 4.88,
+          "text": " 본부요원은 직장의 장위 임명하며 여단은 병보조원 1명과 자원관리"
+        },
+        {
+          "avgLogProbability": -0.151869,
+          "end": 16.64,
+          "start": 10.44,
+          "text": " 방호 동원훈련 각 과의 중 소령과장 1명 및 병사무원 1명을 둡니다."
+        },
+        {
+          "avgLogProbability": -0.151869,
+          "end": 22.16,
+          "start": 16.64,
+          "text": " 장비과는 유사시회만 중 소령과장 1명 통신소령에서 중사 1명"
+        },
+        {
+          "avgLogProbability": -0.151869,
+          "end": 24.48,
+          "start": 22.16,
+          "text": " 병사무원 6명을 둡니다."
+        },
+        {
+          "avgLogProbability": -0.110153,
+          "end": 36.78,
+          "start": 24.48,
+          "text": " 독립연대는 소령참모 1명과 소령에서 중사참모 1명 병사무원 2명이며 예속 통합직장연대는 소령에서 중사참모와 병사무원 각 1명입니다."
+        },
+        {
+          "avgLogProbability": -0.110153,
+          "end": 44.84,
+          "start": 36.78,
+          "text": " 대대도 참모 사무원 각 1명으로 참모 직급은 독립대대와 예속 통합직장 대대 모두 과장입니다."
+        },
+        {
+          "avgLogProbability": -0.110153,
+          "end": 47.6,
+          "start": 44.84,
+          "text": " 중대는 병사무원 1명입니다."
+        },
+        {
+          "avgLogProbability": -0.128099,
+          "end": 52.160000000000004,
+          "start": 47.6,
+          "text": " 대학연대는 소령에서 중사참모 1명과 병사무원 2명,"
+        },
+        {
+          "avgLogProbability": -0.128099,
+          "end": 57.56,
+          "start": 52.160000000000004,
+          "text": " 독립대대는 참모, 사무원 각 1명, 독립중대는 사무원 1명입니다."
+        },
+        {
+          "avgLogProbability": -0.128099,
+          "end": 62.160000000000004,
+          "start": 57.56,
+          "text": " 과장 참모병관은 예비군 지휘관 선발병과까지 확대하며"
+        },
+        {
+          "avgLogProbability": -0.128099,
+          "end": 66.12,
+          "start": 62.160000000000004,
+          "text": " 단일직장 참모는 예하 전담 지휘관이 겸임합니다."
+        },
+        {
+          "avgLogProbability": -0.128099,
+          "end": 71.6,
+          "start": 66.12,
+          "text": " 이 기준은 1994년 1월 1일 이후 신규 통합현성에 적용하고"
+        },
+        {
+          "avgLogProbability": -0.155847,
+          "end": 76.64000000000001,
+          "start": 71.60000000000001,
+          "text": " 1993년 말 근무인원에게 인사상 불이익을 주지 않도록 합니다."
+        }
+      ],
+      "status": "review_required",
+      "target": "국가기관·국가중요시설 직장예비군은 경비부대를 편성합니다. 본부요원은 직장의 장이 임명하며, 여단은 병 보조원 1명과 자원관리·방호·동원훈련 각 과의 중·소령 과장 1명 및 병 사무원 1명을 둡니다. 장비과는 유사시에만 중·소령 과장 1명, 통신 소령~중사 1명, 병 사무원 6명을 둡니다. 독립연대는 소령 참모 1명과 소령~중사 참모 1명, 병 사무원 2명이며, 예속·통합직장 연대는 소령~중사 참모와 병 사무원 각 1명입니다. 대대도 참모·사무원 각 1명으로, 참모 직급은 독립대대와 예속·통합직장 대대 모두 과장입니다. 중대는 병 사무원 1명입니다. 대학 연대는 소령~중사 참모 1명과 병 사무원 2명, 독립대대는 참모·사무원 각 1명, 독립중대는 사무원 1명입니다. 과장·참모 병과는 예비군지휘관 선발 병과까지 확대하며 단일직장 참모는 예하 전담지휘관이 겸임합니다. 이 기준은 1994년 1월 1일 이후 신규 통합편성에 적용하고, 1993년 말 근무 인원에게 인사상 불이익을 주지 않도록 합니다.",
+      "textSha256": "47ffd798fb517985883c89387ea7cf1da4c8cde1c819e3c4851a9358a83412c1",
+      "transcript": "국가기관 국가중요시설 직장예비군 은 경비부대를 편성합니다. 본부요원은 직장의 장위 임명하며 여단은 병보조원 1명과 자원관리 방호 동원훈련 각 과의 중 소령과장 1명 및 병사무원 1명을 둡니다. 장비과는 유사시회만 중 소령과장 1명 통신소령에서 중사 1명 병사무원 6명을 둡니다. 독립연대는 소령참모 1명과 소령에서 중사참모 1명 병사무원 2명이며 예속 통합직장연대는 소령에서 중사참모와 병사무원 각 1명입니다. 대대도 참모 사무원 각 1명으로 참모 직급은 독립대대와 예속 통합직장 대대 모두 과장입니다. 중대는 병사무원 1명입니다. 대학연대는 소령에서 중사참모 1명과 병사무원 2명, 독립대대는 참모, 사무원 각 1명, 독립중대는 사무원 1명입니다. 과장 참모병관은 예비군 지휘관 선발병과까지 확대하며 단일직장 참모는 예하 전담 지휘관이 겸임합니다. 이 기준은 1994년 1월 1일 이후 신규 통합현성에 적용하고 1993년 말 근무인원에게 인사상 불이익을 주지 않도록 합니다."
+    },
+    "b5fbe28439629145bd94578019b5451df854bc83ebb90b46452447f06cda80c2": {
+      "asrSeconds": 10.605,
+      "audioKey": "b5fbe28439629145bd94578019b5451df854bc83ebb90b46452447f06cda80c2",
+      "canonicalCER": 0.0,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "quantity:6개월",
+        "negative",
+        "제외"
+      ],
+      "criticalTranscript": [
+        "quantity:6개월",
+        "negative",
+        "제외"
+      ],
+      "durationMs": 10800,
+      "literalCER": 0.0,
+      "mp3Sha256": "42803db4a2831a6141c5f46aec73de02c397ccb2313ce883e3f88f96d0fb15cd",
+      "normalizedTarget": "병역판정재병역판정입영판정검사또는현역지원신체검사를받은뒤6개월이지나지않은사람은입영판정검사에서제외됩니다",
+      "normalizedTranscript": "병역판정재병역판정입영판정검사또는현역지원신체검사를받은뒤6개월이지나지않은사람은입영판정검사에서제외됩니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.161919,
+          "end": 6.4,
+          "start": 0.0,
+          "text": " 병역 판정, 재병역 판정, 입영 판정 검사 또는 현역 지원 신체 검사를 받은 뒤"
+        },
+        {
+          "avgLogProbability": -0.161919,
+          "end": 12.0,
+          "start": 6.4,
+          "text": " 6개월이 지나지 않은 사람은 입영 판정 검사에서 제외됩니다."
+        }
+      ],
+      "status": "normalized_match",
+      "target": "병역판정·재병역판정·입영판정검사 또는 현역 지원 신체검사를 받은 뒤 6개월이 지나지 않은 사람은 입영판정검사에서 제외됩니다.",
+      "textSha256": "06c76345ae7287324a81c7e97881419ad356e5613ce8bbe4584fa4fc46ff533b",
+      "transcript": "병역 판정, 재병역 판정, 입영 판정 검사 또는 현역 지원 신체 검사를 받은 뒤 6개월이 지나지 않은 사람은 입영 판정 검사에서 제외됩니다."
+    },
+    "c00aa2a35222d44716ecdfea6d181cc636662b7993c727bb67fbe4a5397b686e": {
+      "asrSeconds": 11.925,
+      "audioKey": "c00aa2a35222d44716ecdfea6d181cc636662b7993c727bb67fbe4a5397b686e",
+      "canonicalCER": 0.046154,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "negative",
+        "quantity:20시간",
+        "quantity:1시간"
+      ],
+      "criticalTranscript": [
+        "negative",
+        "quantity:20시간",
+        "quantity:1시간"
+      ],
+      "durationMs": 13100,
+      "literalCER": 0.076923,
+      "mp3Sha256": "89d864e04c3c57150e61b77f9813556ab8192dfd5d3fbf83d82b8bc19a428f28",
+      "normalizedTarget": "지역대참모부중대장부기동대장소대장은임명시기와관계없이연간20시간을부과합니다임명전에이수1시간은빼고세부유형은부대여건에맞춥니다",
+      "normalizedTranscript": "지역대참모부중대장북이동대장소대장은임명시기와관계없이연간20시간을부과합니다임명전에이수1시간은빼고세부유형은부대여권에맞춥니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.229493,
+          "end": 7.74,
+          "start": 0.0,
+          "text": " 지역대 참모, 부중대장, 북이동대장, 소대장은 임명 시기와 관계 없이 연간 스무 시간을 부과합니다."
+        },
+        {
+          "avgLogProbability": -0.229493,
+          "end": 14.08,
+          "start": 7.74,
+          "text": " 임명 전에 이수한 시간은 빼고 세부 유형은 부대 여권에 맞춥니다."
+        }
+      ],
+      "status": "review_required",
+      "target": "지역대 참모·부중대장·부기동대장·소대장은 임명 시기와 관계없이 연간 20시간을 부과합니다. 임명 전에 이수한 시간은 빼고, 세부유형은 부대 여건에 맞춥니다.",
+      "textSha256": "863dd8ab99826938d2b6f103bd80958cf50e94324bce3c429f13b2f1377f624c",
+      "transcript": "지역대 참모, 부중대장, 북이동대장, 소대장은 임명 시기와 관계 없이 연간 스무 시간을 부과합니다. 임명 전에 이수한 시간은 빼고 세부 유형은 부대 여권에 맞춥니다."
+    },
+    "c01afe01dd36c945ddedeacb8bf508f049a9f61cb74bf37e44f61e8823f61575": {
+      "asrSeconds": 12.498,
+      "audioKey": "c01afe01dd36c945ddedeacb8bf508f049a9f61cb74bf37e44f61e8823f61575",
+      "canonicalCER": 0.026316,
+      "criticalMatch": true,
+      "criticalTarget": [],
+      "criticalTranscript": [],
+      "durationMs": 14750,
+      "literalCER": 0.026316,
+      "mp3Sha256": "8c01335dc1bf782cfbf2c231cc119ba51f9b66e295c406d6fa811a71be7e0c1c",
+      "normalizedTarget": "정치적목적으로정당이나공직선거후보자의지지반대의견을집회등여러사람이모인곳에서발표하거나문서책신문등에싣거나인터넷등정보통신망에게시하는행위는금지됩니다",
+      "normalizedTranscript": "정치적목적으로정당이나공직선거후보자의지지반대의견을집회등여러사람이모인곳에서발표하거나문서책신문등의실거나인터넷등정보통신망에게시하는행위는금지됩니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.173858,
+          "end": 4.2,
+          "start": 0.0,
+          "text": " 정치적 목적으로 정당이나 공직선거 후보자의 지지,"
+        },
+        {
+          "avgLogProbability": -0.173858,
+          "end": 8.120000000000001,
+          "start": 4.2,
+          "text": " 반대 의견을 집회 등 여러 사람이 모인 곳에서 발표하거나"
+        },
+        {
+          "avgLogProbability": -0.173858,
+          "end": 11.36,
+          "start": 8.120000000000001,
+          "text": " 문서, 책, 신문 등의 실거나 인터넷 등"
+        },
+        {
+          "avgLogProbability": -0.173858,
+          "end": 14.76,
+          "start": 11.36,
+          "text": " 정보통신망에 게시하는 행위는 금지됩니다."
+        }
+      ],
+      "status": "review_required",
+      "target": "정치적 목적으로 정당이나 공직선거 후보자의 지지·반대 의견을 집회 등 여러 사람이 모인 곳에서 발표하거나 문서·책·신문 등에 싣거나 인터넷 등 정보통신망에 게시하는 행위는 금지됩니다.",
+      "textSha256": "f4f512f70bf7e06a3fc833deb91a12cc5d966b3e20ca4b33d44f635ec4f0c66c",
+      "transcript": "정치적 목적으로 정당이나 공직선거 후보자의 지지, 반대 의견을 집회 등 여러 사람이 모인 곳에서 발표하거나 문서, 책, 신문 등의 실거나 인터넷 등 정보통신망에 게시하는 행위는 금지됩니다."
+    },
+    "c1b8fa6679ae9dbbd9d1617889546353c37b610d46cca4e69b016ca7ff8cc15b": {
+      "asrSeconds": 14.371,
+      "audioKey": "c1b8fa6679ae9dbbd9d1617889546353c37b610d46cca4e69b016ca7ff8cc15b",
+      "canonicalCER": 0.029703,
+      "criticalMatch": false,
+      "criticalTarget": [
+        "quantity:4회",
+        "quantity:0일",
+        "negative",
+        "permission",
+        "negative",
+        "permission"
+      ],
+      "criticalTranscript": [
+        "quantity:4회",
+        "negative",
+        "permission",
+        "negative",
+        "permission"
+      ],
+      "durationMs": 19830,
+      "literalCER": 0.019608,
+      "mp3Sha256": "6569b4c0a1733f5d95f57c1f6e79ccec98dbd5824599094a22c700b04735976d",
+      "normalizedTarget": "연령때문에현역입4회복무소집의무가면제될우려가있거나입0일을미리정하지않은동원훈련소집이면전날까지통지할수있습니다전문의자격시험합격여부를확인할수없는의무수의장교편입대상자도입영전날까지통지할수있습니다",
+      "normalizedTranscript": "연령때문에현역입4회복무소집의무가면제될우려가있거나입영이를미리정하지않은동원훈련소집이면전날까지통지할수있습니다전문의자격시험합격여부를확인할수없는의무수의장교편입대상자도입영전날까지통지할수있습니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.144937,
+          "end": 5.3,
+          "start": 0.0,
+          "text": " 연령 때문에 현역 입영, 사회 복무 소집 의무가 면제될 우려가 있거나"
+        },
+        {
+          "avgLogProbability": -0.144937,
+          "end": 8.64,
+          "start": 5.3,
+          "text": " 입영이를 미리 정하지 않은 동원 훈련 소집이면"
+        },
+        {
+          "avgLogProbability": -0.144937,
+          "end": 11.040000000000001,
+          "start": 8.64,
+          "text": " 전날까지 통지할 수 있습니다."
+        },
+        {
+          "avgLogProbability": -0.144937,
+          "end": 14.6,
+          "start": 11.040000000000001,
+          "text": " 전문의 자격시험 합격 여부를 확인할 수 없는 의무"
+        },
+        {
+          "avgLogProbability": -0.144937,
+          "end": 19.8,
+          "start": 14.6,
+          "text": " 수의장교 편입 대상자도 입영 전날까지 통지할 수 있습니다."
+        }
+      ],
+      "status": "review_required",
+      "target": "연령 때문에 현역입영·사회복무소집 의무가 면제될 우려가 있거나, 입영일을 미리 정하지 않은 동원훈련소집이면 전날까지 통지할 수 있습니다. 전문의 자격시험 합격 여부를 확인할 수 없는 의무·수의장교 편입 대상자도 입영 전날까지 통지할 수 있습니다.",
+      "textSha256": "01a1ca1151f4a344ca070b56010ef08e4a37243c88b34c070e6f9c2bbc5d6af7",
+      "transcript": "연령 때문에 현역 입영, 사회 복무 소집 의무가 면제될 우려가 있거나 입영이를 미리 정하지 않은 동원 훈련 소집이면 전날까지 통지할 수 있습니다. 전문의 자격시험 합격 여부를 확인할 수 없는 의무 수의장교 편입 대상자도 입영 전날까지 통지할 수 있습니다."
+    },
+    "c375065fe1db617093fe420371c0df18a7d7383a912bd0726d18eb7366ca5a0c": {
+      "asrSeconds": 13.46,
+      "audioKey": "c375065fe1db617093fe420371c0df18a7d7383a912bd0726d18eb7366ca5a0c",
+      "canonicalCER": 0.0,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "negative",
+        "permission",
+        "obligation"
+      ],
+      "criticalTranscript": [
+        "negative",
+        "permission",
+        "obligation"
+      ],
+      "durationMs": 16190,
+      "literalCER": 0.0,
+      "mp3Sha256": "7a760cfaaa66c4dd20be7d7b76e3b9d7e286ba2029e23eca732d2ab938943010",
+      "normalizedTarget": "대체역이부상질병심신장애등으로병역을감당하지못하면소집면제해제나병역면제처분을받을수있는절차를안내해야합니다귀화등법정사유에해당하는경우에는소집면제해제절차를안내합니다",
+      "normalizedTranscript": "대체역이부상질병심신장애등으로병역을감당하지못하면소집면제해제나병역면제처분을받을수있는절차를안내해야합니다귀화등법정사유에해당하는경우에는소집면제해제절차를안내합니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.114223,
+          "end": 10.36,
+          "start": 0.0,
+          "text": " 대체역이 부상, 질병, 심신장애 등으로 병역을 감당하지 못하면 소집 면제, 해제나 병역 면제 처분을 받을 수 있는 절차를 안내해야 합니다."
+        },
+        {
+          "avgLogProbability": -0.114223,
+          "end": 17.36,
+          "start": 10.36,
+          "text": " 귀화 등 법정 사유에 해당하는 경우에는 소집 면제, 해제 절차를 안내합니다."
+        }
+      ],
+      "status": "normalized_match",
+      "target": "대체역이 부상·질병·심신장애 등으로 병역을 감당하지 못하면 소집 면제·해제나 병역면제 처분을 받을 수 있는 절차를 안내해야 합니다. 귀화 등 법정 사유에 해당하는 경우에는 소집 면제·해제 절차를 안내합니다.",
+      "textSha256": "e8854feaf1080743734b4b46cb3cf59461eb0d2a1c973c377acb9436bcc8cfb6",
+      "transcript": "대체역이 부상, 질병, 심신장애 등으로 병역을 감당하지 못하면 소집 면제, 해제나 병역 면제 처분을 받을 수 있는 절차를 안내해야 합니다. 귀화 등 법정 사유에 해당하는 경우에는 소집 면제, 해제 절차를 안내합니다."
+    },
+    "d0078dbd3c95c70bf4f135c883de290d6f1d2fcdb6cd2585a2961f6b35361454": {
+      "asrSeconds": 9.871,
+      "audioKey": "d0078dbd3c95c70bf4f135c883de290d6f1d2fcdb6cd2585a2961f6b35361454",
+      "canonicalCER": 0.046512,
+      "criticalMatch": true,
+      "criticalTarget": [],
+      "criticalTranscript": [],
+      "durationMs": 8880,
+      "literalCER": 0.069767,
+      "mp3Sha256": "278103068bea816460a53eae61af6da6b259fe4982c924f65fccaf137deb3212",
+      "normalizedTarget": "드론예비군이작계훈련을불참하면이삼차보충훈련을부과하고삼차훈련을무단불참하면고발합니다",
+      "normalizedTranscript": "드론예비군이작게훈련을불참하면이삼차보충훈련을부과하고삼차훈련을무담불참하면고발합니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.184885,
+          "end": 8.8,
+          "start": 0.0,
+          "text": " 드론 예비군이 작게 훈련을 불참하면 이 3차 보충훈련을 부과하고 3차 훈련을 무담불참하면 고발합니다."
+        }
+      ],
+      "status": "review_required",
+      "target": "드론예비군이 작계훈련을 불참하면 2·3차 보충훈련을 부과하고, 3차 훈련을 무단불참하면 고발합니다.",
+      "textSha256": "eae39b4fe48c2511bb6c8c6a109e3ccf5bbff758e132b6450850d4bec6708860",
+      "transcript": "드론 예비군이 작게 훈련을 불참하면 이 3차 보충훈련을 부과하고 3차 훈련을 무담불참하면 고발합니다."
+    },
+    "d009fd5f8fce24e8ff622f073882bfa7a4bd59b743809d1038e62d6db9d5a8c1": {
+      "asrSeconds": 11.023,
+      "audioKey": "d009fd5f8fce24e8ff622f073882bfa7a4bd59b743809d1038e62d6db9d5a8c1",
+      "canonicalCER": 0.0,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "quantity:22년",
+        "미만"
+      ],
+      "criticalTranscript": [
+        "quantity:22년",
+        "미만"
+      ],
+      "durationMs": 11400,
+      "literalCER": 0.0,
+      "mp3Sha256": "974440aadfc6e2f7be0f3bd21e5169ae9e71aaa2fb9561d42d2d8f8b9cdab15b",
+      "normalizedTarget": "양성기관의평점평균22년연속팔십점미만이고국방부장관이사업수행이어렵다고판단한경우가성과미달에따른지정취소사유입니다",
+      "normalizedTranscript": "양성기관의평점평균22년연속팔십점미만이고국방부장관이사업수행이어렵다고판단한경우가성과미달에따른지정취소사유입니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.148958,
+          "end": 4.48,
+          "start": 0.0,
+          "text": " 양성기관의 평점 평균이 2년 연속 80점 미만이고"
+        },
+        {
+          "avgLogProbability": -0.148958,
+          "end": 8.08,
+          "start": 4.48,
+          "text": " 국방부 장관이 사업 수행이 어렵다고 판단한 경우가"
+        },
+        {
+          "avgLogProbability": -0.148958,
+          "end": 10.72,
+          "start": 8.08,
+          "text": " 성과 미달에 따른 지정 취소 사유입니다."
+        }
+      ],
+      "status": "normalized_match",
+      "target": "양성기관의 평점평균이 2년 연속 80점 미만이고 국방부장관이 사업수행이 어렵다고 판단한 경우가 성과 미달에 따른 지정취소 사유입니다.",
+      "textSha256": "c3689e91f02235aca544fa2dab50dec8d370f3c926ee0e6a6b46c9225ceece72",
+      "transcript": "양성기관의 평점 평균이 2년 연속 80점 미만이고 국방부 장관이 사업 수행이 어렵다고 판단한 경우가 성과 미달에 따른 지정 취소 사유입니다."
+    },
+    "d1930861b7b51ea09e12927b52a4d539244526b61765d87be20060cacef6e7cd": {
+      "asrSeconds": 21.402,
+      "audioKey": "d1930861b7b51ea09e12927b52a4d539244526b61765d87be20060cacef6e7cd",
+      "canonicalCER": 0.015625,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "이상",
+        "quantity:47년",
+        "quantity:10040세",
+        "quantity:42년",
+        "quantity:10045세",
+        "quantity:2년",
+        "quantity:10040세",
+        "quantity:6년",
+        "quantity:10040세",
+        "quantity:7년",
+        "quantity:10042세",
+        "quantity:7년",
+        "quantity:10045세",
+        "이하"
+      ],
+      "criticalTranscript": [
+        "이상",
+        "quantity:47년",
+        "quantity:10040세",
+        "quantity:42년",
+        "quantity:10045세",
+        "quantity:2년",
+        "quantity:10040세",
+        "quantity:6년",
+        "quantity:10040세",
+        "quantity:7년",
+        "quantity:10042세",
+        "quantity:7년",
+        "quantity:10045세",
+        "이하"
+      ],
+      "durationMs": 25480,
+      "literalCER": 0.133333,
+      "mp3Sha256": "44a5ec89fafb9bf92ffb80fe93bc814d13e4ac0c420883afe34fd3f2a4429749",
+      "normalizedTarget": "해당계급에서현역예비역복무기간을합산한최소기간과나이상한은하사에서중47년10040세중사에서상42년10045세소위에서중위2년10040세중위에서대위6년10040세대위에서소령7년10042세소령에서중령7년10045세입니다나이는모두이하기준입니다",
+      "normalizedTranscript": "해당계급에서현역예비역복무기관을합산한최소기관과나이상한은하사에서중47년10040세중사에서상42년10045세소위에서중위2년10040세중위에서대위6년10040세대위에서소령7년10042세소령에서중령7년10045세입니다나이는모두이하기준입니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.131025,
+          "end": 5.36,
+          "start": 0.0,
+          "text": " 해당 계급에서 현역 예비역 복무기관 을 합산한 최소기관과 나이 상한은"
+        },
+        {
+          "avgLogProbability": -0.131025,
+          "end": 11.120000000000001,
+          "start": 5.36,
+          "text": " 하사에서 중사 7년 만 40세 중사에서 상사 12년 만 45세"
+        },
+        {
+          "avgLogProbability": -0.131025,
+          "end": 16.68,
+          "start": 11.120000000000001,
+          "text": " 소위에서 중위 2년 만 40세 중위에서 대위 6년 만 40세"
+        },
+        {
+          "avgLogProbability": -0.131025,
+          "end": 23.26,
+          "start": 16.68,
+          "text": " 대위에서 소령 7년 만 42세 소령에서 중령 7년 만 45세입니다."
+        },
+        {
+          "avgLogProbability": -0.40721,
+          "end": 24.740000000000002,
+          "start": 23.26,
+          "text": " 나이는 모두 이하 기준입니다."
+        }
+      ],
+      "status": "review_required",
+      "target": "해당 계급에서 현역·예비역 복무기간을 합산한 최소기간과 나이 상한은 하사→중사 7년·만 40세, 중사→상사 12년·만 45세, 소위→중위 2년·만 40세, 중위→대위 6년·만 40세, 대위→소령 7년·만 42세, 소령→중령 7년·만 45세입니다. 나이는 모두 이하 기준입니다.",
+      "textSha256": "94e6d5e124b629f9d81405a37d9475402b02dd52e6fbb1145afb447726690109",
+      "transcript": "해당 계급에서 현역 예비역 복무기관 을 합산한 최소기관과 나이 상한은 하사에서 중사 7년 만 40세 중사에서 상사 12년 만 45세 소위에서 중위 2년 만 40세 중위에서 대위 6년 만 40세 대위에서 소령 7년 만 42세 소령에서 중령 7년 만 45세입니다. 나이는 모두 이하 기준입니다."
+    },
+    "d90ea87eb3c6ba37b8a25076fb4d846740802ef613a91ae8f75d579cf824d606": {
+      "asrSeconds": 16.607,
+      "audioKey": "d90ea87eb3c6ba37b8a25076fb4d846740802ef613a91ae8f75d579cf824d606",
+      "canonicalCER": 0.033058,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "negative",
+        "negative",
+        "negative",
+        "제외"
+      ],
+      "criticalTranscript": [
+        "negative",
+        "negative",
+        "negative",
+        "제외"
+      ],
+      "durationMs": 24870,
+      "literalCER": 0.033058,
+      "mp3Sha256": "66bd00352ed198c244f8518de11a5566b07f1b2ff2de54da42629ab6699355d5",
+      "normalizedTarget": "병역기피감면을위한도주자해속임수대리검사대리입영검사입영기피국외여행위반등법정범죄자와복무이탈자고의로연기감면사유를만든사람은아래혜택을받을수없습니다다만본인없이는가족생계를유지할수없는경우에는고의로그사유를만든사람을제외하고예외가인정됩니다",
+      "normalizedTranscript": "병역기피감면을위한도주자해속임수대리검사대리이병검사이병기피국외여행위반등법정범죄자와복무이탈자고의로연기감면사유를만든사람은아래혜택을받을수없습니다다만본인없이는가족생계를유지할수없는경우에는고의로그사유를만든사람을제외하고예외가인정됩니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.125895,
+          "end": 15.18,
+          "start": 0.0,
+          "text": " 병역기피, 감면을 위한 도주, 자해, 속임수, 대리검사, 대리이병, 검사, 이병기피, 국외여행위반 등 법정범죄자와 복무이탈자, 고의로 연기, 감면 사유를 만든 사람은 아래 혜택을 받을 수 없습니다."
+        },
+        {
+          "avgLogProbability": -0.125895,
+          "end": 25.76,
+          "start": 15.18,
+          "text": " 다만 본인 없이는 가족생계를 유지할 수 없는 경우에는 고의로 그 사유를 만든 사람을 제외하고 예외가 인정됩니다."
+        }
+      ],
+      "status": "review_required",
+      "target": "병역기피·감면을 위한 도주·자해·속임수, 대리검사·대리입영, 검사·입영기피, 국외여행 위반 등 법정 범죄자와 복무이탈자, 고의로 연기·감면 사유를 만든 사람은 아래 혜택을 받을 수 없습니다. 다만 본인 없이는 가족 생계를 유지할 수 없는 경우에는 고의로 그 사유를 만든 사람을 제외하고 예외가 인정됩니다.",
+      "textSha256": "cca9e55783c1609a713c731769593f218eabb41c63844b0bf6389b80f7544251",
+      "transcript": "병역기피, 감면을 위한 도주, 자해, 속임수, 대리검사, 대리이병, 검사, 이병기피, 국외여행위반 등 법정범죄자와 복무이탈자, 고의로 연기, 감면 사유를 만든 사람은 아래 혜택을 받을 수 없습니다. 다만 본인 없이는 가족생계를 유지할 수 없는 경우에는 고의로 그 사유를 만든 사람을 제외하고 예외가 인정됩니다."
+    },
+    "e0020f43586e5d5d5945c49fd88799b4a66ab1a963e75393be7f1b407cd70312": {
+      "asrSeconds": 9.721,
+      "audioKey": "e0020f43586e5d5d5945c49fd88799b4a66ab1a963e75393be7f1b407cd70312",
+      "canonicalCER": 0.0,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "permission"
+      ],
+      "criticalTranscript": [
+        "permission"
+      ],
+      "durationMs": 8021,
+      "literalCER": 0.0,
+      "mp3Sha256": "9c31d49cee7a1c66b136fcc1fe5f7e1ca092d60c65a8edab6e6fad7b41ec2af7",
+      "normalizedTarget": "각군참모총장은복무를마친현역병을예비역에편입하는권한을소속군부대장에게맡길수있습니다",
+      "normalizedTranscript": "각군참모총장은복무를마친현역병을예비역에편입하는권한을소속군부대장에게맡길수있습니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.13208,
+          "end": 7.4,
+          "start": 0.0,
+          "text": " 각 군 참모총장은 복무를 마친 현역병을 예비역에 편입하는 권한을 소속 군부대장에게 맡길 수 있습니다."
+        }
+      ],
+      "status": "normalized_match",
+      "target": "각 군 참모총장은 복무를 마친 현역병을 예비역에 편입하는 권한을 소속 군부대장에게 맡길 수 있습니다.",
+      "textSha256": "3cb85b53eef7d1b7108e91766b0c3c9a47b21d3ee175250c2a7cbbce00ffcc34",
+      "transcript": "각 군 참모총장은 복무를 마친 현역병을 예비역에 편입하는 권한을 소속 군부대장에게 맡길 수 있습니다."
+    },
+    "e008bf5bfd3af4d148247235ff29e4b98fb4653bca468a56447ae3c14b880fee": {
+      "asrSeconds": 9.434,
+      "audioKey": "e008bf5bfd3af4d148247235ff29e4b98fb4653bca468a56447ae3c14b880fee",
+      "canonicalCER": 0.073171,
+      "criticalMatch": true,
+      "criticalTarget": [],
+      "criticalTranscript": [],
+      "durationMs": 8130,
+      "literalCER": 0.073171,
+      "mp3Sha256": "566105486e8ab3915abb91e6d3d4f9e2d8595358b30f8ff4a5213cef930c1761",
+      "normalizedTarget": "특정정당인물을지지하거나반대할목적으로투표참여나불참을권유하는운동을해서는안됩니다",
+      "normalizedTranscript": "특정정당임무를지지하거나반대할목적으로투표참여나불참을권유하는운동을해서는안됩니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.165706,
+          "end": 3.96,
+          "start": 0.0,
+          "text": " 특정 정당, 임무를 지지하거나 반대할 목적으로"
+        },
+        {
+          "avgLogProbability": -0.165706,
+          "end": 7.4,
+          "start": 3.96,
+          "text": " 투표 참여나 불참을 권유하는 운동을 해서는 안 됩니다."
+        }
+      ],
+      "status": "review_required",
+      "target": "특정 정당·인물을 지지하거나 반대할 목적으로 투표 참여나 불참을 권유하는 운동을 해서는 안 됩니다.",
+      "textSha256": "5175479d767d39ab436947ceff9cdf5d97111f444a5e992e76a72d9d12ab02f6",
+      "transcript": "특정 정당, 임무를 지지하거나 반대할 목적으로 투표 참여나 불참을 권유하는 운동을 해서는 안 됩니다."
+    },
+    "e0539128adc28eb7b4dbdf21dedbfa039386ed4df40af32f74ccdf9b036d6922": {
+      "asrSeconds": 28.188,
+      "audioKey": "e0539128adc28eb7b4dbdf21dedbfa039386ed4df40af32f74ccdf9b036d6922",
+      "canonicalCER": 0.032407,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "이상",
+        "이상",
+        "quantity:20일",
+        "quantity:1000000000000조"
+      ],
+      "criticalTranscript": [
+        "이상",
+        "이상",
+        "quantity:20일",
+        "quantity:1000000000000조"
+      ],
+      "durationMs": 40270,
+      "literalCER": 0.054455,
+      "mp3Sha256": "634de9fe50660ef34902e01c3755f06d19945a0983b5b39455764e48b0c389d4",
+      "normalizedTarget": "개인화기는교대작전소요를고려해일인일정탄약백사십발과수류탄일발입니다유탄발사기는기동대십이정소대일정에탄약이십사발엠육십또는양각대엠십육은기동대사정에각각팔백발오백육십발육십밀리미터박격포는기동대이문에이십발입니다지역대장중대장기동대장과직장중대급이상지휘관대대급이상참모는권총과20일발을휴대합니다엠육십부족분은양각대엠십육으로대체합니다저격1000000000000조준경은기동대에소대당한개씩네개일반소대한개특전중대두개입니다",
+      "normalizedTranscript": "개인확인은교대작전소요를고려해일인일정탄약백사십발과수류탄일발입니다유탄발사기는기동대십이정소대일정에탄약이십사발m육십또는양각대m십육은기동대사정에각각팔백발오백육십발육십밀리미터박격포는기동대이문에이십발입니다지역대장중대장기동대장과직장중대급이상지휘관대대급이상참모는권총과20일발을휴대합니다엠육십부족부는양각대엠십육으로대체합니다저격1000000000000조준경은기동대에소대당한개씩네개일반소대한개특전중대두개입니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.121614,
+          "end": 6.4,
+          "start": 0.0,
+          "text": " 개인 확인은 교대작전 소요를 고려해 1인 1정, 탄약 140발과 수류탄 1발입니다."
+        },
+        {
+          "avgLogProbability": -0.121614,
+          "end": 20.36,
+          "start": 6.4,
+          "text": " 유탄 발사기는 기동대 12정, 소대 1정에 탄약 24발, m60 또는 양각대 m16은 기동대 4정에 각각 800발, 560발, 60mm 박격포는 기동대 2문에 20발입니다."
+        },
+        {
+          "avgLogProbability": -0.121614,
+          "end": 29.2,
+          "start": 20.36,
+          "text": " 지역대장, 중대장, 기동대장과 직장 중대급 이상 지휘관, 대대급 이상 참모는 권총과 21발을 휴대합니다."
+        },
+        {
+          "avgLogProbability": -0.168393,
+          "end": 32.64,
+          "start": 29.2,
+          "text": " M60 부족부는 양각대 M16으로 대체합니다."
+        },
+        {
+          "avgLogProbability": -0.168393,
+          "end": 39.72,
+          "start": 33.08,
+          "text": " 저격조 조준경은 기동대에 소대당 1개씩 4개, 일반소대 1개, 특전중대 2개입니다."
+        }
+      ],
+      "status": "review_required",
+      "target": "개인화기는 교대작전 소요를 고려해 1인 1정, 탄약 140발과 수류탄 1발입니다. 유탄발사기는 기동대 12정·소대 1정에 탄약 24발, M60 또는 양각대 M16은 기동대 4정에 각각 800발·560발, 60밀리미터 박격포는 기동대 2문에 20발입니다. 지역대장·중대장·기동대장과 직장 중대급 이상 지휘관·대대급 이상 참모는 권총과 21발을 휴대합니다. M60 부족분은 양각대 M16으로 대체합니다. 저격조 조준경은 기동대에 소대당 1개씩 4개, 일반 소대 1개, 특전중대 2개입니다.",
+      "textSha256": "588ba7c1149de2c6280c1806247fa154a379a8caef41cf1133e35a5e47202cc8",
+      "transcript": "개인 확인은 교대작전 소요를 고려해 1인 1정, 탄약 140발과 수류탄 1발입니다. 유탄 발사기는 기동대 12정, 소대 1정에 탄약 24발, m60 또는 양각대 m16은 기동대 4정에 각각 800발, 560발, 60mm 박격포는 기동대 2문에 20발입니다. 지역대장, 중대장, 기동대장과 직장 중대급 이상 지휘관, 대대급 이상 참모는 권총과 21발을 휴대합니다. M60 부족부는 양각대 M16으로 대체합니다. 저격조 조준경은 기동대에 소대당 1개씩 4개, 일반소대 1개, 특전중대 2개입니다."
+    },
+    "f00d179ea90595f2819aa8556468d5ce7bc5219fb88687f95c442134b6952956": {
+      "asrSeconds": 11.933,
+      "audioKey": "f00d179ea90595f2819aa8556468d5ce7bc5219fb88687f95c442134b6952956",
+      "canonicalCER": 0.045455,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "quantity:94호"
+      ],
+      "criticalTranscript": [
+        "quantity:94호"
+      ],
+      "durationMs": 13570,
+      "literalCER": 0.045455,
+      "mp3Sha256": "c844c541bd6de53608ac2bc9b800b142ca71087d12e869b6ef2fff56262dd91b",
+      "normalizedTarget": "의무법무군종수의분야현역장교에지원하려면별지제94호지원서에신원가족관계자격증빙을붙여병무청장에게내야한다지원서는전자문서도가능하다",
+      "normalizedTranscript": "의무법무군종수혜분야현역장교에지원하려면별지제94호지원서에신원가족관계자격증빙을묻혀병무청장에게내야한다지원서는전자문서도가능하다",
+      "segments": [
+        {
+          "avgLogProbability": -0.194735,
+          "end": 4.28,
+          "start": 0.0,
+          "text": " 의무, 법무, 군종, 수혜 분야 현역 장교에 지원하려면"
+        },
+        {
+          "avgLogProbability": -0.194735,
+          "end": 8.0,
+          "start": 4.28,
+          "text": " 별지 제94호 지원서에 신원, 가족 관계"
+        },
+        {
+          "avgLogProbability": -0.194735,
+          "end": 11.040000000000001,
+          "start": 8.0,
+          "text": " 자격증빙을 묻혀 병무청장에게 내야 한다"
+        },
+        {
+          "avgLogProbability": -0.194735,
+          "end": 12.96,
+          "start": 11.040000000000001,
+          "text": " 지원서는 전자문서도 가능하다"
+        }
+      ],
+      "status": "review_required",
+      "target": "의무·법무·군종·수의 분야 현역장교에 지원하려면 별지 제94호 지원서에 신원·가족관계·자격 증빙을 붙여 병무청장에게 내야 한다. 지원서는 전자문서도 가능하다.",
+      "textSha256": "0ceb55372ddfebf39b1f7473973c985d658cdb615ec68dd1c0517f7f3e5a0d46",
+      "transcript": "의무, 법무, 군종, 수혜 분야 현역 장교에 지원하려면 별지 제94호 지원서에 신원, 가족 관계 자격증빙을 묻혀 병무청장에게 내야 한다 지원서는 전자문서도 가능하다"
+    },
+    "f017341c48272c286289c836dfe2f7ec43eb60c11101fdf4500e35322271cfca": {
+      "asrSeconds": 11.21,
+      "audioKey": "f017341c48272c286289c836dfe2f7ec43eb60c11101fdf4500e35322271cfca",
+      "canonicalCER": 0.0,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "quantity:4회",
+        "permission"
+      ],
+      "criticalTranscript": [
+        "quantity:4회",
+        "permission"
+      ],
+      "durationMs": 10510,
+      "literalCER": 0.0,
+      "mp3Sha256": "34f670927673b2314b93a13c305bae5d89b3b7d26a93ead21798a46ccd070ed4",
+      "normalizedTarget": "학군군간부후보생또는의무법무군종수의사관후보생병적에서제적되어4회복무요원으로소집할사람은별도로소집할수있습니다",
+      "normalizedTranscript": "학군군간부후보생또는의무법무군종수의사관후보생병적에서제적되어4회복무요원으로소집할사람은별도로소집할수있습니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.181629,
+          "end": 10.48,
+          "start": 0.0,
+          "text": " 학군 군간부후보생 또는 의무, 법무, 군종, 수의사 관후보생 병적에서 제적되어 사회복무요원으로 소집할 사람은 별도로 소집할 수 있습니다."
+        }
+      ],
+      "status": "normalized_match",
+      "target": "학군 군간부후보생 또는 의무·법무·군종·수의사관후보생 병적에서 제적되어 사회복무요원으로 소집할 사람은 별도로 소집할 수 있습니다.",
+      "textSha256": "0c94010586a44d5de3dbf5539b141161e5b9e0487e0bbc410a9c098cbf975ce2",
+      "transcript": "학군 군간부후보생 또는 의무, 법무, 군종, 수의사 관후보생 병적에서 제적되어 사회복무요원으로 소집할 사람은 별도로 소집할 수 있습니다."
+    },
+    "f31bf2568fbb9469c70f91b6430c78cc8931c5b29f37e3f63005be914b139857": {
+      "asrSeconds": 11.067,
+      "audioKey": "f31bf2568fbb9469c70f91b6430c78cc8931c5b29f37e3f63005be914b139857",
+      "canonicalCER": 0.0,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "negative",
+        "negative",
+        "permission",
+        "permission"
+      ],
+      "criticalTranscript": [
+        "negative",
+        "negative",
+        "permission",
+        "permission"
+      ],
+      "durationMs": 11110,
+      "literalCER": 0.0,
+      "mp3Sha256": "f74204238f5fad929bfbf8e3b1a174d5f44a4832d2c4b2d8a44d34cd071d86f8",
+      "normalizedTarget": "대체역이본인없이는가족생계를유지할수없는경우원하면소집전에는대체복무요원소집을면제할수있고복무중에는소집을해제할수있습니다",
+      "normalizedTranscript": "대체역이본인없이는가족생계를유지할수없는경우원하면소집전에는대체복무요원소집을면제할수있고복무중에는소집을해제할수있습니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.157064,
+          "end": 4.36,
+          "start": 0.0,
+          "text": " 대체역이 본인 없이는 가족 생계를 유지할 수 없는 경우 원하면"
+        },
+        {
+          "avgLogProbability": -0.157064,
+          "end": 8.16,
+          "start": 4.36,
+          "text": " 소집 전에는 대체 복무요원 소집을 면제할 수 있고"
+        },
+        {
+          "avgLogProbability": -0.157064,
+          "end": 10.44,
+          "start": 8.16,
+          "text": " 복무 중에는 소집을 해제할 수 있습니다."
+        }
+      ],
+      "status": "normalized_match",
+      "target": "대체역이 본인 없이는 가족 생계를 유지할 수 없는 경우 원하면, 소집 전에는 대체복무요원 소집을 면제할 수 있고 복무 중에는 소집을 해제할 수 있습니다.",
+      "textSha256": "6b099745eb16a2042d7bb9d391f6c3995696f8116a5c77979580cbf6b0cade2d",
+      "transcript": "대체역이 본인 없이는 가족 생계를 유지할 수 없는 경우 원하면 소집 전에는 대체 복무요원 소집을 면제할 수 있고 복무 중에는 소집을 해제할 수 있습니다."
+    },
+    "f6b7a40221c95c059f9e1c1d4696b6e86816736426125387c4d8fba50215621e": {
+      "asrSeconds": 16.677,
+      "audioKey": "f6b7a40221c95c059f9e1c1d4696b6e86816736426125387c4d8fba50215621e",
+      "canonicalCER": 0.015038,
+      "criticalMatch": false,
+      "criticalTarget": [
+        "quantity:23개월",
+        "이상",
+        "negative",
+        "quantity:1개월",
+        "quantity:24개월",
+        "초과",
+        "quantity:4회",
+        "quantity:24개월",
+        "quantity:4년",
+        "quantity:21개월",
+        "quantity:24개월",
+        "초과"
+      ],
+      "criticalTranscript": [
+        "quantity:23개월",
+        "이상",
+        "negative",
+        "quantity:1개월",
+        "quantity:24개월",
+        "초과",
+        "quantity:4회",
+        "quantity:24개월",
+        "quantity:21개월",
+        "quantity:24개월",
+        "초과"
+      ],
+      "durationMs": 26040,
+      "literalCER": 0.015038,
+      "mp3Sha256": "61fd197f47d3bf82ad403dcb605de105d8ca45a5b04d55fe13476d7c2c2d1926",
+      "normalizedTarget": "치료기간23개월이상이거나기간이적히지않은귀가자의재검사결과가칠급이면치료종료후1개월안재검사규정을적용합니다같은병명으로24개월초과예상또는4회재검사뒤에도칠급이면24개월째재검4년칠급시전시근로역으로편입하며21개월후검사에서24개월초과가예상되면그때편입합니다",
+      "normalizedTranscript": "치료기간23개월이상이거나기간이적히지않은귀가자의재검사결과가칠급이면치료종료후1개월안재검사규정을적용합니다같은병명으로24개월초과예상또는4회재검사뒤에도칠급이면24개월째재검사에칠급시전시근로역으로편입하며21개월후검사에서24개월초과가예상되면그때편입합니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.107649,
+          "end": 6.48,
+          "start": 0.0,
+          "text": " 치료기간이 3개월 이상이거나 기간이 적히지 않은 귀가자의 재검사 결과가 7급이면"
+        },
+        {
+          "avgLogProbability": -0.107649,
+          "end": 10.8,
+          "start": 6.48,
+          "text": " 치료 종료 후 1개월 안재검사 규정을 적용합니다."
+        },
+        {
+          "avgLogProbability": -0.107649,
+          "end": 16.12,
+          "start": 10.8,
+          "text": " 같은 병명으로 24개월 초과 예상 또는 사회 재검사 뒤에도 7급이면"
+        },
+        {
+          "avgLogProbability": -0.107649,
+          "end": 20.88,
+          "start": 16.12,
+          "text": " 24개월째 재검사에 7급 시 전시 근로역으로 편입하며"
+        },
+        {
+          "avgLogProbability": -0.107649,
+          "end": 26.0,
+          "start": 20.88,
+          "text": " 21개월 후 검사에서 24개월 초과가 예상되면 그때 편입합니다."
+        }
+      ],
+      "status": "review_required",
+      "target": "치료기간이 3개월 이상이거나 기간이 적히지 않은 귀가자의 재검사 결과가 7급이면 치료 종료 후 1개월 안 재검사 규정을 적용합니다. 같은 병명으로 24개월 초과 예상 또는 4회 재검사 뒤에도 7급이면 24개월째 재검사해 7급 시 전시근로역으로 편입하며, 21개월 후 검사에서 24개월 초과가 예상되면 그때 편입합니다.",
+      "textSha256": "3886dbd054022a7185a84aa450ab6e310e3b213abe944b82500cdb930e662e70",
+      "transcript": "치료기간이 3개월 이상이거나 기간이 적히지 않은 귀가자의 재검사 결과가 7급이면 치료 종료 후 1개월 안재검사 규정을 적용합니다. 같은 병명으로 24개월 초과 예상 또는 사회 재검사 뒤에도 7급이면 24개월째 재검사에 7급 시 전시 근로역으로 편입하며 21개월 후 검사에서 24개월 초과가 예상되면 그때 편입합니다."
+    }
+  },
+  "schema": "reader-assistance-verification-report.v1",
+  "selection": {
+    "corpusApprovedEntries": 5896,
+    "entries": [
+      {
+        "audioKey": "000092d7a1098d3c02bb209a74a2ade37c8a720177f5a72f96fb16c1d128931a",
+        "entryId": "6c28e915a190aa93ec7f087f2b1f6ba2a75d434463fd8b17ff4f9348e39cd4fc",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 1999,
+        "textSha256": "4249fe3c448ab59fa8ed070b3a2ecdc3bb889657dd399f2a70e84b1dfa325300"
+      },
+      {
+        "audioKey": "0001a3e06eb7d9a7d1a16ac2c0f34a183e06fea1c99b5cb29d7246161cb66d59",
+        "entryId": "f3c890081561357e07891b63ecc016275cce64f847a91563448335258cfcb30a",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 4662,
+        "textSha256": "2d5a97bc2e15a695edbec20f192ec915b541f991b51ee1912233814107a62cf8"
+      },
+      {
+        "audioKey": "07f9b6ca8f8f095bad2bf91bdca686fc1b17e9f500adc0e54d7f5aab04f25479",
+        "entryId": "598856597e29635d7d956a417e74b5e2d82511dbf389bef09aeb773a3f6c177c",
+        "reasons": [
+          "exception"
+        ],
+        "sourceIndex": 2469,
+        "textSha256": "14926336e56e501d4d64d3c5339be6cf21d999897601e9f90fd313cb126f1292"
+      },
+      {
+        "audioKey": "080d0cbb6f2db164a529f364e10812116caa2b912fde43a98ec2088864b84c9d",
+        "entryId": "8c58f1fa914c8858f9ef83082b526da0af035bc26e7f5b7ddcdd6559a2d5fa9b",
+        "reasons": [
+          "pilot-lexical-risk"
+        ],
+        "sourceIndex": 2194,
+        "textSha256": "e2c24009d3e7dc9a3075f36f204a38aa82a3daa57c2cc9785e7aeaf8499e8c44"
+      },
+      {
+        "audioKey": "0e872c3b33260a0aff15822f8469bdfc4276cc34189284cf55a37773e72a793f",
+        "entryId": "ec3512181642e9dd1da044bd70186fa1e3c22035770046671794a4a3bdbe11fe",
+        "reasons": [
+          "exception"
+        ],
+        "sourceIndex": 1047,
+        "textSha256": "578de3441151b2159b0826b3d23664777daf0f1ac306c23eb2694dfe52fd9771"
+      },
+      {
+        "audioKey": "0ee0fd5e0cd240fdcd884f6c20973390c9f9112901a3ad269f7ef8fa6d2fe9cf",
+        "entryId": "a2f333e775c54be067ab3d7907f13a3029de952185301956db8182b309740c14",
+        "reasons": [
+          "exception"
+        ],
+        "sourceIndex": 4298,
+        "textSha256": "43c51d1cc3f14ad90288ddf25cdd50d153109022993e3564c2e1da203f47069a"
+      },
+      {
+        "audioKey": "1026bc8ae63d955185db9cbe110a833d941611486110a0f4e8b7a0f00809ae08",
+        "entryId": "e7a313eb3b629bc0b43e8f8a7c0583d9a02161a61cf5605f3e973ca67e633773",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 1300,
+        "textSha256": "e322c9a9b357f4887d3f10fb163448c10af1f261b177761e18fceb987b2f2ec2"
+      },
+      {
+        "audioKey": "1027c541d63551e07eb2b306ee9628f002f445b3ebca61334fc9e3c6bc75b2f0",
+        "entryId": "30b7a568e6c7575e4fa4d43e1f9be0ef4f788bed97f1417e8efb386a6585e047",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 6388,
+        "textSha256": "ac65a4d8950a5af072635f3f22e6f1d89a32ff22c6081ce2a83a97b7d947bde2"
+      },
+      {
+        "audioKey": "120963d0fcd70dbbb9b624a229791e7ba481c7628fa7a4b2407a4fb681243518",
+        "entryId": "d8f946161ffa8e5616aa5c2ddc05cf20490b33d9ef44e06f47e86c2b79f042ff",
+        "reasons": [
+          "pilot-lexical-risk"
+        ],
+        "sourceIndex": 1701,
+        "textSha256": "aabfaf182c4cf233bfeb07d2340f24565c6833d27d942dcf35978c58dc4e7290"
+      },
+      {
+        "audioKey": "14e02bd7fdcf204874097ee8dc8b99e047ac3f32360e0e0b5c4080ceb94b7d8d",
+        "entryId": "844a5f19f0eae1d71c2842f13df0bea90e04c6648c18e3941ff6071a025b509d",
+        "reasons": [
+          "pilot-lexical-risk"
+        ],
+        "sourceIndex": 1707,
+        "textSha256": "8a17d2a5df4ab52e53b209007af29801a64cf0c8c64608c260de5f0900fd314d"
+      },
+      {
+        "audioKey": "16cb20b13b6709db2b96a5e13c964d64a9e8a26e48f062412f0e7ea18afa73fa",
+        "entryId": "98cf0d36ba58b32f39b0e6d5793fc81e4ba9810b22b692ddd1fb86af73ed324c",
+        "reasons": [
+          "pilot-lexical-risk"
+        ],
+        "sourceIndex": 1399,
+        "textSha256": "b9f6529d0ddff3b4eba32b3f65ec81b07b1ab57b902af08e1c5ce8bfe4a645a8"
+      },
+      {
+        "audioKey": "1ac65cb377dd56d207066eecd862d46602cf72da4ec21bafbfc89f2c8f5f72d2",
+        "entryId": "102e084dbc1d32185faea3950f504baaa3e2c195b87d6d9c7d63b33bf8facbef",
+        "reasons": [
+          "pilot-lexical-risk"
+        ],
+        "sourceIndex": 5020,
+        "textSha256": "fad792e2ee90f73df257750b9fb2efabe7bb04754b0f5169e82db0772b0caedb"
+      },
+      {
+        "audioKey": "1c41e47b353b9819c4cd2a9553aa01bfe420514868fab00739e725c481058661",
+        "entryId": "2f150be5ffbefda786cde40e5cd7c229c20126a166d32985b05da4484c7b9f4d",
+        "reasons": [
+          "pilot-lexical-risk"
+        ],
+        "sourceIndex": 5019,
+        "textSha256": "ba67da700bd9c09fb4403509e76da6a907680a97faff11f0798e44d0b10d9823"
+      },
+      {
+        "audioKey": "200314d859ef80526e451770cfba390808e407468cea08b02696f1d0be1b8b1d",
+        "entryId": "176adf65bf0d0889565cc4c0c3ba88bf49b44649835d1273643bf18f701cb4e6",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 5789,
+        "textSha256": "73156a87330a2638bc346eb7ac88a9285bb635dfac82f69552cfec2bb092cabf"
+      },
+      {
+        "audioKey": "2003f192c1ccf1801e9ae3eda676b620faa6ceed60ae52d653848c8e74a8819d",
+        "entryId": "7480f8aae8a8e42ad25d81ead533716216b52b22544dd9abc19592108338d75d",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 674,
+        "textSha256": "31a7a25d8bb882539ad09ac52ef89fc095b0921b8c8c0702049b0fcad83e3e22"
+      },
+      {
+        "audioKey": "29408e9cc42c9c6c04ae304612b36a3ef62fbaf9ae6692e32df1f9b296a5c6de",
+        "entryId": "9c870da127d3a4517dd95e0800ca74ad9f8589b51b6511de963e980d648a0971",
+        "reasons": [
+          "numeric-boundary"
+        ],
+        "sourceIndex": 1689,
+        "textSha256": "15a4df21bd93c7a26e511989ad85af731a70498a07136aa80245ef9d090aa24b"
+      },
+      {
+        "audioKey": "30243790266577dbac0a117367962ab04f116a034462036fa121edd2082ad89f",
+        "entryId": "4c4bbd128b7f2accac1498db52272effc80f2bd21412376bb5a1ed295a0c9126",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 3424,
+        "textSha256": "1cc6d37a32587ebae6f4dd9ed500ffb840bbf4da4f4946d2694775e21399c6cf"
+      },
+      {
+        "audioKey": "3024e0d5c1bc2360daa60a42373c385300ee88f49eaf85f6dd3046d556f07a5b",
+        "entryId": "57e7f8122e2bfef336f57ee5406e86654b3e3729d20bf308fd8049690104506a",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 4392,
+        "textSha256": "57bb0ef334f9236f34a8a004fc13e147e525eab8e4ffc4cfab922bb578f4e975"
+      },
+      {
+        "audioKey": "4010a57034c1ab0424b2fda31b5a6ec844508296d8ed86ed34778357c895efb6",
+        "entryId": "23c7a5d316166aae38efca66a0551b2180eb62bc3d56c68bd6eec41c51a8c5c4",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 5469,
+        "textSha256": "3c9cca1a51de167fd6f6137b3dcd8f3ddee49aeb03ebd9ae1d49137312fc669d"
+      },
+      {
+        "audioKey": "40182bc5f5adfefce2dcad2b7a7f7a21d6c8c53e27292a898ddd1e33f6072263",
+        "entryId": "2389e0eb7645a7c988ad38df216146295a098ce8117d4d7397bfaff56d0d468c",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 1516,
+        "textSha256": "ad9f6637d43052b109f0a844bdb86d8aa257637783fa47a001904430af8c6193"
+      },
+      {
+        "audioKey": "47e2ea9a1654a5730fa56742493f671cdc896b51f76675e6b5b1aa432575ae3c",
+        "entryId": "7623efd4996afb41e78624ee6b28567f813aa5303dbdba6b300ad6d6fe1727e5",
+        "reasons": [
+          "pilot-lexical-risk"
+        ],
+        "sourceIndex": 4384,
+        "textSha256": "3acc5077b1eef3196d8c5f67585a26dfedf4c287308e84e6d64aee94a72d0c49"
+      },
+      {
+        "audioKey": "5019444863f07d38bf2907a9d2463062c178fc65c86e88b94f9bb65427bab246",
+        "entryId": "16165f81f63e75dec5944962b8e726e0fe05ffb9acab5b9c356e391ef495294e",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 3385,
+        "textSha256": "28f867cc56a609fab2b33681a559ce9b327b1bf27c1564cd319000241307075c"
+      },
+      {
+        "audioKey": "50288457342ca42fef2ebec37a978079b584f92dfe2e2ebf017dc420c8ac857c",
+        "entryId": "b7fe58722a98597bf49a5d6107f29c60999b67c3ee779765e022f9144baf5885",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 6371,
+        "textSha256": "1de210101de07bb69e37fc5083e7f188a228808e6ce7b34d3b89d162a0c227b2"
+      },
+      {
+        "audioKey": "600033a4667079f93eed06e583cab6828de6d2ffe37af4a5dc1189a0a4478fbe",
+        "entryId": "8985c1ddea4d449d03a6e9ada2098e5174be8850004a4624e81e31271422236d",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 518,
+        "textSha256": "bb018dbba47107904943aeefacce5c378df4610726926ad5af8ee7fd7f419e52"
+      },
+      {
+        "audioKey": "60066b7fde003f34212983efa10e21580073e14e6b08d111cc63417d4c71bb70",
+        "entryId": "c5696bf8a8de84a2961a0cb4c999e6858dec07088635f20bb50e63b72bc8dd67",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 2246,
+        "textSha256": "c052405e554aebc3f509edf91e6a0f860cea0f9512d69d570cc362b93ec7cb21"
+      },
+      {
+        "audioKey": "6190751b56b1c9bc84ed43d2205c02187e2652696eba67bee83acd0c3594d72d",
+        "entryId": "a391ee2c96b265e59a461cae3ee5907360e54839db238ae38fc827812c66620a",
+        "reasons": [
+          "numeric-boundary"
+        ],
+        "sourceIndex": 6257,
+        "textSha256": "1752969f58802c6b8640372ab1c01c0b9a0a67bd07775ba5bae90419c62b786c"
+      },
+      {
+        "audioKey": "6c5a0c244d36d2991f056748b8b956774f7a14d897a28af5afc9cee6ebb18d5f",
+        "entryId": "eaa947e48342ac8ff098e13e26c2a23cce76c58063b7744a8d9f4364784df2bb",
+        "reasons": [
+          "longest-text"
+        ],
+        "sourceIndex": 5765,
+        "textSha256": "309e69aace588bdbbb91cd1f314a528613202a9bcdb267f4c9193b18b8d42426"
+      },
+      {
+        "audioKey": "6e3db9b6b715fe7965b38ac655026411d173910b6ba5e693ac3172f2253c8315",
+        "entryId": "b6d3513e49c32f7518417949f211d28abb979e2ba0d6dc19fa33d3fe0eae77a1",
+        "reasons": [
+          "penalty-and-modality"
+        ],
+        "sourceIndex": 1406,
+        "textSha256": "26757b3c7eee89f5294fbbba4c701c42c470342e52c61cf158807fd6c95e22a1"
+      },
+      {
+        "audioKey": "70142c23c00fe23a3df67ad320dfc1c6379b348585db02e68c1232d0ae525431",
+        "entryId": "d820d626cccbc1d719c880110ebbed9dd7d9f0ca0b871fe0d5d1f59af9369979",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 5231,
+        "textSha256": "4186d5be6a280bb848e3e72e848e483c9a0706fddd4bded8e254cfd06a9e4f8d"
+      },
+      {
+        "audioKey": "70211068a82ab14d5be8ffaaea089d9163b2eb146ab5fcbdaf0912a36e4b1212",
+        "entryId": "d30a405c8fccce5941d4e3fbf528fdeca1563fddcd5088a44638caa58b3229e2",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 4717,
+        "textSha256": "4f82332fbcd856742c726b02d471dbed982ab1fee52c05f27fc97b3c6c60eae7"
+      },
+      {
+        "audioKey": "737003ebef7fa119ac918064a5e9af319ca45462e48a8e0a431f516b03903487",
+        "entryId": "62caa64bd69a76ab2a2848f9288cc6a763d7bfb869f2ac25f912dfec290178ac",
+        "reasons": [
+          "penalty-and-modality"
+        ],
+        "sourceIndex": 4308,
+        "textSha256": "01f8bb2b5e2412362d31e25b110f298efdb0acc5f87b011bd851b59e6a730ab5"
+      },
+      {
+        "audioKey": "74c7417518a50da667b93505169eb291e71b891b0a1f4d6feb3cef9bb9663025",
+        "entryId": "475e89e62b984185ff724238373595670733331a4bb5c1dc4431d8267bcb22ea",
+        "reasons": [
+          "longest-text",
+          "numeric-boundary"
+        ],
+        "sourceIndex": 6215,
+        "textSha256": "6a87f21d99cd7fa506a05673eeb8d7cededeb9dcab78131b26c2841ef16bc2a2"
+      },
+      {
+        "audioKey": "7790b0b7ab89bc333ee1fe3522aa156280330699ea550d226391d8f2558ae437",
+        "entryId": "8fcbdce91a0b6abda443a558a8a0d6412f801725db0974caae726d4b1f72d420",
+        "reasons": [
+          "longest-text",
+          "numeric-boundary"
+        ],
+        "sourceIndex": 5876,
+        "textSha256": "eeff0b854dff9313f71d043c979e336251954fa6e5980db3d8ca2bda8d82d72f"
+      },
+      {
+        "audioKey": "7ad013835889ff5e0aea7321ff95ea9ee7376b72cd4d52a24f4e893e29347a4a",
+        "entryId": "05d25f4e35ae2e26734f1dce5341a99ffa8f662a3a2173c703965f45597d2ef5",
+        "reasons": [
+          "numeric-boundary"
+        ],
+        "sourceIndex": 2301,
+        "textSha256": "7ceffbf9102b2604cc2ee816b6105d2e2bcfd9e7960f10b877b31e788edb3031"
+      },
+      {
+        "audioKey": "7b8764bb41523ceb016ced971c5284b2cc9f946e08550be545cd0c3a9ef135df",
+        "entryId": "5911ae19908d873647c482d3dc0fe336931c3e20cf86d4d277fbae7ad77df2bd",
+        "reasons": [
+          "numeric-boundary"
+        ],
+        "sourceIndex": 2077,
+        "textSha256": "e05c51821dd77339718cc8ff4988cfbbc519bd2dcda7299974b9d75285af497d"
+      },
+      {
+        "audioKey": "8003c5f37a26aba0117d7628110c750ee0f8cc8c0e4f6935bb534bb2cbc268c0",
+        "entryId": "9c1cb5288dab9251b6d90b4c7dbbdc44b04fe782e3be9145de65f756840d5431",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 6874,
+        "textSha256": "850bb7f97dbda431ea8c89797957c8cfde54bbe447ca8d78ff7b307b59bb13bf"
+      },
+      {
+        "audioKey": "80092627716cab98714fe47cae9138d80778719c6e4ce11040a10aea21efd85e",
+        "entryId": "f4b010e5966fa54a18f03353cf783c18f9b4e077da203591b97a8d943fe55014",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 5261,
+        "textSha256": "8cbd5d47a1367b013c6817ba37a33ad0a57c4cfa0fffbc497c652bb1489cdb3c"
+      },
+      {
+        "audioKey": "900b350194a96a3dc8bc2c35f30d3170d721a16d4b8ab7174ecb56e0dfe25665",
+        "entryId": "0555f549b9e83d950899b549343d552846610c8b935c065ec423aaad9f78698f",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 951,
+        "textSha256": "f137ca9a6fecf4420e9d17abacdd09971acce05902f3a2366a5d210a7c65a840"
+      },
+      {
+        "audioKey": "900b6c9a9b438050f959d73fcc0ce019c4cfb492216588a12abf3c01b01744e7",
+        "entryId": "d272689d468319e0ef30a38a81e99acc44f08d7aee395ce48322426367d36a62",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 4757,
+        "textSha256": "4ace6052bab1f77756e619d3ffa4ba38b7c33f160da0f8eb2b0e44963ca7acd2"
+      },
+      {
+        "audioKey": "9018143665980d239d72d7aaad7a1be92b726ea0929679c23e2e7c4b850a2b30",
+        "entryId": "d74c589466b7d9c186b414b04298cdcac298500dd9ceb73f103d83dd17d207e5",
+        "reasons": [
+          "penalty-and-modality"
+        ],
+        "sourceIndex": 1285,
+        "textSha256": "844356b68f97cf1b65df76705496291245d93d62363aa0d7eb8e750c4b7b6eb0"
+      },
+      {
+        "audioKey": "95e4067fa31c33ca9a30f7794e0fac4830d49cf7e16dc585356bb0f7c7074b10",
+        "entryId": "1fcc915bd92395c62ca91e460450cc1aa4bc54a9c6f9e70040824822c8a045e2",
+        "reasons": [
+          "longest-text"
+        ],
+        "sourceIndex": 6153,
+        "textSha256": "1b9af09916769c3b1dfdbb4d6aac8a9c7157e5d82b264290b8a50b2d026e74ee"
+      },
+      {
+        "audioKey": "a01182a412a99735e4d86e1c0be25772ae1c60a91eff6db15ff9174bdc07a9c7",
+        "entryId": "6fbfcd331485439b97b25f7f264d8b32a0dd76669ac706b955b169d0f52964c6",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 6440,
+        "textSha256": "a505def5b85260215a2c8991eb7a8c295bf81bcde85da0e3ddba5fd624bcc3e8"
+      },
+      {
+        "audioKey": "a01bffca9d4766f22e7597c40e4106046a40130994e55ec8e36bb9021fc578b6",
+        "entryId": "ad1173dee5aa88719bcbc2754a5bebff565cef3b4e5849cc21047edb0026d43f",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 4332,
+        "textSha256": "704e878e7c8a00e895835abb7b11ae29eab0bd67e38fa9831abd02f29b8ba50a"
+      },
+      {
+        "audioKey": "b00990a3f8346a766b82825b90f1fd5dde33778bc7c7460197f57a212579444b",
+        "entryId": "0edf9f9e0a1422c609de82722265cd1646308bed6f39a80942e45b22b726ea84",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 59,
+        "textSha256": "02d7dc069041dc196acfd096dd3effdaa0a74ee9f865dbd27b073a2548bbd747"
+      },
+      {
+        "audioKey": "b00a5f507dce6fe8640dc28e21f53ca71bc4ea6de6c00ae312de45f58737a36f",
+        "entryId": "b9b7357e3404cca338c18c5cbbe866db3471b292059c2e98cefed08cd8fd18fe",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 5127,
+        "textSha256": "85b40585444e097a9fc7f9e384be440cb42bdf14e837a51f03c659d6593ce6ef"
+      },
+      {
+        "audioKey": "b1dd4507065b876e908ab5efcdaffc4ba1b28f3444c23572a0086c3f1c1fa1a6",
+        "entryId": "7a799faaad2cbf3d66aad4ce428fd201d06ab4e176e2d0834492414eeed987d7",
+        "reasons": [
+          "longest-text",
+          "numeric-boundary"
+        ],
+        "sourceIndex": 5779,
+        "textSha256": "47ffd798fb517985883c89387ea7cf1da4c8cde1c819e3c4851a9358a83412c1"
+      },
+      {
+        "audioKey": "b5fbe28439629145bd94578019b5451df854bc83ebb90b46452447f06cda80c2",
+        "entryId": "0d5c02faa97ce5c1a6b46449b9e7504d9ea086e8dd0398baaa62830dcde6b612",
+        "reasons": [
+          "pilot-lexical-risk"
+        ],
+        "sourceIndex": 1695,
+        "textSha256": "06c76345ae7287324a81c7e97881419ad356e5613ce8bbe4584fa4fc46ff533b"
+      },
+      {
+        "audioKey": "b9b451b8202bea830bca8b03f98742f277d2d48d40eea3a7d345a1a2d9bb2e0a",
+        "entryId": "fca79926a5bedb7aee67b358fdbbf4f149181ec6706a9f24bfb081890ecebfbe",
+        "reasons": [
+          "penalty-and-modality"
+        ],
+        "sourceIndex": 4746,
+        "textSha256": "a4649cc4b0c06d4a84efe636a84918b50a8f069cb13afbd8eb48ce6e72d66bf6"
+      },
+      {
+        "audioKey": "bd401ca1532443d4694833ae6b3ac6774cf612e14081c1858b5820ea4425c60b",
+        "entryId": "6a771a85638e91f49b0d4c191e8d2e9928408fc9446573be49816d49fff64da8",
+        "reasons": [
+          "longest-text"
+        ],
+        "sourceIndex": 5851,
+        "textSha256": "a6c106a91adc99b340e7a8ba5e90b9a4c069e11ce98a5c80a1c683ed300e04ca"
+      },
+      {
+        "audioKey": "c00aa2a35222d44716ecdfea6d181cc636662b7993c727bb67fbe4a5397b686e",
+        "entryId": "2eea124bf4d8115b64f375249a96bc720f440dceadcea8a081e29872ca4db503",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 6427,
+        "textSha256": "863dd8ab99826938d2b6f103bd80958cf50e94324bce3c429f13b2f1377f624c"
+      },
+      {
+        "audioKey": "c01afe01dd36c945ddedeacb8bf508f049a9f61cb74bf37e44f61e8823f61575",
+        "entryId": "43cce59e415ddfbe2af877e9a887435600eb51c9b94ede17fc6982183a50477e",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 2561,
+        "textSha256": "f4f512f70bf7e06a3fc833deb91a12cc5d966b3e20ca4b33d44f635ec4f0c66c"
+      },
+      {
+        "audioKey": "c1b8fa6679ae9dbbd9d1617889546353c37b610d46cca4e69b016ca7ff8cc15b",
+        "entryId": "f47f5260bca755c5561ac604454e6534e17864c3042134094efe77985e78d536",
+        "reasons": [
+          "penalty-and-modality"
+        ],
+        "sourceIndex": 1377,
+        "textSha256": "01a1ca1151f4a344ca070b56010ef08e4a37243c88b34c070e6f9c2bbc5d6af7"
+      },
+      {
+        "audioKey": "c375065fe1db617093fe420371c0df18a7d7383a912bd0726d18eb7366ca5a0c",
+        "entryId": "5fdc56f46d81efb5bae326f2352c1a66bd88b1fcdf8b42a95b364ebcc5fda471",
+        "reasons": [
+          "penalty-and-modality"
+        ],
+        "sourceIndex": 1365,
+        "textSha256": "e8854feaf1080743734b4b46cb3cf59461eb0d2a1c973c377acb9436bcc8cfb6"
+      },
+      {
+        "audioKey": "d0078dbd3c95c70bf4f135c883de290d6f1d2fcdb6cd2585a2961f6b35361454",
+        "entryId": "64d65e19c309ebe1079ca9838e10b0e2a5dd0ff1f3e23f7e4c1c42da078caa88",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 6455,
+        "textSha256": "eae39b4fe48c2511bb6c8c6a109e3ccf5bbff758e132b6450850d4bec6708860"
+      },
+      {
+        "audioKey": "d009fd5f8fce24e8ff622f073882bfa7a4bd59b743809d1038e62d6db9d5a8c1",
+        "entryId": "c1b28426cda4cc6aa5c9efff9741d5e43dcedefd23d00e24a415508bee68cf23",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 1926,
+        "textSha256": "c3689e91f02235aca544fa2dab50dec8d370f3c926ee0e6a6b46c9225ceece72"
+      },
+      {
+        "audioKey": "d1930861b7b51ea09e12927b52a4d539244526b61765d87be20060cacef6e7cd",
+        "entryId": "8ecbc7041b015a28680e15886c703c560de4c9b3a6dc1e24003b41183e094484",
+        "reasons": [
+          "numeric-boundary"
+        ],
+        "sourceIndex": 5976,
+        "textSha256": "94e6d5e124b629f9d81405a37d9475402b02dd52e6fbb1145afb447726690109"
+      },
+      {
+        "audioKey": "d90ea87eb3c6ba37b8a25076fb4d846740802ef613a91ae8f75d579cf824d606",
+        "entryId": "4b0ca8b14f6661698fd14a2cb1228b8dbb607e3f3ca00a80e73f61d96afb1c8d",
+        "reasons": [
+          "exception"
+        ],
+        "sourceIndex": 4538,
+        "textSha256": "cca9e55783c1609a713c731769593f218eabb41c63844b0bf6389b80f7544251"
+      },
+      {
+        "audioKey": "e0020f43586e5d5d5945c49fd88799b4a66ab1a963e75393be7f1b407cd70312",
+        "entryId": "860c1ca35833a2770c1e6458da48d467b5bd2f39a22f49c1c005ded0ae7ef8e4",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 1827,
+        "textSha256": "3cb85b53eef7d1b7108e91766b0c3c9a47b21d3ee175250c2a7cbbce00ffcc34"
+      },
+      {
+        "audioKey": "e008bf5bfd3af4d148247235ff29e4b98fb4653bca468a56447ae3c14b880fee",
+        "entryId": "43e4093a30f0970e57ccdc956ee335a0ef3d44517a4065d673505ed437e27d44",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 2522,
+        "textSha256": "5175479d767d39ab436947ceff9cdf5d97111f444a5e992e76a72d9d12ab02f6"
+      },
+      {
+        "audioKey": "e0539128adc28eb7b4dbdf21dedbfa039386ed4df40af32f74ccdf9b036d6922",
+        "entryId": "93d6ec6387b1fe8e20e7ab59387885643d1e974fe5109e3933b604394c6a4032",
+        "reasons": [
+          "numeric-boundary"
+        ],
+        "sourceIndex": 6091,
+        "textSha256": "588ba7c1149de2c6280c1806247fa154a379a8caef41cf1133e35a5e47202cc8"
+      },
+      {
+        "audioKey": "e70afc811756946cb08ed23fa51e91fd4bdda3d91274c96139306c3303b84a15",
+        "entryId": "3cf593bf098a87fb1579d5e2b75a77b482f4e2b09128dca0f5f4838766dbe420",
+        "reasons": [
+          "penalty-and-modality"
+        ],
+        "sourceIndex": 2617,
+        "textSha256": "f3fbb5059ee53fe892210137f324ec629381ca73e90f9c7f9c24ce965c07bdc7"
+      },
+      {
+        "audioKey": "f00d179ea90595f2819aa8556468d5ce7bc5219fb88687f95c442134b6952956",
+        "entryId": "f30b775ebcfa391d9b150c759704f7810485e40b051b390c243456631786a566",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 3785,
+        "textSha256": "0ceb55372ddfebf39b1f7473973c985d658cdb615ec68dd1c0517f7f3e5a0d46"
+      },
+      {
+        "audioKey": "f017341c48272c286289c836dfe2f7ec43eb60c11101fdf4500e35322271cfca",
+        "entryId": "e7a4d9cf2771a833db7918e6fe4fcbd5c3b0cce98a4cfc78cb7c26ea6d959dbd",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 2278,
+        "textSha256": "0c94010586a44d5de3dbf5539b141161e5b9e0487e0bbc410a9c098cbf975ce2"
+      },
+      {
+        "audioKey": "f31bf2568fbb9469c70f91b6430c78cc8931c5b29f37e3f63005be914b139857",
+        "entryId": "900e9d0536966ce6c315965322291c6a0da8df0e1077cd2c3a66973df1e42377",
+        "reasons": [
+          "penalty-and-modality"
+        ],
+        "sourceIndex": 4224,
+        "textSha256": "6b099745eb16a2042d7bb9d391f6c3995696f8116a5c77979580cbf6b0cade2d"
+      },
+      {
+        "audioKey": "f6b7a40221c95c059f9e1c1d4696b6e86816736426125387c4d8fba50215621e",
+        "entryId": "a86fd9f89d82ef7edb28bf4c7e90a07f5966d419db6eb9c1367fa6fe69a94c17",
+        "reasons": [
+          "numeric-boundary"
+        ],
+        "sourceIndex": 1721,
+        "textSha256": "3886dbd054022a7185a84aa450ab6e310e3b213abe944b82500cdb930e662e70"
+      }
+    ],
+    "recipeSha256": "325696fa16298826933979aa72f34cebf1aca3c1e473bb5035cd10265097f0b8",
+    "schema": "reader-assistance-verification-sample.v1",
+    "selectedUniqueClips": 65,
+    "sourceDataSha256": "d6d40bb76000a71f6db4a3f0afac103fe2d560ddcf5f9264e383435dbdb5de5e",
+    "strategy": "hash-prefix-2-longest-6-boundary-10-penalty-8-exception-4-rare-8.v1"
+  },
+  "sourceDataSha256": "d6d40bb76000a71f6db4a3f0afac103fe2d560ddcf5f9264e383435dbdb5de5e",
+  "timing": {
+    "asrSeconds": 891.098,
+    "audioSeconds": 1067.961,
+    "elapsedSeconds": 763.184,
+    "reusedAssessments": 14
+  }
+}
