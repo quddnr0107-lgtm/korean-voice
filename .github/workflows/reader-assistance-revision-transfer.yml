@@ -1,0 +1,27 @@
+name: Register exact corrected explanation bytes
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/reader-assistance-f1-transfer-20261105]
+    paths:
+      - reader-assistance/transfer/revision-21db3f3e.json
+      - tools/apply_reader_assistance_revision.mjs
+      - .github/workflows/reader-assistance-revision-transfer.yml
+permissions:
+  contents: write
+jobs:
+  register:
+    if: github.repository == 'quddnr0107-lgtm/korean-voice'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify 32 exact corrections and register the immutable canonical blob
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node tools/apply_reader_assistance_revision.mjs
