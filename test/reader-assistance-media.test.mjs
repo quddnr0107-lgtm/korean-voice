@@ -111,6 +111,18 @@ test('cache unavailability does not discard a valid F1 response',async()=>{
   }
 });
 
+test('a same-length corrupt cache entry cannot impersonate the sealed MP3 digest',async()=>{
+  const data=fixture(), cache=memoryCache();
+  await cache.put(new Request(address),new Response(new Uint8Array(bytes.length),{headers:{
+    'Content-Length':String(bytes.length),'X-Reader-Assistance-SHA256':sha(bytes)
+  }}));
+  let fetched=0;
+  const response=await handle(new Request(address),{},data,{cache,fetchImpl:async()=>{fetched++;return source();}});
+  assert.equal(response.status,200);
+  assert.deepEqual(new Uint8Array(await response.arrayBuffer()),bytes);
+  assert.equal(fetched,1);
+});
+
 test('the real Worker router delegates F1 requests before touching any existing service bindings',async()=>{
   const src=fs.readFileSync(new URL('../worker.mjs',import.meta.url),'utf8');let serviceCalls=0,delegations=0;
   const trap=()=>{serviceCalls++;throw Error('service access');};
