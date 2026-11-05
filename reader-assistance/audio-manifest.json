@@ -1,0 +1,13 @@
+{
+  "schema": "reader-assistance-audio-pack.v1",
+  "complete": false,
+  "voice": "f1",
+  "recipe": "reader-assistance-f1-v1",
+  "sourceDataSha256": null,
+  "recipeSha256": null,
+  "expectedEntries": 0,
+  "readyEntries": 0,
+  "packs": {},
+  "clips": {},
+  "entries": []
+}

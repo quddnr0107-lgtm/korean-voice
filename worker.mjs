@@ -16,6 +16,8 @@ import { makeBaker } from './lib/bake.mjs';
 import { prune, retireVoices, MAX_DELETE } from './lib/prune.mjs';
 import { normalizeItems, renderKey, dayStamp, quota, FREE_DAILY_CHARS, GLOBAL_DAILY_CHARS, globalCap, LIMITS } from './lib/render.mjs';
 import { verifyGithubOidc } from './lib/oidc.mjs';
+import { handleReaderAssistanceMedia } from './lib/reader-assistance-media.mjs';
+import assistanceAudioManifest from './reader-assistance/audio-manifest.json' with { type: 'json' };
 export { handleTts, MODEL, LANGS, MAX_CHARS, _reset } from './lib/melotts.mjs';
 
 // 컨테이너 = server/server.py (포트 8790). 3분 요청이 없으면 잠든다(비용 0). 첫 요청이 깨우며 모델 로드 약 2초.
@@ -466,6 +468,7 @@ async function handleHealth(request, env) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    if (url.pathname.startsWith('/reader-assistance/')) return handleReaderAssistanceMedia(request, ctx, assistanceAudioManifest);
     if (request.method === 'OPTIONS' && ['/tts', '/warm', '/meta', '/health', '/api/tts', '/bake', '/render'].includes(url.pathname)) return new Response(null, { status: 204, headers: { ...CORS, 'Access-Control-Max-Age': '86400', 'Access-Control-Allow-Headers': 'Range, Content-Type, Authorization' } });
     if (url.pathname === '/tts') return handleLiveTts(request, env, ctx);
     if (url.pathname === '/warm' && request.method === 'POST') return handleWarm(request, env);

@@ -1,0 +1,175 @@
+name: Reviewed F1 assistance packs
+
+on:
+  workflow_dispatch:
+    inputs:
+      pilot:
+        description: Bake only the seven reviewed pilot paragraphs; keep catalog incomplete
+        type: boolean
+        default: false
+  push:
+    branches:
+      - codex/reader-assistance-f1-pilot-20261105
+      - codex/reader-assistance-f1-bake-20261105
+    paths:
+      - .github/workflows/reader-assistance-f1.yml
+      - reader-assistance/**
+      - tools/reader_assistance.py
+      - lib/reader-assistance.mjs
+      - test/reader_assistance_test.py
+
+permissions:
+  contents: read
+
+concurrency:
+  group: reviewed-reader-assistance-f1
+  cancel-in-progress: false
+
+env:
+  RA_PILOT: ${{ inputs.pilot == true || github.ref == 'refs/heads/codex/reader-assistance-f1-pilot-20261105' }}
+  RA_DATA: ${{ (inputs.pilot == true || github.ref == 'refs/heads/codex/reader-assistance-f1-pilot-20261105') && 'reader-assistance/pilot.json' || 'reader-assistance/data.json' }}
+  HF_HUB_DISABLE_TELEMETRY: '1'
+  DO_NOT_TRACK: '1'
+  PYTHONUNBUFFERED: '1'
+  OMP_NUM_THREADS: '2'
+  OPENBLAS_NUM_THREADS: '2'
+
+jobs:
+  prepare:
+    if: github.repository == 'quddnr0107-lgtm/korean-voice'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      missing: ${{ steps.inventory.outputs.missing }}
+      buckets: ${{ steps.inventory.outputs.buckets }}
+      model-key: ${{ steps.model.outputs.key }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Review, content identity, pack and failure regressions
+        run: python3 -m unittest discover -s test -p reader_assistance_test.py -v
+      - name: Validate every exact reviewed text before any synthesis
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=()
+          if [ "$RA_PILOT" = true ]; then args+=(--pilot); fi
+          python3 tools/reader_assistance.py plan --data "$RA_DATA" "${args[@]}"
+      - name: Find only missing content-addressed clips
+        id: inventory
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=()
+          if [ "$RA_PILOT" = true ]; then args+=(--pilot); fi
+          python3 tools/reader_assistance.py inventory --data "$RA_DATA" "${args[@]}"
+      - name: One model cache identity
+        id: model
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os
+          recipe=json.load(open('reader-assistance/recipe.json'))
+          pinned=json.dumps({'assets':recipe['assets'],'helper':recipe['helper']},sort_keys=True,separators=(',',':')).encode()
+          with open(os.environ['GITHUB_OUTPUT'],'a') as output:
+              output.write('key=reader-assistance-supertonic3-'+hashlib.sha256(pinned).hexdigest()[:16]+'\n')
+          PY
+      - name: Restore the one shared model cache
+        if: steps.inventory.outputs.missing != '0'
+        id: assets
+        uses: actions/cache/restore@v4
+        with:
+          path: supertonic3
+          key: ${{ steps.model.outputs.key }}
+          restore-keys: supertonic3-v1
+      - name: Download and verify pinned model bytes once
+        if: steps.inventory.outputs.missing != '0'
+        run: python3 tools/reader_assistance.py download-model
+      - name: Save only the verified reusable model
+        if: steps.inventory.outputs.missing != '0' && steps.assets.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: supertonic3
+          key: ${{ steps.model.outputs.key }}
+
+  bake:
+    needs: prepare
+    if: needs.prepare.outputs.missing != '0'
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        bucket: ${{ fromJson(needs.prepare.outputs.buckets) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Restore verified model; no audio or artifact cache
+        uses: actions/cache/restore@v4
+        with:
+          path: supertonic3
+          key: ${{ needs.prepare.outputs.model-key }}
+          fail-on-cache-miss: true
+      - name: Install CPU inference dependencies
+        run: python3 -m pip install --quiet onnxruntime numpy soundfile imageio-ffmpeg
+      - name: Audio metric and failure regressions
+        run: python3 -m unittest discover -s test -p reader_assistance_test.py -v
+      - name: Synthesize only missing clips, validate, and publish immutable packs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RA_BUCKET: ${{ matrix.bucket }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=()
+          if [ "$RA_PILOT" = true ]; then args+=(--pilot); fi
+          python3 tools/reader_assistance.py bake --data "$RA_DATA" --bucket "$RA_BUCKET" "${args[@]}"
+
+  catalog:
+    needs: [prepare, bake]
+    if: always() && needs.prepare.result == 'success' && (needs.bake.result == 'success' || needs.bake.result == 'skipped')
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Require every reviewed entry and publish its atomic data-branch catalog
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=()
+          if [ "$RA_PILOT" = true ]; then args+=(--pilot); fi
+          python3 tools/reader_assistance.py assemble --data "$RA_DATA" --publish-catalog "${args[@]}"
+      - name: State the activation boundary
+        run: |
+          if [ "$RA_PILOT" = true ]; then
+            echo 'Pilot catalog remains complete=false on its separate data branch. No production activation.' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'All reviewed entries have F1 audio. Catalog is on data/reader-assistance-f1-v1. Worker and study-site deployments are separate verified steps.' >> "$GITHUB_STEP_SUMMARY"
+          fi

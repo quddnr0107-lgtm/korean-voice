@@ -1,0 +1,225 @@
+{
+  "schema": "reader-assistance.v1",
+  "version": "2026-11-05.1",
+  "label": "보조설명",
+  "partial": true,
+  "sourceBasis": {
+    "corpusPath": "_deploy/study_data.json",
+    "corpusGitBlob": "7529156d58cd43137695634db48a81ae0d12c1b3",
+    "corpusCommit": "02cbf4153bcc87a83e663dd6bed6eb16e177aa8d",
+    "officialUrl": "https://www.law.go.kr/lsLawLinkInfo.do?chrClsCd=010202&lsJoLnkSeq=1000520482",
+    "effectiveDate": "2026-10-02",
+    "reviewedAt": "2026-11-05",
+    "reviewScope": "병역법 시행령 제136조 중 검토한 7개 문단"
+  },
+  "dependencies": [
+    {
+      "id": "military-decree-136-reviewed-20261105",
+      "law": "병역법",
+      "period": "27년 전반기",
+      "type": "시행령",
+      "articleNum": "136",
+      "originals": [
+        "시행령 제136조 (수형자 등의 병역처분)",
+        "① 현역병입영 대상자, 승선근무예비역 또는 보충역(보충역의 장교·준사관·부사관 및 보충역의 복무를 마친 사람은 제외한다)으로서 법 제65조제1항제2호 및 제3호에 따라 보충역 또는 전시근로역으로 편입할 수 있는 사람과 대체역으로서 법 제65조의2제1항에 따라 소집을 면제 또는 해제할 수 있는 사람은 다음 각 호에 따른다.",
+        "이 경우 형이 부정기형으로서 장기와 단기를 정하여 선고된 경우에는 장기를 적용하고, 금고 이상의 형에 처한 판결이 확정된 죄와 그 판결 확정 전에 범한 죄를 「형법」 제37조에 따라 경합범으로 하여 각 죄에 대하여 각각 징역 또는 금고의 형이 선고된 경우에는 그 형기를 합산하여 적용하되, 징역과 금고는 같은 종류의 형으로 보고 각 형기를 합산한다.",
+        "1. 보충역 편입 대상은 다음 각 목의 어느 하나에 해당하는 사람.",
+        "가. 6개월 이상 1년 6개월 미만의 징역 또는 금고의 실형을 선고받은 사람",
+        "나. 1년 이상의 징역이나 금고의 형의 집행유예를 선고받은 사람",
+        "2. 전시근로역 편입 대상은 다음 각 목의 어느 하나에 해당하는 사람",
+        "가. 1년 6개월 이상의 징역 또는 금고의 실형을 선고받은 사람.",
+        "나. 가족관계등록부상 부모를 알 수 없는 사람",
+        "다. 13세 이전에 부모가 사망하고 부양할 가족 (「민법」 제779조 및 제974조에 따른 가족을 말한다)이 없는 사람",
+        "라. 18세 미만의 아동으로「아동복지법」 제52조제1항제1호에 따른 아동양육시설, 같은 항 제3호에 따른 아동보호치료시설, 같은 항 제4호에 따른 공동생활가정 또는 같은 항 제13호에 따른 학대피해아동쉼터에 5년 이상 보호된 사실이 있는 사람",
+        "마.「국적법」 제5조부터 제8조까지의 규정에 따라 대한민국국적을 취득한 사람",
+        "바. 성을 전환하여 가족관계등록부상 여성에서 남성으로 성별이 정정된 사람",
+        "3. 대체복무요원 소집면제 또는 해제 처분 대상: 제2호나목부터 바목까지의 어느 하나에 해당하는 사람",
+        "② 지방병무청장은 사회복무요원으로 복무 중인 사람으로서 징역 또는 금고의 형의 선고를 받은 사람이나 법 제33조제1항 본문, 같은 조 제2항제3호·제3호의2 또는 제5호에 해당하는 사람 중 복무기관의 장이 정상적인 직무수행이 곤란하다고 인정하는 사람은 국방부령으로 정하는 심사를 거쳐 전시근로역에 편입할 수 있다.",
+        "이 경우 병역처분변경의 방법, 절차 등에 관하여는 제135조의3제2항부터 제7항까지를 준용한다.",
+        "③ 보충역으로서 복무를 마친 사람과 예비역의 병 중 제1항제2호가목에 해당하는 사람은 법 제65조제1항 및 제5항에 따라 전시근로역에 편입할 수 있다.",
+        "④ 제1항 및 제3항에 따라 병역처분변경을 원하는 사람은 병역처분변경원서를 지방병무청장에게 제출하되, 현역입영 통지 또는 사회복무요원ᆞ대체복무요원 소집 통지를 받은 사람은 입영일이나 소집일 전날까지 제출하여야 한다.",
+        "다만, 제1항제1호 및 제2호가목에 해당하는 사람에 대해서는 지방병무청장의 사실확인에 의하여 처리할 수 있다.",
+        "⑤ 지방병무청장은 병역판정검사 당시 제1항 각 호의 어느 하나에 해당하는 사람에 대해서는 법 제14조제1항제1호에 따라 보충역 또는 전시근로역에 편입할 수 있다.",
+        "다만, 제1항제2호나목부터 마목까지에 해당하는 사람이 현역이나 사회복무요원의 복무를 원하는 경우에는 제135조의2를 준용하여 병역처분을 변경할 수 있다.",
+        "⑥ 지방병무청장은 병역판정검사 대상자로서 제1항제2호에 해당하는 사람은 법 제64조제1항에 따라 병역판정검사를 실시하지 아니하고 전시근로역에 편입할 수 있다.",
+        "⑦ 제1항제2호라목에 따라 병역처분의 변경을 받으려는 사람은 그가 보호받았던 아동복지시설의 장을 거쳐 관할 특별자치시장·특별자치도지사·시장·군수·구청장의 확인을 받아야 한다.",
+        "⑧ 제1항제1호에도 불구하고 다음 각 호의 어느 하나에 해당하는 사람은 보충역에 편입하지 않는다.",
+        "1. 법 제86조에 따라 병역의무를 기피하거나 감면받을 목적으로 도망가거나 행방을 감추어 징역형을 선고받은 사람 또는 신체를 손상하거나 속임수를 써서 징역형을 선고받은 사람",
+        "2. 법 제87조제3항에 따라 정당한 사유 없이 의무이행일에 병역판정검사, 재병역판정검사, 입영판정검사, 신체검사 또는 확인신체검사를 받지 않아 징역형을 선고받은 사람",
+        "3. 법 제88조제1항 각 호 외의 부분 본문에 따라 정당한 사유 없이 같은 항 각 호의 기간이 지나도 입영하지 않거나 소집에 응하지 않아 징역형을 선고받은 사람 또는 같은 항 각 호 외의 부분 단서에 따라 정당한 사유 없이 지정된 일시의 점검에 참석하지 않아 징역형을 선고받은 사람",
+        "4. 법 제88조의2에 따라 대체역으로 편입될 목적으로 서류를 거짓으로 작성하여 제출하거나 거짓으로 진술하여 징역형을 선고받은 사람",
+        "5. 법 제94조제1항 또는 제2항에 따라 국외여행허가 의무를 위반하여 징역형을 선고받은 사람",
+        "⑨ 제1항제2호가목, 제2항, 제3항 및 제6항에도 불구하고 제8항 각 호의 어느 하나에 해당하는 사람은 전시근로역에 편입하지 않는다."
+      ],
+      "sha256": "b282c18fe37176e92f8bb458fedbf2a3b1c05d8534dc89b4eb63181e09da7c4a",
+      "sourceUrl": "https://www.law.go.kr/lsLawLinkInfo.do?chrClsCd=010202&lsJoLnkSeq=1000520482",
+      "reviewedAt": "2026-11-05"
+    }
+  ],
+  "entries": [
+    {
+      "id": "military-decree-136-3",
+      "law": "병역법",
+      "period": "27년 전반기",
+      "type": "시행령",
+      "articleNum": "136",
+      "original": "③ 보충역으로서 복무를 마친 사람과 예비역의 병 중 제1항제2호가목에 해당하는 사람은 법 제65조제1항 및 제5항에 따라 전시근로역에 편입할 수 있다.",
+      "originalSha256": "e45f8579a55063c9f8b937b4887aa476d0b9abfcc07ec7083d857b4166a09d5d",
+      "text": "보충역 복무를 마친 사람이나 예비역 병사가 1년 6개월 이상의 징역 또는 금고의 실형을 선고받았다면, 전시근로역에 편입할 수 있습니다.",
+      "dependencyIds": [
+        "military-decree-136-reviewed-20261105"
+      ],
+      "provision": "제136조제3항",
+      "sourceUrl": "https://www.law.go.kr/lsLawLinkInfo.do?chrClsCd=010202&lsJoLnkSeq=1000520482",
+      "reviewedAt": "2026-11-05",
+      "review": {
+        "status": "approved",
+        "textSha256": "ca14b822849c355fd459c9ecfa0b16a38ee7e73f389475c781b899d6be3e5553",
+        "reviewedAt": "2026-11-05",
+        "basis": "Previously reviewed seven paragraphs; see original sourceBasis and dependency snapshots. Pilot only."
+      }
+    },
+    {
+      "id": "military-decree-136-4-proviso",
+      "law": "병역법",
+      "period": "27년 전반기",
+      "type": "시행령",
+      "articleNum": "136",
+      "original": "다만, 제1항제1호 및 제2호가목에 해당하는 사람에 대해서는 지방병무청장의 사실확인에 의하여 처리할 수 있다.",
+      "originalSha256": "d58f8ee762b62d96331354a365d886cacf3fd7749bf606ef6e9263f1dd706c89",
+      "text": "징역이나 금고의 실형을 6개월 이상 선고받았거나, 1년 이상의 징역·금고형을 선고받고 그 집행이 유예된 사람은 지방병무청장이 그 사실을 확인하여 병역처분 변경을 처리할 수 있습니다.",
+      "dependencyIds": [
+        "military-decree-136-reviewed-20261105"
+      ],
+      "provision": "제136조제4항 단서",
+      "sourceUrl": "https://www.law.go.kr/lsLawLinkInfo.do?chrClsCd=010202&lsJoLnkSeq=1000520482",
+      "reviewedAt": "2026-11-05",
+      "review": {
+        "status": "approved",
+        "textSha256": "965679b3e7ee0e0fa1aa10a617fffd00065d625c187e63fe49617c4f93c95983",
+        "reviewedAt": "2026-11-05",
+        "basis": "Previously reviewed seven paragraphs; see original sourceBasis and dependency snapshots. Pilot only."
+      }
+    },
+    {
+      "id": "military-decree-136-7",
+      "law": "병역법",
+      "period": "27년 전반기",
+      "type": "시행령",
+      "articleNum": "136",
+      "original": "⑦ 제1항제2호라목에 따라 병역처분의 변경을 받으려는 사람은 그가 보호받았던 아동복지시설의 장을 거쳐 관할 특별자치시장·특별자치도지사·시장·군수·구청장의 확인을 받아야 한다.",
+      "originalSha256": "adb05adaac49dd296cc4b1d2ee4b3f25da0c86da7c3a9bf17ff8d647fac9e3d6",
+      "text": "18세 미만의 아동으로서 아동양육시설·아동보호치료시설·공동생활가정·학대피해아동쉼터에 5년 이상 보호된 사실이 있어 전시근로역으로 바꾸려는 경우입니다. 보호받았던 시설의 장을 거쳐, 관할 특별자치시장·특별자치도지사·시장·군수·구청장의 확인을 받아야 합니다.",
+      "dependencyIds": [
+        "military-decree-136-reviewed-20261105"
+      ],
+      "provision": "제136조제7항",
+      "sourceUrl": "https://www.law.go.kr/lsLawLinkInfo.do?chrClsCd=010202&lsJoLnkSeq=1000520482",
+      "reviewedAt": "2026-11-05",
+      "review": {
+        "status": "approved",
+        "textSha256": "ca37db2d0c3538a1c1a8a3289142ada80e8253e33bf13e5250426e970c849177",
+        "reviewedAt": "2026-11-05",
+        "basis": "Previously reviewed seven paragraphs; see original sourceBasis and dependency snapshots. Pilot only."
+      }
+    },
+    {
+      "id": "military-decree-136-8",
+      "law": "병역법",
+      "period": "27년 전반기",
+      "type": "시행령",
+      "articleNum": "136",
+      "original": "⑧ 제1항제1호에도 불구하고 다음 각 호의 어느 하나에 해당하는 사람은 보충역에 편입하지 않는다.",
+      "originalSha256": "b58d15c229ae6456e8434ce042471a2d16164ab1b1b97d5ab2d46f95daa96a91",
+      "text": "징역이나 금고의 실형을 6개월 이상 1년 6개월 미만 선고받았거나, 1년 이상의 징역·금고형을 선고받고 그 집행이 유예된 사람은 보충역 편입 대상이 될 수 있습니다. 하지만 아래에 나오는 경우에는 이 기준에 해당해도 보충역에 편입하지 않습니다.",
+      "dependencyIds": [
+        "military-decree-136-reviewed-20261105"
+      ],
+      "provision": "제136조제8항",
+      "sourceUrl": "https://www.law.go.kr/lsLawLinkInfo.do?chrClsCd=010202&lsJoLnkSeq=1000520482",
+      "reviewedAt": "2026-11-05",
+      "review": {
+        "status": "approved",
+        "textSha256": "c398ef7e4c0820f63cded383a1c17c93ef6ee22d1b314007eb8b1e2431ee4eaa",
+        "reviewedAt": "2026-11-05",
+        "basis": "Previously reviewed seven paragraphs; see original sourceBasis and dependency snapshots. Pilot only."
+      }
+    },
+    {
+      "id": "military-decree-136-8-1",
+      "law": "병역법",
+      "period": "27년 전반기",
+      "type": "시행령",
+      "articleNum": "136",
+      "original": "1. 법 제86조에 따라 병역의무를 기피하거나 감면받을 목적으로 도망가거나 행방을 감추어 징역형을 선고받은 사람 또는 신체를 손상하거나 속임수를 써서 징역형을 선고받은 사람",
+      "originalSha256": "7e06fcb79381b8f0a6be895cfe764b5d7823484c6654e81b5ddc5549c01d5290",
+      "text": "병역을 피하거나 줄이려고 도망가거나, 행방을 감추거나, 자기 몸을 다치게 하거나, 속임수를 써서 징역형을 선고받은 사람은 앞에서 말한 형량 기준에 해당해도 보충역에 편입하지 않습니다.",
+      "dependencyIds": [
+        "military-decree-136-reviewed-20261105"
+      ],
+      "provision": "제136조제8항제1호",
+      "sourceUrl": "https://www.law.go.kr/lsLawLinkInfo.do?chrClsCd=010202&lsJoLnkSeq=1000520482",
+      "reviewedAt": "2026-11-05",
+      "review": {
+        "status": "approved",
+        "textSha256": "bcda662d7d62ebcb05445f413ad861251788baf414d08c55f16df3cfbed05f51",
+        "reviewedAt": "2026-11-05",
+        "basis": "Previously reviewed seven paragraphs; see original sourceBasis and dependency snapshots. Pilot only."
+      }
+    },
+    {
+      "id": "military-decree-136-8-2",
+      "law": "병역법",
+      "period": "27년 전반기",
+      "type": "시행령",
+      "articleNum": "136",
+      "original": "2. 법 제87조제3항에 따라 정당한 사유 없이 의무이행일에 병역판정검사, 재병역판정검사, 입영판정검사, 신체검사 또는 확인신체검사를 받지 않아 징역형을 선고받은 사람",
+      "originalSha256": "5edb83c2e60734182c621dded7bb62e1e55bb645c744b954927967f071758a85",
+      "text": "정해진 날에 병역판정검사·재병역판정검사·입영판정검사·신체검사·확인신체검사를 정당한 사유 없이 받지 않아 징역형을 선고받은 사람은 보충역에 편입하지 않습니다.",
+      "dependencyIds": [
+        "military-decree-136-reviewed-20261105"
+      ],
+      "provision": "제136조제8항제2호",
+      "sourceUrl": "https://www.law.go.kr/lsLawLinkInfo.do?chrClsCd=010202&lsJoLnkSeq=1000520482",
+      "reviewedAt": "2026-11-05",
+      "review": {
+        "status": "approved",
+        "textSha256": "0cbb0877acf6858a5b1ba661502ff81eca62bac30644d87fcbc39848384c7412",
+        "reviewedAt": "2026-11-05",
+        "basis": "Previously reviewed seven paragraphs; see original sourceBasis and dependency snapshots. Pilot only."
+      }
+    },
+    {
+      "id": "military-decree-136-8-4",
+      "law": "병역법",
+      "period": "27년 전반기",
+      "type": "시행령",
+      "articleNum": "136",
+      "original": "4. 법 제88조의2에 따라 대체역으로 편입될 목적으로 서류를 거짓으로 작성하여 제출하거나 거짓으로 진술하여 징역형을 선고받은 사람",
+      "originalSha256": "73302cf2e3aa1918748ff85519ee9ffc83e315ca4a0efbbbca233835a2b420d5",
+      "text": "대체역으로 편입되려고 거짓 서류를 만들어 제출하거나 거짓 진술을 해서 징역형을 선고받은 사람은 보충역에 편입하지 않습니다.",
+      "dependencyIds": [
+        "military-decree-136-reviewed-20261105"
+      ],
+      "provision": "제136조제8항제4호",
+      "sourceUrl": "https://www.law.go.kr/lsLawLinkInfo.do?chrClsCd=010202&lsJoLnkSeq=1000520482",
+      "reviewedAt": "2026-11-05",
+      "review": {
+        "status": "approved",
+        "textSha256": "de0d2fad927723a2fe7c38900ff349810961930ef524ceed5a423be67f9c5def",
+        "reviewedAt": "2026-11-05",
+        "basis": "Previously reviewed seven paragraphs; see original sourceBasis and dependency snapshots. Pilot only."
+      }
+    }
+  ],
+  "coverage": {
+    "totalRows": 6915,
+    "headerRows": 842,
+    "bodyRows": 6073,
+    "explainedRows": 7,
+    "unexplainedBodyRows": 6066,
+    "reviewedArticleRows": 30,
+    "reviewedArticleBodyRows": 29,
+    "reviewedArticles": 1
+  }
+}

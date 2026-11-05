@@ -1,0 +1,51 @@
+{
+  "id": "reader-assistance-f1-v1",
+  "voice": "f1",
+  "style": "F1",
+  "previewRunId": "41940068323",
+  "settings": {
+    "rate": 1.05,
+    "baseSpeed": 1,
+    "steps": 16,
+    "emotion": "neutral",
+    "noProfile": true,
+    "seed": 20261105,
+    "gainDb": -1,
+    "pitchSt": 0,
+    "brightDb": 0,
+    "punch": 0,
+    "groupChars": 90
+  },
+  "encoding": {
+    "codec": "libmp3lame",
+    "quality": 2,
+    "sampleRate": 44100,
+    "channels": 1,
+    "wavSubtype": "PCM_16"
+  },
+  "model": {
+    "repository": "supertone-oss-archive/supertonic-3",
+    "revision": "main"
+  },
+  "helper": {
+    "repository": "supertone-oss-archive/supertonic",
+    "commit": "1e9799e964ea4c0dad7cde993b65c3c813a7b373",
+    "path": "py/helper.py",
+    "gitBlob": "ff9e4dac3158a332e3179e268c7cadb095c1a59e"
+  },
+  "assets": {
+    "onnx/duration_predictor.onnx": "c3eb91414d5ff8a7a239b7fe9e34e7e2bf8a8140d8375ffb14718b1c639325db",
+    "onnx/text_encoder.onnx": "c7befd5ea8c3119769e8a6c1486c4edc6a3bc8365c67621c881bbb774b9902ff",
+    "onnx/tts.json": "42078d3aef1cd43ab43021f3c54f47d2d75ceb4e75f627f118890128b06a0d09",
+    "onnx/unicode_indexer.json": "9bf7346e43883a81f8645c81224f786d43c5b57f3641f6e7671a7d6c493cb24f",
+    "onnx/vector_estimator.onnx": "883ac868ea0275ef0e991524dc64f16b3c0376efd7c320af6b53f5b780d7c61c",
+    "onnx/vocoder.onnx": "085de76dd8e8d5836d6ca66826601f615939218f90e519f70ee8a36ed2a4c4ba",
+    "voice_styles/F1.json": "bbdec6ee00231c2c742ad05483df5334cab3b52fda3ba38e6a07059c4563dbc2"
+  },
+  "sourceGitBlobs": {
+    "tools/synth-supertonic.py": "a8cb4ea0827a96a2769e12ac82fcdd72055eabdc",
+    "public/ko-voice.js": "97aa17cc68369509d69b6517d8b486752ac7aef1",
+    "tools/reader_assistance.py": "a7244bcfb4e7d823ba52eccee465cf871f7398a1",
+    "lib/reader-assistance.mjs": "4f1ad1f8f6e7aed1d7b60ae671b404f5ec3d897c"
+  }
+}
