@@ -1,0 +1,80 @@
+name: Reader assistance female voice previews
+
+on:
+  push:
+    branches:
+      - codex/reader-assistance-voices-20261105
+    paths:
+      - .github/workflows/reader-assistance-voices.yml
+      - research/reader-assistance-voices/**
+
+permissions:
+  contents: read
+
+concurrency:
+  group: reader-assistance-female-voices-20261105
+  cancel-in-progress: true
+
+jobs:
+  preview:
+    if: github.repository == 'quddnr0107-lgtm/korean-voice' && github.ref == 'refs/heads/codex/reader-assistance-voices-20261105'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      HF_HUB_DISABLE_TELEMETRY: '1'
+      DO_NOT_TRACK: '1'
+      PYTHONUNBUFFERED: '1'
+      OMP_NUM_THREADS: '2'
+      OPENBLAS_NUM_THREADS: '2'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Check the fixed preview plan
+        run: python research/reader-assistance-voices/render.py --plan-only
+      - name: Install local CPU inference dependencies
+        run: python -m pip install --quiet onnxruntime numpy soundfile imageio-ffmpeg
+      - name: Restore existing Supertonic 3 assets without saving a new cache
+        uses: actions/cache/restore@v4
+        with:
+          path: supertonic3
+          key: supertonic3-v1
+      - name: Download missing assets from the official model archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p supertonic3/onnx supertonic3/voice_styles
+          base=https://huggingface.co/supertone-oss-archive/supertonic-3/resolve/main
+          for file in onnx/duration_predictor.onnx onnx/text_encoder.onnx onnx/tts.json onnx/unicode_indexer.json onnx/vector_estimator.onnx onnx/vocoder.onnx voice_styles/F1.json voice_styles/F3.json voice_styles/F5.json; do
+            if [ ! -s "supertonic3/$file" ]; then
+              curl --fail --location --retry 3 --connect-timeout 20 --max-time 240 "$base/$file" --output "supertonic3/$file"
+            fi
+          done
+      - name: Download the reviewed helper at its immutable commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/reader-assistance-helper"
+          curl --fail --location --retry 3 --connect-timeout 20 --max-time 60 \
+            https://raw.githubusercontent.com/supertone-oss-archive/supertonic/1e9799e964ea4c0dad7cde993b65c3c813a7b373/py/helper.py \
+            --output "$RUNNER_TEMP/reader-assistance-helper/helper.py"
+      - name: Synthesize and validate F1 F3 F5 with the same text and settings
+        run: python research/reader-assistance-voices/render.py --assets supertonic3 --helper "$RUNNER_TEMP/reader-assistance-helper" --out preview-out
+      - name: Upload only the three previews and their manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: reader-assistance-female-voices-20261105
+          path: |
+            preview-out/*.wav
+            preview-out/*.mp3
+            preview-out/manifest.json
+            preview-out/text.txt
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0

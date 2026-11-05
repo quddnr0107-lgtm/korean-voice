@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Three female voice previews for 보조설명; no production activation",
+  "repository": "quddnr0107-lgtm/korean-voice",
+  "reviewedMainSha": "609962c839e544a275dfcb19a6a033eeafd35ce4",
+  "branch": "codex/reader-assistance-voices-20261105",
+  "productionReference": {
+    "voiceId": "female",
+    "label": "하은",
+    "recipe": "k2",
+    "style": "F2",
+    "source": "https://github.com/quddnr0107-lgtm/korean-voice/blob/609962c839e544a275dfcb19a6a033eeafd35ce4/server/recipes.py"
+  },
+  "sourceGitBlobs": {
+    "tools/synth-supertonic.py": "a8cb4ea0827a96a2769e12ac82fcdd72055eabdc",
+    "public/ko-voice.js": "97aa17cc68369509d69b6517d8b486752ac7aef1"
+  },
+  "helper": {
+    "repository": "supertone-oss-archive/supertonic",
+    "commit": "1e9799e964ea4c0dad7cde993b65c3c813a7b373",
+    "path": "py/helper.py",
+    "gitBlob": "ff9e4dac3158a332e3179e268c7cadb095c1a59e"
+  },
+  "model": {
+    "repository": "supertone-oss-archive/supertonic-3",
+    "revision": "main",
+    "legacyCacheKey": "supertonic3-v1",
+    "note": "Restore existing Supertonic 3 assets when present; download missing assets from the official archive. Actual asset SHA-256 values are recorded in the artifact."
+  },
+  "textFile": "research/reader-assistance-voices/text.txt",
+  "settings": {
+    "rate": 1.05,
+    "baseSpeed": 1,
+    "steps": 16,
+    "emotion": "neutral",
+    "noProfile": true,
+    "seed": 20261105,
+    "gainDb": -1,
+    "pitchSt": 0,
+    "brightDb": 0,
+    "punch": 0
+  },
+  "voices": [
+    {
+      "style": "F1",
+      "wav": "female-f1.wav",
+      "mp3": "female-f1.mp3"
+    },
+    {
+      "style": "F3",
+      "wav": "female-f3.wav",
+      "mp3": "female-f3.mp3"
+    },
+    {
+      "style": "F5",
+      "wav": "female-f5.wav",
+      "mp3": "female-f5.mp3"
+    }
+  ],
+  "artifactName": "reader-assistance-female-voices-20261105",
+  "constraints": {
+    "productionCalls": 0,
+    "r2Calls": 0,
+    "paidTtsCalls": 0,
+    "repositoryWrites": 0
+  }
+}
