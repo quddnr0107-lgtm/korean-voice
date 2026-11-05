@@ -1,0 +1,171 @@
+{
+  "schema": "reader-assistance-table-groups.v1",
+  "sourceDataSha256": "96b4a911edc3665687003234f3d72ba02510d6cfd3d0067c2ba5f551e5752d65",
+  "groups": [
+    {
+      "id": "corpus-review-table-6743",
+      "anchorSourceId": "570623b9f179579033aad398d219faa688f99a82f568066133b1b381129db542",
+      "memberSourceIds": [
+        "570623b9f179579033aad398d219faa688f99a82f568066133b1b381129db542",
+        "d056cae16cdb6a858f30aa2eaee82e4149b503792d11a8d7b88090a1478a9e8c",
+        "a34689a65bad29ef9901d9b17b75e052c8cc9d9d5b16999461d4f896de850ae4",
+        "641bfb0cf44779a8e78d37308083f9b1f68c4664e9f16015a9a728a7aa03f16f",
+        "cfa2f4893ee0684f21a3ffc76251ec48532c7123e074a360f0ebe31be9290686",
+        "c149c7903217ecd9b8368ce2191676561ee59b0dcabc34f7bdb91dd93402c6e0",
+        "65ba70e7e9d9dfed735d67f5b0bd83ae177e912e9c00a1c985fc3f99d7fa92cc",
+        "53660512bcbb7f38313352fe8a6b88927e4abe8c7d5457e174c017a1cdd2b76f",
+        "2835bc3236cbebb722cb17acb8d17913add14a63111baa58745daec6014b38fd",
+        "6a85ad1546fe4f5d1a9ad889cd8f7b12688e057bc00deed73861a22f1902adc6",
+        "2edad3872449b9ad9a59bd287562b120523c86904018859579770339c680e0a5",
+        "bc9f99bff0d0c6eb8198e4b6eea9a25143e06e14e8cc0c289dbc85c521c33601",
+        "9f97481c45f022fdf5c4cfaff57ab08998f4d269c51bcb235c72fbdc4a0243cb",
+        "f134607f269e3be554f1b03bb135f267e5d5d29b9867f00ab8cc12f7a57ee5b1",
+        "9ece39b8ba27029d867de30e7779b55a7d659dbc14ecbafe1d2c1f162ee51e0a",
+        "6d472a93e249892edb320cc1f9df8e84e131ee41c36e9134f669d3a883c3a2c3",
+        "428edc9e7e2a593448806c327f94bac9787d8bc890f5a0faec7908627af951c1",
+        "466cccbb0a8eb834e778307a98411124f8d15082dbf20b2db11cb416bbecdea5",
+        "8550c371602a3a9125a30375984ba1aba15e2bd9b152689320cbfe1d1e3c7c5e",
+        "495e921324dfc8315287f5f9d125ce5a6603b4a972d3b54c3cf0d7bda06d4871"
+      ],
+      "status": "approved",
+      "author": "f1_frontend",
+      "reviewer": "corpus_review",
+      "anchorTextSha256": "239909ebff4eb2aa3b3c75543307374b77c4d8c959742dad6305839b73ad7e9c",
+      "sourceDataSha256": "96b4a911edc3665687003234f3d72ba02510d6cfd3d0067c2ba5f551e5752d65",
+      "evidence": [
+        {
+          "source": "evidence/targeted-source-inspection.json",
+          "sha256": "46b771bc04d8daee0c122e45091b9bbba9606afcae4974347f194816175c6098"
+        },
+        {
+          "source": "evidence/table-group-runtime-fixture-evidence.json",
+          "sha256": "a32dc28addea872c5f0bebf04a9650d329d8871e1b722e5971c226a109f64c34"
+        },
+        {
+          "source": "source/training-delay-2026.pdf",
+          "sha256": "1d1df91745b6d94b8dcf945da53417a371561724e3efc4260876080e2e1efda9"
+        }
+      ],
+      "unresolvedIssues": [],
+      "resolutions": [
+        {
+          "issue": "숨김 원문 행을 포함한 표/서식의 설명 표시와 낭독 연결",
+          "evidence": [
+            "evidence/targeted-source-inspection.json",
+            "evidence/table-group-runtime-fixture-evidence.json"
+          ],
+          "result": "memberSourceIds를 원문 순으로 보존하고 서로 다른 text는 전부 anchor 뒤에서 제공한다. 6743 그룹의 20개, 6763 그룹의 2개 고유 설명을 fixture에서 확인했다. 각 member는 별도 원문·설명 해시의 검토 기록을 유지한다."
+        },
+        {
+          "issue": "현행 별표 7의 출산 증빙을 설명에 반영했으나, 이 체크포인트의 sourceIndex 6756 원문·그림·원문 낭독에는 이전 진단서 또는 임신확인서가 남아 있다. 원문과 표시 자료를 현행 증빙으로 함께 이관하고 source identity/hash 및 그룹 참조를 갱신한 뒤 독립 승인해야 한다.",
+          "result": "단일 출산 증빙 셀의 원문 이관을 독립 확인하고 새 sourceId로 갱신했다. 20개 구성 행은 원문 순서대로 보존하고 개별 승인 설명을 모두 표시한다.",
+          "evidence": [
+            "evidence/source-migration-6756.json",
+            "evidence/table-group-runtime-fixture-evidence.json"
+          ]
+        }
+      ],
+      "verificationScope": {
+        "sourceInspection": true,
+        "runtimeFixture": true,
+        "actualAudioPlayed": false
+      }
+    },
+    {
+      "id": "corpus-review-table-6763",
+      "anchorSourceId": "8f8a28f8102e8df48ffcd5a23e6ef97da90653911ce3dcba481e3a8468fe773f",
+      "memberSourceIds": [
+        "8f8a28f8102e8df48ffcd5a23e6ef97da90653911ce3dcba481e3a8468fe773f",
+        "db802033d6cc5d82177691b00cee095875814a67e448de42d83e2d05e042deda",
+        "9df7a79b99705156ac4b0517ffcb6084db8d9dd07bd355fc7f992a66190f2bb2",
+        "cb282bc26896aad9bbf933a28e65302483c98c1c44948125152a9f15012356a9",
+        "ca14a722f483135a2bd1c889693fbe13aa0f0d13309ed6ac457ce9b0c0668309",
+        "7249fe4149c5875dd2c9f077e45392ce2df195926689a9848b881073efb28218",
+        "1dbfd55776fe307aad10271c0bd1dddaad936b2e7be76a4c018c90e05221eaf0",
+        "01a815b8115ea4f1bb13a3791d932a1cd04d77b1112d51de30b209bf44c5fd96",
+        "a1c13fefe5098b7e50349954d90d7ac0468229baf0c5db25e1f3ed637f745a74"
+      ],
+      "status": "approved",
+      "author": "f1_frontend",
+      "reviewer": "corpus_review",
+      "anchorTextSha256": "b021c9bbd9b9abd94ded010eb919a92e3cbec07841a0a6fc0ecb61f0b22fb69e",
+      "sourceDataSha256": "96b4a911edc3665687003234f3d72ba02510d6cfd3d0067c2ba5f551e5752d65",
+      "evidence": [
+        {
+          "source": "evidence/targeted-source-inspection.json",
+          "sha256": "46b771bc04d8daee0c122e45091b9bbba9606afcae4974347f194816175c6098"
+        },
+        {
+          "source": "evidence/table-group-runtime-fixture-evidence.json",
+          "sha256": "a32dc28addea872c5f0bebf04a9650d329d8871e1b722e5971c226a109f64c34"
+        },
+        {
+          "source": "source/training-delay-2026.pdf",
+          "sha256": "1d1df91745b6d94b8dcf945da53417a371561724e3efc4260876080e2e1efda9"
+        },
+        {
+          "source": "source/figures/51_p134.png",
+          "sha256": "c21f77acfea1317d71db0121e747ac14dcfbf6f3a1c6a0995261ce6ec2cd0a01"
+        }
+      ],
+      "unresolvedIssues": [],
+      "resolutions": [
+        {
+          "issue": "숨김 원문 행을 포함한 표/서식의 설명 표시와 낭독 연결",
+          "evidence": [
+            "evidence/targeted-source-inspection.json",
+            "evidence/table-group-runtime-fixture-evidence.json"
+          ],
+          "result": "memberSourceIds를 원문 순으로 보존하고 서로 다른 text는 전부 anchor 뒤에서 제공한다. 6743 그룹의 20개, 6763 그룹의 2개 고유 설명을 fixture에서 확인했다. 각 member는 별도 원문·설명 해시의 검토 기록을 유지한다."
+        }
+      ],
+      "verificationScope": {
+        "sourceInspection": true,
+        "runtimeFixture": true,
+        "actualAudioPlayed": false
+      }
+    },
+    {
+      "id": "corpus-review-table-6849",
+      "anchorSourceId": "ee301539c14cd942f68271bb700e1a77ede69d069bc4be76bedec76daad55d3c",
+      "memberSourceIds": [
+        "ee301539c14cd942f68271bb700e1a77ede69d069bc4be76bedec76daad55d3c"
+      ],
+      "status": "approved",
+      "author": "f1_frontend",
+      "reviewer": "corpus_review",
+      "anchorTextSha256": "a507d4200585a1497a2ea0bd6f44a34837f6c3964ffc679ae8d7ffb0c1495f9f",
+      "sourceDataSha256": "96b4a911edc3665687003234f3d72ba02510d6cfd3d0067c2ba5f551e5752d65",
+      "evidence": [
+        {
+          "source": "evidence/targeted-source-inspection.json",
+          "sha256": "46b771bc04d8daee0c122e45091b9bbba9606afcae4974347f194816175c6098"
+        },
+        {
+          "source": "source/training-rule-current-full.pdf",
+          "sha256": "f93243f833b382477b554d84e49cf4c6427339f98917286fa7befabf149336ef"
+        },
+        {
+          "source": "evidence/rendered/training-rule-current-full-60.png",
+          "sha256": "e30fa53dea872f9ebd8ee192677f1d48c5b2d48e3ac3b6d09b65aedaf8d0fe1e"
+        }
+      ],
+      "unresolvedIssues": [],
+      "resolutions": [
+        {
+          "issue": "숨김 원문 행을 포함한 표/서식의 설명 표시와 낭독 연결",
+          "evidence": [
+            "evidence/targeted-source-inspection.json",
+            "source/training-rule-current-full.pdf"
+          ],
+          "result": "호송표를 실제 공식 PDF의 입소·퇴소 두 셀과 대조했고, 이 표에 해당하는 sourceIndex 6849의 단일 source identity와 설명을 연결한다."
+        }
+      ],
+      "verificationScope": {
+        "sourceInspection": true,
+        "runtimeFixture": false,
+        "actualAudioPlayed": false
+      }
+    }
+  ]
+}

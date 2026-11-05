@@ -3,11 +3,12 @@
   "status": "input-packaging-only-no-explanations-authored",
   "source": {
     "repository": "quddnr0107-lgtm/yebijun-muhanhoidok234",
-    "commit": "02cbf4153bcc87a83e663dd6bed6eb16e177aa8d",
+    "commit": "f2ce1ac9dc436908a4828738f661cce30f5c838b",
     "path": "_deploy/study_data.json",
-    "gitBlobSha": "7529156d58cd43137695634db48a81ae0d12c1b3",
-    "sha256": "d5fdeb3cb755635318685b50332012c51cbb3e0ca54ca188ff994b7d7debdd00",
-    "snapshot": "source/study_data.json"
+    "gitBlobSha": "f8215f08534a691040109adad686065b217409ec",
+    "sha256": "96b4a911edc3665687003234f3d72ba02510d6cfd3d0067c2ba5f551e5752d65",
+    "snapshot": "source/study_data.json",
+    "migrationEvidence": "evidence/source-migration-6756.json"
   },
   "identityContract": {
     "sourceIndex": "zero-based index into the exact DATA.blanks snapshot",

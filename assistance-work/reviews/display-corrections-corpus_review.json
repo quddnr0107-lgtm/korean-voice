@@ -1,0 +1,125 @@
+{
+  "schema": "reader-assistance-display-corrections.v1",
+  "sourceDataSha256": "96b4a911edc3665687003234f3d72ba02510d6cfd3d0067c2ba5f551e5752d65",
+  "corrections": [
+    {
+      "sourceId": "6857655984ddce505c020b41937ab6a3ea55d6e5b64bae8c0e5fb6a4c0a19ede",
+      "sourceIndex": 5582,
+      "status": "approved",
+      "author": "root",
+      "reviewer": "corpus_review",
+      "originalSha256": "cbcc8cd1a05dd46ac788839429e52665895455094423255d9a619137c776e614",
+      "sourceDataSha256": "96b4a911edc3665687003234f3d72ba02510d6cfd3d0067c2ba5f551e5752d65",
+      "hidden": false,
+      "hasReconstructedSpeech": false,
+      "appendixFlag": false,
+      "unresolvedIssues": [],
+      "evidence": [
+        {
+          "source": "source/figures/35_p067.png",
+          "sha256": "5ca043db62f42246b60a5c8ab4a31f951b4f44592f155ce51e83179069e0297b"
+        },
+        {
+          "source": "evidence/display-collision-5582-verification.json",
+          "sha256": "5e310912833c400ee110bb568b07461ff9d73f8b385c62a53ed2fbf99dd35767"
+        }
+      ],
+      "resolutions": [
+        {
+          "issue": "sourceIndex 5582의 40자 prefix 충돌로 표 낭독이 있는 것처럼 기록된 baseline metadata",
+          "evidence": [
+            "source/figures/35_p067.png",
+            "evidence/display-collision-5582-verification.json"
+          ],
+          "result": "실제 지원서 말미 문장을 표 그룹으로 간주하지 않는다. exact-source guard에서 5582는 표 0개·일반 원문 낭독이고 5574만 별표 17을 표시·낭독함을 확인했다. source identity와 본문을 보존하여 hasReconstructedSpeech=false로 정정한다."
+        }
+      ]
+    },
+    {
+      "sourceId": "7c9d6fd4702aa4a421859072a23843948dacccd3dd0030fca345eb40957cf2b7",
+      "sourceIndex": 6366,
+      "status": "approved",
+      "author": "corpus_review",
+      "reviewer": "root",
+      "sourceDataSha256": "96b4a911edc3665687003234f3d72ba02510d6cfd3d0067c2ba5f551e5752d65",
+      "originalSha256": "b7ce30e5f68bca9b5ee6091180063271220c2946b8e44c8f6846c5d1ec451afe",
+      "hidden": false,
+      "hasReconstructedSpeech": true,
+      "appendixFlag": false,
+      "unresolvedIssues": [],
+      "evidence": [
+        {
+          "source": "source/training-command-letter-current.gif",
+          "sha256": "a80cb4ad35388a86bd4e10614df93f8e034f2c9f8cfadc7ef0e5c60306349a74"
+        },
+        {
+          "source": "source/display-evidence/훈령2-본문표-6366.json",
+          "sha256": "4c0338331eac9aa78ca3afd041f1f0d3e654ea908ae0b683c92844d698185745"
+        },
+        {
+          "source": "evidence/restored-speech-6366-6849-evidence.json",
+          "sha256": "c8b90afa34a52032f773b047bd47eb916dcfba63c246a8d3b8cb97834243b131"
+        },
+        {
+          "source": "evidence/root-independent-display-review-6366-6849.json",
+          "sha256": "8a0a323c95de974d2a1faf503c1a40fe3c291d09f306b93b0bfd9d1829653f43"
+        }
+      ],
+      "resolutions": [
+        {
+          "issue": "이전 baseline과 현재 exact-source 복원 표 낭독의 표시 메타데이터 불일치",
+          "evidence": [
+            "evidence/root-independent-display-review-6366-6849.json",
+            "evidence/restored-speech-6366-6849-evidence.json"
+          ],
+          "result": "root가 공식 표 실제 이미지, 정본 표 및 현재 생성된 원문 낭독 문장을 독립 대조하여 일치를 확인했다. hidden=false, hasReconstructedSpeech=true, appendixFlag=false로 기록한다. 실제 음원 청취는 아직 별도다."
+        }
+      ],
+      "proposalReason": "이전 baseline에는 복원 표 낭독이 없다고 기록되어 있으나 현행 앱은 exact-source guard를 거쳐 이 원문의 표 낭독을 제공한다. 원문 문장 자체는 동일하고 메타데이터의 표시 여부를 정정하는 제안이다.",
+      "limits": "기존 낭독 구현의 작성자를 추정하지 않는다. structuralOnly 증거는 실제 음원 청취나 법적 승인 기록을 대신하지 않는다."
+    },
+    {
+      "sourceId": "ee301539c14cd942f68271bb700e1a77ede69d069bc4be76bedec76daad55d3c",
+      "sourceIndex": 6849,
+      "status": "approved",
+      "author": "corpus_review",
+      "reviewer": "root",
+      "sourceDataSha256": "96b4a911edc3665687003234f3d72ba02510d6cfd3d0067c2ba5f551e5752d65",
+      "originalSha256": "d9e8472609a9e13ffed8acd7d72525293f6a7a3679c5fd7a2c6f9ca46d222e4e",
+      "hidden": false,
+      "hasReconstructedSpeech": true,
+      "appendixFlag": false,
+      "unresolvedIssues": [],
+      "evidence": [
+        {
+          "source": "evidence/rendered/training-rule-current-full-60.png",
+          "sha256": "e30fa53dea872f9ebd8ee192677f1d48c5b2d48e3ac3b6d09b65aedaf8d0fe1e"
+        },
+        {
+          "source": "source/display-evidence/훈령2-본문표-6849.json",
+          "sha256": "09b63b46b29f34752b078719c6ee10e442cd4e85af266804e357d4c030338293"
+        },
+        {
+          "source": "evidence/restored-speech-6366-6849-evidence.json",
+          "sha256": "c8b90afa34a52032f773b047bd47eb916dcfba63c246a8d3b8cb97834243b131"
+        },
+        {
+          "source": "evidence/root-independent-display-review-6366-6849.json",
+          "sha256": "8a0a323c95de974d2a1faf503c1a40fe3c291d09f306b93b0bfd9d1829653f43"
+        }
+      ],
+      "resolutions": [
+        {
+          "issue": "이전 baseline과 현재 exact-source 복원 표 낭독의 표시 메타데이터 불일치",
+          "evidence": [
+            "evidence/root-independent-display-review-6366-6849.json",
+            "evidence/restored-speech-6366-6849-evidence.json"
+          ],
+          "result": "root가 공식 표 실제 이미지, 정본 표 및 현재 생성된 원문 낭독 문장을 독립 대조하여 일치를 확인했다. hidden=false, hasReconstructedSpeech=true, appendixFlag=false로 기록한다. 실제 음원 청취는 아직 별도다."
+        }
+      ],
+      "proposalReason": "이전 baseline에는 복원 표 낭독이 없다고 기록되어 있으나 현행 앱은 exact-source guard를 거쳐 이 원문의 표 낭독을 제공한다. 원문 문장 자체는 동일하고 메타데이터의 표시 여부를 정정하는 제안이다.",
+      "limits": "기존 낭독 구현의 작성자를 추정하지 않는다. structuralOnly 증거는 실제 음원 청취나 법적 승인 기록을 대신하지 않는다."
+    }
+  ]
+}

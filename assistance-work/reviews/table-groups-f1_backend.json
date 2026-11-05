@@ -1,6 +1,6 @@
 {
   "schema": "reader-assistance-table-groups.v1",
-  "sourceDataSha256": "d5fdeb3cb755635318685b50332012c51cbb3e0ca54ca188ff994b7d7debdd00",
+  "sourceDataSha256": "96b4a911edc3665687003234f3d72ba02510d6cfd3d0067c2ba5f551e5752d65",
   "groups": [
     {
       "id": "backend-table-6547",

@@ -1,6 +1,6 @@
 {
   "schema": "reader-assistance-display-corrections.v1",
-  "sourceDataSha256": "d5fdeb3cb755635318685b50332012c51cbb3e0ca54ca188ff994b7d7debdd00",
+  "sourceDataSha256": "96b4a911edc3665687003234f3d72ba02510d6cfd3d0067c2ba5f551e5752d65",
   "corrections": [
     {
       "sourceId": "cdf522b18c4ad0f4a77a30d53295e17c9a8bc3e89a3853058df6136697a8f775",
@@ -12,19 +12,19 @@
       "appendixFlag": false,
       "reviewer": "f1_frontend",
       "originalSha256": "b15f9da1664286b4a81ce9c6ef4a303d6a442a1d7952f5c0de01576ad35e8643",
-      "sourceDataSha256": "d5fdeb3cb755635318685b50332012c51cbb3e0ca54ca188ff994b7d7debdd00",
+      "sourceDataSha256": "96b4a911edc3665687003234f3d72ba02510d6cfd3d0067c2ba5f551e5752d65",
       "unresolvedIssues": [],
       "evidence": [
         {
-          "source": "../yebijun/_deploy/assets/appendix/reader-assistance/military-decree-fraud-transfer-to-active.gif",
+          "source": "source/display-evidence/military-decree-fraud-transfer-to-active.gif",
           "sha256": "d0e07fae966ce2c206f328e8b8c73e99022ae24d5d573bf68259d45b061d9841"
         },
         {
-          "source": "../yebijun/_deploy/assets/appendix/reader-assistance/military-decree-fraud-transfer-to-social.gif",
+          "source": "source/display-evidence/military-decree-fraud-transfer-to-social.gif",
           "sha256": "5daa61a4c244c9faf5f8e2edc8c3c89085ad9035ae964fafcedd456dd2e2c319"
         },
         {
-          "source": "../yebijun/.github/appendix-tables/병역법시행령-본문산식-3374.json",
+          "source": "source/display-evidence/병역법시행령-본문산식-3374.json",
           "sha256": "db213873a285353e5fbf7a53e0f54fa52e46e0fae4c3f2a79cfcfa796309f2fc"
         },
         {
@@ -52,19 +52,19 @@
       "appendixFlag": false,
       "reviewer": "f1_frontend",
       "originalSha256": "945a16f8673272167673eba66227bdddf41dc80fd5e1c84818e216532cbee40c",
-      "sourceDataSha256": "d5fdeb3cb755635318685b50332012c51cbb3e0ca54ca188ff994b7d7debdd00",
+      "sourceDataSha256": "96b4a911edc3665687003234f3d72ba02510d6cfd3d0067c2ba5f551e5752d65",
       "unresolvedIssues": [],
       "evidence": [
         {
-          "source": "../yebijun/_deploy/assets/appendix/reader-assistance/military-decree-researchers-to-active.gif",
+          "source": "source/display-evidence/military-decree-researchers-to-active.gif",
           "sha256": "d0fe952f0df156b0b5cc70a520af548811b41e57916ac13a7655a2308f95a109"
         },
         {
-          "source": "../yebijun/_deploy/assets/appendix/reader-assistance/military-decree-researchers-to-social.gif",
+          "source": "source/display-evidence/military-decree-researchers-to-social.gif",
           "sha256": "49c7fa550055a8991aa1ecb2410b4f942b13b32fd0cb360ad901aeb395644d65"
         },
         {
-          "source": "../yebijun/.github/appendix-tables/병역법시행령-본문산식-3376.json",
+          "source": "source/display-evidence/병역법시행령-본문산식-3376.json",
           "sha256": "6e8956c324e6bdd5c67125185774446a71d69feaf2afa8b79298e62094e74458"
         },
         {
@@ -92,19 +92,19 @@
       "appendixFlag": false,
       "reviewer": "f1_frontend",
       "originalSha256": "7303dbeb68f3a9a1be93c2e5fa63b9a8f3ac71b8bf7f4245fc6795be4984540c",
-      "sourceDataSha256": "d5fdeb3cb755635318685b50332012c51cbb3e0ca54ca188ff994b7d7debdd00",
+      "sourceDataSha256": "96b4a911edc3665687003234f3d72ba02510d6cfd3d0067c2ba5f551e5752d65",
       "unresolvedIssues": [],
       "evidence": [
         {
-          "source": "../yebijun/_deploy/assets/appendix/reader-assistance/military-decree-fraud-transfer-to-active.gif",
+          "source": "source/display-evidence/military-decree-fraud-transfer-to-active.gif",
           "sha256": "d0e07fae966ce2c206f328e8b8c73e99022ae24d5d573bf68259d45b061d9841"
         },
         {
-          "source": "../yebijun/_deploy/assets/appendix/reader-assistance/military-decree-fraud-transfer-to-social.gif",
+          "source": "source/display-evidence/military-decree-fraud-transfer-to-social.gif",
           "sha256": "5daa61a4c244c9faf5f8e2edc8c3c89085ad9035ae964fafcedd456dd2e2c319"
         },
         {
-          "source": "../yebijun/.github/appendix-tables/병역법시행령-본문산식-3374.json",
+          "source": "source/display-evidence/병역법시행령-본문산식-3374.json",
           "sha256": "db213873a285353e5fbf7a53e0f54fa52e46e0fae4c3f2a79cfcfa796309f2fc"
         },
         {
@@ -132,19 +132,19 @@
       "appendixFlag": false,
       "reviewer": "f1_frontend",
       "originalSha256": "9476d597fd5f0346ddbaa2f2ce8c66ff0ec2ea9df0c48d3baee41c199edf5286",
-      "sourceDataSha256": "d5fdeb3cb755635318685b50332012c51cbb3e0ca54ca188ff994b7d7debdd00",
+      "sourceDataSha256": "96b4a911edc3665687003234f3d72ba02510d6cfd3d0067c2ba5f551e5752d65",
       "unresolvedIssues": [],
       "evidence": [
         {
-          "source": "../yebijun/_deploy/assets/appendix/reader-assistance/military-decree-fraud-transfer-to-active.gif",
+          "source": "source/display-evidence/military-decree-fraud-transfer-to-active.gif",
           "sha256": "d0e07fae966ce2c206f328e8b8c73e99022ae24d5d573bf68259d45b061d9841"
         },
         {
-          "source": "../yebijun/_deploy/assets/appendix/reader-assistance/military-decree-fraud-transfer-to-social.gif",
+          "source": "source/display-evidence/military-decree-fraud-transfer-to-social.gif",
           "sha256": "5daa61a4c244c9faf5f8e2edc8c3c89085ad9035ae964fafcedd456dd2e2c319"
         },
         {
-          "source": "../yebijun/.github/appendix-tables/병역법시행령-본문산식-3374.json",
+          "source": "source/display-evidence/병역법시행령-본문산식-3374.json",
           "sha256": "db213873a285353e5fbf7a53e0f54fa52e46e0fae4c3f2a79cfcfa796309f2fc"
         },
         {
@@ -172,15 +172,15 @@
       "appendixFlag": false,
       "reviewer": "f1_frontend",
       "originalSha256": "ca47f47b15e7d8708007a2f96fb1fc675716709a2eae65ca6bde6b28ed488f98",
-      "sourceDataSha256": "d5fdeb3cb755635318685b50332012c51cbb3e0ca54ca188ff994b7d7debdd00",
+      "sourceDataSha256": "96b4a911edc3665687003234f3d72ba02510d6cfd3d0067c2ba5f551e5752d65",
       "unresolvedIssues": [],
       "evidence": [
         {
-          "source": "../yebijun/_deploy/assets/appendix/reader-assistance/military-decree-social-to-active.gif",
+          "source": "source/display-evidence/military-decree-social-to-active.gif",
           "sha256": "6a2b0298bdb1e9e4fe3556b13cff302526ead3394c5fa7a831d5effcbc9fdd71"
         },
         {
-          "source": "../yebijun/.github/appendix-tables/병역법시행령-본문산식-4355.json",
+          "source": "source/display-evidence/병역법시행령-본문산식-4355.json",
           "sha256": "1dfec3f59023667bc56d94229b89c9204c98f1d1fb724c09ad20bac821e68c52"
         },
         {

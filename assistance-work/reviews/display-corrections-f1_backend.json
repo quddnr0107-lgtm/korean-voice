@@ -1,6 +1,6 @@
 {
   "schema": "reader-assistance-display-corrections.v1",
-  "sourceDataSha256": "d5fdeb3cb755635318685b50332012c51cbb3e0ca54ca188ff994b7d7debdd00",
+  "sourceDataSha256": "96b4a911edc3665687003234f3d72ba02510d6cfd3d0067c2ba5f551e5752d65",
   "corrections": [
     {
       "sourceId": "9e08cf08d8c21b76946559c09da68102262100f9ec0712b6a0ab1df1cc6eb41f",
@@ -13,7 +13,7 @@
       "appendixFlag": false,
       "evidence": [
         {
-          "url": "https://www.law.go.kr/admRulLsInfoP.do?admRulSeq=2100000286712"
+          "source": "https://www.law.go.kr/admRulLsInfoP.do?admRulSeq=2100000286712"
         },
         {
           "source": "source/training-rule-current.html",

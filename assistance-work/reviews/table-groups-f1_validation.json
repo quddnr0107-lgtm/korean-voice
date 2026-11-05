@@ -1,6 +1,6 @@
 {
   "schema": "reader-assistance-table-groups.v1",
-  "sourceDataSha256": "d5fdeb3cb755635318685b50332012c51cbb3e0ca54ca188ff994b7d7debdd00",
+  "sourceDataSha256": "96b4a911edc3665687003234f3d72ba02510d6cfd3d0067c2ba5f551e5752d65",
   "groups": [
     {
       "id": "validation-table-5490",
@@ -764,16 +764,32 @@
       ],
       "status": "approved",
       "author": "root",
-      "reviewer": "f1_validation",
+      "reviewer": "corpus_review",
       "anchorTextSha256": "6ad8aaeecdf39bb44d4fc397207c35e98c9044a71821d29d24053cc034bd99ca",
       "evidence": [
         {
-          "source": "source/training-command-letter.gif",
-          "gitBlobSha": "ab24d7bcaeb5d37b319ccaf087c7159ffd4b780d"
+          "source": "source/training-command-letter-current.gif",
+          "sha256": "a80cb4ad35388a86bd4e10614df93f8e034f2c9f8cfadc7ef0e5c60306349a74"
+        },
+        {
+          "source": "evidence/targeted-source-inspection.json",
+          "sha256": "46b771bc04d8daee0c122e45091b9bbba9606afcae4974347f194816175c6098"
+        },
+        {
+          "source": "https://www.law.go.kr/LSW/flDownload.do?flSeq=170380583"
         }
       ],
       "unresolvedIssues": [],
-      "resolutions": []
+      "resolutions": [
+        {
+          "issue": "지휘서신 표의 실제 대상·시기와 단일 원문 anchor 연결",
+          "evidence": [
+            "source/training-command-letter-current.gif",
+            "evidence/targeted-source-inspection.json"
+          ],
+          "result": "현행 공식 표 네 행과 설명의 시기·대상을 직접 대조했다. 단일 원문 sourceIndex 6366과 설명의 identity/hash를 유지한다. 실제 음원 청취를 주장하지 않는다."
+        }
+      ]
     }
   ]
 }
