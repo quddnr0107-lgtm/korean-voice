@@ -1,0 +1,108 @@
+name: Corrected F1 corpus independent CPU ASR
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - codex/reader-assistance-f1-asr-medium-20261105
+    paths:
+      - tools/reader_assistance_revision_verify.py
+      - test/reader_assistance_revision_verify_test.py
+      - reader-assistance/revision-verification-pin.json
+      - .github/workflows/reader-assistance-f1-revision-verify.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: reader-assistance-f1-fixed-sample-asr
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    if: github.repository == 'quddnr0107-lgtm/korean-voice'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      HF_HUB_DISABLE_TELEMETRY: '1'
+      DO_NOT_TRACK: '1'
+      OMP_NUM_THREADS: '4'
+      OPENBLAS_NUM_THREADS: '4'
+      PYTHONUNBUFFERED: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Read immutable source and completed catalog pins
+        id: pins
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,re
+          from pathlib import Path
+          pin=json.loads(Path('reader-assistance/revision-verification-pin.json').read_text())
+          assert pin['schema']=='reader-assistance-revision-verification-pin.v1'
+          assert re.fullmatch('[a-f0-9]{64}',pin['sourceDataSha256'])
+          assert re.fullmatch('[a-f0-9]{40}',pin['catalogGitBlob'])
+          assert hashlib.sha256(Path('reader-assistance/data.json').read_bytes()).hexdigest()==pin['sourceDataSha256']
+          with open(os.environ['GITHUB_OUTPUT'],'a') as out:
+              out.write('source='+pin['sourceDataSha256']+'\n')
+              out.write('catalog='+pin['catalogGitBlob']+'\n')
+          PY
+      - name: Materialize exact evidence and reject stale source or audio bindings
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_SHA: ${{ steps.pins.outputs.source }}
+          CATALOG_BLOB: ${{ steps.pins.outputs.catalog }}
+        run: python3 tools/reader_assistance_revision_verify.py prepare --source-sha256 "$SOURCE_SHA" --catalog-blob "$CATALOG_BLOB"
+      - name: Preserve old failures and reject changed-transcript reuse
+        run: |
+          python3 -m unittest discover -s test -p 'reader_assistance*test.py' -v
+          node --test test/reader-assistance-media.test.mjs test/reader-assistance-subset-media.test.mjs
+      - name: Install the previously measured CPU ASR versions
+        run: python3 -m pip install --quiet faster-whisper==1.2.1 ctranslate2==4.8.5
+      - name: Reuse the existing pinned medium model cache
+        id: asr-model
+        uses: actions/cache/restore@v4
+        with:
+          path: reader-assistance-asr-model
+          key: reader-assistance-faster-whisper-medium-v2
+      - name: Verify every source binding and transcribe only pending exact clips
+        id: audit
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_SHA: ${{ steps.pins.outputs.source }}
+          CATALOG_BLOB: ${{ steps.pins.outputs.catalog }}
+        run: python3 tools/reader_assistance_revision_verify.py audit --source-sha256 "$SOURCE_SHA" --catalog-blob "$CATALOG_BLOB" --publish
+      - name: Export the full declared sample as exact MP3s for direct review
+        id: review-clips
+        if: always() && hashFiles('reader-assistance-revision-verification-report.json') != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_SHA: ${{ steps.pins.outputs.source }}
+          CATALOG_BLOB: ${{ steps.pins.outputs.catalog }}
+        run: python3 tools/reader_assistance_revision_verify.py export --source-sha256 "$SOURCE_SHA" --catalog-blob "$CATALOG_BLOB"
+      - name: Keep the exact review sample for one day
+        if: always() && steps.review-clips.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: reader-assistance-f1-revision-review
+          path: reader-assistance-review-clips/
+          retention-days: 1
+          compression-level: 0
+          if-no-files-found: error
+      - name: Retain the pinned model if its cache was missing
+        if: always() && steps.asr-model.outputs.cache-hit != 'true' && hashFiles('reader-assistance-asr-model/medium.ready') != ''
+        uses: actions/cache/save@v4
+        with:
+          path: reader-assistance-asr-model
+          key: reader-assistance-faster-whisper-medium-v2
+      - name: Preserve incomplete or review-required evidence status
+        if: always() && (steps.audit.outcome != 'success' || steps.review-clips.outcome != 'success')
+        run: exit 1
