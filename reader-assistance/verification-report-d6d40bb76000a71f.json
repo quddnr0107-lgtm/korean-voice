@@ -1,0 +1,1221 @@
+{
+  "approvalGranted": false,
+  "asrProfile": {
+    "assessmentGitBlob": "c4263e5f7d9f66c7782c735370a5f049224cad92",
+    "beamSize": 5,
+    "computeType": "int8",
+    "conditionOnPreviousText": false,
+    "cpuThreads": 4,
+    "ctranslate2Version": "4.8.5",
+    "device": "cpu",
+    "fasterWhisperVersion": "1.2.1",
+    "judgeGitBlob": "13fbe3a17a3eb73907b5454714ec1862aa4741f7",
+    "koVoiceGitBlob": "97aa17cc68369509d69b6517d8b486752ac7aef1",
+    "language": "ko",
+    "modelRepository": "Systran/faster-whisper-medium",
+    "modelRevision": "08e178d48790749d25932bbc082711ddcfdfbc4f",
+    "targetPromptUsed": false,
+    "temperature": 0,
+    "vadFilter": false,
+    "verificationGitBlob": "8843027a72c4f66a945a2b8b68749afc3be84eb0"
+  },
+  "counts": {
+    "normalized_match": 11,
+    "review_required": 3
+  },
+  "coverage": {
+    "allCorpusAssessed": false,
+    "allSelectedClipsAssessed": false,
+    "assessedUniqueClips": 14,
+    "missingAudioKeys": [
+      "07f9b6ca8f8f095bad2bf91bdca686fc1b17e9f500adc0e54d7f5aab04f25479",
+      "080d0cbb6f2db164a529f364e10812116caa2b912fde43a98ec2088864b84c9d",
+      "0e872c3b33260a0aff15822f8469bdfc4276cc34189284cf55a37773e72a793f",
+      "0ee0fd5e0cd240fdcd884f6c20973390c9f9112901a3ad269f7ef8fa6d2fe9cf",
+      "1026bc8ae63d955185db9cbe110a833d941611486110a0f4e8b7a0f00809ae08",
+      "1027c541d63551e07eb2b306ee9628f002f445b3ebca61334fc9e3c6bc75b2f0",
+      "120963d0fcd70dbbb9b624a229791e7ba481c7628fa7a4b2407a4fb681243518",
+      "14e02bd7fdcf204874097ee8dc8b99e047ac3f32360e0e0b5c4080ceb94b7d8d",
+      "16cb20b13b6709db2b96a5e13c964d64a9e8a26e48f062412f0e7ea18afa73fa",
+      "1ac65cb377dd56d207066eecd862d46602cf72da4ec21bafbfc89f2c8f5f72d2",
+      "1c41e47b353b9819c4cd2a9553aa01bfe420514868fab00739e725c481058661",
+      "200314d859ef80526e451770cfba390808e407468cea08b02696f1d0be1b8b1d",
+      "2003f192c1ccf1801e9ae3eda676b620faa6ceed60ae52d653848c8e74a8819d",
+      "29408e9cc42c9c6c04ae304612b36a3ef62fbaf9ae6692e32df1f9b296a5c6de",
+      "30243790266577dbac0a117367962ab04f116a034462036fa121edd2082ad89f",
+      "3024e0d5c1bc2360daa60a42373c385300ee88f49eaf85f6dd3046d556f07a5b",
+      "47e2ea9a1654a5730fa56742493f671cdc896b51f76675e6b5b1aa432575ae3c",
+      "6c5a0c244d36d2991f056748b8b956774f7a14d897a28af5afc9cee6ebb18d5f",
+      "6e3db9b6b715fe7965b38ac655026411d173910b6ba5e693ac3172f2253c8315",
+      "70142c23c00fe23a3df67ad320dfc1c6379b348585db02e68c1232d0ae525431",
+      "70211068a82ab14d5be8ffaaea089d9163b2eb146ab5fcbdaf0912a36e4b1212",
+      "737003ebef7fa119ac918064a5e9af319ca45462e48a8e0a431f516b03903487",
+      "74c7417518a50da667b93505169eb291e71b891b0a1f4d6feb3cef9bb9663025",
+      "7790b0b7ab89bc333ee1fe3522aa156280330699ea550d226391d8f2558ae437",
+      "7ad013835889ff5e0aea7321ff95ea9ee7376b72cd4d52a24f4e893e29347a4a",
+      "7b8764bb41523ceb016ced971c5284b2cc9f946e08550be545cd0c3a9ef135df",
+      "8003c5f37a26aba0117d7628110c750ee0f8cc8c0e4f6935bb534bb2cbc268c0",
+      "80092627716cab98714fe47cae9138d80778719c6e4ce11040a10aea21efd85e",
+      "95e4067fa31c33ca9a30f7794e0fac4830d49cf7e16dc585356bb0f7c7074b10",
+      "b00990a3f8346a766b82825b90f1fd5dde33778bc7c7460197f57a212579444b",
+      "b00a5f507dce6fe8640dc28e21f53ca71bc4ea6de6c00ae312de45f58737a36f",
+      "b1dd4507065b876e908ab5efcdaffc4ba1b28f3444c23572a0086c3f1c1fa1a6",
+      "b5fbe28439629145bd94578019b5451df854bc83ebb90b46452447f06cda80c2",
+      "b9b451b8202bea830bca8b03f98742f277d2d48d40eea3a7d345a1a2d9bb2e0a",
+      "bd401ca1532443d4694833ae6b3ac6774cf612e14081c1858b5820ea4425c60b",
+      "c00aa2a35222d44716ecdfea6d181cc636662b7993c727bb67fbe4a5397b686e",
+      "c01afe01dd36c945ddedeacb8bf508f049a9f61cb74bf37e44f61e8823f61575",
+      "c1b8fa6679ae9dbbd9d1617889546353c37b610d46cca4e69b016ca7ff8cc15b",
+      "c375065fe1db617093fe420371c0df18a7d7383a912bd0726d18eb7366ca5a0c",
+      "d0078dbd3c95c70bf4f135c883de290d6f1d2fcdb6cd2585a2961f6b35361454",
+      "d009fd5f8fce24e8ff622f073882bfa7a4bd59b743809d1038e62d6db9d5a8c1",
+      "d1930861b7b51ea09e12927b52a4d539244526b61765d87be20060cacef6e7cd",
+      "d90ea87eb3c6ba37b8a25076fb4d846740802ef613a91ae8f75d579cf824d606",
+      "e0020f43586e5d5d5945c49fd88799b4a66ab1a963e75393be7f1b407cd70312",
+      "e008bf5bfd3af4d148247235ff29e4b98fb4653bca468a56447ae3c14b880fee",
+      "e0539128adc28eb7b4dbdf21dedbfa039386ed4df40af32f74ccdf9b036d6922",
+      "e70afc811756946cb08ed23fa51e91fd4bdda3d91274c96139306c3303b84a15",
+      "f00d179ea90595f2819aa8556468d5ce7bc5219fb88687f95c442134b6952956",
+      "f017341c48272c286289c836dfe2f7ec43eb60c11101fdf4500e35322271cfca",
+      "f31bf2568fbb9469c70f91b6430c78cc8931c5b29f37e3f63005be914b139857",
+      "f6b7a40221c95c059f9e1c1d4696b6e86816736426125387c4d8fba50215621e"
+    ],
+    "selectedUniqueClips": 65,
+    "unassessedAudioKeys": [
+      "07f9b6ca8f8f095bad2bf91bdca686fc1b17e9f500adc0e54d7f5aab04f25479",
+      "080d0cbb6f2db164a529f364e10812116caa2b912fde43a98ec2088864b84c9d",
+      "0e872c3b33260a0aff15822f8469bdfc4276cc34189284cf55a37773e72a793f",
+      "0ee0fd5e0cd240fdcd884f6c20973390c9f9112901a3ad269f7ef8fa6d2fe9cf",
+      "1026bc8ae63d955185db9cbe110a833d941611486110a0f4e8b7a0f00809ae08",
+      "1027c541d63551e07eb2b306ee9628f002f445b3ebca61334fc9e3c6bc75b2f0",
+      "120963d0fcd70dbbb9b624a229791e7ba481c7628fa7a4b2407a4fb681243518",
+      "14e02bd7fdcf204874097ee8dc8b99e047ac3f32360e0e0b5c4080ceb94b7d8d",
+      "16cb20b13b6709db2b96a5e13c964d64a9e8a26e48f062412f0e7ea18afa73fa",
+      "1ac65cb377dd56d207066eecd862d46602cf72da4ec21bafbfc89f2c8f5f72d2",
+      "1c41e47b353b9819c4cd2a9553aa01bfe420514868fab00739e725c481058661",
+      "200314d859ef80526e451770cfba390808e407468cea08b02696f1d0be1b8b1d",
+      "2003f192c1ccf1801e9ae3eda676b620faa6ceed60ae52d653848c8e74a8819d",
+      "29408e9cc42c9c6c04ae304612b36a3ef62fbaf9ae6692e32df1f9b296a5c6de",
+      "30243790266577dbac0a117367962ab04f116a034462036fa121edd2082ad89f",
+      "3024e0d5c1bc2360daa60a42373c385300ee88f49eaf85f6dd3046d556f07a5b",
+      "47e2ea9a1654a5730fa56742493f671cdc896b51f76675e6b5b1aa432575ae3c",
+      "6c5a0c244d36d2991f056748b8b956774f7a14d897a28af5afc9cee6ebb18d5f",
+      "6e3db9b6b715fe7965b38ac655026411d173910b6ba5e693ac3172f2253c8315",
+      "70142c23c00fe23a3df67ad320dfc1c6379b348585db02e68c1232d0ae525431",
+      "70211068a82ab14d5be8ffaaea089d9163b2eb146ab5fcbdaf0912a36e4b1212",
+      "737003ebef7fa119ac918064a5e9af319ca45462e48a8e0a431f516b03903487",
+      "74c7417518a50da667b93505169eb291e71b891b0a1f4d6feb3cef9bb9663025",
+      "7790b0b7ab89bc333ee1fe3522aa156280330699ea550d226391d8f2558ae437",
+      "7ad013835889ff5e0aea7321ff95ea9ee7376b72cd4d52a24f4e893e29347a4a",
+      "7b8764bb41523ceb016ced971c5284b2cc9f946e08550be545cd0c3a9ef135df",
+      "8003c5f37a26aba0117d7628110c750ee0f8cc8c0e4f6935bb534bb2cbc268c0",
+      "80092627716cab98714fe47cae9138d80778719c6e4ce11040a10aea21efd85e",
+      "95e4067fa31c33ca9a30f7794e0fac4830d49cf7e16dc585356bb0f7c7074b10",
+      "b00990a3f8346a766b82825b90f1fd5dde33778bc7c7460197f57a212579444b",
+      "b00a5f507dce6fe8640dc28e21f53ca71bc4ea6de6c00ae312de45f58737a36f",
+      "b1dd4507065b876e908ab5efcdaffc4ba1b28f3444c23572a0086c3f1c1fa1a6",
+      "b5fbe28439629145bd94578019b5451df854bc83ebb90b46452447f06cda80c2",
+      "b9b451b8202bea830bca8b03f98742f277d2d48d40eea3a7d345a1a2d9bb2e0a",
+      "bd401ca1532443d4694833ae6b3ac6774cf612e14081c1858b5820ea4425c60b",
+      "c00aa2a35222d44716ecdfea6d181cc636662b7993c727bb67fbe4a5397b686e",
+      "c01afe01dd36c945ddedeacb8bf508f049a9f61cb74bf37e44f61e8823f61575",
+      "c1b8fa6679ae9dbbd9d1617889546353c37b610d46cca4e69b016ca7ff8cc15b",
+      "c375065fe1db617093fe420371c0df18a7d7383a912bd0726d18eb7366ca5a0c",
+      "d0078dbd3c95c70bf4f135c883de290d6f1d2fcdb6cd2585a2961f6b35361454",
+      "d009fd5f8fce24e8ff622f073882bfa7a4bd59b743809d1038e62d6db9d5a8c1",
+      "d1930861b7b51ea09e12927b52a4d539244526b61765d87be20060cacef6e7cd",
+      "d90ea87eb3c6ba37b8a25076fb4d846740802ef613a91ae8f75d579cf824d606",
+      "e0020f43586e5d5d5945c49fd88799b4a66ab1a963e75393be7f1b407cd70312",
+      "e008bf5bfd3af4d148247235ff29e4b98fb4653bca468a56447ae3c14b880fee",
+      "e0539128adc28eb7b4dbdf21dedbfa039386ed4df40af32f74ccdf9b036d6922",
+      "e70afc811756946cb08ed23fa51e91fd4bdda3d91274c96139306c3303b84a15",
+      "f00d179ea90595f2819aa8556468d5ce7bc5219fb88687f95c442134b6952956",
+      "f017341c48272c286289c836dfe2f7ec43eb60c11101fdf4500e35322271cfca",
+      "f31bf2568fbb9469c70f91b6430c78cc8931c5b29f37e3f63005be914b139857",
+      "f6b7a40221c95c059f9e1c1d4696b6e86816736426125387c4d8fba50215621e"
+    ]
+  },
+  "directListeningCompleted": false,
+  "limitation": "Independent automated transcription of a predeclared sample is evidence, not direct listening, legal review, or permission to activate. All disagreements remain review_required.",
+  "recipeSha256": "325696fa16298826933979aa72f34cebf1aca3c1e473bb5035cd10265097f0b8",
+  "results": {
+    "000092d7a1098d3c02bb209a74a2ade37c8a720177f5a72f96fb16c1d128931a": {
+      "asrSeconds": 10.409,
+      "audioKey": "000092d7a1098d3c02bb209a74a2ade37c8a720177f5a72f96fb16c1d128931a",
+      "canonicalCER": 0.0,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "quantity:20일"
+      ],
+      "criticalTranscript": [
+        "quantity:20일"
+      ],
+      "durationMs": 9340,
+      "literalCER": 0.0,
+      "mp3Sha256": "33cdc885a248e0c71ab999338ad1cce2707cf0ec51d72e8b55729968903b0beb",
+      "normalizedTarget": "상근예비역이근무하는부대기관장은월말기준운영현황서를작성해다음달20일까지소집부대장에게보내야한다",
+      "normalizedTranscript": "상근예비역이근무하는부대기관장은월말기준운영현황서를작성해다음달20일까지소집부대장에게보내야한다",
+      "segments": [
+        {
+          "avgLogProbability": -0.176047,
+          "end": 9.28,
+          "start": 0.0,
+          "text": " 상근예비역이 근무하는 부대, 기관장은 월말 기준 운영 현황서를 작성해 다음달 20일까지 소집 부대장에게 보내야 한다."
+        }
+      ],
+      "status": "normalized_match",
+      "target": "상근예비역이 근무하는 부대·기관장은 월말 기준 운영 현황서를 작성해 다음 달 20일까지 소집부대장에게 보내야 한다.",
+      "textSha256": "4249fe3c448ab59fa8ed070b3a2ecdc3bb889657dd399f2a70e84b1dfa325300",
+      "transcript": "상근예비역이 근무하는 부대, 기관장은 월말 기준 운영 현황서를 작성해 다음달 20일까지 소집 부대장에게 보내야 한다."
+    },
+    "0001a3e06eb7d9a7d1a16ac2c0f34a183e06fea1c99b5cb29d7246161cb66d59": {
+      "asrSeconds": 10.375,
+      "audioKey": "0001a3e06eb7d9a7d1a16ac2c0f34a183e06fea1c99b5cb29d7246161cb66d59",
+      "canonicalCER": 0.0,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "quantity:132호",
+        "quantity:132호"
+      ],
+      "criticalTranscript": [
+        "quantity:132호",
+        "quantity:132호"
+      ],
+      "durationMs": 11140,
+      "literalCER": 0.017857,
+      "mp3Sha256": "ad22d46f8aa00f9030e125e2cdcf926cf6657007e5b0f18c319219050219b6a2",
+      "normalizedTarget": "본인이국외여행허가나기간연장허가를취소하고싶으면별지제132호또는제132호의이신청서를지방병무청장에게내야한다",
+      "normalizedTranscript": "본인이국외여행허가나기간연장허가를취소하고싶으면별지제132호또는제132호의이신청서를지방병무청장에게내야한다",
+      "segments": [
+        {
+          "avgLogProbability": -0.168724,
+          "end": 3.92,
+          "start": 0.0,
+          "text": " 본인이 국외여행 허가나 기간 연장 허가를 취소하고 싶으면"
+        },
+        {
+          "avgLogProbability": -0.168724,
+          "end": 11.120000000000001,
+          "start": 3.92,
+          "text": " 별지 제132호 또는 제132호의 이 신청서를 지방병무청장에게 내야 한다."
+        }
+      ],
+      "status": "normalized_match",
+      "target": "본인이 국외여행 허가나 기간연장 허가를 취소하고 싶으면 별지 제132호 또는 제132호의2 신청서를 지방병무청장에게 내야 한다.",
+      "textSha256": "2d5a97bc2e15a695edbec20f192ec915b541f991b51ee1912233814107a62cf8",
+      "transcript": "본인이 국외여행 허가나 기간 연장 허가를 취소하고 싶으면 별지 제132호 또는 제132호의 이 신청서를 지방병무청장에게 내야 한다."
+    },
+    "4010a57034c1ab0424b2fda31b5a6ec844508296d8ed86ed34778357c895efb6": {
+      "asrSeconds": 9.648,
+      "audioKey": "4010a57034c1ab0424b2fda31b5a6ec844508296d8ed86ed34778357c895efb6",
+      "canonicalCER": 0.021277,
+      "criticalMatch": true,
+      "criticalTarget": [],
+      "criticalTranscript": [],
+      "durationMs": 9780,
+      "literalCER": 0.021277,
+      "mp3Sha256": "f93bfeb145d7e4d7b3949de9064de5ce5cbfc769e292a66e78162c932602750f",
+      "normalizedTarget": "전시사변동원령선포때병역법상범죄를저지르면해당조문이정한형의최장기간에그절반까지더해가중합니다",
+      "normalizedTranscript": "전시사변동원령선포때병역법상범죄를저지르면해당조문이정한형의최장기간의그절반까지더해가중합니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.216748,
+          "end": 9.72,
+          "start": 0.0,
+          "text": " 전시 사변, 동원령 선포 때 병역법상 범죄를 저지르면 해당 조문이 정한형의 최장기간의 그 절반까지 더해 가중합니다."
+        }
+      ],
+      "status": "review_required",
+      "target": "전시·사변·동원령 선포 때 병역법상 범죄를 저지르면, 해당 조문이 정한 형의 최장 기간에 그 절반까지 더해 가중합니다.",
+      "textSha256": "3c9cca1a51de167fd6f6137b3dcd8f3ddee49aeb03ebd9ae1d49137312fc669d",
+      "transcript": "전시 사변, 동원령 선포 때 병역법상 범죄를 저지르면 해당 조문이 정한형의 최장기간의 그 절반까지 더해 가중합니다."
+    },
+    "40182bc5f5adfefce2dcad2b7a7f7a21d6c8c53e27292a898ddd1e33f6072263": {
+      "asrSeconds": 8.089,
+      "audioKey": "40182bc5f5adfefce2dcad2b7a7f7a21d6c8c53e27292a898ddd1e33f6072263",
+      "canonicalCER": 0.0,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "quantity:4일",
+        "quantity:417일"
+      ],
+      "criticalTranscript": [
+        "quantity:4일",
+        "quantity:417일"
+      ],
+      "durationMs": 7220,
+      "literalCER": 0.0,
+      "mp3Sha256": "2c8583e720132e55aa733774dd2cfcb673224ca11dcf1c21e1f6c46c3c78a00f",
+      "normalizedTarget": "본인이검4일을선택한경우에는선택한검417일전까지통지서를보내야합니다",
+      "normalizedTranscript": "본인이검4일을선택한경우에는선택한검417일전까지통지서를보내야합니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.180894,
+          "end": 6.44,
+          "start": 0.0,
+          "text": " 본인이 검사일을 선택한 경우에는 선택한 검사일 7일 전까지 통지서를 보내야 합니다."
+        }
+      ],
+      "status": "normalized_match",
+      "target": "본인이 검사일을 선택한 경우에는 선택한 검사일 7일 전까지 통지서를 보내야 합니다.",
+      "textSha256": "ad9f6637d43052b109f0a844bdb86d8aa257637783fa47a001904430af8c6193",
+      "transcript": "본인이 검사일을 선택한 경우에는 선택한 검사일 7일 전까지 통지서를 보내야 합니다."
+    },
+    "5019444863f07d38bf2907a9d2463062c178fc65c86e88b94f9bb65427bab246": {
+      "asrSeconds": 8.694,
+      "audioKey": "5019444863f07d38bf2907a9d2463062c178fc65c86e88b94f9bb65427bab246",
+      "canonicalCER": 0.0,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "quantity:1년",
+        "permission"
+      ],
+      "criticalTranscript": [
+        "quantity:1년",
+        "permission"
+      ],
+      "durationMs": 7350,
+      "literalCER": 0.0,
+      "mp3Sha256": "f4066c99bc4b57c212028a02f961233e2d60ebc6e1dd45c539819189bd92b8bb",
+      "normalizedTarget": "병역인원수급계획상필요하면해당요원들의복무기간을최대1년범위에서조정할수있습니다",
+      "normalizedTranscript": "병역인원수급계획상필요하면해당요원들의복무기간을최대1년범위에서조정할수있습니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.177127,
+          "end": 6.640000000000001,
+          "start": 0.0,
+          "text": " 병역인원 수급 계획상 필요하면 해당 요원들의 복무기간을 최대 1년 범위에서 조정할 수 있습니다."
+        }
+      ],
+      "status": "normalized_match",
+      "target": "병역인원 수급계획상 필요하면 해당 요원들의 복무기간을 최대 1년 범위에서 조정할 수 있습니다.",
+      "textSha256": "28f867cc56a609fab2b33681a559ce9b327b1bf27c1564cd319000241307075c",
+      "transcript": "병역인원 수급 계획상 필요하면 해당 요원들의 복무기간을 최대 1년 범위에서 조정할 수 있습니다."
+    },
+    "50288457342ca42fef2ebec37a978079b584f92dfe2e2ebf017dc420c8ac857c": {
+      "asrSeconds": 8.217,
+      "audioKey": "50288457342ca42fef2ebec37a978079b584f92dfe2e2ebf017dc420c8ac857c",
+      "canonicalCER": 0.0,
+      "criticalMatch": true,
+      "criticalTarget": [],
+      "criticalTranscript": [],
+      "durationMs": 6250,
+      "literalCER": 0.0,
+      "mp3Sha256": "9f466c3743739340a7f5e2e7515cc386556e117fe0169ed0ad17894e38a435a0",
+      "normalizedTarget": "학생예비군의점심은부대여건에맞춰도시락이나부대급식등으로지원합니다",
+      "normalizedTranscript": "학생예비군의점심은부대여건에맞춰도시락이나부대급식등으로지원합니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.205511,
+          "end": 5.6000000000000005,
+          "start": 0.0,
+          "text": " 학생 예비군의 점심은 부대 여건에 맞춰 도시락이나 부대 급식 등으로 지원합니다."
+        }
+      ],
+      "status": "normalized_match",
+      "target": "학생예비군의 점심은 부대 여건에 맞춰 도시락이나 부대급식 등으로 지원합니다.",
+      "textSha256": "1de210101de07bb69e37fc5083e7f188a228808e6ce7b34d3b89d162a0c227b2",
+      "transcript": "학생 예비군의 점심은 부대 여건에 맞춰 도시락이나 부대 급식 등으로 지원합니다."
+    },
+    "600033a4667079f93eed06e583cab6828de6d2ffe37af4a5dc1189a0a4478fbe": {
+      "asrSeconds": 9.57,
+      "audioKey": "600033a4667079f93eed06e583cab6828de6d2ffe37af4a5dc1189a0a4478fbe",
+      "canonicalCER": 0.0,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "permission"
+      ],
+      "criticalTranscript": [
+        "permission"
+      ],
+      "durationMs": 10060,
+      "literalCER": 0.0,
+      "mp3Sha256": "47525abb97655c311193bc9ad2f1bd31206666d898d363020352d306d5fa77ed",
+      "normalizedTarget": "국방부장관은예비군권익보장센터를효율적으로운영하는데필요한지원을관계중앙행정기관장등에게요청할수있습니다",
+      "normalizedTranscript": "국방부장관은예비군권익보장센터를효율적으로운영하는데필요한지원을관계중앙행정기관장등에게요청할수있습니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.14576,
+          "end": 10.0,
+          "start": 0.0,
+          "text": " 국방부장관은 예비군권익보장센터를 효율적으로 운영하는 데 필요한 지원을 관계 중앙행정기관장 등에게 요청할 수 있습니다."
+        }
+      ],
+      "status": "normalized_match",
+      "target": "국방부장관은 예비군권익보장센터를 효율적으로 운영하는 데 필요한 지원을 관계 중앙행정기관장 등에게 요청할 수 있습니다.",
+      "textSha256": "bb018dbba47107904943aeefacce5c378df4610726926ad5af8ee7fd7f419e52",
+      "transcript": "국방부장관은 예비군권익보장센터를 효율적으로 운영하는 데 필요한 지원을 관계 중앙행정기관장 등에게 요청할 수 있습니다."
+    },
+    "60066b7fde003f34212983efa10e21580073e14e6b08d111cc63417d4c71bb70": {
+      "asrSeconds": 10.809,
+      "audioKey": "60066b7fde003f34212983efa10e21580073e14e6b08d111cc63417d4c71bb70",
+      "canonicalCER": 0.0,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "quantity:4회",
+        "quantity:10월",
+        "quantity:31일"
+      ],
+      "criticalTranscript": [
+        "quantity:4회",
+        "quantity:10월",
+        "quantity:31일"
+      ],
+      "durationMs": 11490,
+      "literalCER": 0.0,
+      "mp3Sha256": "d51c17514020579f294d394d2f52fcd147a7d77ac8fef9428bb50e25f5ae49cd",
+      "normalizedTarget": "병무청장은다음해4회복무요원의월별소집인원등을정한소집계획을작성하여매년10월31일까지지방병무청장에게보내야합니다",
+      "normalizedTranscript": "병무청장은다음해4회복무요원의월별소집인원등을정한소집계획을작성하여매년10월31일까지지방병무청장에게보내야합니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.150524,
+          "end": 6.32,
+          "start": 0.0,
+          "text": " 병무청장은 다음해 사회복무요원의 월별 소집인원 등을 정한 소집계획을 작성하여"
+        },
+        {
+          "avgLogProbability": -0.150524,
+          "end": 12.56,
+          "start": 6.32,
+          "text": " 매년 10월 31일까지 지방병무청장에게 보내야 합니다."
+        }
+      ],
+      "status": "normalized_match",
+      "target": "병무청장은 다음 해 사회복무요원의 월별 소집인원 등을 정한 소집계획을 작성하여 매년 10월 31일까지 지방병무청장에게 보내야 합니다.",
+      "textSha256": "c052405e554aebc3f509edf91e6a0f860cea0f9512d69d570cc362b93ec7cb21",
+      "transcript": "병무청장은 다음해 사회복무요원의 월별 소집인원 등을 정한 소집계획을 작성하여 매년 10월 31일까지 지방병무청장에게 보내야 합니다."
+    },
+    "6190751b56b1c9bc84ed43d2205c02187e2652696eba67bee83acd0c3594d72d": {
+      "asrSeconds": 14.975,
+      "audioKey": "6190751b56b1c9bc84ed43d2205c02187e2652696eba67bee83acd0c3594d72d",
+      "canonicalCER": 0.0,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "quantity:30일",
+        "quantity:23일",
+        "quantity:8일",
+        "quantity:22일",
+        "quantity:16일",
+        "quantity:7일",
+        "quantity:15일",
+        "제외",
+        "quantity:7일",
+        "quantity:8일",
+        "quantity:3일"
+      ],
+      "criticalTranscript": [
+        "quantity:30일",
+        "quantity:23일",
+        "quantity:8일",
+        "quantity:22일",
+        "quantity:16일",
+        "quantity:7일",
+        "quantity:15일",
+        "제외",
+        "quantity:7일",
+        "quantity:8일",
+        "quantity:3일"
+      ],
+      "durationMs": 25030,
+      "literalCER": 0.0,
+      "mp3Sha256": "205d7307d671e069b4600493fbeb0e1c635075c7046c761d4be94c60940224fa",
+      "normalizedTarget": "인터넷신청은신청일포함30일전부터23일전까지8일모바일고지는고지일포함22일전부터16일전까지7일입니다이메일우편방문팩스등기는전달일포함15일전부터전달일제외7일전까지8일간진행합니다전국단위훈련신청은신청일을빼고3일전까지입니다",
+      "normalizedTranscript": "인터넷신청은신청일포함30일전부터23일전까지8일모바일고지는고지일포함22일전부터16일전까지7일입니다이메일우편방문팩스등기는전달일포함15일전부터전달일제외7일전까지8일간진행합니다전국단위훈련신청은신청일을빼고3일전까지입니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.127209,
+          "end": 5.12,
+          "start": 0.0,
+          "text": " 인터넷 신청은 신청일 포함 30일 전부터 23일 전까지 8일"
+        },
+        {
+          "avgLogProbability": -0.127209,
+          "end": 11.36,
+          "start": 5.12,
+          "text": " 모바일 고지는 고지일 포함 22일 전부터 16일 전까지 7일입니다."
+        },
+        {
+          "avgLogProbability": -0.127209,
+          "end": 15.6,
+          "start": 11.36,
+          "text": " 이메일, 우편, 방문, 팩스, 등기는 전달일 포함"
+        },
+        {
+          "avgLogProbability": -0.127209,
+          "end": 20.240000000000002,
+          "start": 15.6,
+          "text": " 15일 전부터 전달일 제외 7일 전까지 8일간 진행합니다."
+        },
+        {
+          "avgLogProbability": -0.127209,
+          "end": 25.0,
+          "start": 20.240000000000002,
+          "text": " 전국 단위 훈련 신청은 신청일을 빼고 3일 전까지입니다."
+        }
+      ],
+      "status": "normalized_match",
+      "target": "인터넷 신청은 신청일 포함 30일 전부터 23일 전까지 8일, 모바일 고지는 고지일 포함 22일 전부터 16일 전까지 7일입니다. 이메일·우편·방문·팩스·등기는 전달일 포함 15일 전부터 전달일 제외 7일 전까지 8일간 진행합니다. 전국단위훈련 신청은 신청일을 빼고 3일 전까지입니다.",
+      "textSha256": "1752969f58802c6b8640372ab1c01c0b9a0a67bd07775ba5bae90419c62b786c",
+      "transcript": "인터넷 신청은 신청일 포함 30일 전부터 23일 전까지 8일 모바일 고지는 고지일 포함 22일 전부터 16일 전까지 7일입니다. 이메일, 우편, 방문, 팩스, 등기는 전달일 포함 15일 전부터 전달일 제외 7일 전까지 8일간 진행합니다. 전국 단위 훈련 신청은 신청일을 빼고 3일 전까지입니다."
+    },
+    "900b350194a96a3dc8bc2c35f30d3170d721a16d4b8ab7174ecb56e0dfe25665": {
+      "asrSeconds": 10.363,
+      "audioKey": "900b350194a96a3dc8bc2c35f30d3170d721a16d4b8ab7174ecb56e0dfe25665",
+      "canonicalCER": 0.0,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "permission"
+      ],
+      "criticalTranscript": [
+        "permission"
+      ],
+      "durationMs": 11260,
+      "literalCER": 0.0,
+      "mp3Sha256": "797d77d48afc272720ea1160345aa577600e63aadabded3be6972ab76ec5fada",
+      "normalizedTarget": "중앙지역직장통합방위협의회는대통령령의기준에따라예비군방위협의회나중앙지역민방위협의회와통합하여운영할수있습니다",
+      "normalizedTranscript": "중앙지역직장통합방위협의회는대통령령의기준에따라예비군방위협의회나중앙지역민방위협의회와통합하여운영할수있습니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.15435,
+          "end": 10.64,
+          "start": 0.0,
+          "text": " 중앙, 지역, 직장 통합방위협의회는 대통령령의 기준에 따라 예비군 방위협의회나 중앙, 지역 민방위협의회와 통합하여 운영할 수 있습니다."
+        }
+      ],
+      "status": "normalized_match",
+      "target": "중앙·지역·직장 통합방위협의회는 대통령령의 기준에 따라 예비군 방위협의회나 중앙·지역 민방위협의회와 통합하여 운영할 수 있습니다.",
+      "textSha256": "f137ca9a6fecf4420e9d17abacdd09971acce05902f3a2366a5d210a7c65a840",
+      "transcript": "중앙, 지역, 직장 통합방위협의회는 대통령령의 기준에 따라 예비군 방위협의회나 중앙, 지역 민방위협의회와 통합하여 운영할 수 있습니다."
+    },
+    "900b6c9a9b438050f959d73fcc0ce019c4cfb492216588a12abf3c01b01744e7": {
+      "asrSeconds": 11.033,
+      "audioKey": "900b6c9a9b438050f959d73fcc0ce019c4cfb492216588a12abf3c01b01744e7",
+      "canonicalCER": 0.0,
+      "criticalMatch": true,
+      "criticalTarget": [],
+      "criticalTranscript": [],
+      "durationMs": 13390,
+      "literalCER": 0.0,
+      "mp3Sha256": "087a13495ffc16a2a549f4b66bb4cf6ee0ae97440d717cea1747cb0bdc1c73af",
+      "normalizedTarget": "병역판정재판정입영판정신체검사체력검사확인검사가직접원인이되어치료가필요해진사람은국가부담치료대상입니다재신체검사도포함됩니다",
+      "normalizedTranscript": "병역판정재판정입영판정신체검사체력검사확인검사가직접원인이되어치료가필요해진사람은국가부담치료대상입니다재신체검사도포함됩니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.159165,
+          "end": 11.120000000000001,
+          "start": 0.0,
+          "text": " 병역 판정, 재판정, 입영 판정, 신체 검사, 체력 검사, 확인 검사가 직접 원인이 되어 치료가 필요해진 사람은 국가부담 치료 대상입니다."
+        },
+        {
+          "avgLogProbability": -0.159165,
+          "end": 14.56,
+          "start": 11.120000000000001,
+          "text": " 재신체 검사도 포함됩니다."
+        }
+      ],
+      "status": "normalized_match",
+      "target": "병역판정·재판정·입영판정·신체검사·체력검사·확인검사가 직접 원인이 되어 치료가 필요해진 사람은 국가부담 치료 대상입니다. 재신체검사도 포함됩니다.",
+      "textSha256": "4ace6052bab1f77756e619d3ffa4ba38b7c33f160da0f8eb2b0e44963ca7acd2",
+      "transcript": "병역 판정, 재판정, 입영 판정, 신체 검사, 체력 검사, 확인 검사가 직접 원인이 되어 치료가 필요해진 사람은 국가부담 치료 대상입니다. 재신체 검사도 포함됩니다."
+    },
+    "9018143665980d239d72d7aaad7a1be92b726ea0929679c23e2e7c4b850a2b30": {
+      "asrSeconds": 10.452,
+      "audioKey": "9018143665980d239d72d7aaad7a1be92b726ea0929679c23e2e7c4b850a2b30",
+      "canonicalCER": 0.035088,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "quantity:6년",
+        "이상",
+        "negative",
+        "제외"
+      ],
+      "criticalTranscript": [
+        "quantity:6년",
+        "이상",
+        "negative",
+        "제외"
+      ],
+      "durationMs": 11640,
+      "literalCER": 0.035088,
+      "mp3Sha256": "9800e463e26447e5146e1368dfa9009eb7a6a796fd1d75821af9961011b4700c",
+      "normalizedTarget": "병역의무자가사형무기징역무기금고또는6년이상의징역금고를선고받으면병역에복무할수없습니다이경우병적에서도제외됩니다",
+      "normalizedTranscript": "병역이무자가사형무기직역무기금고또는6년이상의징역금고를선고받으면병역에복무할수없습니다이경우병적에서도제외됩니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.159595,
+          "end": 11.0,
+          "start": 0.0,
+          "text": " 병역이무자가 사형, 무기직역, 무기금고 또는 6년 이상의 징역, 금고를 선고받으면 병역에 복무할 수 없습니다. 이 경우 병적에서도 제외됩니다."
+        }
+      ],
+      "status": "review_required",
+      "target": "병역의무자가 사형, 무기징역·무기금고 또는 6년 이상의 징역·금고를 선고받으면 병역에 복무할 수 없습니다. 이 경우 병적에서도 제외됩니다.",
+      "textSha256": "844356b68f97cf1b65df76705496291245d93d62363aa0d7eb8e750c4b7b6eb0",
+      "transcript": "병역이무자가 사형, 무기직역, 무기금고 또는 6년 이상의 징역, 금고를 선고받으면 병역에 복무할 수 없습니다. 이 경우 병적에서도 제외됩니다."
+    },
+    "a01182a412a99735e4d86e1c0be25772ae1c60a91eff6db15ff9174bdc07a9c7": {
+      "asrSeconds": 8.644,
+      "audioKey": "a01182a412a99735e4d86e1c0be25772ae1c60a91eff6db15ff9174bdc07a9c7",
+      "canonicalCER": 0.029412,
+      "criticalMatch": true,
+      "criticalTarget": [],
+      "criticalTranscript": [],
+      "durationMs": 7360,
+      "literalCER": 0.029412,
+      "mp3Sha256": "d3ec55ce2775801f9d48b7ca4222cf1c7d62180651262136cd06bf61cbcfae32",
+      "normalizedTarget": "다만내륙에서이차까지무단불참한훈련은도서지역으로옮겨도다시부과합니다",
+      "normalizedTranscript": "다만내륙에서이차까지무담불참한훈련은도서지역으로옮겨도다시부과합니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.189495,
+          "end": 7.36,
+          "start": 0.0,
+          "text": " 다만 내륙에서 2차까지 무담불참한 훈련은 도서지역으로 옮겨도 다시 부과합니다."
+        }
+      ],
+      "status": "review_required",
+      "target": "다만 내륙에서 2차까지 무단불참한 훈련은 도서지역으로 옮겨도 다시 부과합니다.",
+      "textSha256": "a505def5b85260215a2c8991eb7a8c295bf81bcde85da0e3ddba5fd624bcc3e8",
+      "transcript": "다만 내륙에서 2차까지 무담불참한 훈련은 도서지역으로 옮겨도 다시 부과합니다."
+    },
+    "a01bffca9d4766f22e7597c40e4106046a40130994e55ec8e36bb9021fc578b6": {
+      "asrSeconds": 9.577,
+      "audioKey": "a01bffca9d4766f22e7597c40e4106046a40130994e55ec8e36bb9021fc578b6",
+      "canonicalCER": 0.0,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "quantity:4회",
+        "permission",
+        "quantity:24세"
+      ],
+      "criticalTranscript": [
+        "quantity:4회",
+        "permission",
+        "quantity:24세"
+      ],
+      "durationMs": 8990,
+      "literalCER": 0.0,
+      "mp3Sha256": "846324b6451f51271722c111cd3ce3b7e47c0eabb8d047c209463a21a9589e18",
+      "normalizedTarget": "4회복무소집대상보충역의학력변동에따른병역처분변경을적용할수있는기간은24세까지입니다",
+      "normalizedTranscript": "4회복무소집대상보충역의학력변동에따른병역처분변경을적용할수있는기간은24세까지입니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.192861,
+          "end": 8.4,
+          "start": 0.0,
+          "text": " 사회복무 소집 대상, 보충역의 학력변동에 따른 병역 처분 변경을 적용할 수 있는 기간은 24세까지입니다."
+        }
+      ],
+      "status": "normalized_match",
+      "target": "사회복무 소집 대상 보충역의 학력 변동에 따른 병역처분 변경을 적용할 수 있는 기간은 24세까지입니다.",
+      "textSha256": "704e878e7c8a00e895835abb7b11ae29eab0bd67e38fa9831abd02f29b8ba50a",
+      "transcript": "사회복무 소집 대상, 보충역의 학력변동에 따른 병역 처분 변경을 적용할 수 있는 기간은 24세까지입니다."
+    }
+  },
+  "schema": "reader-assistance-verification-report.v1",
+  "selection": {
+    "corpusApprovedEntries": 5896,
+    "entries": [
+      {
+        "audioKey": "000092d7a1098d3c02bb209a74a2ade37c8a720177f5a72f96fb16c1d128931a",
+        "entryId": "6c28e915a190aa93ec7f087f2b1f6ba2a75d434463fd8b17ff4f9348e39cd4fc",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 1999,
+        "textSha256": "4249fe3c448ab59fa8ed070b3a2ecdc3bb889657dd399f2a70e84b1dfa325300"
+      },
+      {
+        "audioKey": "0001a3e06eb7d9a7d1a16ac2c0f34a183e06fea1c99b5cb29d7246161cb66d59",
+        "entryId": "f3c890081561357e07891b63ecc016275cce64f847a91563448335258cfcb30a",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 4662,
+        "textSha256": "2d5a97bc2e15a695edbec20f192ec915b541f991b51ee1912233814107a62cf8"
+      },
+      {
+        "audioKey": "07f9b6ca8f8f095bad2bf91bdca686fc1b17e9f500adc0e54d7f5aab04f25479",
+        "entryId": "598856597e29635d7d956a417e74b5e2d82511dbf389bef09aeb773a3f6c177c",
+        "reasons": [
+          "exception"
+        ],
+        "sourceIndex": 2469,
+        "textSha256": "14926336e56e501d4d64d3c5339be6cf21d999897601e9f90fd313cb126f1292"
+      },
+      {
+        "audioKey": "080d0cbb6f2db164a529f364e10812116caa2b912fde43a98ec2088864b84c9d",
+        "entryId": "8c58f1fa914c8858f9ef83082b526da0af035bc26e7f5b7ddcdd6559a2d5fa9b",
+        "reasons": [
+          "pilot-lexical-risk"
+        ],
+        "sourceIndex": 2194,
+        "textSha256": "e2c24009d3e7dc9a3075f36f204a38aa82a3daa57c2cc9785e7aeaf8499e8c44"
+      },
+      {
+        "audioKey": "0e872c3b33260a0aff15822f8469bdfc4276cc34189284cf55a37773e72a793f",
+        "entryId": "ec3512181642e9dd1da044bd70186fa1e3c22035770046671794a4a3bdbe11fe",
+        "reasons": [
+          "exception"
+        ],
+        "sourceIndex": 1047,
+        "textSha256": "578de3441151b2159b0826b3d23664777daf0f1ac306c23eb2694dfe52fd9771"
+      },
+      {
+        "audioKey": "0ee0fd5e0cd240fdcd884f6c20973390c9f9112901a3ad269f7ef8fa6d2fe9cf",
+        "entryId": "a2f333e775c54be067ab3d7907f13a3029de952185301956db8182b309740c14",
+        "reasons": [
+          "exception"
+        ],
+        "sourceIndex": 4298,
+        "textSha256": "43c51d1cc3f14ad90288ddf25cdd50d153109022993e3564c2e1da203f47069a"
+      },
+      {
+        "audioKey": "1026bc8ae63d955185db9cbe110a833d941611486110a0f4e8b7a0f00809ae08",
+        "entryId": "e7a313eb3b629bc0b43e8f8a7c0583d9a02161a61cf5605f3e973ca67e633773",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 1300,
+        "textSha256": "e322c9a9b357f4887d3f10fb163448c10af1f261b177761e18fceb987b2f2ec2"
+      },
+      {
+        "audioKey": "1027c541d63551e07eb2b306ee9628f002f445b3ebca61334fc9e3c6bc75b2f0",
+        "entryId": "30b7a568e6c7575e4fa4d43e1f9be0ef4f788bed97f1417e8efb386a6585e047",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 6388,
+        "textSha256": "ac65a4d8950a5af072635f3f22e6f1d89a32ff22c6081ce2a83a97b7d947bde2"
+      },
+      {
+        "audioKey": "120963d0fcd70dbbb9b624a229791e7ba481c7628fa7a4b2407a4fb681243518",
+        "entryId": "d8f946161ffa8e5616aa5c2ddc05cf20490b33d9ef44e06f47e86c2b79f042ff",
+        "reasons": [
+          "pilot-lexical-risk"
+        ],
+        "sourceIndex": 1701,
+        "textSha256": "aabfaf182c4cf233bfeb07d2340f24565c6833d27d942dcf35978c58dc4e7290"
+      },
+      {
+        "audioKey": "14e02bd7fdcf204874097ee8dc8b99e047ac3f32360e0e0b5c4080ceb94b7d8d",
+        "entryId": "844a5f19f0eae1d71c2842f13df0bea90e04c6648c18e3941ff6071a025b509d",
+        "reasons": [
+          "pilot-lexical-risk"
+        ],
+        "sourceIndex": 1707,
+        "textSha256": "8a17d2a5df4ab52e53b209007af29801a64cf0c8c64608c260de5f0900fd314d"
+      },
+      {
+        "audioKey": "16cb20b13b6709db2b96a5e13c964d64a9e8a26e48f062412f0e7ea18afa73fa",
+        "entryId": "98cf0d36ba58b32f39b0e6d5793fc81e4ba9810b22b692ddd1fb86af73ed324c",
+        "reasons": [
+          "pilot-lexical-risk"
+        ],
+        "sourceIndex": 1399,
+        "textSha256": "b9f6529d0ddff3b4eba32b3f65ec81b07b1ab57b902af08e1c5ce8bfe4a645a8"
+      },
+      {
+        "audioKey": "1ac65cb377dd56d207066eecd862d46602cf72da4ec21bafbfc89f2c8f5f72d2",
+        "entryId": "102e084dbc1d32185faea3950f504baaa3e2c195b87d6d9c7d63b33bf8facbef",
+        "reasons": [
+          "pilot-lexical-risk"
+        ],
+        "sourceIndex": 5020,
+        "textSha256": "fad792e2ee90f73df257750b9fb2efabe7bb04754b0f5169e82db0772b0caedb"
+      },
+      {
+        "audioKey": "1c41e47b353b9819c4cd2a9553aa01bfe420514868fab00739e725c481058661",
+        "entryId": "2f150be5ffbefda786cde40e5cd7c229c20126a166d32985b05da4484c7b9f4d",
+        "reasons": [
+          "pilot-lexical-risk"
+        ],
+        "sourceIndex": 5019,
+        "textSha256": "ba67da700bd9c09fb4403509e76da6a907680a97faff11f0798e44d0b10d9823"
+      },
+      {
+        "audioKey": "200314d859ef80526e451770cfba390808e407468cea08b02696f1d0be1b8b1d",
+        "entryId": "176adf65bf0d0889565cc4c0c3ba88bf49b44649835d1273643bf18f701cb4e6",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 5789,
+        "textSha256": "73156a87330a2638bc346eb7ac88a9285bb635dfac82f69552cfec2bb092cabf"
+      },
+      {
+        "audioKey": "2003f192c1ccf1801e9ae3eda676b620faa6ceed60ae52d653848c8e74a8819d",
+        "entryId": "7480f8aae8a8e42ad25d81ead533716216b52b22544dd9abc19592108338d75d",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 674,
+        "textSha256": "31a7a25d8bb882539ad09ac52ef89fc095b0921b8c8c0702049b0fcad83e3e22"
+      },
+      {
+        "audioKey": "29408e9cc42c9c6c04ae304612b36a3ef62fbaf9ae6692e32df1f9b296a5c6de",
+        "entryId": "9c870da127d3a4517dd95e0800ca74ad9f8589b51b6511de963e980d648a0971",
+        "reasons": [
+          "numeric-boundary"
+        ],
+        "sourceIndex": 1689,
+        "textSha256": "15a4df21bd93c7a26e511989ad85af731a70498a07136aa80245ef9d090aa24b"
+      },
+      {
+        "audioKey": "30243790266577dbac0a117367962ab04f116a034462036fa121edd2082ad89f",
+        "entryId": "4c4bbd128b7f2accac1498db52272effc80f2bd21412376bb5a1ed295a0c9126",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 3424,
+        "textSha256": "1cc6d37a32587ebae6f4dd9ed500ffb840bbf4da4f4946d2694775e21399c6cf"
+      },
+      {
+        "audioKey": "3024e0d5c1bc2360daa60a42373c385300ee88f49eaf85f6dd3046d556f07a5b",
+        "entryId": "57e7f8122e2bfef336f57ee5406e86654b3e3729d20bf308fd8049690104506a",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 4392,
+        "textSha256": "57bb0ef334f9236f34a8a004fc13e147e525eab8e4ffc4cfab922bb578f4e975"
+      },
+      {
+        "audioKey": "4010a57034c1ab0424b2fda31b5a6ec844508296d8ed86ed34778357c895efb6",
+        "entryId": "23c7a5d316166aae38efca66a0551b2180eb62bc3d56c68bd6eec41c51a8c5c4",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 5469,
+        "textSha256": "3c9cca1a51de167fd6f6137b3dcd8f3ddee49aeb03ebd9ae1d49137312fc669d"
+      },
+      {
+        "audioKey": "40182bc5f5adfefce2dcad2b7a7f7a21d6c8c53e27292a898ddd1e33f6072263",
+        "entryId": "2389e0eb7645a7c988ad38df216146295a098ce8117d4d7397bfaff56d0d468c",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 1516,
+        "textSha256": "ad9f6637d43052b109f0a844bdb86d8aa257637783fa47a001904430af8c6193"
+      },
+      {
+        "audioKey": "47e2ea9a1654a5730fa56742493f671cdc896b51f76675e6b5b1aa432575ae3c",
+        "entryId": "7623efd4996afb41e78624ee6b28567f813aa5303dbdba6b300ad6d6fe1727e5",
+        "reasons": [
+          "pilot-lexical-risk"
+        ],
+        "sourceIndex": 4384,
+        "textSha256": "3acc5077b1eef3196d8c5f67585a26dfedf4c287308e84e6d64aee94a72d0c49"
+      },
+      {
+        "audioKey": "5019444863f07d38bf2907a9d2463062c178fc65c86e88b94f9bb65427bab246",
+        "entryId": "16165f81f63e75dec5944962b8e726e0fe05ffb9acab5b9c356e391ef495294e",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 3385,
+        "textSha256": "28f867cc56a609fab2b33681a559ce9b327b1bf27c1564cd319000241307075c"
+      },
+      {
+        "audioKey": "50288457342ca42fef2ebec37a978079b584f92dfe2e2ebf017dc420c8ac857c",
+        "entryId": "b7fe58722a98597bf49a5d6107f29c60999b67c3ee779765e022f9144baf5885",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 6371,
+        "textSha256": "1de210101de07bb69e37fc5083e7f188a228808e6ce7b34d3b89d162a0c227b2"
+      },
+      {
+        "audioKey": "600033a4667079f93eed06e583cab6828de6d2ffe37af4a5dc1189a0a4478fbe",
+        "entryId": "8985c1ddea4d449d03a6e9ada2098e5174be8850004a4624e81e31271422236d",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 518,
+        "textSha256": "bb018dbba47107904943aeefacce5c378df4610726926ad5af8ee7fd7f419e52"
+      },
+      {
+        "audioKey": "60066b7fde003f34212983efa10e21580073e14e6b08d111cc63417d4c71bb70",
+        "entryId": "c5696bf8a8de84a2961a0cb4c999e6858dec07088635f20bb50e63b72bc8dd67",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 2246,
+        "textSha256": "c052405e554aebc3f509edf91e6a0f860cea0f9512d69d570cc362b93ec7cb21"
+      },
+      {
+        "audioKey": "6190751b56b1c9bc84ed43d2205c02187e2652696eba67bee83acd0c3594d72d",
+        "entryId": "a391ee2c96b265e59a461cae3ee5907360e54839db238ae38fc827812c66620a",
+        "reasons": [
+          "numeric-boundary"
+        ],
+        "sourceIndex": 6257,
+        "textSha256": "1752969f58802c6b8640372ab1c01c0b9a0a67bd07775ba5bae90419c62b786c"
+      },
+      {
+        "audioKey": "6c5a0c244d36d2991f056748b8b956774f7a14d897a28af5afc9cee6ebb18d5f",
+        "entryId": "eaa947e48342ac8ff098e13e26c2a23cce76c58063b7744a8d9f4364784df2bb",
+        "reasons": [
+          "longest-text"
+        ],
+        "sourceIndex": 5765,
+        "textSha256": "309e69aace588bdbbb91cd1f314a528613202a9bcdb267f4c9193b18b8d42426"
+      },
+      {
+        "audioKey": "6e3db9b6b715fe7965b38ac655026411d173910b6ba5e693ac3172f2253c8315",
+        "entryId": "b6d3513e49c32f7518417949f211d28abb979e2ba0d6dc19fa33d3fe0eae77a1",
+        "reasons": [
+          "penalty-and-modality"
+        ],
+        "sourceIndex": 1406,
+        "textSha256": "26757b3c7eee89f5294fbbba4c701c42c470342e52c61cf158807fd6c95e22a1"
+      },
+      {
+        "audioKey": "70142c23c00fe23a3df67ad320dfc1c6379b348585db02e68c1232d0ae525431",
+        "entryId": "d820d626cccbc1d719c880110ebbed9dd7d9f0ca0b871fe0d5d1f59af9369979",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 5231,
+        "textSha256": "4186d5be6a280bb848e3e72e848e483c9a0706fddd4bded8e254cfd06a9e4f8d"
+      },
+      {
+        "audioKey": "70211068a82ab14d5be8ffaaea089d9163b2eb146ab5fcbdaf0912a36e4b1212",
+        "entryId": "d30a405c8fccce5941d4e3fbf528fdeca1563fddcd5088a44638caa58b3229e2",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 4717,
+        "textSha256": "4f82332fbcd856742c726b02d471dbed982ab1fee52c05f27fc97b3c6c60eae7"
+      },
+      {
+        "audioKey": "737003ebef7fa119ac918064a5e9af319ca45462e48a8e0a431f516b03903487",
+        "entryId": "62caa64bd69a76ab2a2848f9288cc6a763d7bfb869f2ac25f912dfec290178ac",
+        "reasons": [
+          "penalty-and-modality"
+        ],
+        "sourceIndex": 4308,
+        "textSha256": "01f8bb2b5e2412362d31e25b110f298efdb0acc5f87b011bd851b59e6a730ab5"
+      },
+      {
+        "audioKey": "74c7417518a50da667b93505169eb291e71b891b0a1f4d6feb3cef9bb9663025",
+        "entryId": "475e89e62b984185ff724238373595670733331a4bb5c1dc4431d8267bcb22ea",
+        "reasons": [
+          "longest-text",
+          "numeric-boundary"
+        ],
+        "sourceIndex": 6215,
+        "textSha256": "6a87f21d99cd7fa506a05673eeb8d7cededeb9dcab78131b26c2841ef16bc2a2"
+      },
+      {
+        "audioKey": "7790b0b7ab89bc333ee1fe3522aa156280330699ea550d226391d8f2558ae437",
+        "entryId": "8fcbdce91a0b6abda443a558a8a0d6412f801725db0974caae726d4b1f72d420",
+        "reasons": [
+          "longest-text",
+          "numeric-boundary"
+        ],
+        "sourceIndex": 5876,
+        "textSha256": "eeff0b854dff9313f71d043c979e336251954fa6e5980db3d8ca2bda8d82d72f"
+      },
+      {
+        "audioKey": "7ad013835889ff5e0aea7321ff95ea9ee7376b72cd4d52a24f4e893e29347a4a",
+        "entryId": "05d25f4e35ae2e26734f1dce5341a99ffa8f662a3a2173c703965f45597d2ef5",
+        "reasons": [
+          "numeric-boundary"
+        ],
+        "sourceIndex": 2301,
+        "textSha256": "7ceffbf9102b2604cc2ee816b6105d2e2bcfd9e7960f10b877b31e788edb3031"
+      },
+      {
+        "audioKey": "7b8764bb41523ceb016ced971c5284b2cc9f946e08550be545cd0c3a9ef135df",
+        "entryId": "5911ae19908d873647c482d3dc0fe336931c3e20cf86d4d277fbae7ad77df2bd",
+        "reasons": [
+          "numeric-boundary"
+        ],
+        "sourceIndex": 2077,
+        "textSha256": "e05c51821dd77339718cc8ff4988cfbbc519bd2dcda7299974b9d75285af497d"
+      },
+      {
+        "audioKey": "8003c5f37a26aba0117d7628110c750ee0f8cc8c0e4f6935bb534bb2cbc268c0",
+        "entryId": "9c1cb5288dab9251b6d90b4c7dbbdc44b04fe782e3be9145de65f756840d5431",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 6874,
+        "textSha256": "850bb7f97dbda431ea8c89797957c8cfde54bbe447ca8d78ff7b307b59bb13bf"
+      },
+      {
+        "audioKey": "80092627716cab98714fe47cae9138d80778719c6e4ce11040a10aea21efd85e",
+        "entryId": "f4b010e5966fa54a18f03353cf783c18f9b4e077da203591b97a8d943fe55014",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 5261,
+        "textSha256": "8cbd5d47a1367b013c6817ba37a33ad0a57c4cfa0fffbc497c652bb1489cdb3c"
+      },
+      {
+        "audioKey": "900b350194a96a3dc8bc2c35f30d3170d721a16d4b8ab7174ecb56e0dfe25665",
+        "entryId": "0555f549b9e83d950899b549343d552846610c8b935c065ec423aaad9f78698f",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 951,
+        "textSha256": "f137ca9a6fecf4420e9d17abacdd09971acce05902f3a2366a5d210a7c65a840"
+      },
+      {
+        "audioKey": "900b6c9a9b438050f959d73fcc0ce019c4cfb492216588a12abf3c01b01744e7",
+        "entryId": "d272689d468319e0ef30a38a81e99acc44f08d7aee395ce48322426367d36a62",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 4757,
+        "textSha256": "4ace6052bab1f77756e619d3ffa4ba38b7c33f160da0f8eb2b0e44963ca7acd2"
+      },
+      {
+        "audioKey": "9018143665980d239d72d7aaad7a1be92b726ea0929679c23e2e7c4b850a2b30",
+        "entryId": "d74c589466b7d9c186b414b04298cdcac298500dd9ceb73f103d83dd17d207e5",
+        "reasons": [
+          "penalty-and-modality"
+        ],
+        "sourceIndex": 1285,
+        "textSha256": "844356b68f97cf1b65df76705496291245d93d62363aa0d7eb8e750c4b7b6eb0"
+      },
+      {
+        "audioKey": "95e4067fa31c33ca9a30f7794e0fac4830d49cf7e16dc585356bb0f7c7074b10",
+        "entryId": "1fcc915bd92395c62ca91e460450cc1aa4bc54a9c6f9e70040824822c8a045e2",
+        "reasons": [
+          "longest-text"
+        ],
+        "sourceIndex": 6153,
+        "textSha256": "1b9af09916769c3b1dfdbb4d6aac8a9c7157e5d82b264290b8a50b2d026e74ee"
+      },
+      {
+        "audioKey": "a01182a412a99735e4d86e1c0be25772ae1c60a91eff6db15ff9174bdc07a9c7",
+        "entryId": "6fbfcd331485439b97b25f7f264d8b32a0dd76669ac706b955b169d0f52964c6",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 6440,
+        "textSha256": "a505def5b85260215a2c8991eb7a8c295bf81bcde85da0e3ddba5fd624bcc3e8"
+      },
+      {
+        "audioKey": "a01bffca9d4766f22e7597c40e4106046a40130994e55ec8e36bb9021fc578b6",
+        "entryId": "ad1173dee5aa88719bcbc2754a5bebff565cef3b4e5849cc21047edb0026d43f",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 4332,
+        "textSha256": "704e878e7c8a00e895835abb7b11ae29eab0bd67e38fa9831abd02f29b8ba50a"
+      },
+      {
+        "audioKey": "b00990a3f8346a766b82825b90f1fd5dde33778bc7c7460197f57a212579444b",
+        "entryId": "0edf9f9e0a1422c609de82722265cd1646308bed6f39a80942e45b22b726ea84",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 59,
+        "textSha256": "02d7dc069041dc196acfd096dd3effdaa0a74ee9f865dbd27b073a2548bbd747"
+      },
+      {
+        "audioKey": "b00a5f507dce6fe8640dc28e21f53ca71bc4ea6de6c00ae312de45f58737a36f",
+        "entryId": "b9b7357e3404cca338c18c5cbbe866db3471b292059c2e98cefed08cd8fd18fe",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 5127,
+        "textSha256": "85b40585444e097a9fc7f9e384be440cb42bdf14e837a51f03c659d6593ce6ef"
+      },
+      {
+        "audioKey": "b1dd4507065b876e908ab5efcdaffc4ba1b28f3444c23572a0086c3f1c1fa1a6",
+        "entryId": "7a799faaad2cbf3d66aad4ce428fd201d06ab4e176e2d0834492414eeed987d7",
+        "reasons": [
+          "longest-text",
+          "numeric-boundary"
+        ],
+        "sourceIndex": 5779,
+        "textSha256": "47ffd798fb517985883c89387ea7cf1da4c8cde1c819e3c4851a9358a83412c1"
+      },
+      {
+        "audioKey": "b5fbe28439629145bd94578019b5451df854bc83ebb90b46452447f06cda80c2",
+        "entryId": "0d5c02faa97ce5c1a6b46449b9e7504d9ea086e8dd0398baaa62830dcde6b612",
+        "reasons": [
+          "pilot-lexical-risk"
+        ],
+        "sourceIndex": 1695,
+        "textSha256": "06c76345ae7287324a81c7e97881419ad356e5613ce8bbe4584fa4fc46ff533b"
+      },
+      {
+        "audioKey": "b9b451b8202bea830bca8b03f98742f277d2d48d40eea3a7d345a1a2d9bb2e0a",
+        "entryId": "fca79926a5bedb7aee67b358fdbbf4f149181ec6706a9f24bfb081890ecebfbe",
+        "reasons": [
+          "penalty-and-modality"
+        ],
+        "sourceIndex": 4746,
+        "textSha256": "a4649cc4b0c06d4a84efe636a84918b50a8f069cb13afbd8eb48ce6e72d66bf6"
+      },
+      {
+        "audioKey": "bd401ca1532443d4694833ae6b3ac6774cf612e14081c1858b5820ea4425c60b",
+        "entryId": "6a771a85638e91f49b0d4c191e8d2e9928408fc9446573be49816d49fff64da8",
+        "reasons": [
+          "longest-text"
+        ],
+        "sourceIndex": 5851,
+        "textSha256": "a6c106a91adc99b340e7a8ba5e90b9a4c069e11ce98a5c80a1c683ed300e04ca"
+      },
+      {
+        "audioKey": "c00aa2a35222d44716ecdfea6d181cc636662b7993c727bb67fbe4a5397b686e",
+        "entryId": "2eea124bf4d8115b64f375249a96bc720f440dceadcea8a081e29872ca4db503",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 6427,
+        "textSha256": "863dd8ab99826938d2b6f103bd80958cf50e94324bce3c429f13b2f1377f624c"
+      },
+      {
+        "audioKey": "c01afe01dd36c945ddedeacb8bf508f049a9f61cb74bf37e44f61e8823f61575",
+        "entryId": "43cce59e415ddfbe2af877e9a887435600eb51c9b94ede17fc6982183a50477e",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 2561,
+        "textSha256": "f4f512f70bf7e06a3fc833deb91a12cc5d966b3e20ca4b33d44f635ec4f0c66c"
+      },
+      {
+        "audioKey": "c1b8fa6679ae9dbbd9d1617889546353c37b610d46cca4e69b016ca7ff8cc15b",
+        "entryId": "f47f5260bca755c5561ac604454e6534e17864c3042134094efe77985e78d536",
+        "reasons": [
+          "penalty-and-modality"
+        ],
+        "sourceIndex": 1377,
+        "textSha256": "01a1ca1151f4a344ca070b56010ef08e4a37243c88b34c070e6f9c2bbc5d6af7"
+      },
+      {
+        "audioKey": "c375065fe1db617093fe420371c0df18a7d7383a912bd0726d18eb7366ca5a0c",
+        "entryId": "5fdc56f46d81efb5bae326f2352c1a66bd88b1fcdf8b42a95b364ebcc5fda471",
+        "reasons": [
+          "penalty-and-modality"
+        ],
+        "sourceIndex": 1365,
+        "textSha256": "e8854feaf1080743734b4b46cb3cf59461eb0d2a1c973c377acb9436bcc8cfb6"
+      },
+      {
+        "audioKey": "d0078dbd3c95c70bf4f135c883de290d6f1d2fcdb6cd2585a2961f6b35361454",
+        "entryId": "64d65e19c309ebe1079ca9838e10b0e2a5dd0ff1f3e23f7e4c1c42da078caa88",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 6455,
+        "textSha256": "eae39b4fe48c2511bb6c8c6a109e3ccf5bbff758e132b6450850d4bec6708860"
+      },
+      {
+        "audioKey": "d009fd5f8fce24e8ff622f073882bfa7a4bd59b743809d1038e62d6db9d5a8c1",
+        "entryId": "c1b28426cda4cc6aa5c9efff9741d5e43dcedefd23d00e24a415508bee68cf23",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 1926,
+        "textSha256": "c3689e91f02235aca544fa2dab50dec8d370f3c926ee0e6a6b46c9225ceece72"
+      },
+      {
+        "audioKey": "d1930861b7b51ea09e12927b52a4d539244526b61765d87be20060cacef6e7cd",
+        "entryId": "8ecbc7041b015a28680e15886c703c560de4c9b3a6dc1e24003b41183e094484",
+        "reasons": [
+          "numeric-boundary"
+        ],
+        "sourceIndex": 5976,
+        "textSha256": "94e6d5e124b629f9d81405a37d9475402b02dd52e6fbb1145afb447726690109"
+      },
+      {
+        "audioKey": "d90ea87eb3c6ba37b8a25076fb4d846740802ef613a91ae8f75d579cf824d606",
+        "entryId": "4b0ca8b14f6661698fd14a2cb1228b8dbb607e3f3ca00a80e73f61d96afb1c8d",
+        "reasons": [
+          "exception"
+        ],
+        "sourceIndex": 4538,
+        "textSha256": "cca9e55783c1609a713c731769593f218eabb41c63844b0bf6389b80f7544251"
+      },
+      {
+        "audioKey": "e0020f43586e5d5d5945c49fd88799b4a66ab1a963e75393be7f1b407cd70312",
+        "entryId": "860c1ca35833a2770c1e6458da48d467b5bd2f39a22f49c1c005ded0ae7ef8e4",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 1827,
+        "textSha256": "3cb85b53eef7d1b7108e91766b0c3c9a47b21d3ee175250c2a7cbbce00ffcc34"
+      },
+      {
+        "audioKey": "e008bf5bfd3af4d148247235ff29e4b98fb4653bca468a56447ae3c14b880fee",
+        "entryId": "43e4093a30f0970e57ccdc956ee335a0ef3d44517a4065d673505ed437e27d44",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 2522,
+        "textSha256": "5175479d767d39ab436947ceff9cdf5d97111f444a5e992e76a72d9d12ab02f6"
+      },
+      {
+        "audioKey": "e0539128adc28eb7b4dbdf21dedbfa039386ed4df40af32f74ccdf9b036d6922",
+        "entryId": "93d6ec6387b1fe8e20e7ab59387885643d1e974fe5109e3933b604394c6a4032",
+        "reasons": [
+          "numeric-boundary"
+        ],
+        "sourceIndex": 6091,
+        "textSha256": "588ba7c1149de2c6280c1806247fa154a379a8caef41cf1133e35a5e47202cc8"
+      },
+      {
+        "audioKey": "e70afc811756946cb08ed23fa51e91fd4bdda3d91274c96139306c3303b84a15",
+        "entryId": "3cf593bf098a87fb1579d5e2b75a77b482f4e2b09128dca0f5f4838766dbe420",
+        "reasons": [
+          "penalty-and-modality"
+        ],
+        "sourceIndex": 2617,
+        "textSha256": "f3fbb5059ee53fe892210137f324ec629381ca73e90f9c7f9c24ce965c07bdc7"
+      },
+      {
+        "audioKey": "f00d179ea90595f2819aa8556468d5ce7bc5219fb88687f95c442134b6952956",
+        "entryId": "f30b775ebcfa391d9b150c759704f7810485e40b051b390c243456631786a566",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 3785,
+        "textSha256": "0ceb55372ddfebf39b1f7473973c985d658cdb615ec68dd1c0517f7f3e5a0d46"
+      },
+      {
+        "audioKey": "f017341c48272c286289c836dfe2f7ec43eb60c11101fdf4500e35322271cfca",
+        "entryId": "e7a4d9cf2771a833db7918e6fe4fcbd5c3b0cce98a4cfc78cb7c26ea6d959dbd",
+        "reasons": [
+          "first-pack-hash-sample"
+        ],
+        "sourceIndex": 2278,
+        "textSha256": "0c94010586a44d5de3dbf5539b141161e5b9e0487e0bbc410a9c098cbf975ce2"
+      },
+      {
+        "audioKey": "f31bf2568fbb9469c70f91b6430c78cc8931c5b29f37e3f63005be914b139857",
+        "entryId": "900e9d0536966ce6c315965322291c6a0da8df0e1077cd2c3a66973df1e42377",
+        "reasons": [
+          "penalty-and-modality"
+        ],
+        "sourceIndex": 4224,
+        "textSha256": "6b099745eb16a2042d7bb9d391f6c3995696f8116a5c77979580cbf6b0cade2d"
+      },
+      {
+        "audioKey": "f6b7a40221c95c059f9e1c1d4696b6e86816736426125387c4d8fba50215621e",
+        "entryId": "a86fd9f89d82ef7edb28bf4c7e90a07f5966d419db6eb9c1367fa6fe69a94c17",
+        "reasons": [
+          "numeric-boundary"
+        ],
+        "sourceIndex": 1721,
+        "textSha256": "3886dbd054022a7185a84aa450ab6e310e3b213abe944b82500cdb930e662e70"
+      }
+    ],
+    "recipeSha256": "325696fa16298826933979aa72f34cebf1aca3c1e473bb5035cd10265097f0b8",
+    "schema": "reader-assistance-verification-sample.v1",
+    "selectedUniqueClips": 65,
+    "sourceDataSha256": "d6d40bb76000a71f6db4a3f0afac103fe2d560ddcf5f9264e383435dbdb5de5e",
+    "strategy": "hash-prefix-2-longest-6-boundary-10-penalty-8-exception-4-rare-8.v1"
+  },
+  "sourceDataSha256": "d6d40bb76000a71f6db4a3f0afac103fe2d560ddcf5f9264e383435dbdb5de5e",
+  "timing": {
+    "asrSeconds": 140.855,
+    "audioSeconds": 150.3,
+    "elapsedSeconds": 145.305,
+    "reusedAssessments": 0
+  }
+}
