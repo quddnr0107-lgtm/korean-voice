@@ -27,6 +27,7 @@ JUDGE = R.import_path('reader_assistance_original_judge', ROOT / 'research/judge
 REPORT_BRANCH = 'data/reader-assistance-f1-asr-pilot'
 PILOT_SOURCE_SHA = '9e386157fec6450c85d999679a1207ebca4b8e702a8a5acbbc2d240c0ba31205'
 ASR_MODEL = 'Systran/faster-whisper-small'
+ASR_FILES = ('config.json', 'model.bin', 'tokenizer.json', 'vocabulary.txt')
 NUMBERS = {'영': 0, '공': 0, '일': 1, '이': 2, '삼': 3, '사': 4, '오': 5, '육': 6, '칠': 7, '팔': 8, '구': 9}
 UNITS = {'십': 10, '백': 100, '천': 1000, '만': 10000, '억': 100000000, '조': 1000000000000}
 NATIVE = {'한': '일', '하나': '일', '두': '이', '둘': '이', '세': '삼', '셋': '삼', '네': '사', '넷': '사',
@@ -109,6 +110,12 @@ def clip_bytes(clip, pack):
     return data
 
 
+def check_model_snapshot(path):
+    """CTranslate2 needs vocabulary.txt as well as faster-whisper's tokenizer JSON."""
+    missing = [name for name in ASR_FILES if not (path / name).is_file() or (path / name).stat().st_size == 0]
+    R.require(not missing, 'Incomplete ASR model snapshot: ' + ', '.join(missing))
+
+
 def publish_report(client, report):
     """Evidence-only data branch; never writes the production audio manifest or main."""
     R.require(report.get('schema') == 'reader-assistance-asr-report.v1' and report.get('pilot') is True,
@@ -159,9 +166,10 @@ def main():
     from faster_whisper import WhisperModel
     download_started = time.perf_counter()
     model_path = Path(snapshot_download(repo_id=ASR_MODEL, cache_dir=args.model_cache,
-                                       allow_patterns=['config.json', 'model.bin', 'tokenizer.json', 'vocabulary.json', 'preprocessor_config.json']))
+                                       allow_patterns=list(ASR_FILES)))
     revision = model_path.name
     R.require(re.fullmatch('[a-f0-9]{40}', revision) is not None, 'ASR model snapshot revision missing')
+    check_model_snapshot(model_path)
     model = WhisperModel(str(model_path), device='cpu', compute_type='int8', cpu_threads=4, num_workers=1, local_files_only=True)
     loaded_seconds = time.perf_counter() - download_started
     profile = {'modelRepository': ASR_MODEL, 'modelRevision': revision, 'device': 'cpu', 'computeType': 'int8',

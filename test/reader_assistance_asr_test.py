@@ -1,6 +1,7 @@
 import importlib.util
 from pathlib import Path
 import sys
+import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -11,6 +12,19 @@ spec.loader.exec_module(A)
 
 
 class LegalASR(unittest.TestCase):
+    def test_ct2_vocabulary_is_required_in_addition_to_tokenizer(self):
+        with tempfile.TemporaryDirectory() as directory:
+            model = Path(directory)
+            for name in ('config.json', 'model.bin', 'tokenizer.json'):
+                (model / name).write_bytes(b'nonempty fixture')
+            with self.assertRaisesRegex(Exception, 'vocabulary.txt'):
+                A.check_model_snapshot(model)
+            (model / 'vocabulary.txt').write_bytes(b'fixture token')
+            A.check_model_snapshot(model)
+            (model / 'vocabulary.txt').write_bytes(b'')
+            with self.assertRaisesRegex(Exception, 'vocabulary.txt'):
+                A.check_model_snapshot(model)
+
     def test_spacing_digits_and_number_reading_can_be_equivalent(self):
         for target, transcript in [('6개월 이상 1년 미만입니다.', '육 개월 이상 일 년 미만입니다.'),
                                    ('한 명입니다.', '1명입니다.'), ('한 해입니다.', '1년입니다.'),
