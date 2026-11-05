@@ -1,0 +1,166 @@
+name: Publish the explicitly reviewed F1 subset
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - codex/reader-assistance-f1-stage-20261105
+    paths:
+      - .github/workflows/reader-assistance-f1-subset.yml
+      - reader-assistance/data.json
+      - tools/reader_assistance_subset.py
+      - test/reader_assistance_subset_test.py
+      - reader-assistance/reviewed-subset-policy.json
+      - lib/reader-assistance-media.mjs
+      - test/reader-assistance-subset-media.test.mjs
+
+permissions:
+  contents: read
+
+concurrency:
+  group: reviewed-reader-assistance-f1
+  cancel-in-progress: false
+
+env:
+  RA_DATA: reader-assistance/data.json
+  HF_HUB_DISABLE_TELEMETRY: '1'
+  DO_NOT_TRACK: '1'
+  PYTHONUNBUFFERED: '1'
+  OMP_NUM_THREADS: '2'
+  OPENBLAS_NUM_THREADS: '2'
+
+jobs:
+  prepare:
+    if: github.repository == 'quddnr0107-lgtm/korean-voice'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      missing: ${{ steps.inventory.outputs.missing }}
+      buckets: ${{ steps.inventory.outputs.buckets }}
+      model-key: ${{ steps.model.outputs.key }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify the frozen recipe, exact subset and unchanged full-corpus gate
+        run: |
+          python3 -m unittest discover -s test -p reader_assistance_test.py -v
+          python3 -m unittest discover -s test -p reader_assistance_subset_test.py -v
+          node --test test/reader-assistance-media.test.mjs
+      - name: Validate every exact approval and the entire original row ledger
+        run: python3 tools/reader_assistance_subset.py plan --data "$RA_DATA"
+      - name: Find only missing content-addressed clips
+        id: inventory
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tools/reader_assistance_subset.py inventory --data "$RA_DATA"
+      - name: Reuse the frozen F1 model cache identity
+        id: model
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os
+          recipe=json.load(open('reader-assistance/recipe.json'))
+          pinned=json.dumps({'assets':recipe['assets'],'helper':recipe['helper']},sort_keys=True,separators=(',',':')).encode()
+          with open(os.environ['GITHUB_OUTPUT'],'a') as output:
+              output.write('key=reader-assistance-supertonic3-'+hashlib.sha256(pinned).hexdigest()[:16]+'\n')
+          PY
+      - name: Restore the shared model cache
+        if: steps.inventory.outputs.missing != '0'
+        id: assets
+        uses: actions/cache/restore@v4
+        with:
+          path: supertonic3
+          key: ${{ steps.model.outputs.key }}
+          restore-keys: supertonic3-v1
+      - name: Download and verify pinned model bytes once
+        if: steps.inventory.outputs.missing != '0'
+        run: python3 tools/reader_assistance.py download-model
+      - name: Retain only the verified reusable model
+        if: steps.inventory.outputs.missing != '0' && steps.assets.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: supertonic3
+          key: ${{ steps.model.outputs.key }}
+
+  bake:
+    needs: prepare
+    if: needs.prepare.outputs.missing != '0'
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      max-parallel: 16
+      matrix:
+        bucket: ${{ fromJson(needs.prepare.outputs.buckets) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Restore verified model; no audio or artifact cache
+        uses: actions/cache/restore@v4
+        with:
+          path: supertonic3
+          key: ${{ needs.prepare.outputs.model-key }}
+          fail-on-cache-miss: true
+      - name: Install CPU inference dependencies
+        run: python3 -m pip install --quiet onnxruntime numpy soundfile imageio-ffmpeg
+      - name: Verify objective audio and subset failure checks
+        run: |
+          python3 -m unittest discover -s test -p reader_assistance_test.py -v
+          python3 -m unittest discover -s test -p reader_assistance_subset_test.py -v
+      - name: Bake only missing approved text with the frozen F1 recipe
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RA_BUCKET: ${{ matrix.bucket }}
+        run: python3 tools/reader_assistance_subset.py bake --data "$RA_DATA" --bucket "$RA_BUCKET"
+
+  catalog:
+    needs: [prepare, bake]
+    if: always() && needs.prepare.result == 'success' && (needs.bake.result == 'success' || needs.bake.result == 'skipped')
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Require every approved clip and assemble the explicit subset catalog
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tools/reader_assistance_subset.py assemble --data "$RA_DATA" --out reader-assistance/audio-manifest.json
+      - name: Verify the exact catalog source ledger and unchanged legacy media gate
+        run: node --test test/reader-assistance-media.test.mjs test/reader-assistance-subset-media.test.mjs
+      - name: Publish only after the deployed media contract passes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tools/reader_assistance_subset.py assemble --data "$RA_DATA" --publish-catalog
+      - name: Preserve the unresolved source and scope boundary
+        run: |
+          python3 - <<'PYINFO'
+          import json,os
+          policy=json.load(open('reader-assistance/reviewed-subset-policy.json'))
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as output:
+              output.write(f"F1 audio is ready for {policy['approvedEntries']} reviewed entries. The complete source has {policy['bodyRows']} body rows; {len(policy['excluded'])} explicitly identified row remains excluded.\n")
+              output.write('Catalog stays complete=false on data/reader-assistance-f1-reviewed-subset-v1. Text review and audio synthesis are separate from direct listening. Worker and study-site activation are separate verified steps.\n')
+          PYINFO

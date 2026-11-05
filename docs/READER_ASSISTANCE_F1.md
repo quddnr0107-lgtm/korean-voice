@@ -130,3 +130,50 @@ The first successful small-model pilot assessed 106.06 seconds of audio in
 tokens, two had exact normalized transcripts, and five required review for other
 transcription disagreements. These are limited pilot measurements, not a claim
 that the spoken words were manually checked or that all-corpus accuracy is known.
+
+
+## Explicit reviewed subset with one unresolved source
+
+`tools/reader_assistance_subset.py` is a separate publication entry point. It does
+not change the sealed F1 renderer or relax the full-corpus pipeline. The canonical
+`reader-assistance/data.json` remains the exact compiler output: `partial:true`,
+6,072 approved entries and one blocked source among 6,073 body rows.
+
+The separately pinned `reader-assistance/reviewed-subset-policy.json` identifies
+source 6384, its original/explanation/review hashes, and the unresolved reason. Its
+`sourceRowsSha256` is SHA-256 of canonical JSON containing every original body
+row as `[sourceIndex, sourceId, originalSha256]`, sorted by source index. Each
+approved entry must match its exact approved text and original hash. Adding the
+one excluded row must reproduce the whole pinned ledger. The excluded review is
+retained unchanged and cannot carry explanation text or audio.
+
+The subset workflow uses the same sixteen CPU hash buckets and reuses existing
+clips only when both the exact text and sealed recipe match. The data's source
+snapshot may change without regenerating unchanged text. Every included clip must
+exist before publication; a missing clip remains a failure. Publication uses only
+`data/reader-assistance-f1-reviewed-subset-v1` and the new
+`reader-assistance-reviewed-subset-audio.v1` schema. It preserves `complete:false`
+and adds `reviewedScopeReady:true` plus the explicit `releaseScope`. These fields
+mean that the declared approved scope has synthesized audio; they do not assert
+complete source coverage, verified legal correctness, or direct listening.
+
+Attach with:
+
+```sh
+python3 tools/reader_assistance_subset.py attach \
+  --data reader-assistance/data.json \
+  --catalog reader-assistance/audio-manifest.json \
+  --out reader-assistance/attached.json
+```
+
+The attached result preserves the exclusion and adds F1 audio only to approved
+entries. The public Worker permits this new partial schema only when its scope
+matches the deployed policy exactly and its entry ledger reproduces the pinned
+source hash. Ordinary incomplete manifests remain rejected. Media requests fetch
+verified MP3 byte ranges from immutable GitHub Release packs; this route never
+loads a model, invokes a paid TTS service, starts a Container, or reads/writes R2.
+
+Text review, completed synthesis, independent ASR sample evidence and actual
+screen/playback checks are reported separately. ASR disagreements remain evidence
+requiring interpretation and never change an approval record or normalization
+rules to manufacture a passing result.
