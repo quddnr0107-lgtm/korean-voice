@@ -1,0 +1,53 @@
+name: F1 assistance pilot independent CPU ASR
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - codex/reader-assistance-f1-asr-pilot-20261105
+    paths:
+      - tools/reader_assistance_asr.py
+      - test/reader_assistance_asr_test.py
+      - .github/workflows/reader-assistance-f1-asr.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: reader-assistance-f1-asr-pilot
+  cancel-in-progress: false
+
+jobs:
+  judge:
+    if: github.repository == 'quddnr0107-lgtm/korean-voice'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      HF_HUB_DISABLE_TELEMETRY: '1'
+      DO_NOT_TRACK: '1'
+      OMP_NUM_THREADS: '4'
+      OPENBLAS_NUM_THREADS: '4'
+      PYTHONUNBUFFERED: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Critical legal-token and full-text disagreement regressions
+        run: python3 -m unittest discover -s test -p reader_assistance_asr_test.py -v
+      - name: Install local CPU ASR only
+        run: python3 -m pip install --quiet faster-whisper
+      - name: Reuse the small ASR model
+        uses: actions/cache@v4
+        with:
+          path: reader-assistance-asr-model
+          key: reader-assistance-faster-whisper-small-v1
+      - name: Compare seven exact published clips without regenerating them
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tools/reader_assistance_asr.py --publish

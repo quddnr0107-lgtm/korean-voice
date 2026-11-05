@@ -83,3 +83,7 @@ python3 tools/reader_assistance.py attach --data reader-assistance/data.json --c
 The `attach` command refuses a partial catalog, different source bytes, different recipe, missing row, wrong text hash, or extra/missing audio key. The output keeps every explanation and adds `entry.audio` with F1, recipe ID, the dedicated Worker URL, duration, MP3 checksum, audio key, and text checksum.
 
 The workflow runs on explicit dispatch or the dedicated pilot/bake branches. It is not scheduled daily, and an unchanged data set performs no new synthesis or pack uploads.
+
+## Version-one limitation
+
+This first production recipe is intentionally frozen. Its source pin includes the complete bake script, so even a transport-only edit changes the recipe hash. Existing packs from a different recipe hash are rejected in this version's namespace. Do not describe an arbitrary settings/code change as an automatic in-place upgrade. A future renderer change needs a reviewed new recipe/namespace (or a separately reviewed compatibility migration); it must not clobber v1 audio. ASR evaluation lives in a separate module and does not change the selected F1 synthesis recipe or its audio keys.
