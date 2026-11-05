@@ -1,0 +1,95 @@
+{
+  "status": "author-evidence-only-not-independent-approval",
+  "retrievedAt": "2026-11-05",
+  "externalEvidence": [
+    {
+      "sourceIndices": [
+        369
+      ],
+      "provision": "정보통신망법 제2조제1항제5호",
+      "url": "https://www.law.go.kr/lsLinkCommonInfo.do?lsJoLnkSeq=1031679391",
+      "verifiedMeaning": "전자문서는 정보처리 장치로 전자적으로 작성·송수신·저장되는 표준화된 문서형식 자료다."
+    },
+    {
+      "sourceIndices": [
+        388
+      ],
+      "provision": "군수품관리법 제6조제3항",
+      "url": "https://www.law.go.kr/LSW/lbook/lbFileDownload.do?flExt=pdf&lbookConflSeq=37661&lbookSeq=45483",
+      "verifiedMeaning": "물품관리관은 국방관서의 장이나 각 군 참모총장에게 군수품 관리 사무를 위임받은 공무원이다."
+    },
+    {
+      "sourceIndices": [
+        417
+      ],
+      "provision": "예비군법 시행령 별도 1, 개정 2021-01-05",
+      "url": "https://www.law.go.kr/LSW/flDownload.do?bylClsCd=110204&flSeq=134619705&gubun=",
+      "verifiedMeaning": "모표·이름표·흉장·휘장·견장의 제식이다. 초고는 종류와 부착위치의 핵심을 설명했으며 도면의 전체 치수·재질을 모두 낭독한 것으로 표시하지 않았다."
+    },
+    {
+      "sourceIndices": [
+        419
+      ],
+      "provision": "예비군법 시행령 별도 2",
+      "url": "https://www.law.go.kr/LSW/flDownload.do?bylClsCd=110204&flSeq=156960383&gubun=",
+      "verifiedMeaning": "야전상의·점퍼는 면직 또는 혼방, 각 군이 승인받아 정한 해당 특수군복 색상. 점퍼는 착탈식 인조털 깃과 필요에 따른 겉붙임주머니."
+    },
+    {
+      "sourceIndices": [
+        471
+      ],
+      "provision": "군인 재해보상법 제33조·제39조",
+      "urls": [
+        "https://www.law.go.kr/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1028487291",
+        "https://www.law.go.kr/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1028488653"
+      ],
+      "verifiedMeaning": "장애보상은 장애등급과 전상·특수직무공상 등의 원인에 따라 금액이 달라지고 사망보상도 전사·특수직무순직·그 밖의 공무상 사망으로 구분한다. 초고는 예비군법 시행령 원문의 준용 범위인 지급액·지급절차를 설명하며 외부 법률의 모든 세부 숫자를 추가하지 않았다."
+    },
+    {
+      "sourceIndices": [
+        497
+      ],
+      "provision": "국가유공자법 제6조 및 보훈보상대상자법 제4조",
+      "urls": [
+        "https://www.law.go.kr/lsLinkCommonInfo.do?lsJoLnkSeq=1030198169",
+        "https://www.law.go.kr/LSW/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1029511075"
+      ],
+      "verifiedMeaning": "두 법률 모두 국가보훈부장관에게 등록을 신청한다."
+    },
+    {
+      "sourceIndices": [
+        704
+      ],
+      "provision": "예비군법 시행령 별표, 2023 신설 일반기준 및 2025 개정 개별기준",
+      "urls": [
+        "https://www.law.go.kr/LSW/lsRvsDocListP.do?chrClsCd=010202&lsId=005634&lsRvsGubun=all",
+        "https://www.law.go.kr/flDownload.do?flSeq=128556847",
+        "https://www.law.go.kr/flDownload.do?flSeq=155765117"
+      ],
+      "localEvidence": [
+        "source/reserve-decree-fines-2023.gif",
+        "source/reserve-decree-fines-2025.gif"
+      ],
+      "verifiedMeaning": "실제 공식 별표 이미지를 열어 확인했다. 최근 3년 동일 위반 처분 이력, 대리통지 의무 위반 30·50·100만원, 교직원 불이익 150·250·500만원, 기준액 2분의 1 범위 감경·가중, 체납자 감경 제외, 가중 시 법정상한 준수. 2025 개정문은 일반기준의 상한 참조를 제15조의2제1항 및 제2항으로 바꾸고 두 행의 개별기준을 제시했다."
+    },
+    {
+      "sourceIndices": [
+        517
+      ],
+      "provision": "민원 처리에 관한 법률 제12조의2제2항",
+      "url": "https://www.acrc.go.kr/boardDownload.es?bid=1013&list_no=109913&seq=1",
+      "verifiedMeaning": "인터넷을 통해 민원을 신청·접수받아 처리하는 정보시스템이 전자민원창구다."
+    }
+  ],
+  "sourceObservationsForReviewer": [
+    {
+      "sourceIndices": [
+        376,
+        366,
+        372
+      ],
+      "observation": "376 원문은 일정 공시를 제16조제4항으로 인용하지만 현재 366 제4항은 대리전달 방법이고 372 제5항이 일정 공시다. 초고는 원문 문장에 직접 적힌 일정 공시 조건과 3일 전 신청을 설명하며 참조 내용의 실제 위치 372를 기록했다. 원문은 수정하지 않았다.",
+      "officialConfirmationUrl": "https://www.law.go.kr/lsInfoP.do?efYd=20260102&lsiSeq=281493"
+    }
+  ]
+}

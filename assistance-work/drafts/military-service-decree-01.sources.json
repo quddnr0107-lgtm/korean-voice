@@ -1,0 +1,61 @@
+{
+  "shard": "military-service-decree-01",
+  "author": "f1_validation",
+  "reviewStatus": "draft",
+  "notes": [
+    {
+      "sourceIndices": [
+        1376,
+        1377
+      ],
+      "topic": "7일 전·전날 통지 예외의 연결",
+      "verifiedContent": "법6 및 시행령9②,21②③,29⑤단서,53①단서④,65의3③,66②④,101①③,105②,109②,121③,155의2③단서를 실제 원문으로 읽음. 제20조·52조의 별도 순서 대상도 확인. 대상 종류가 많아 1376은 3문장282자로 요약. 개별 세부사유는 각 조문 초고와 함께 교차검토 필요."
+    },
+    {
+      "sourceIndices": [
+        1489,
+        1490,
+        1491,
+        1492
+      ],
+      "topic": "국적변동 유형",
+      "sources": [
+        "https://www.law.go.kr/LSW/lsInfoR.do?ancYnChk=0&chrClsCd=010202&efYd=20221001&lsiSeq=244609"
+      ],
+      "localEvidence": "source/nationality-act.html",
+      "verifiedContent": "국적법3인지,4귀화,8수반,9회복,11재취득,14신고이탈,14의2특례이탈허가,14의3④국적선택명령불이행,14의4국적상실결정,16상실처리,20국적판정 원문 확인."
+    },
+    {
+      "sourceIndices": [
+        1542
+      ],
+      "topic": "현행 병역판정검사 직원 별표1",
+      "sources": [
+        "https://www.law.go.kr/LSW/flDownload.do?gubun=&flSeq=169583213&bylClsCd=110201"
+      ],
+      "localEvidence": "source/military-decree-staff-table.pdf",
+      "verifiedContent": "2022-11-22개정 별표. 판정관·보좌관·수석의사·적성분류관 각1, 의사12이내, 의료기술10이내, 사무13이내. 일반직원 지방청장, 의사 병무청장/지방청장, 파견군의관 병무청장. 병무청장 인원조정 가능. 진료과 명칭은 현행 심장혈관흉부외과로 확인."
+    },
+    {
+      "sourceIndices": [
+        1545
+      ],
+      "topic": "현행 중앙신체검사기관 별표1의2",
+      "sources": [
+        "https://www.law.go.kr/LSW/flDownload.do?gubun=&flSeq=169583299&bylClsCd=110201"
+      ],
+      "localEvidence": "source/military-decree-central-staff-table.pdf",
+      "verifiedContent": "2022-12-13개정 별표. 수석1/검사의사34이내, 병무청장 또는 중앙병역판정검사소장 임면. 수석은보좌·등급판정, 의사는진료과별검사. 파견군의관과 인원조정 가능. 전담의사를 제외한 조직·인원·임무는 병무청 직제 적용."
+    },
+    {
+      "sourceIndices": [
+        1598
+      ],
+      "topic": "군인사법5 병과",
+      "sources": [
+        "https://www.law.go.kr/lsLawLinkInfo.do?chrClsCd=010202&lsJoLnkSeq=900191322"
+      ],
+      "verifiedContent": "각 군별 기본·특수병과. 특수병과 의무법무군종; 육군의무 군의치의수의의정간호."
+    }
+  ]
+}

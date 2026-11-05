@@ -1,0 +1,48 @@
+{
+  "status": "author-evidence-only-not-independent-approval",
+  "retrievedAt": "2026-11-05",
+  "externalEvidence": [
+    {
+      "sourceIndices": [17],
+      "authority": "행정안전부 국민안전24",
+      "provision": "민방위 정의와 본질, 민방위기본법 제2조 관련 안내",
+      "url": "https://safekorea.go.kr/safekorea-kor/edtr/clns/cded/civilDefenseDefinition.do?menuSn=52",
+      "verifiedMeaning": "민방위는 주민의 생명과 재산을 보호하기 위한 자위적 활동이다. 초고에는 활동의 목적만 풀어 썼다."
+    },
+    {
+      "sourceIndices": [230],
+      "authority": "법제처 국가법령정보센터",
+      "provision": "비상대비에 관한 법률 제10조제1항·제3항",
+      "url": "https://law.go.kr/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1016076079",
+      "verifiedMeaning": "비상대비 인력자원·물적자원 활용을 위한 실태조사이며 관계기관 소속 공무원의 조사 참여 규정이 있다."
+    },
+    {
+      "sourceIndices": [231],
+      "authority": "법제처 국가법령정보센터",
+      "provision": "국가공무원법 제33조, 시행 2026-10-22",
+      "url": "https://www.law.go.kr/LSW/lsInfoP.do?ancYnChk=0&chrClsCd=010202&efYd=20261022&lsiSeq=285489",
+      "verifiedMeaning": "성년후견, 미복권 파산, 일정한 형사처벌, 법률·판결에 따른 자격상실·정지, 파면·해임 등의 결격사유가 있다. 초고는 결격사유 유형의 예시로 표시하며 각각의 세부 기간을 전부 나열한 것으로 표현하지 않았다."
+    },
+    {
+      "sourceIndices": [338],
+      "authority": "법제처 국가법령정보센터",
+      "provision": "미세먼지 저감 및 관리에 관한 특별법 제2조제1호",
+      "url": "https://www.law.go.kr/DRF/lawService.do?MST=283033&OC=me_pr&efYd=20260127&mobileYn=Y&target=law&type=HTML",
+      "verifiedMeaning": "미세먼지의 법정 정의에는 입자 지름 10마이크로미터 이하 미세먼지와 2.5마이크로미터 이하 초미세먼지가 포함된다. 초고에는 수치가 아닌 두 범주만 풀어 썼으며, 실제 경보 발령 여부를 별도 요건으로 추가하지 않았다."
+    },
+    {
+      "sourceIndices": [360],
+      "authority": "법제처 국가법령정보센터",
+      "provision": "민사소송법 제189조 발신주의",
+      "url": "https://www.law.go.kr/LSW/lsLinkCommonInfo.do?lsJoLnkSeq=1031930495",
+      "verifiedMeaning": "제185조제2항 또는 제187조에 따라 서류를 발송한 경우 발송 시 송달된 것으로 보는 규정이다. 예비군법은 이를 준용 대상에서 제외하므로 그 예외의 뜻을 설명했다."
+    },
+    {
+      "sourceIndices": [361],
+      "authority": "법제처 국가법령정보센터",
+      "provision": "정보통신망 이용촉진 및 정보보호 등에 관한 법률 제2조제1항제5호",
+      "url": "https://www.law.go.kr/lsLinkCommonInfo.do?lsJoLnkSeq=1031679391",
+      "verifiedMeaning": "정보처리 장치로 전자적으로 작성되어 송수신되거나 저장된 표준화 문서 자료라는 전자문서 정의를 확인했다."
+    }
+  ]
+}

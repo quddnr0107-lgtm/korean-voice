@@ -1,0 +1,49 @@
+{
+  "shard": "reserve-rule-01",
+  "author": "f1_validation",
+  "reviewStatus": "draft",
+  "notes": [
+    {
+      "sourceIndices": [
+        159
+      ],
+      "topic": "별표2 계급 및 1단계 낮은 임명 예외",
+      "sources": [
+        "https://www.mnd.go.kr/user/mnd/upload/pblictn/PBLICTNEBOOK_202203231113266170.pdf",
+        "https://law.go.kr/LSW/lsRvsDocListP.do?chrClsCd=010202&lsId=010251&lsRvsGubun=all"
+      ],
+      "verifiedContent": "여단장·연대장 일반 기준 대령, 대대장 중령. 소속 전원 훈련 일부 보류 가능 직장부대는 각각 중령·소령도 가능. 2024 개정은 6급 이하 예비전력관리기구의 대위 표현을 위관급장교로 바꾼 것이고 위 지휘관 계급은 변경되지 않음."
+    },
+    {
+      "sourceIndices": [
+        164
+      ],
+      "topic": "국가공무원법33제5호 제외",
+      "sources": [
+        "https://law.go.kr/lsLinkCommonInfo.do?lsJoLnkSeq=1031734197"
+      ],
+      "verifiedContent": "제5호는 금고 이상의 형의 선고유예 기간 중인 사람. 집행유예와 혼동하지 않음."
+    },
+    {
+      "sourceIndices": [
+        165
+      ],
+      "topic": "군무원인사법28제1항 직권면직",
+      "sources": [
+        "https://law.go.kr/LSW/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1032263607",
+        "https://www.law.go.kr/LSW/lsSideInfoP.do?docCls=jo&joBrNo=00&joNo=0028&lsiSeq=290765&urlMode=lsScJoRltInfoR"
+      ],
+      "verifiedContent": "신체·정신장애로 직무감당 불가, 매우 낮은 근무성적, 조직·정원·예산 변경으로 인원초과, 휴직 종료·사유소멸 후 미복귀 또는 직무불가, 대기명령 기간 능력향상·태도개선 뜻 없음, 전직시험 2회 이상 불합격 및 능력부족."
+    },
+    {
+      "sourceIndices": [
+        299
+      ],
+      "topic": "제17조제2항 제1~3호",
+      "sources": [
+        "https://law.go.kr/LSW/lsLinkCommonInfo.do?lspttninfSeq=66131"
+      ],
+      "verifiedContent": "제1호부터 제3호는 2015-12-28 삭제. 데이터 누락으로 간주하지 않음."
+    }
+  ]
+}

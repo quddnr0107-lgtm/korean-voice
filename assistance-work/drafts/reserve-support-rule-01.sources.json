@@ -1,0 +1,55 @@
+{
+  "shard": "reserve-support-rule-01",
+  "author": "f1_validation",
+  "reviewStatus": "draft",
+  "notes": [
+    {
+      "sourceIndices": [
+        717
+      ],
+      "topic": "육성지원 범위 별표",
+      "sources": [
+        "https://www.law.go.kr/LSW/flDownload.do?gubun=&flSeq=108980295&bylClsCd=110201"
+      ],
+      "verifiedContent": "2016-11-30개정 2쪽 전체 읽음. 사무실, 장비물자, 훈련시설, 지역방위작전 급식수송통신의료장비물자전투시설, 사기·유대·홍보 등 5개 분야의 구체적 예시를 짧게 연결."
+    },
+    {
+      "sourceIndices": [
+        729,
+        730
+      ],
+      "topic": "원문 데이터의 제7조제2항 누락 확인",
+      "sources": [
+        "https://www.law.go.kr/LSW/lsInfoR.do?ancYnChk=0&chrClsCd=010202&efYd=20211025&lsiSeq=236551"
+      ],
+      "localEvidence": "source/reserve-support-current.html",
+      "verifiedContent": "공식 현행 제7조제2항은 중기계획 수립해 기준 2년째~6년째 5년간을 계획연도로 정하나 스냅샷에는 729제1항과730제3항 사이에 제2항이 없음. 기존 원문은 변경하지 않았고 가짜 sourceId를 생성하지 않음."
+    },
+    {
+      "sourceIndices": [
+        715,
+        716,
+        740,
+        741,
+        742,
+        780,
+        781
+      ],
+      "topic": "원문 문장 잘림",
+      "sources": [
+        "https://www.law.go.kr/LSW/lsInfoR.do?ancYnChk=0&chrClsCd=010202&efYd=20211025&lsiSeq=236551"
+      ],
+      "verifiedContent": "715/716은 제4조제4호, 740/741/742는 제8조제3항, 780/781은 제16조제1항의 하나의 문장. 앞뒤 내용 전체를 읽어 주어·의무·기한 복원. 각 sourceIndex 자체는 유지."
+    },
+    {
+      "sourceIndices": [
+        705,
+        718,
+        778,
+        799
+      ],
+      "topic": "장 제목의 본문 분류",
+      "verifiedContent": "원문 스냅샷의 isHeader=false이지만 1~4장 제목에 해당. 다음 실제 조항에 근거해 장의 내용을 구체적으로 안내하는 문장으로 작성. 일반 조항으로 허위해석하지 않음."
+    }
+  ]
+}

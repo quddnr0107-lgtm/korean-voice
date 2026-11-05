@@ -1,0 +1,51 @@
+[
+  {
+    "sourceIndex": 5697,
+    "reason": "표 OCR 조각이 아니라 주요 직위자 임명 절차의 완전한 본문 조항으로, 원문과 보조설명을 표시해야 함",
+    "action": "remove-hide"
+  },
+  {
+    "sourceIndex": 5698,
+    "reason": "표 OCR 조각이 아니라 주요 직위자 임명 절차의 완전한 본문 조항으로, 원문과 보조설명을 표시해야 함",
+    "action": "remove-hide"
+  },
+  {
+    "sourceIndex": 5696,
+    "reason": "실제 본문 제11조제2항제3호를 별지7호서식 이미지·낭독으로 대체하는 오연결. 진짜 서식 앵커5707에 연결해야 함",
+    "action": "move-table-anchor",
+    "targetSourceIndex": 5707
+  },
+  {
+    "sourceIndex": 5884,
+    "reason": "특전예비군 인원·물자 관리와 지휘관 임기를 정한 실제 본문이 표 OCR로 잘못 숨겨짐",
+    "action": "remove-hide"
+  },
+  {
+    "sourceIndex": 5885,
+    "reason": "특전예비군 인원·물자 관리와 지휘관 임기를 정한 실제 본문이 표 OCR로 잘못 숨겨짐",
+    "action": "remove-hide"
+  },
+  {
+    "sourceIndex": 5838,
+    "targetSourceIndex": 5840,
+    "action": "move-table-anchor",
+    "reason": "탈퇴 처리의 본문이 별지2호서식으로 대체됨. 실제 서식앵커5840으로 옮기고 그 행 표시 복원 필요"
+  },
+  {
+    "sourceIndex": 5840,
+    "action": "remove-hide",
+    "reason": "이동할 별지2호서식 앵커"
+  },
+  {
+    "sourceIndex": 5888,
+    "targetSourceIndex": 5894,
+    "action": "move-table-anchor",
+    "reason": "특전예비군 지원 구비서류 본문이 별지1호서식으로 대체됨. 실제 서식앵커5894에 연결해야 함"
+  },
+  {
+    "sourceIndex": 5765,
+    "action": "complete-table-pages",
+    "reason": "별표11은 원문 3페이지인데 현재 이미지는 단일직장 여단 그림만 표시. 공식PDF 전체확인·그림 추가·원문낭독 보완 필요",
+    "url": "https://law.go.kr/LSW/flDownload.do?bylClsCd=200201&flSeq=137313973"
+  }
+]

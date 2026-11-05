@@ -1,0 +1,49 @@
+{
+  "shard": "reserve-rule-02",
+  "author": "f1_validation",
+  "reviewStatus": "draft",
+  "notes": [
+    {
+      "sourceIndices": [
+        553
+      ],
+      "topic": "별도1 부대기 제식",
+      "sources": [
+        "https://www.law.go.kr/LSW/flDownload.do?gubun=&flSeq=159553473&bylClsCd=110204"
+      ],
+      "verifiedContent": "2016-11-30개정 3쪽 PDF: 하늘색 바탕, 백색 고딕체, 직장 여단기·연대기·대대기·중대기는 직장명 뒤 예비군과 부대단위, 지역중대기는 예비군 뒤 읍면동명과 대, 지역대기·기동대기는 시군구명 뒤 예비군과 단위. 짧은 설명에 대표 표기만 사용."
+    },
+    {
+      "sourceIndices": [
+        563
+      ],
+      "topic": "별도2 예식띠 제식",
+      "sources": [
+        "https://www.law.go.kr/LSW/flDownload.do?gubun=&flSeq=159553483&bylClsCd=110204"
+      ],
+      "localEvidence": "source/reserve-rule-ceremonial-belt.pdf",
+      "verifiedContent": "백색 면사, 버클·기꽂이·고리 주물, 띠 끝 백색 비닐, 기꽂이 밤색 가죽."
+    },
+    {
+      "sourceIndices": [
+        566
+      ],
+      "topic": "별도3 받침다리·보관상자",
+      "sources": [
+        "https://www.law.go.kr/LSW/flDownload.do?gubun=&flSeq=159553489&bylClsCd=110204"
+      ],
+      "localEvidence": "source/reserve-rule-flag-stand.pdf",
+      "verifiedContent": "받침다리 알루미늄, 보관상자 5mm 합판에 자색비닐 및 스테인리스 장식."
+    },
+    {
+      "sourceIndices": [
+        631
+      ],
+      "topic": "관계자 문책기준",
+      "sources": [
+        "https://www.law.go.kr/DRF/flDownload.do?flNm=%5B%EB%B3%84%ED%91%9C+%5D+%EA%B4%80%EA%B3%84%EC%9E%90+%EB%AC%B8%EC%B1%85%EA%B8%B0%EC%A4%80%28%EC%A0%9C37%EC%A1%B0%EC%A0%9C2%ED%95%AD+%EA%B4%80%EB%A0%A8%29%0A&flSeq=157506997"
+      ],
+      "verifiedContent": "2021-12-10개정 별표 4쪽 전체 읽음. 편성·자원관리, 교육훈련, 무기탄약장비관리, 운영, 동원. 고의·과실과 비위 정도 4구분으로 주의·경고·견책·감봉·정직·해임 이상 기준 차등. 모든 개별 비위 세목을 짧은 설명에 열거하지 않고 범위와 적용 구조를 설명."
+    }
+  ]
+}
