@@ -1,0 +1,43 @@
+name: Inspect official appendix pages for assistance source coverage
+on:
+  push:
+    branches: [codex/reader-assistance-source-audit-20261105]
+    paths: [.github/workflows/reader-assistance-source-audit.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source:
+    if: github.repository == 'quddnr0107-lgtm/korean-voice'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Read the exact official appendix PDF
+        run: |
+          mkdir -p source-audit
+          python3 - <<'PY'
+          import urllib.request, hashlib, json
+          from pathlib import Path
+          url = 'https://law.go.kr/LSW/flDownload.do?bylClsCd=200201&flNm=%5B%EB%B3%84%ED%91%9C+11%5D+%EC%A0%9C%EB%8C%80%EB%B3%84%28%EC%97%AC%EB%8B%A8~%EB%8F%85%EB%A6%BD%EC%86%8C%EB%8C%80%29+%EC%A7%81%EC%9E%A5%EC%98%88%EB%B9%84%EA%B5%B0+%ED%8E%B8%EC%84%B1%EA%B8%B0%EA%B5%AC%EB%8F%84%28%EC%A0%9C14%EC%A1%B0+%EA%B4%80%EB%A0%A8%29&flSeq=137313973'
+          with urllib.request.urlopen(url, timeout=40) as response:
+              assert urllib.parse.urlparse(response.url).hostname in ('law.go.kr','www.law.go.kr')
+              data=response.read(10000001)
+          assert data.startswith(b'%PDF') and len(data)<10000000
+          Path('source-audit/organization-appendix11.pdf').write_bytes(data)
+          Path('source-audit/source.json').write_text(json.dumps({'url':url,'sha256':hashlib.sha256(data).hexdigest(),'bytes':len(data),'status':'official-source-for-manual-comparison-not-automatic-approval'},indent=2)+'\n')
+          PY
+      - name: Render every page for visual comparison
+        run: |
+          if ! command -v pdftoppm >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq poppler-utils
+          fi
+          pdfinfo source-audit/organization-appendix11.pdf > source-audit/pdfinfo.txt
+          pdftotext -layout source-audit/organization-appendix11.pdf source-audit/organization-appendix11.txt
+          pdftoppm -r 130 -png source-audit/organization-appendix11.pdf source-audit/organization-appendix11
+      - uses: actions/upload-artifact@v4
+        with:
+          name: reader-assistance-official-appendix11-${{ github.run_id }}
+          path: source-audit
+          retention-days: 1
+          if-no-files-found: error
