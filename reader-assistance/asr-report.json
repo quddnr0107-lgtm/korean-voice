@@ -1,0 +1,362 @@
+{
+  "asrProfile": {
+    "assessmentGitBlob": "3ee5d8f935824c2f3992af50489c7be69b599456",
+    "beamSize": 5,
+    "computeType": "int8",
+    "conditionOnPreviousText": false,
+    "cpuThreads": 4,
+    "ctranslate2Version": "4.8.5",
+    "device": "cpu",
+    "fasterWhisperVersion": "1.2.1",
+    "judgeGitBlob": "13fbe3a17a3eb73907b5454714ec1862aa4741f7",
+    "koVoiceGitBlob": "97aa17cc68369509d69b6517d8b486752ac7aef1",
+    "language": "ko",
+    "modelRepository": "Systran/faster-whisper-small",
+    "modelRevision": "536b0662742c02347bc0e980a01041f333bce120",
+    "targetPromptUsed": false,
+    "temperature": 0,
+    "vadFilter": false
+  },
+  "asrProfileSha256": "43b4f8b99fcd4ad1bf423d9e698e044012e5ad53f66ef5f2e0af13d76d5e11f5",
+  "counts": {
+    "normalized_match": 2,
+    "review_required": 5
+  },
+  "coverage": {
+    "allCorpusAssessed": false,
+    "allPilotClipsAssessed": true,
+    "assessedUniqueClips": 7,
+    "expectedEntries": 7
+  },
+  "limitation": "ASR is independent automated evidence, not direct human listening. Any non-equivalent full-text transcription or critical-token mismatch requires review; no automatic exception or false complete status.",
+  "pilot": true,
+  "recipeSha256": "325696fa16298826933979aa72f34cebf1aca3c1e473bb5035cd10265097f0b8",
+  "results": {
+    "06f20f7c092f93f7cc93052c1e4921ec28d65e7945a456b26410f147ed449041": {
+      "asrSeconds": 2.938,
+      "audioKey": "06f20f7c092f93f7cc93052c1e4921ec28d65e7945a456b26410f147ed449041",
+      "canonicalCER": 0.0,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "quantity:6개월",
+        "이상",
+        "quantity:1년",
+        "이상",
+        "permission"
+      ],
+      "criticalTranscript": [
+        "quantity:6개월",
+        "이상",
+        "quantity:1년",
+        "이상",
+        "permission"
+      ],
+      "durationMs": 14900,
+      "literalCER": 0.0,
+      "mp3Sha256": "ff52b4b174fe5bcc2bc788aba44b31986c9af1edb3acf64cd1b68add3c73f408",
+      "normalizedTarget": "징역이나금고의실형을6개월이상선고받았거나1년이상의징역금고형을선고받고그집행이유예된사람은지방병무청장이그사실을확인하여병역처분변경을처리할수있습니다",
+      "normalizedTranscript": "징역이나금고의실형을6개월이상선고받았거나1년이상의징역금고형을선고받고그집행이유예된사람은지방병무청장이그사실을확인하여병역처분변경을처리할수있습니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.128363,
+          "end": 5.3,
+          "start": 0.0,
+          "text": " 징역이나 금고의 실형을 6개월 이상 선고받았거나 1년 이상의 징역"
+        },
+        {
+          "avgLogProbability": -0.128363,
+          "end": 10.84,
+          "start": 5.3,
+          "text": " 금고형을 선고받고 그 집행이 유예된 사람은 지방병무청장이 그 사실을"
+        },
+        {
+          "avgLogProbability": -0.128363,
+          "end": 14.28,
+          "start": 10.84,
+          "text": " 확인하여 병역 처분 변경을 처리할 수 있습니다."
+        }
+      ],
+      "status": "normalized_match",
+      "target": "징역이나 금고의 실형을 6개월 이상 선고받았거나, 1년 이상의 징역·금고형을 선고받고 그 집행이 유예된 사람은 지방병무청장이 그 사실을 확인하여 병역처분 변경을 처리할 수 있습니다.",
+      "textSha256": "965679b3e7ee0e0fa1aa10a617fffd00065d625c187e63fe49617c4f93c95983",
+      "transcript": "징역이나 금고의 실형을 6개월 이상 선고받았거나 1년 이상의 징역 금고형을 선고받고 그 집행이 유예된 사람은 지방병무청장이 그 사실을 확인하여 병역 처분 변경을 처리할 수 있습니다."
+    },
+    "6e29cb12968e331a641a70a87898fb2c48105d2220ccba8398a51c121a8216c8": {
+      "asrSeconds": 2.297,
+      "audioKey": "6e29cb12968e331a641a70a87898fb2c48105d2220ccba8398a51c121a8216c8",
+      "canonicalCER": 0.0,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "negative"
+      ],
+      "criticalTranscript": [
+        "negative"
+      ],
+      "durationMs": 9810,
+      "literalCER": 0.0,
+      "mp3Sha256": "f6a9b747a760fc5f7fcbc472953f691dbdc8a52d41ca26ce3af5d33590d63ecc",
+      "normalizedTarget": "대체역으로편입되려고거짓서류를만들어제출하거나거짓진술을해서징역형을선고받은사람은보충역에편입하지않습니다",
+      "normalizedTranscript": "대체역으로편입되려고거짓서류를만들어제출하거나거짓진술을해서징역형을선고받은사람은보충역에편입하지않습니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.124501,
+          "end": 5.5,
+          "start": 0.0,
+          "text": " 대체 역으로 편입되려고 거짓 서류를 만들어 제출하거나 거짓 진술을 해서"
+        },
+        {
+          "avgLogProbability": -0.124501,
+          "end": 9.2,
+          "start": 5.5,
+          "text": " 징역형을 선고받은 사람은 보충역에 편입하지 않습니다."
+        }
+      ],
+      "status": "normalized_match",
+      "target": "대체역으로 편입되려고 거짓 서류를 만들어 제출하거나 거짓 진술을 해서 징역형을 선고받은 사람은 보충역에 편입하지 않습니다.",
+      "textSha256": "de0d2fad927723a2fe7c38900ff349810961930ef524ceed5a423be67f9c5def",
+      "transcript": "대체 역으로 편입되려고 거짓 서류를 만들어 제출하거나 거짓 진술을 해서 징역형을 선고받은 사람은 보충역에 편입하지 않습니다."
+    },
+    "b0fba2ae1e34da0747c78ae4995d20dcf6dd6996f31dea77a117e6f0fa82486b": {
+      "asrSeconds": 2.326,
+      "audioKey": "b0fba2ae1e34da0747c78ae4995d20dcf6dd6996f31dea77a117e6f0fa82486b",
+      "canonicalCER": 0.017857,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "quantity:1년",
+        "quantity:6개월",
+        "이상",
+        "permission"
+      ],
+      "criticalTranscript": [
+        "quantity:1년",
+        "quantity:6개월",
+        "이상",
+        "permission"
+      ],
+      "durationMs": 11020,
+      "literalCER": 0.017857,
+      "mp3Sha256": "90c05226e9e944a1ac9f6f6caad1a72b086428181d04a00af357062dcc2b208c",
+      "normalizedTarget": "보충역복무를마친사람이나예비역병사가1년6개월이상의징역또는금고의실형을선고받았다면전시근로역에편입할수있습니다",
+      "normalizedTranscript": "보축역복무를마친사람이나예비역병사가1년6개월이상의징역또는금고의실형을선고받았다면전시근로역에편입할수있습니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.134578,
+          "end": 5.64,
+          "start": 0.0,
+          "text": " 보축역 복무를 마친 사람이나 예비역 병사가 1년 6개월 이상의 징역"
+        },
+        {
+          "avgLogProbability": -0.134578,
+          "end": 10.4,
+          "start": 5.64,
+          "text": " 또는 금고의 실형을 선고받았다면 전시 근로역에 편입할 수 있습니다."
+        }
+      ],
+      "status": "review_required",
+      "target": "보충역 복무를 마친 사람이나 예비역 병사가 1년 6개월 이상의 징역 또는 금고의 실형을 선고받았다면, 전시근로역에 편입할 수 있습니다.",
+      "textSha256": "ca14b822849c355fd459c9ecfa0b16a38ee7e73f389475c781b899d6be3e5553",
+      "transcript": "보축역 복무를 마친 사람이나 예비역 병사가 1년 6개월 이상의 징역 또는 금고의 실형을 선고받았다면 전시 근로역에 편입할 수 있습니다."
+    },
+    "b7914db23b6bdbd02a3040b1c6da3a09cbd5ed99f6c3ce24eb0c65410aff9d4d": {
+      "asrSeconds": 2.734,
+      "audioKey": "b7914db23b6bdbd02a3040b1c6da3a09cbd5ed99f6c3ce24eb0c65410aff9d4d",
+      "canonicalCER": 0.026316,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "negative"
+      ],
+      "criticalTranscript": [
+        "negative"
+      ],
+      "durationMs": 14920,
+      "literalCER": 0.026316,
+      "mp3Sha256": "fca2c1c55abcdffccb67350befef4815c756408eaf129c1af723605b82b12ef7",
+      "normalizedTarget": "병역을피하거나줄이려고도망가거나행방을감추거나자기몸을다치게하거나속임수를써서징역형을선고받은사람은앞에서말한형량기준에해당해도보충역에편입하지않습니다",
+      "normalizedTranscript": "병역을피하거나줄이려고도망가거나행방을감추거나자기몸을다치게하거나속임수를써서징역형을선고받은사람은앞에서말한형량기준의해당에도보충역에편입하지않습니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.120737,
+          "end": 4.92,
+          "start": 0.0,
+          "text": " 병역을 피하거나 줄이려고 도망 가거나 행방을 감추거나 자기 몸을"
+        },
+        {
+          "avgLogProbability": -0.120737,
+          "end": 10.8,
+          "start": 4.92,
+          "text": " 다치게 하거나 속임수를 써서 징역형을 선고받은 사람은 앞에서 말한 형량"
+        },
+        {
+          "avgLogProbability": -0.120737,
+          "end": 14.0,
+          "start": 10.8,
+          "text": " 기준의 해당에도 보충역에 편입하지 않습니다."
+        }
+      ],
+      "status": "review_required",
+      "target": "병역을 피하거나 줄이려고 도망가거나, 행방을 감추거나, 자기 몸을 다치게 하거나, 속임수를 써서 징역형을 선고받은 사람은 앞에서 말한 형량 기준에 해당해도 보충역에 편입하지 않습니다.",
+      "textSha256": "bcda662d7d62ebcb05445f413ad861251788baf414d08c55f16df3cfbed05f51",
+      "transcript": "병역을 피하거나 줄이려고 도망 가거나 행방을 감추거나 자기 몸을 다치게 하거나 속임수를 써서 징역형을 선고받은 사람은 앞에서 말한 형량 기준의 해당에도 보충역에 편입하지 않습니다."
+    },
+    "cc616f35ce183ab4ad5857161c8716eced478f5e7a7c75a6dc9ac98e67ecde6b": {
+      "asrSeconds": 3.791,
+      "audioKey": "cc616f35ce183ab4ad5857161c8716eced478f5e7a7c75a6dc9ac98e67ecde6b",
+      "canonicalCER": 0.017857,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "quantity:18세",
+        "미만",
+        "quantity:5년",
+        "이상",
+        "obligation"
+      ],
+      "criticalTranscript": [
+        "quantity:18세",
+        "미만",
+        "quantity:5년",
+        "이상",
+        "obligation"
+      ],
+      "durationMs": 22330,
+      "literalCER": 0.017857,
+      "mp3Sha256": "67aa468755946b981b3b7326c8729f6e1c49a29a1b044a41608fd8d3043fd65a",
+      "normalizedTarget": "18세미만의아동으로서아동양육시설아동보호치료시설공동생활가정학대피해아동쉼터에5년이상보호된사실이있어전시근로역으로바꾸려는경우입니다보호받았던시설의장을거쳐관할특별자치시장특별자치도지사시장군수구청장의확인을받아야합니다",
+      "normalizedTranscript": "18세미만의아동으로써아동양육시설아동보호치료시설공동생활가정학대피해아동심터에5년이상보호된사실이있어전시근로역으로바꾸려는경우입니다보호받았던시설의장을거쳐관할특별자치시장특별자치도지사시장군수구청장의확인을받아야합니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.148507,
+          "end": 12.8,
+          "start": 0.0,
+          "text": " 18세 미만의 아동으로써 아동양육시설, 아동보호치료시설, 공동생활가정, 학대피해아동심터에 5년 이상 보호된 사실이 있어 전시 근로역으로 바꾸려는 경우입니다."
+        },
+        {
+          "avgLogProbability": -0.148507,
+          "end": 21.8,
+          "start": 13.5,
+          "text": " 보호받았던 시설의 장을 거쳐 관할 특별자치시장, 특별자치도지사, 시장, 군수, 구청장의 확인을 받아야 합니다."
+        }
+      ],
+      "status": "review_required",
+      "target": "18세 미만의 아동으로서 아동양육시설·아동보호치료시설·공동생활가정·학대피해아동쉼터에 5년 이상 보호된 사실이 있어 전시근로역으로 바꾸려는 경우입니다. 보호받았던 시설의 장을 거쳐, 관할 특별자치시장·특별자치도지사·시장·군수·구청장의 확인을 받아야 합니다.",
+      "textSha256": "ca37db2d0c3538a1c1a8a3289142ada80e8253e33bf13e5250426e970c849177",
+      "transcript": "18세 미만의 아동으로써 아동양육시설, 아동보호치료시설, 공동생활가정, 학대피해아동심터에 5년 이상 보호된 사실이 있어 전시 근로역으로 바꾸려는 경우입니다. 보호받았던 시설의 장을 거쳐 관할 특별자치시장, 특별자치도지사, 시장, 군수, 구청장의 확인을 받아야 합니다."
+    },
+    "e0f20b8db5d53e93fcd0917e722b6a1c1ed91d987d5a717aa2d1e329c97952a3": {
+      "asrSeconds": 3.367,
+      "audioKey": "e0f20b8db5d53e93fcd0917e722b6a1c1ed91d987d5a717aa2d1e329c97952a3",
+      "canonicalCER": 0.04,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "quantity:6개월",
+        "이상",
+        "quantity:1년",
+        "quantity:6개월",
+        "미만",
+        "quantity:1년",
+        "이상",
+        "permission",
+        "negative"
+      ],
+      "criticalTranscript": [
+        "quantity:6개월",
+        "이상",
+        "quantity:1년",
+        "quantity:6개월",
+        "미만",
+        "quantity:1년",
+        "이상",
+        "permission",
+        "negative"
+      ],
+      "durationMs": 19230,
+      "literalCER": 0.04,
+      "mp3Sha256": "424dbf26d1274d572e88a5c76a346f57f0df0c2d16f4134fdcc79cf8623d6f64",
+      "normalizedTarget": "징역이나금고의실형을6개월이상1년6개월미만선고받았거나1년이상의징역금고형을선고받고그집행이유예된사람은보충역편입대상이될수있습니다하지만아래에나오는경우에는이기준에해당해도보충역에편입하지않습니다",
+      "normalizedTranscript": "징역이나금고의실형을6개월이상1년6개월미만선고받았거나1년이상의징역금고형을선고받고그집행이유예된사람은보충력편입대상이될수있습니다하지만아래에나오는경우에는이기준의해당에도보충력에편입하지않습니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.124386,
+          "end": 5.4,
+          "start": 0.0,
+          "text": " 징역이나 금고의 실형을 6개월 이상 1년 6개월 미만 선고받았거나"
+        },
+        {
+          "avgLogProbability": -0.124386,
+          "end": 10.5,
+          "start": 5.4,
+          "text": " 1년 이상의 징역 금고형을 선고받고 그 집행이 유예된 사람은"
+        },
+        {
+          "avgLogProbability": -0.124386,
+          "end": 13.1,
+          "start": 10.5,
+          "text": " 보충력 편입 대상이 될 수 있습니다."
+        },
+        {
+          "avgLogProbability": -0.124386,
+          "end": 18.5,
+          "start": 13.1,
+          "text": " 하지만 아래에 나오는 경우에는 이 기준의 해당에도 보충력에 편입하지 않습니다."
+        }
+      ],
+      "status": "review_required",
+      "target": "징역이나 금고의 실형을 6개월 이상 1년 6개월 미만 선고받았거나, 1년 이상의 징역·금고형을 선고받고 그 집행이 유예된 사람은 보충역 편입 대상이 될 수 있습니다. 하지만 아래에 나오는 경우에는 이 기준에 해당해도 보충역에 편입하지 않습니다.",
+      "textSha256": "c398ef7e4c0820f63cded383a1c17c93ef6ee22d1b314007eb8b1e2431ee4eaa",
+      "transcript": "징역이나 금고의 실형을 6개월 이상 1년 6개월 미만 선고받았거나 1년 이상의 징역 금고형을 선고받고 그 집행이 유예된 사람은 보충력 편입 대상이 될 수 있습니다. 하지만 아래에 나오는 경우에는 이 기준의 해당에도 보충력에 편입하지 않습니다."
+    },
+    "e7df92ccda1e0887f84ea93cb24e97ef4a556c54742d23059361423fa57118bb": {
+      "asrSeconds": 2.893,
+      "audioKey": "e7df92ccda1e0887f84ea93cb24e97ef4a556c54742d23059361423fa57118bb",
+      "canonicalCER": 0.028986,
+      "criticalMatch": true,
+      "criticalTarget": [
+        "negative",
+        "negative",
+        "negative"
+      ],
+      "criticalTranscript": [
+        "negative",
+        "negative",
+        "negative"
+      ],
+      "durationMs": 13850,
+      "literalCER": 0.028986,
+      "mp3Sha256": "50ebfcdd9b6a3a4158a775cce3701947bbde914d03882fe85c9398a07f3e7c79",
+      "normalizedTarget": "정해진날에병역판정검사재병역판정검사입영판정검사신체검사확인신체검사를정당한사유없이받지않아징역형을선고받은사람은보충역에편입하지않습니다",
+      "normalizedTranscript": "정해진날에병역판정검사재병역판정검사이병판정검사신체검사확인신체검사를정당한사유없이받지않아징역형을선고받은사람은보충역에편입하지않습니다",
+      "segments": [
+        {
+          "avgLogProbability": -0.138809,
+          "end": 6.54,
+          "start": 0.0,
+          "text": " 정해진 날에 병역판정검사, 재병역판정검사, 이병판정검사, 신체검사,"
+        },
+        {
+          "avgLogProbability": -0.138809,
+          "end": 11.42,
+          "start": 6.54,
+          "text": " 확인신체검사를 정당한 사유 없이 받지 않아 징역형을 선고받은 사람은"
+        },
+        {
+          "avgLogProbability": -0.138809,
+          "end": 13.2,
+          "start": 11.42,
+          "text": " 보충역에 편입하지 않습니다."
+        }
+      ],
+      "status": "review_required",
+      "target": "정해진 날에 병역판정검사·재병역판정검사·입영판정검사·신체검사·확인신체검사를 정당한 사유 없이 받지 않아 징역형을 선고받은 사람은 보충역에 편입하지 않습니다.",
+      "textSha256": "0cbb0877acf6858a5b1ba661502ff81eca62bac30644d87fcbc39848384c7412",
+      "transcript": "정해진 날에 병역판정검사, 재병역판정검사, 이병판정검사, 신체검사, 확인신체검사를 정당한 사유 없이 받지 않아 징역형을 선고받은 사람은 보충역에 편입하지 않습니다."
+    }
+  },
+  "schema": "reader-assistance-asr-report.v1",
+  "sourceDataSha256": "9e386157fec6450c85d999679a1207ebca4b8e702a8a5acbbc2d240c0ba31205",
+  "timing": {
+    "asrSeconds": 20.346,
+    "audioSeconds": 106.06,
+    "medianClipAsrSeconds": 2.893,
+    "modelDownloadAndLoadSeconds": 3.103,
+    "realtimeFactor": 0.1918
+  }
+}
