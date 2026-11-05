@@ -69,8 +69,8 @@
         "6b57f13854bcc946f1693ff1fe00228b20f879f91e3146347bd704b3401e15da",
         "8c9a4c7f30d9db9de964d275ee14281ce95ed62b4b3a09a2973fe0775d02c3dd"
       ],
-      "anchorTextSha256": "f8b321bf078d319c08a8612e79a3767cf111d0dc26ee6e582e808397680dc5aa",
-      "memberReviewsSha256": "838d98a194b8f43cf5923ef8182d2d37a8220ef5d47fe90a0478f178467938e0",
+      "anchorTextSha256": "ca480ccbceb1c2be874738187e745bc74546413877163f3f1dbf1bdbbf8b663e",
+      "memberReviewsSha256": "0c23e9afcb0f4c258e0de25257bfa9f436d6c72e299c2f32b372de192567408a",
       "author": "corpus_review",
       "reviewer": "root",
       "proposedReviewer": "root",
@@ -84,6 +84,14 @@
         {
           "source": "evidence/presentation-mapping-root-review.json",
           "sha256": "715c6202978a8617eae34e61629c3fad84615eca1497602c4ffec2d191b5be5a"
+        },
+        {
+          "source": "evidence/signature-field-review-20261105.json",
+          "sha256": "fbd989212483a0284121787baddc67bb6e6f64c8b28338dab544cbb34804dd32"
+        },
+        {
+          "source": "evidence/signature-root-review-20261105.json",
+          "sha256": "33f4b4ecc25d37bd5e08b3325f556d5dc5542d5191b0cfb14964965363e04381"
         }
       ],
       "resolutions": [
@@ -93,6 +101,13 @@
           "evidence": [
             "evidence/presentation-mapping-root-review.json"
           ]
+        },
+        {
+          "issue": "구성원 설명의 서명·날인 표현 정정 후 해시와 검토 연결 갱신",
+          "evidence": [
+            "evidence/signature-field-review-20261105.json"
+          ],
+          "result": "9개 그룹의 원문 순서·표 구성원·숨김 행 매핑을 보존하고, 각 새 설명을 서식 그림과 대조한 기록에 연결했다."
         }
       ],
       "mappingRationale": "5594에서 별지 제7호 주요 직위자 지원서가 시작하고 5595에 신청인 정보와 지원자/추천자 확인란이 이어진다. 서로 다른 두 기존 설명을 원문 순으로 모두 제공한다. 다음 별지 제8호 면직사유서의 본문은 기존 5596 그룹으로 구별한다.",

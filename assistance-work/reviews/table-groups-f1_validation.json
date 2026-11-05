@@ -144,16 +144,28 @@
       ],
       "status": "approved",
       "author": "root",
-      "reviewer": "f1_validation",
-      "anchorTextSha256": "ae5669cc5167579bf1c8b8d005d918633c9e9a86be9d5fcca575284cfc4cdfd9",
+      "reviewer": "corpus_review",
+      "anchorTextSha256": "db8a80b3507b691a0f1678205f6435169a09619da3667f97269a309a7f7c1b0b",
       "evidence": [
         {
           "source": "source/figures/40_p072.png",
           "gitBlobSha": "40c4950f2360b35deba8e070a2c5f4590229ba63"
+        },
+        {
+          "source": "evidence/signature-field-review-20261105.json",
+          "sha256": "fbd989212483a0284121787baddc67bb6e6f64c8b28338dab544cbb34804dd32"
         }
       ],
       "unresolvedIssues": [],
-      "resolutions": []
+      "resolutions": [
+        {
+          "issue": "구성원 설명의 서명·날인 표현 정정 후 해시와 검토 연결 갱신",
+          "evidence": [
+            "evidence/signature-field-review-20261105.json"
+          ],
+          "result": "9개 그룹의 원문 순서·표 구성원·숨김 행 매핑을 보존하고, 각 새 설명을 서식 그림과 대조한 기록에 연결했다."
+        }
+      ]
     },
     {
       "id": "validation-table-5602",
@@ -172,8 +184,8 @@
       ],
       "status": "approved",
       "author": "root",
-      "reviewer": "f1_validation",
-      "anchorTextSha256": "0f4824b3caa5b43b5d736329c9b1c82325ba99a1da48833c5afbd004f269adff",
+      "reviewer": "corpus_review",
+      "anchorTextSha256": "8f90bc595a5f3f9d757e099a17dc4185de05682c26cb930b5da6edf2e8a425e2",
       "evidence": [
         {
           "source": "source/figures/33_p064.png",
@@ -182,10 +194,22 @@
         {
           "source": "source/figures/33_p065.png",
           "gitBlobSha": "364bc5a3eaf709ae7e5ac29303cc3e9a3b875bef"
+        },
+        {
+          "source": "evidence/signature-field-review-20261105.json",
+          "sha256": "fbd989212483a0284121787baddc67bb6e6f64c8b28338dab544cbb34804dd32"
         }
       ],
       "unresolvedIssues": [],
-      "resolutions": []
+      "resolutions": [
+        {
+          "issue": "구성원 설명의 서명·날인 표현 정정 후 해시와 검토 연결 갱신",
+          "evidence": [
+            "evidence/signature-field-review-20261105.json"
+          ],
+          "result": "9개 그룹의 원문 순서·표 구성원·숨김 행 매핑을 보존하고, 각 새 설명을 서식 그림과 대조한 기록에 연결했다."
+        }
+      ]
     },
     {
       "id": "validation-table-5612",
@@ -198,16 +222,28 @@
       ],
       "status": "approved",
       "author": "root",
-      "reviewer": "f1_validation",
-      "anchorTextSha256": "4830f80dd13778993f7d1c7717470b804c9a8fc14649fefb3165cbea0756b1db",
+      "reviewer": "corpus_review",
+      "anchorTextSha256": "625f0279ad92ca06785738d33598ea1b06f98ac5a5930b7be833233d439fa9d0",
       "evidence": [
         {
           "source": "source/figures/34_p066.png",
           "gitBlobSha": "7a19841acef9e8ad00769f14992134e494ca37d1"
+        },
+        {
+          "source": "evidence/signature-field-review-20261105.json",
+          "sha256": "fbd989212483a0284121787baddc67bb6e6f64c8b28338dab544cbb34804dd32"
         }
       ],
       "unresolvedIssues": [],
-      "resolutions": []
+      "resolutions": [
+        {
+          "issue": "구성원 설명의 서명·날인 표현 정정 후 해시와 검토 연결 갱신",
+          "evidence": [
+            "evidence/signature-field-review-20261105.json"
+          ],
+          "result": "9개 그룹의 원문 순서·표 구성원·숨김 행 매핑을 보존하고, 각 새 설명을 서식 그림과 대조한 기록에 연결했다."
+        }
+      ]
     },
     {
       "id": "validation-table-5616",
@@ -219,16 +255,28 @@
       ],
       "status": "approved",
       "author": "root",
-      "reviewer": "f1_validation",
-      "anchorTextSha256": "351175a11145b4d7d6679dff037a431e0ce364a42864926b42a572680dbb4c96",
+      "reviewer": "corpus_review",
+      "anchorTextSha256": "f087051fb976532c192bb898634cf3b421e7e8c2f1ff7ebb9a8995e564bc48cf",
       "evidence": [
         {
           "source": "source/figures/35_p067.png",
           "gitBlobSha": "a63b3ee76d01614bcbfaf791f55719c22c90e520"
+        },
+        {
+          "source": "evidence/signature-field-review-20261105.json",
+          "sha256": "fbd989212483a0284121787baddc67bb6e6f64c8b28338dab544cbb34804dd32"
         }
       ],
       "unresolvedIssues": [],
-      "resolutions": []
+      "resolutions": [
+        {
+          "issue": "구성원 설명의 서명·날인 표현 정정 후 해시와 검토 연결 갱신",
+          "evidence": [
+            "evidence/signature-field-review-20261105.json"
+          ],
+          "result": "9개 그룹의 원문 순서·표 구성원·숨김 행 매핑을 보존하고, 각 새 설명을 서식 그림과 대조한 기록에 연결했다."
+        }
+      ]
     },
     {
       "id": "validation-table-5647",
@@ -372,8 +420,8 @@
       ],
       "status": "approved",
       "author": "root",
-      "reviewer": "f1_validation",
-      "anchorTextSha256": "4830f80dd13778993f7d1c7717470b804c9a8fc14649fefb3165cbea0756b1db",
+      "reviewer": "corpus_review",
+      "anchorTextSha256": "625f0279ad92ca06785738d33598ea1b06f98ac5a5930b7be833233d439fa9d0",
       "evidence": [
         {
           "source": "source/figures/15_p030.png",
@@ -382,10 +430,22 @@
         {
           "source": "source/figures/34_p066.png",
           "gitBlobSha": "7a19841acef9e8ad00769f14992134e494ca37d1"
+        },
+        {
+          "source": "evidence/signature-field-review-20261105.json",
+          "sha256": "fbd989212483a0284121787baddc67bb6e6f64c8b28338dab544cbb34804dd32"
         }
       ],
       "unresolvedIssues": [],
-      "resolutions": []
+      "resolutions": [
+        {
+          "issue": "구성원 설명의 서명·날인 표현 정정 후 해시와 검토 연결 갱신",
+          "evidence": [
+            "evidence/signature-field-review-20261105.json"
+          ],
+          "result": "9개 그룹의 원문 순서·표 구성원·숨김 행 매핑을 보존하고, 각 새 설명을 서식 그림과 대조한 기록에 연결했다."
+        }
+      ]
     },
     {
       "id": "validation-table-5851",
@@ -450,16 +510,28 @@
       ],
       "status": "approved",
       "author": "root",
-      "reviewer": "f1_validation",
-      "anchorTextSha256": "e7b559aca5673800d7f3814bed8e9986b2b601ac968360ee69d1894f8704bca6",
+      "reviewer": "corpus_review",
+      "anchorTextSha256": "b73243645dc6af46480114b501c77f0bc679999daefb309b350803938b03388c",
       "evidence": [
         {
           "source": "source/figures/20_p037.png",
           "gitBlobSha": "476643830ec34f6de1d68f1a682da82677ae681b"
+        },
+        {
+          "source": "evidence/signature-field-review-20261105.json",
+          "sha256": "fbd989212483a0284121787baddc67bb6e6f64c8b28338dab544cbb34804dd32"
         }
       ],
       "unresolvedIssues": [],
-      "resolutions": []
+      "resolutions": [
+        {
+          "issue": "구성원 설명의 서명·날인 표현 정정 후 해시와 검토 연결 갱신",
+          "evidence": [
+            "evidence/signature-field-review-20261105.json"
+          ],
+          "result": "9개 그룹의 원문 순서·표 구성원·숨김 행 매핑을 보존하고, 각 새 설명을 서식 그림과 대조한 기록에 연결했다."
+        }
+      ]
     },
     {
       "id": "validation-table-5896",
@@ -471,16 +543,28 @@
       ],
       "status": "approved",
       "author": "root",
-      "reviewer": "f1_validation",
-      "anchorTextSha256": "351175a11145b4d7d6679dff037a431e0ce364a42864926b42a572680dbb4c96",
+      "reviewer": "corpus_review",
+      "anchorTextSha256": "f087051fb976532c192bb898634cf3b421e7e8c2f1ff7ebb9a8995e564bc48cf",
       "evidence": [
         {
           "source": "source/figures/21_p038.png",
           "gitBlobSha": "a2a176aa2b973ce97cdf62586344b8d7efb4c5ff"
+        },
+        {
+          "source": "evidence/signature-field-review-20261105.json",
+          "sha256": "fbd989212483a0284121787baddc67bb6e6f64c8b28338dab544cbb34804dd32"
         }
       ],
       "unresolvedIssues": [],
-      "resolutions": []
+      "resolutions": [
+        {
+          "issue": "구성원 설명의 서명·날인 표현 정정 후 해시와 검토 연결 갱신",
+          "evidence": [
+            "evidence/signature-field-review-20261105.json"
+          ],
+          "result": "9개 그룹의 원문 순서·표 구성원·숨김 행 매핑을 보존하고, 각 새 설명을 서식 그림과 대조한 기록에 연결했다."
+        }
+      ]
     },
     {
       "id": "validation-table-5765",
@@ -531,16 +615,28 @@
       ],
       "status": "approved",
       "author": "root",
-      "reviewer": "f1_validation",
-      "anchorTextSha256": "f8b321bf078d319c08a8612e79a3767cf111d0dc26ee6e582e808397680dc5aa",
+      "reviewer": "corpus_review",
+      "anchorTextSha256": "ca480ccbceb1c2be874738187e745bc74546413877163f3f1dbf1bdbbf8b663e",
       "evidence": [
         {
           "source": "source/figures/09_p016.png",
           "gitBlobSha": "c857b6169c5c05945f35b915c01e048690a20948"
+        },
+        {
+          "source": "evidence/signature-field-review-20261105.json",
+          "sha256": "fbd989212483a0284121787baddc67bb6e6f64c8b28338dab544cbb34804dd32"
         }
       ],
       "unresolvedIssues": [],
-      "resolutions": []
+      "resolutions": [
+        {
+          "issue": "구성원 설명의 서명·날인 표현 정정 후 해시와 검토 연결 갱신",
+          "evidence": [
+            "evidence/signature-field-review-20261105.json"
+          ],
+          "result": "9개 그룹의 원문 순서·표 구성원·숨김 행 매핑을 보존하고, 각 새 설명을 서식 그림과 대조한 기록에 연결했다."
+        }
+      ]
     },
     {
       "id": "validation-table-5954",
