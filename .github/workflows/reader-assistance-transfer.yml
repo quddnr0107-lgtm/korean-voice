@@ -1,0 +1,50 @@
+name: Register exact canonical public explanation bytes
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/reader-assistance-f1-transfer-20261105]
+    paths:
+      - reader-assistance/transfer/data-39df5c0d.json.gz.base64
+      - .github/workflows/reader-assistance-transfer.yml
+
+permissions:
+  contents: write
+
+jobs:
+  register:
+    if: github.repository == 'quddnr0107-lgtm/korean-voice'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify transfer and exact canonical bytes before creating the immutable Git blob
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import base64,gzip,hashlib,json,os,urllib.request
+          from pathlib import Path
+          compressed=base64.b64decode(Path('reader-assistance/transfer/data-39df5c0d.json.gz.base64').read_text(),validate=False)
+          assert len(compressed)==2460138,'Compressed length changed'
+          assert hashlib.sha256(compressed).hexdigest()=='6988d622e9c3c4695096945e2b6abc23ca4de4167f1c891293f0031f849f096f','Compressed transfer changed'
+          raw=gzip.decompress(compressed)
+          assert len(raw)==16652479,'Canonical byte count changed'
+          assert hashlib.sha256(raw).hexdigest()=='39df5c0dabc5a2c96b1b8a9d6bb9d485c51ed3f8078d8287a9667258466596f7','Canonical source bytes changed'
+          expected=hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\0'+raw).hexdigest()
+          assert expected=='c46ea3bde1436457c8f218889ded7c782e38d685','Canonical Git identity changed'
+          data=json.loads(raw)
+          assert data['partial'] is True and len(data['entries'])==6072 and len(data['exclusions'])==1,'Unexpected public scope'
+          assert data['exclusions'][0]['sourceIndex']==6384 and data['exclusions'][0]['status']=='blocked','Blocked source changed'
+          payload=json.dumps({'content':base64.b64encode(raw).decode(),'encoding':'base64'}).encode()
+          request=urllib.request.Request('https://api.github.com/repos/quddnr0107-lgtm/korean-voice/git/blobs',data=payload,method='POST',headers={
+              'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json','Content-Type':'application/json','User-Agent':'reader-assistance-byte-transfer'})
+          with urllib.request.urlopen(request,timeout=120) as response:
+              result=json.load(response)
+          assert result['sha']==expected,'Remote Git blob does not match exact local bytes'
+          print('CANONICAL_DATA_BLOB '+json.dumps({'sha':expected,'bytes':len(raw),'sha256':hashlib.sha256(raw).hexdigest()}),flush=True)
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as output:
+              output.write('Exact canonical explanation bytes registered as Git blob `'+expected+'`. No synthesis, activation or source reserialization occurred.\n')
+          PY
