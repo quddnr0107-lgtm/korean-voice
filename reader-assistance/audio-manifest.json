@@ -1,13 +1,125 @@
 {
-  "schema": "reader-assistance-audio-pack.v1",
+  "clips": {
+    "06f20f7c092f93f7cc93052c1e4921ec28d65e7945a456b26410f147ed449041": {
+      "durationMs": 14900,
+      "length": 182748,
+      "offset": 0,
+      "pack": "9450f90bd182bdd436f0ccdde63a876ad6f863ebbc4fb740db681a17348260fa",
+      "sha256": "ff52b4b174fe5bcc2bc788aba44b31986c9af1edb3acf64cd1b68add3c73f408",
+      "textSha256": "965679b3e7ee0e0fa1aa10a617fffd00065d625c187e63fe49617c4f93c95983"
+    },
+    "6e29cb12968e331a641a70a87898fb2c48105d2220ccba8398a51c121a8216c8": {
+      "durationMs": 9810,
+      "length": 124893,
+      "offset": 0,
+      "pack": "a32f046b171eb327be9fa3da381473e079fea6ffdc17e6ee21110677a3c643a4",
+      "sha256": "f6a9b747a760fc5f7fcbc472953f691dbdc8a52d41ca26ce3af5d33590d63ecc",
+      "textSha256": "de0d2fad927723a2fe7c38900ff349810961930ef524ceed5a423be67f9c5def"
+    },
+    "b0fba2ae1e34da0747c78ae4995d20dcf6dd6996f31dea77a117e6f0fa82486b": {
+      "durationMs": 11020,
+      "length": 136155,
+      "offset": 0,
+      "pack": "bf53b59ba23e13f182895a00c67b27a0f2506c4cc808ddd8f304dc8a2d1f9706",
+      "sha256": "90c05226e9e944a1ac9f6f6caad1a72b086428181d04a00af357062dcc2b208c",
+      "textSha256": "ca14b822849c355fd459c9ecfa0b16a38ee7e73f389475c781b899d6be3e5553"
+    },
+    "b7914db23b6bdbd02a3040b1c6da3a09cbd5ed99f6c3ce24eb0c65410aff9d4d": {
+      "durationMs": 14920,
+      "length": 185363,
+      "offset": 136155,
+      "pack": "bf53b59ba23e13f182895a00c67b27a0f2506c4cc808ddd8f304dc8a2d1f9706",
+      "sha256": "fca2c1c55abcdffccb67350befef4815c756408eaf129c1af723605b82b12ef7",
+      "textSha256": "bcda662d7d62ebcb05445f413ad861251788baf414d08c55f16df3cfbed05f51"
+    },
+    "cc616f35ce183ab4ad5857161c8716eced478f5e7a7c75a6dc9ac98e67ecde6b": {
+      "durationMs": 22330,
+      "length": 281163,
+      "offset": 0,
+      "pack": "696424bc117a6bd4465ebfe428171b72ce782b8a291f247f789812ca66138f80",
+      "sha256": "67aa468755946b981b3b7326c8729f6e1c49a29a1b044a41608fd8d3043fd65a",
+      "textSha256": "ca37db2d0c3538a1c1a8a3289142ada80e8253e33bf13e5250426e970c849177"
+    },
+    "e0f20b8db5d53e93fcd0917e722b6a1c1ed91d987d5a717aa2d1e329c97952a3": {
+      "durationMs": 19230,
+      "length": 233495,
+      "offset": 0,
+      "pack": "6bccaa6b7e3d10c28b6acd72ccc8dd69790c6fc718ae688629d2363d73412d30",
+      "sha256": "424dbf26d1274d572e88a5c76a346f57f0df0c2d16f4134fdcc79cf8623d6f64",
+      "textSha256": "c398ef7e4c0820f63cded383a1c17c93ef6ee22d1b314007eb8b1e2431ee4eaa"
+    },
+    "e7df92ccda1e0887f84ea93cb24e97ef4a556c54742d23059361423fa57118bb": {
+      "durationMs": 13850,
+      "length": 177478,
+      "offset": 233495,
+      "pack": "6bccaa6b7e3d10c28b6acd72ccc8dd69790c6fc718ae688629d2363d73412d30",
+      "sha256": "50ebfcdd9b6a3a4158a775cce3701947bbde914d03882fe85c9398a07f3e7c79",
+      "textSha256": "0cbb0877acf6858a5b1ba661502ff81eca62bac30644d87fcbc39848384c7412"
+    }
+  },
   "complete": false,
-  "voice": "f1",
+  "entries": [
+    {
+      "audioKey": "b0fba2ae1e34da0747c78ae4995d20dcf6dd6996f31dea77a117e6f0fa82486b",
+      "id": "military-decree-136-3"
+    },
+    {
+      "audioKey": "06f20f7c092f93f7cc93052c1e4921ec28d65e7945a456b26410f147ed449041",
+      "id": "military-decree-136-4-proviso"
+    },
+    {
+      "audioKey": "cc616f35ce183ab4ad5857161c8716eced478f5e7a7c75a6dc9ac98e67ecde6b",
+      "id": "military-decree-136-7"
+    },
+    {
+      "audioKey": "e0f20b8db5d53e93fcd0917e722b6a1c1ed91d987d5a717aa2d1e329c97952a3",
+      "id": "military-decree-136-8"
+    },
+    {
+      "audioKey": "b7914db23b6bdbd02a3040b1c6da3a09cbd5ed99f6c3ce24eb0c65410aff9d4d",
+      "id": "military-decree-136-8-1"
+    },
+    {
+      "audioKey": "e7df92ccda1e0887f84ea93cb24e97ef4a556c54742d23059361423fa57118bb",
+      "id": "military-decree-136-8-2"
+    },
+    {
+      "audioKey": "6e29cb12968e331a641a70a87898fb2c48105d2220ccba8398a51c121a8216c8",
+      "id": "military-decree-136-8-4"
+    }
+  ],
+  "expectedEntries": 7,
+  "packs": {
+    "696424bc117a6bd4465ebfe428171b72ce782b8a291f247f789812ca66138f80": {
+      "sha256": "696424bc117a6bd4465ebfe428171b72ce782b8a291f247f789812ca66138f80",
+      "size": 281762,
+      "url": "https://github.com/quddnr0107-lgtm/korean-voice/releases/download/reader-assistance-f1-v1-packs/696424bc117a6bd4465ebfe428171b72ce782b8a291f247f789812ca66138f80.bin"
+    },
+    "6bccaa6b7e3d10c28b6acd72ccc8dd69790c6fc718ae688629d2363d73412d30": {
+      "sha256": "6bccaa6b7e3d10c28b6acd72ccc8dd69790c6fc718ae688629d2363d73412d30",
+      "size": 411848,
+      "url": "https://github.com/quddnr0107-lgtm/korean-voice/releases/download/reader-assistance-f1-v1-packs/6bccaa6b7e3d10c28b6acd72ccc8dd69790c6fc718ae688629d2363d73412d30.bin"
+    },
+    "9450f90bd182bdd436f0ccdde63a876ad6f863ebbc4fb740db681a17348260fa": {
+      "sha256": "9450f90bd182bdd436f0ccdde63a876ad6f863ebbc4fb740db681a17348260fa",
+      "size": 183347,
+      "url": "https://github.com/quddnr0107-lgtm/korean-voice/releases/download/reader-assistance-f1-v1-packs/9450f90bd182bdd436f0ccdde63a876ad6f863ebbc4fb740db681a17348260fa.bin"
+    },
+    "a32f046b171eb327be9fa3da381473e079fea6ffdc17e6ee21110677a3c643a4": {
+      "sha256": "a32f046b171eb327be9fa3da381473e079fea6ffdc17e6ee21110677a3c643a4",
+      "size": 125491,
+      "url": "https://github.com/quddnr0107-lgtm/korean-voice/releases/download/reader-assistance-f1-v1-packs/a32f046b171eb327be9fa3da381473e079fea6ffdc17e6ee21110677a3c643a4.bin"
+    },
+    "bf53b59ba23e13f182895a00c67b27a0f2506c4cc808ddd8f304dc8a2d1f9706": {
+      "sha256": "bf53b59ba23e13f182895a00c67b27a0f2506c4cc808ddd8f304dc8a2d1f9706",
+      "size": 322393,
+      "url": "https://github.com/quddnr0107-lgtm/korean-voice/releases/download/reader-assistance-f1-v1-packs/bf53b59ba23e13f182895a00c67b27a0f2506c4cc808ddd8f304dc8a2d1f9706.bin"
+    }
+  },
+  "readyEntries": 7,
   "recipe": "reader-assistance-f1-v1",
-  "sourceDataSha256": null,
-  "recipeSha256": null,
-  "expectedEntries": 0,
-  "readyEntries": 0,
-  "packs": {},
-  "clips": {},
-  "entries": []
+  "recipeSha256": "325696fa16298826933979aa72f34cebf1aca3c1e473bb5035cd10265097f0b8",
+  "schema": "reader-assistance-audio-pack.v1",
+  "sourceDataSha256": "9e386157fec6450c85d999679a1207ebca4b8e702a8a5acbbc2d240c0ba31205",
+  "voice": "f1"
 }
