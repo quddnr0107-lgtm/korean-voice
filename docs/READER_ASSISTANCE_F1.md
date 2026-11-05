@@ -87,3 +87,29 @@ The workflow runs on explicit dispatch or the dedicated pilot/bake branches. It 
 ## Version-one limitation
 
 This first production recipe is intentionally frozen. Its source pin includes the complete bake script, so even a transport-only edit changes the recipe hash. Existing packs from a different recipe hash are rejected in this version's namespace. Do not describe an arbitrary settings/code change as an automatic in-place upgrade. A future renderer change needs a reviewed new recipe/namespace (or a separately reviewed compatibility migration); it must not clobber v1 audio. ASR evaluation lives in a separate module and does not change the selected F1 synthesis recipe or its audio keys.
+
+### Independent pilot cross-check
+
+`tools/reader_assistance_asr.py --model medium --export-review-clips reader-assistance-review-clips --publish`
+transcribes the same seven immutable MP3 clips with the official
+`Systran/faster-whisper-medium` CPU int8 model, without a target-text prompt or
+any synthesis. The default remains `--model small`. The accepted model names
+are an explicit allowlist, and the actual model revision is recorded.
+
+Push the isolated `codex/reader-assistance-f1-asr-medium-20261105` branch to run
+this cross-check. Medium evidence is published as
+`reader-assistance/asr-report-medium.json` on `data/reader-assistance-f1-asr-pilot`;
+the existing `reader-assistance/asr-report.json` small-model evidence is retained.
+The comparison reads the previous small report by immutable Git blob
+`4e3726531285baad83cb4d5efc2f224761aa1dc6`, verifies every text/audio identity,
+and exports only clips that either model marks for review. The temporary Actions
+artifact contains exact MP3 bytes plus both reports and a comparison JSON, with
+one-day retention and no audio re-encoding. Model cache saving runs even when
+transcription disagreement makes the final job fail; such a failure never marks
+the audio or full corpus as approved.
+
+The first successful small-model pilot assessed 106.06 seconds of audio in
+20.346 CPU seconds (RTF 0.1918). All seven had matching extracted critical legal
+tokens, two had exact normalized transcripts, and five required review for other
+transcription disagreements. These are limited pilot measurements, not a claim
+that the spoken words were manually checked or that all-corpus accuracy is known.

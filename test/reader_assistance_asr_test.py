@@ -1,4 +1,5 @@
 import importlib.util
+import json
 from pathlib import Path
 import sys
 import tempfile
@@ -12,6 +13,52 @@ spec.loader.exec_module(A)
 
 
 class LegalASR(unittest.TestCase):
+    def test_medium_publish_path_preserves_small_report(self):
+        self.assertEqual(A.report_path('small'), 'reader-assistance/asr-report.json')
+        self.assertEqual(A.report_path('medium'), 'reader-assistance/asr-report-medium.json')
+        with self.assertRaisesRegex(Exception, 'Unsupported'):
+            A.report_path('../../audio-manifest')
+
+    def test_review_export_keeps_disagreement_even_if_medium_matches(self):
+        target = '보충역에 편입하지 않습니다.'
+        same = A.assess(target, target)
+        different = A.assess(target, '보충력에 편입하지 않습니다.')
+        content = b'byte-exact MP3 fixture'
+        for item in (same, different):
+            item['mp3Sha256'] = A.R.sha256(content)
+        baseline = {'results': {'a' * 64: different, 'b' * 64: same}}
+        report = {'results': {'a' * 64: same, 'b' * 64: same},
+                  'asrProfile': {'modelRepository': A.ASR_MODELS['medium']}}
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory)
+            count = A.export_review_clips(path, baseline, report, {'a' * 64: content, 'b' * 64: content})
+            self.assertEqual(count, 1)
+            self.assertEqual((path / ('a' * 64 + '.mp3')).read_bytes(), content)
+            self.assertFalse((path / ('b' * 64 + '.mp3')).exists())
+            comparison = json.loads((path / 'comparison.json').read_text())
+            self.assertFalse(comparison[0]['directListeningCompleted'])
+            self.assertEqual(comparison[0]['smallTranscript'], different['transcript'])
+            with self.assertRaisesRegex(Exception, 'exact MP3'):
+                A.export_review_clips(path, baseline, report, {'a' * 64: b'changed bytes'})
+
+    def test_baseline_is_rejected_if_audio_or_source_changed(self):
+        key, content = 'a' * 64, b'fixture'
+        plan = {'sourceDataSha256': 'source', 'recipeSha256': 'recipe',
+                'tasks': {key: {'text': '원문', 'textSha256': A.R.sha256('원문'.encode())}}}
+        clips = {key: {'sha256': A.R.sha256(content)}}
+        report = {'schema': 'reader-assistance-asr-report.v1', 'pilot': True,
+                  'sourceDataSha256': 'source', 'recipeSha256': 'recipe',
+                  'asrProfile': {'modelRepository': A.ASR_MODELS['small']},
+                  'results': {key: {'target': '원문', 'textSha256': plan['tasks'][key]['textSha256'],
+                                    'mp3Sha256': clips[key]['sha256']}}}
+        A.validate_baseline(report, plan, clips)
+        report['results'][key]['mp3Sha256'] = 'wrong'
+        with self.assertRaisesRegex(Exception, 'mismatch'):
+            A.validate_baseline(report, plan, clips)
+        report['sourceDataSha256'] = 'different source'
+        with self.assertRaisesRegex(Exception, 'Wrong source'):
+            A.validate_baseline(report, plan, clips)
+
     def test_ct2_vocabulary_is_required_in_addition_to_tokenizer(self):
         with tempfile.TemporaryDirectory() as directory:
             model = Path(directory)
