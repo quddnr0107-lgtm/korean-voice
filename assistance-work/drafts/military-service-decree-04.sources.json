@@ -1,0 +1,71 @@
+{
+  "shard": "military-service-decree-04",
+  "author": "f1_validation",
+  "reviewStatus": "draft",
+  "notes": [
+    {
+      "sourceIndices": [2202, 2203],
+      "topic": "전환복무 해제와 병역처분변경 준용",
+      "verifiedContent": "법33의7제1항2호(현역·전환복무자의 예술체육 편입), 법65제1~3항·11항(질병장애·수형·귀화등부적합·가족국외이주·출산상근전환·계속복무부적합), 시행령137제1항 실제 본문을 읽음. 해제요청 및 해당자 해제는 의무로, 개별 보충역·전시근로역 편입 등의 판단 요건을 모두 무조건 편입으로 바꾸지 않도록 작성."
+    },
+    {
+      "sourceIndices": [2284],
+      "topic": "대체역 취소 후 원 신분 복귀",
+      "sources": ["https://www.law.go.kr/LSW/lsInfoR.do?ancYnChk=0&chrClsCd=010202&efYd=20260421&lsiSeq=285515"],
+      "verifiedContent": "대체역법25제2항은 편입취소 시 대체역 병적 제적 및 편입 전 병역 종류로 복귀하여 병역이행. 이 시행령 호는 그중 사회복무요원으로 소집할 사람에 한정하므로 보충역으로 돌아온 소집 대상자의 별도 소집으로 설명."
+    },
+    {
+      "sourceIndices": [2317, 2318, 2319, 2320, 2321, 2322, 2323],
+      "topic": "고발·복무중단·복무재개 경계",
+      "verifiedContent": "법89의2제1호 및89의3, 시행령165제2~3항을 직접 읽음. 고발 자체만으로 중단이 아니며 구속/집행유예·선고유예 외 형 선고/고발 후 불송치불기소 또는 선고 전 합계3일이상 추가이탈 조건이 필요. 복무기관장 통지와 지방청장 통지를 구분했고 중단기간 인정은 죄안됨·혐의사실불인정 불송치불기소 및 무죄에 한정."
+    },
+    {
+      "sourceIndices": [2327],
+      "topic": "국가공무원 근무시간 준용",
+      "sources": [
+        "https://www.law.go.kr/LSW/lsLawLinkInfo.do?chrClsCd=010202&lsId=002643&lsJoLnkSeq=1000824164&print=print",
+        "https://www.law.go.kr/LSW/lsLinkCommonInfo.do?lsJoLnkSeq=1033630815"
+      ],
+      "verifiedContent": "국가공무원 복무규정9조 직접 확인. 점심제외 주40시간, 토요일 휴무 원칙,9~18시 및12~13시 점심, 기관특수성시1시간 범위 점심변경. 2026-6-23본문과2026-10-2검색원문에 해당 조 내용 동일함."
+    },
+    {
+      "sourceIndices": [2343],
+      "topic": "대규모재난의 범위와 휴가조건",
+      "sources": [
+        "https://law.go.kr/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1030601285",
+        "https://www.law.go.kr/LSW/lsLawLinkInfo.do?chrClsCd=010202&lsId=009708&lsJoLnkSeq=1000589763&print=print"
+      ],
+      "verifiedContent": "재난안전법14제1항과 시행령13조 확인. 인명재산피해·사회경제영향이 커서 주무부처/지역본부 건의로 중앙대책본부장이 인정하거나 이에 준해 중앙본부 설치가 필요하다고 판단하는 재난. 청원휴가10일은 이 대규모재난 피해와 복무기관장의 장기수습 필요 인정이 함께 필요."
+    },
+    {
+      "sourceIndices": [2345],
+      "topic": "본문 목록 병합 결함",
+      "sourceDefect": "한 sourceIndex에 제59조제1항제2호타목 배우자 임신검진 휴가와 다음 항목 제목인 '3. 병가'가 이어 붙음.",
+      "verifiedContent": "배우자검진 동행10일이내 청원휴가와 후속 병가를 2문장으로 구분함. 원문 snapshot 및 identity는 변경하지 않음."
+    },
+    {
+      "sourceIndices": [2353],
+      "topic": "건강진단 종류",
+      "sources": [
+        "https://www.law.go.kr/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1030698555",
+        "https://www.law.go.kr/lsLinkCommonInfo.do?lsJoLnkSeq=1034050001",
+        "https://www.law.go.kr/lsLinkCommonInfo.do?lsJoLnkSeq=1034048105"
+      ],
+      "verifiedContent": "산업안전보건법129일반건강진단,130특수건강진단등,131임시건강진단명령 내용을 확인하여 숫자만의 참조를 진단 종류로 바꿈. 건강보험·결핵검진은 원문에 이미 종류가 명시되어 그대로 풀이."
+    },
+    {
+      "sourceIndices": [2356],
+      "topic": "제1급감염병 정의",
+      "sources": [
+        "https://www.law.go.kr/lsLinkCommonInfo.do?lsJoLnkSeq=1024110819",
+        "https://www.law.go.kr/lsLinkCommonInfo.do?lsJoLnkSeq=1033656621"
+      ],
+      "verifiedContent": "감염병예방법2제2호는 생물테러감염병 또는 치명률·집단발생우려가 커 즉시 신고하고 높은 수준의 격리가 필요한 제1급감염병을 정의. 공가 사유는 이 감염병의 필수·임시예방접종 또는 법42제2항3호 검사로 한정하여 모든 접종검사로 확대하지 않음."
+    },
+    {
+      "sourceIndices": [2363, 2365, 2366, 2367, 2379, 2380],
+      "topic": "허가의무·재량 및 수치 경계",
+      "verifiedContent": "방송통신/원격수업은 근무시간 후 학업이어야 하며 출석수업 연가는 특별사유 없으면 허용의무. 병가미사용 추가연가는 의무위반이 없고 소집일부터해제30일전까지 공무외병가를 세는 재량허가. 출퇴근 곤란은 편도8km초과, 왕복3시간이상으로 경계가 서로 다름을 보존."
+    }
+  ]
+}

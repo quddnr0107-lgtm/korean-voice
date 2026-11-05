@@ -1,0 +1,57 @@
+{
+  "shard": "military-service-decree-03",
+  "author": "f1_validation",
+  "reviewStatus": "draft",
+  "notes": [
+    {
+      "sourceIndices": [1924, 1925, 1926],
+      "topic": "전문인력 양성기관 지정·평가 별표",
+      "sources": [
+        "https://www.law.go.kr/LSW/flDownload.do?flSeq=169583305",
+        "https://www.law.go.kr/LSW/flDownload.do?flSeq=169583311"
+      ],
+      "localEvidence": ["source/military-decree-nco-school-criteria.pdf", "source/military-decree-nco-school-evaluation.pdf"],
+      "verifiedContent": "시행령 현행 본문의 별표 링크에서 직접 받은 별표1의3·1의4를 읽음. 특수목적고·특성화고, 담당자 각1명 이상, 군기술교육40% 이상, 산학겸임교사 등1명 이상 및 시설·교육·예산계획 요건을 구별. 평점평균80 이상 적합이지만 예산 부정수급 및 집행의 불량평가 예외가 있음. 2년 연속80 미만 외에 장관의 사업수행 곤란 판단이 있어야 성과에 따른 취소사유이며 자동취소 아님."
+    },
+    {
+      "sourceIndices": [1986],
+      "topic": "상근예비역 전환 복무기간의 OCR 산식 복원",
+      "sources": ["https://www.law.go.kr/LSW/flDownload.do?flSeq=24130428"],
+      "localEvidence": ["source/military-decree-resident-reserve-formula.gif"],
+      "verifiedContent": "공식 산식 이미지를 직접 열어 확인: (현역 의무복무기간-현역으로 복무한 일수)/현역 의무복무기간 × 상근예비역 의무복무기간. sourceIndex4292의 자녀 출산으로 상근전환하는 맥락을 연결. 소수점 이하 버림. 원문 snapshot의 훼손된 ASCII 산식은 변경하지 않음."
+    },
+    {
+      "sourceIndices": [2065],
+      "topic": "선박직원의 범위",
+      "sources": ["https://www.law.go.kr/lsLawLinkInfo.do?chrClsCd=010202&lsJoLnkSeq=1000457893"],
+      "verifiedContent": "선박직원법2제3호의 선박직원은 해기사로서 선장·항해사·기관장·기관사·전자기관사·통신장·통신사·운항장·운항사. 본문 설명은 항해사·기관사 등으로 요약하고 5년 내3년 및 해운500톤/수산100톤 기준을 유지함."
+    },
+    {
+      "sourceIndices": [2077, 2078],
+      "topic": "선원법 휴가 준용 원문 확인",
+      "sources": [
+        "https://www.law.go.kr/LSW/lsSideInfoP.do?docCls=jo&joBrNo=00&joNo=0062&lsiSeq=273639&urlMode=lsScJoRltInfoR",
+        "https://www.law.go.kr/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1032442521",
+        "https://www.law.go.kr/LSW/lsSideInfoP.do?docCls=jo&joBrNo=00&joNo=0074&lsiSeq=273639&urlMode=lsScJoRltInfoR"
+      ],
+      "verifiedContent": "62제5항은 출산휴가가 아니라 주4시간 시간외근로를 월1일 유급휴가로 대신하는 규정. 69조의8개월 계속승무·이후4개월내 부여·항해종료까지 연기가능·8개월미만 발생휴가, 70조의월6일/연해·15일내국내항기항 월5일 및 장기근속 가산, 71조의귀국다음날~승선전날(해외승선출국전날)·공휴일노동절필수교육등제외, 74조의일정어선1년계속근무특례를 읽음. 설명은 3문장으로 요약하며 장기근속의 세부 가산 계산과 소수기간 올림 등은 원문참조 근거에 남김."
+    },
+    {
+      "sourceIndices": [2130, 2131, 2132],
+      "topic": "편입취소 후 잔여 복무기간 산식과 본문 누락",
+      "sources": [
+        "https://www.law.go.kr/LSW/lsInfoR.do?ancYnChk=0&chrClsCd=010202&efYd=20261002&lsiSeq=290421",
+        "https://www.law.go.kr/LSW/flDownload.do?flSeq=103486161",
+        "https://www.law.go.kr/LSW/flDownload.do?flSeq=103486163"
+      ],
+      "localEvidence": ["source/military-decree-current.html", "source/military-decree-ship-to-active-formula.gif", "source/military-decree-ship-to-social-formula.gif"],
+      "sourceDefect": "snapshot sourceIndex2131은 제40조의7제5항의 산식 소개 문장까지만 있고, 소수점 이하 숫자를 계산하지 않는다는 문장과 제1·2호 산식이 빠져 있음.",
+      "verifiedContent": "공식 현행 본문 및 두 산식 이미지를 직접 확인. 공통 비율=(종전 의무복무기간-복무한 일수)/종전 의무복무기간. 제1호는 현역 의무복무기간, 제2호는 사회복무요원 의무복무기간을 곱하고 소수점 이하는 버림. 6개월 미만의 사회복무 전환 기준은 제1호 현역 산출기간임. snapshot 불변, 초고 설명에 확인한 산식 의미를 연결함."
+    },
+    {
+      "sourceIndices": [2115, 2116, 2117, 2118, 2119, 2120, 2121, 2122, 2153, 2154, 2155, 2156, 2157],
+      "topic": "통보기한과 인권침해 인정·이동",
+      "verifiedContent": "법23의3 원문2029의 발생일부터14일내 업체장 통보를 각 사유에 붙임. 지방청의 병무청 보고는 별도7일 기한이며 대상도 명칭소재지·기준선박상실·휴폐업 등으로 한정. 법23의5제3항2051의 다른 업체 이동은 할 수 있음. 관계기관 조사에서 위반확인 외 지방청장의 인권침해 인정도 필요함."
+    }
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "shard": "military-service-decree-05",
+  "author": "f1_validation",
+  "reviewStatus": "draft",
+  "notes": [
+    {
+      "sourceIndices": [2389, 2390, 2391, 2392, 2394, 2395],
+      "topic": "보수 산정에 더하는 환산 복무기간",
+      "sources": [
+        "https://www.law.go.kr/LSW/lsInfoR.do?ancYnChk=0&chrClsCd=010202&efYd=20261002&lsiSeq=290421",
+        "https://www.law.go.kr/LSW/flDownload.do?flSeq=27516676",
+        "https://www.law.go.kr/LSW/flDownload.do?flSeq=24130436",
+        "https://www.law.go.kr/LSW/flDownload.do?flSeq=135365701",
+        "https://www.law.go.kr/LSW/flDownload.do?flSeq=135363651",
+        "https://www.law.go.kr/LSW/flDownload.do?flSeq=24867615",
+        "https://www.law.go.kr/LSW/lsInfoR.do?ancYnChk=0&chrClsCd=010202&efYd=20261002&lsiSeq=290381",
+        "https://www.law.go.kr/LSW/flDownload.do?flSeq=68268197"
+      ],
+      "localEvidence": [
+        "source/military-decree-current.html",
+        "source/military-decree-artists-to-social.gif",
+        "source/military-decree-professionals-to-social.gif",
+        "source/military-decree-fraud-transfer-to-social.gif",
+        "source/military-decree-researchers-to-social.gif",
+        "source/military-decree-active-to-social.gif",
+        "source/alternative-service-decree-current.html",
+        "source/alternative-to-social-formula.gif"
+      ],
+      "verifiedContent": "병역시행령68의19·70의2·92·92의2 및 대체역시행령39의 실제 본문과 사회복무 환산 산식 그림을 직접 열어 확인. 보수 기준에 더하는 것은 종전 근무일수 그대로가 아니라 사회복무 의무기간에서 산출 잔여기간을 뺀 기간임. 예술체육 공익복무 미달 공제, 부정전직 전까지만 복무인정(이후 군사교육 인정 예외 있음), 일반 취소의 기존 복무비율을 구분. 산식은 남은 종전 복무비율에 새 의무기간을 곱하고 소수점 이하를 버리는 방식.",
+      "sourceDefects": [
+        "2744·2853에 산식 이미지 원문 누락",
+        "3378·3379는 부정전직 제3항 산식인데 제4항 뒤에 놓여 있음; 실제 제4항은 일반 복무일수 산식",
+        "해당 원문 수정은 별도 담당자에게 전달했으며 초고의 sourceId는 그대로 유지"
+      ]
+    },
+    {
+      "sourceIndices": [2408],
+      "topic": "법31의2 항 번호의 시행시점 차이",
+      "sources": [
+        "https://law.go.kr/lsLinkCommonInfo.do?chrClsCd=010202&lspttninfSeq=112563",
+        "https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=290783"
+      ],
+      "verifiedContent": "시행령63 현행은 법31의2제2항을 인용. corpus 본법은 2026-6-9 개정·2026-12-10 시행 조문을 반영하여 제2항에 전자복무관리시스템을 신설하고 감독권을 제3항(source2405)으로 옮김. 설명은 실제 관리감독 내용을 연결하며 전자시스템으로 잘못 풀지 않음. 원문 인용번호는 변경하지 않음."
+    },
+    {
+      "sourceIndices": [2432, 2433, 2434, 2435, 2436, 2437, 2438, 2441, 2446],
+      "topic": "분할복무 요건·기한·중단취소",
+      "sources": ["https://law.go.kr/lsInfoP.do?lsId=000959"],
+      "verifiedContent": "법31의3 본문2422~2429 확인: 본인치료2년 원칙과 입원·거동불편 등 인정시 치료기간 추가, 가족간병·재난가사 합계6개월. 1개월이상 치료는 시행령 신청기준. 가족간병 필요라는 상위문맥을2434에 붙임. 자연재해대책법2제3호의 풍수해 종류를 실제 확인. 법36제5항3호 사회복무요원의 산업기능요원 편입 맥락을2446에 연결."
+    },
+    {
+      "sourceIndices": [2488, 2489, 2490, 2491, 2492, 2495, 2496, 2501, 2503],
+      "topic": "괴롭힘 조사 주체와 기관 재지정 사유",
+      "verifiedContent": "법31의5·31의6·32 실제 본문 확인. 지방청의 괴롭힘 조사는 기관장이 조사하지 않거나 기관장이 가해자인 경우의 재량조사. 재지정 신청은 동거가족 이사로 통근불가 또는 질병장애로 현기관 계속근무불가. 폐쇄이동 및 형선고 정상근무불가는 별도 명단에 따른 지정이며 형선고자의 재지정불가 사정 예외를 구분."
+    },
+    {
+      "sourceIndices": [2546, 2549, 2565, 2582, 2583, 2584],
+      "topic": "예외와 경고·교육 요건",
+      "verifiedContent": "잔여3개월이하 이의제한은 자살폭력 사고우려 예외가 있음. 법33 경고 및5일연장과89의3 형사처벌 경계 확인. 복무지도교육은 해당사유만으로 무조건 실시하지 않고 법33의2제3항의 병무청장 필요인정 및 재량을 유지함."
+    },
+    {
+      "sourceIndices": [2628, 2629, 2630, 2631, 2632, 2633, 2634],
+      "topic": "예술경연 입상요건",
+      "verifiedContent": "국제대회는2위이상 및성적순2명이내를 모두 충족해야 함. 한국인 비율 등에 따른 지정대회는1위최고성적만, 1위없는 일반대회의 예외는 나목인원기준의 예외이므로 가목2위이상 조건은 유지하여2632에 명시. 국내대회는 국제대회없는 분야·지정대회·경쟁부문·1위최고성적이라는 조건을 유지. 입상만으로 자동편입된다는 표현을 사용하지 않음."
+    }
+  ]
+}

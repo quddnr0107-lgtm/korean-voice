@@ -1,5 +1,5 @@
-# 보조설명 authoring checkpoint
+# 보조설명 작성·검토 체크포인트
 
-These are manually authored draft explanations, not an approved corpus. Each row is tied to an exact original source identity; no private questions or answers are included. Independently reviewed records will be maintained separately. Do not publish this working set to learners or synthesize it as complete.
+6073개 원문에 대응하는 전체 초안입니다. draft는 승인·완료를 뜻하지 않습니다. reviews는 작성자와 다른 검토자가 실제 원문 및 참조를 읽고 남긴 개별 검토 기록입니다. 전체 승인과 음성 검증이 끝나기 전에는 운영용 데이터로 사용하지 않습니다.
 
-Current draft coverage: 5239 of 6,073 body identities. Remaining authoring and all independent review gates remain open. F1 audio is content-addressed; only approved final text may enter the full bake.
+퀴즈·정답 데이터는 포함하지 않습니다. 음성 합성을 자동 실행하지 않는 작업 경로입니다.

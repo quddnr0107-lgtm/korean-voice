@@ -26,7 +26,7 @@ Write one record per actually checked row to `reviews/<same-shard-name>.jsonl`:
   "reviewer": "f1_validation",
   "textSha256": "SHA256 of exact final explanation UTF-8 bytes",
   "originalSha256": "originalSha256 from rows.jsonl",
-  "sourceDataSha256": "2e15d59281fc68f2af0908cfd4e7b72898d26ae35345319247e3f979efc9c12b",
+  "sourceDataSha256": "d5fdeb3cb755635318685b50332012c51cbb3e0ca54ca188ff994b7d7debdd00",
   "unresolvedIssues": [],
   "resolutions": [],
   "note": "Specific review note where useful; otherwise concise scope statement"
