@@ -1,0 +1,199 @@
+{
+  "schema": "reader-assistance-display-corrections.v1",
+  "sourceDataSha256": "d5fdeb3cb755635318685b50332012c51cbb3e0ca54ca188ff994b7d7debdd00",
+  "corrections": [
+    {
+      "sourceId": "cdf522b18c4ad0f4a77a30d53295e17c9a8bc3e89a3853058df6136697a8f775",
+      "sourceIndex": 3374,
+      "author": "root",
+      "status": "approved",
+      "hidden": false,
+      "hasReconstructedSpeech": true,
+      "appendixFlag": false,
+      "reviewer": "f1_frontend",
+      "originalSha256": "b15f9da1664286b4a81ce9c6ef4a303d6a442a1d7952f5c0de01576ad35e8643",
+      "sourceDataSha256": "d5fdeb3cb755635318685b50332012c51cbb3e0ca54ca188ff994b7d7debdd00",
+      "unresolvedIssues": [],
+      "evidence": [
+        {
+          "source": "../yebijun/_deploy/assets/appendix/reader-assistance/military-decree-fraud-transfer-to-active.gif",
+          "sha256": "d0e07fae966ce2c206f328e8b8c73e99022ae24d5d573bf68259d45b061d9841"
+        },
+        {
+          "source": "../yebijun/_deploy/assets/appendix/reader-assistance/military-decree-fraud-transfer-to-social.gif",
+          "sha256": "5daa61a4c244c9faf5f8e2edc8c3c89085ad9035ae964fafcedd456dd2e2c319"
+        },
+        {
+          "source": "../yebijun/.github/appendix-tables/병역법시행령-본문산식-3374.json",
+          "sha256": "db213873a285353e5fbf7a53e0f54fa52e46e0fae4c3f2a79cfcfa796309f2fc"
+        },
+        {
+          "source": "https://www.law.go.kr/LSW/flDownload.do?flSeq=135363647"
+        },
+        {
+          "source": "https://www.law.go.kr/LSW/flDownload.do?flSeq=135365701"
+        }
+      ],
+      "resolutions": [
+        {
+          "issue": "산식 누락·OCR 배열 및 표시 연결",
+          "evidence": "실제 _deploy/appendix_data.json studyImages/studyHideLineIds와 appendix-speech.json, 아래 공식 그림 및 복원 낭독 JSON을 대조",
+          "result": "공식 제92조제3항의 두 분수 그림과 실제 앞말·낭독을 대조했다. 부정 전직 전까지만 인정하는 현역병·사회복무요원 환산식이며 뒤엉킨 OCR 3378·3379의 내용을 이 앵커에서 모두 표시한다."
+        }
+      ]
+    },
+    {
+      "sourceId": "e31ed8980da0ec4d00d0d0fd18efdab7a88ffd2f2d1da4baf4575b5228c5ff2c",
+      "sourceIndex": 3376,
+      "author": "root",
+      "status": "approved",
+      "hidden": false,
+      "hasReconstructedSpeech": true,
+      "appendixFlag": false,
+      "reviewer": "f1_frontend",
+      "originalSha256": "945a16f8673272167673eba66227bdddf41dc80fd5e1c84818e216532cbee40c",
+      "sourceDataSha256": "d5fdeb3cb755635318685b50332012c51cbb3e0ca54ca188ff994b7d7debdd00",
+      "unresolvedIssues": [],
+      "evidence": [
+        {
+          "source": "../yebijun/_deploy/assets/appendix/reader-assistance/military-decree-researchers-to-active.gif",
+          "sha256": "d0fe952f0df156b0b5cc70a520af548811b41e57916ac13a7655a2308f95a109"
+        },
+        {
+          "source": "../yebijun/_deploy/assets/appendix/reader-assistance/military-decree-researchers-to-social.gif",
+          "sha256": "49c7fa550055a8991aa1ecb2410b4f942b13b32fd0cb360ad901aeb395644d65"
+        },
+        {
+          "source": "../yebijun/.github/appendix-tables/병역법시행령-본문산식-3376.json",
+          "sha256": "6e8956c324e6bdd5c67125185774446a71d69feaf2afa8b79298e62094e74458"
+        },
+        {
+          "source": "https://www.law.go.kr/LSW/flDownload.do?flSeq=135363649"
+        },
+        {
+          "source": "https://www.law.go.kr/LSW/flDownload.do?flSeq=135363651"
+        }
+      ],
+      "resolutions": [
+        {
+          "issue": "산식 누락·OCR 배열 및 표시 연결",
+          "evidence": "실제 _deploy/appendix_data.json studyImages/studyHideLineIds와 appendix-speech.json, 아래 공식 그림 및 복원 낭독 JSON을 대조",
+          "result": "공식 제92조제4항의 두 분수 그림과 실제 앞말·낭독을 대조했다. 일반적인 복무한 일수를 공제하므로 부정 전직 전까지만 공제하는 제3항 산식과 별도 표시한다."
+        }
+      ]
+    },
+    {
+      "sourceId": "39253ee4cb2f4b83ea96edce3093e6fcce6fb35c80e86685b2927d0e805870a5",
+      "sourceIndex": 3378,
+      "author": "root",
+      "status": "approved",
+      "hidden": true,
+      "hasReconstructedSpeech": false,
+      "appendixFlag": false,
+      "reviewer": "f1_frontend",
+      "originalSha256": "7303dbeb68f3a9a1be93c2e5fa63b9a8f3ac71b8bf7f4245fc6795be4984540c",
+      "sourceDataSha256": "d5fdeb3cb755635318685b50332012c51cbb3e0ca54ca188ff994b7d7debdd00",
+      "unresolvedIssues": [],
+      "evidence": [
+        {
+          "source": "../yebijun/_deploy/assets/appendix/reader-assistance/military-decree-fraud-transfer-to-active.gif",
+          "sha256": "d0e07fae966ce2c206f328e8b8c73e99022ae24d5d573bf68259d45b061d9841"
+        },
+        {
+          "source": "../yebijun/_deploy/assets/appendix/reader-assistance/military-decree-fraud-transfer-to-social.gif",
+          "sha256": "5daa61a4c244c9faf5f8e2edc8c3c89085ad9035ae964fafcedd456dd2e2c319"
+        },
+        {
+          "source": "../yebijun/.github/appendix-tables/병역법시행령-본문산식-3374.json",
+          "sha256": "db213873a285353e5fbf7a53e0f54fa52e46e0fae4c3f2a79cfcfa796309f2fc"
+        },
+        {
+          "source": "https://www.law.go.kr/LSW/flDownload.do?flSeq=135363647"
+        },
+        {
+          "source": "https://www.law.go.kr/LSW/flDownload.do?flSeq=135365701"
+        }
+      ],
+      "resolutions": [
+        {
+          "issue": "산식 누락·OCR 배열 및 표시 연결",
+          "evidence": "실제 _deploy/appendix_data.json studyImages/studyHideLineIds와 appendix-speech.json, 아래 공식 그림 및 복원 낭독 JSON을 대조",
+          "result": "제92조제3항 소속 산식 OCR이 제4항 뒤에 잘못 배치되어 있다. 실제 studyHideLineIds에 숨김을 적용하고 3374에서 해당 현역병·사회복무요원 두 그림과 낭독을 모두 제공하는 것을 확인했다."
+        }
+      ]
+    },
+    {
+      "sourceId": "77595ae10ea21a277cf7ca02b132e10a61f602b31bd62b2a66a8108aa75113c1",
+      "sourceIndex": 3379,
+      "author": "root",
+      "status": "approved",
+      "hidden": true,
+      "hasReconstructedSpeech": false,
+      "appendixFlag": false,
+      "reviewer": "f1_frontend",
+      "originalSha256": "9476d597fd5f0346ddbaa2f2ce8c66ff0ec2ea9df0c48d3baee41c199edf5286",
+      "sourceDataSha256": "d5fdeb3cb755635318685b50332012c51cbb3e0ca54ca188ff994b7d7debdd00",
+      "unresolvedIssues": [],
+      "evidence": [
+        {
+          "source": "../yebijun/_deploy/assets/appendix/reader-assistance/military-decree-fraud-transfer-to-active.gif",
+          "sha256": "d0e07fae966ce2c206f328e8b8c73e99022ae24d5d573bf68259d45b061d9841"
+        },
+        {
+          "source": "../yebijun/_deploy/assets/appendix/reader-assistance/military-decree-fraud-transfer-to-social.gif",
+          "sha256": "5daa61a4c244c9faf5f8e2edc8c3c89085ad9035ae964fafcedd456dd2e2c319"
+        },
+        {
+          "source": "../yebijun/.github/appendix-tables/병역법시행령-본문산식-3374.json",
+          "sha256": "db213873a285353e5fbf7a53e0f54fa52e46e0fae4c3f2a79cfcfa796309f2fc"
+        },
+        {
+          "source": "https://www.law.go.kr/LSW/flDownload.do?flSeq=135363647"
+        },
+        {
+          "source": "https://www.law.go.kr/LSW/flDownload.do?flSeq=135365701"
+        }
+      ],
+      "resolutions": [
+        {
+          "issue": "산식 누락·OCR 배열 및 표시 연결",
+          "evidence": "실제 _deploy/appendix_data.json studyImages/studyHideLineIds와 appendix-speech.json, 아래 공식 그림 및 복원 낭독 JSON을 대조",
+          "result": "제92조제3항 소속 산식 OCR이 제4항 뒤에 잘못 배치되어 있다. 실제 studyHideLineIds에 숨김을 적용하고 3374에서 해당 현역병·사회복무요원 두 그림과 낭독을 모두 제공하는 것을 확인했다."
+        }
+      ]
+    },
+    {
+      "sourceId": "7a9ac93713c505a52afc912c6ab35ec2adef4cc825fc648bd0b08271a054ba46",
+      "sourceIndex": 4355,
+      "author": "root",
+      "status": "approved",
+      "hidden": false,
+      "hasReconstructedSpeech": true,
+      "appendixFlag": false,
+      "reviewer": "f1_frontend",
+      "originalSha256": "ca47f47b15e7d8708007a2f96fb1fc675716709a2eae65ca6bde6b28ed488f98",
+      "sourceDataSha256": "d5fdeb3cb755635318685b50332012c51cbb3e0ca54ca188ff994b7d7debdd00",
+      "unresolvedIssues": [],
+      "evidence": [
+        {
+          "source": "../yebijun/_deploy/assets/appendix/reader-assistance/military-decree-social-to-active.gif",
+          "sha256": "6a2b0298bdb1e9e4fe3556b13cff302526ead3394c5fa7a831d5effcbc9fdd71"
+        },
+        {
+          "source": "../yebijun/.github/appendix-tables/병역법시행령-본문산식-4355.json",
+          "sha256": "1dfec3f59023667bc56d94229b89c9204c98f1d1fb724c09ad20bac821e68c52"
+        },
+        {
+          "source": "https://www.law.go.kr/LSW/flDownload.do?flSeq=31320343"
+        }
+      ],
+      "resolutions": [
+        {
+          "issue": "산식 누락·OCR 배열 및 표시 연결",
+          "evidence": "실제 _deploy/appendix_data.json studyImages/studyHideLineIds와 appendix-speech.json, 아래 공식 그림 및 복원 낭독 JSON을 대조",
+          "result": "공식 제135조의2제5항의 그림과 실제 복원 낭독을 대조했다. 종전 기간에서 복무한 일수를 빼 종전 기간으로 나누고 현역병 기간을 곱한다. 깨진 OCR 앞말은 숨기되 복원된 제5항 전체와 소수점 버림을 낭독한다."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,248 @@
+{
+  "changes": [
+    {
+      "sourceIndex": 5696,
+      "targetSourceIndex": 5707,
+      "action": "move-table-anchor"
+    },
+    {
+      "sourceIndex": 5838,
+      "targetSourceIndex": 5840,
+      "action": "move-table-anchor"
+    },
+    {
+      "sourceIndex": 5888,
+      "targetSourceIndex": 5894,
+      "action": "move-table-anchor"
+    },
+    {
+      "sourceIndex": 5697,
+      "action": "remove-hide"
+    },
+    {
+      "sourceIndex": 5698,
+      "action": "remove-hide"
+    },
+    {
+      "sourceIndex": 5840,
+      "action": "remove-hide"
+    },
+    {
+      "sourceIndex": 5884,
+      "action": "remove-hide"
+    },
+    {
+      "sourceIndex": 5885,
+      "action": "remove-hide"
+    },
+    {
+      "sourceIndex": 6626,
+      "action": "remove-hide"
+    },
+    {
+      "sourceIndex": 5765,
+      "action": "complete-table-pages",
+      "source": "https://law.go.kr/LSW/flDownload.do?bylClsCd=200201&flSeq=137313973"
+    },
+    {
+      "sourceIndex": 6905,
+      "action": "correct-image-article-number"
+    },
+    {
+      "sourceIndex": 5504,
+      "action": "correct-diagram-command-line"
+    },
+    {
+      "sourceIndex": 6067,
+      "action": "include-navy-supply-chain"
+    },
+    {
+      "sourceIndex": 6215,
+      "action": "match-current-training-table"
+    }
+  ],
+  "corrections": [
+    {
+      "sourceId": "cdf522b18c4ad0f4a77a30d53295e17c9a8bc3e89a3853058df6136697a8f775",
+      "sourceIndex": 3374,
+      "author": "root",
+      "status": "draft",
+      "hidden": false,
+      "hasReconstructedSpeech": true,
+      "appendixFlag": false
+    },
+    {
+      "sourceId": "e31ed8980da0ec4d00d0d0fd18efdab7a88ffd2f2d1da4baf4575b5228c5ff2c",
+      "sourceIndex": 3376,
+      "author": "root",
+      "status": "draft",
+      "hidden": false,
+      "hasReconstructedSpeech": true,
+      "appendixFlag": false
+    },
+    {
+      "sourceId": "39253ee4cb2f4b83ea96edce3093e6fcce6fb35c80e86685b2927d0e805870a5",
+      "sourceIndex": 3378,
+      "author": "root",
+      "status": "draft",
+      "hidden": true,
+      "hasReconstructedSpeech": false,
+      "appendixFlag": false
+    },
+    {
+      "sourceId": "77595ae10ea21a277cf7ca02b132e10a61f602b31bd62b2a66a8108aa75113c1",
+      "sourceIndex": 3379,
+      "author": "root",
+      "status": "draft",
+      "hidden": true,
+      "hasReconstructedSpeech": false,
+      "appendixFlag": false
+    },
+    {
+      "sourceId": "7a9ac93713c505a52afc912c6ab35ec2adef4cc825fc648bd0b08271a054ba46",
+      "sourceIndex": 4355,
+      "author": "root",
+      "status": "draft",
+      "hidden": false,
+      "hasReconstructedSpeech": true,
+      "appendixFlag": false
+    },
+    {
+      "sourceId": "6857655984ddce505c020b41937ab6a3ea55d6e5b64bae8c0e5fb6a4c0a19ede",
+      "sourceIndex": 5582,
+      "author": "root",
+      "status": "draft",
+      "hidden": false,
+      "hasReconstructedSpeech": false,
+      "appendixFlag": false
+    },
+    {
+      "sourceId": "de6f83c37013445994d622d782a531c293be782e294f2d940e8d864e2b961045",
+      "sourceIndex": 5696,
+      "author": "root",
+      "status": "draft",
+      "hidden": false,
+      "hasReconstructedSpeech": false,
+      "appendixFlag": false
+    },
+    {
+      "sourceId": "5a37a8529c9e4c01c09c0c30a341ee0eeac31db1e37f9fef90c27d9a16d1eaa3",
+      "sourceIndex": 5697,
+      "author": "root",
+      "status": "draft",
+      "hidden": false,
+      "hasReconstructedSpeech": false,
+      "appendixFlag": false
+    },
+    {
+      "sourceId": "93885ead3a59a067bb64f5403e4b76a8c11cc40edf46272ec2c388b7b386e97b",
+      "sourceIndex": 5698,
+      "author": "root",
+      "status": "draft",
+      "hidden": false,
+      "hasReconstructedSpeech": false,
+      "appendixFlag": false
+    },
+    {
+      "sourceId": "38384cf99777921384fc8f3e810c3a048773959423ddf93599e32d22fbf068a4",
+      "sourceIndex": 5707,
+      "author": "root",
+      "status": "draft",
+      "hidden": false,
+      "hasReconstructedSpeech": true,
+      "appendixFlag": false
+    },
+    {
+      "sourceId": "22c1568828ba897e9c0798c31f7d2c67fc7dd9f2ab524380eb49f1a4a3a9f19a",
+      "sourceIndex": 5708,
+      "author": "root",
+      "status": "draft",
+      "hidden": true,
+      "hasReconstructedSpeech": false,
+      "appendixFlag": false
+    },
+    {
+      "sourceId": "5eb68fd0301607ce4c9f0318eff81273c281f6fad7f26f15820cb7871f3255a4",
+      "sourceIndex": 5838,
+      "author": "root",
+      "status": "draft",
+      "hidden": false,
+      "hasReconstructedSpeech": false,
+      "appendixFlag": false
+    },
+    {
+      "sourceId": "b27d7512a30fc3c55bca7ffa20f2fbd47a4005cd17d2f76694f3a9f4f310dff1",
+      "sourceIndex": 5840,
+      "author": "root",
+      "status": "draft",
+      "hidden": false,
+      "hasReconstructedSpeech": true,
+      "appendixFlag": false
+    },
+    {
+      "sourceId": "524d37f9f40ab42b0eda7efd5ed87775c2716e1fbb6b3444741f6a143d36d558",
+      "sourceIndex": 5884,
+      "author": "root",
+      "status": "draft",
+      "hidden": false,
+      "hasReconstructedSpeech": false,
+      "appendixFlag": false
+    },
+    {
+      "sourceId": "029998e1568a2003cde11006991a090d9779a0f2e118fb81c09ec10203c092c7",
+      "sourceIndex": 5885,
+      "author": "root",
+      "status": "draft",
+      "hidden": false,
+      "hasReconstructedSpeech": false,
+      "appendixFlag": false
+    },
+    {
+      "sourceId": "58f33762855a02cdb13d26e0febc279479cbea1098277f91f1090e149c82f32c",
+      "sourceIndex": 5888,
+      "author": "root",
+      "status": "draft",
+      "hidden": false,
+      "hasReconstructedSpeech": false,
+      "appendixFlag": false
+    },
+    {
+      "sourceId": "af0c4ecd2a81aff1f37ce0725bbb1bfa8ea9aad57e8d8800f32a8d0d6d4b6092",
+      "sourceIndex": 5894,
+      "author": "root",
+      "status": "draft",
+      "hidden": false,
+      "hasReconstructedSpeech": true,
+      "appendixFlag": false
+    },
+    {
+      "sourceId": "7c9d6fd4702aa4a421859072a23843948dacccd3dd0030fca345eb40957cf2b7",
+      "sourceIndex": 6366,
+      "author": "root",
+      "status": "draft",
+      "hidden": false,
+      "hasReconstructedSpeech": true,
+      "appendixFlag": false
+    },
+    {
+      "sourceId": "9e08cf08d8c21b76946559c09da68102262100f9ec0712b6a0ab1df1cc6eb41f",
+      "sourceIndex": 6626,
+      "author": "root",
+      "status": "draft",
+      "hidden": false,
+      "hasReconstructedSpeech": false,
+      "appendixFlag": false
+    },
+    {
+      "sourceId": "ee301539c14cd942f68271bb700e1a77ede69d069bc4be76bedec76daad55d3c",
+      "sourceIndex": 6849,
+      "author": "root",
+      "status": "draft",
+      "hidden": false,
+      "hasReconstructedSpeech": true,
+      "appendixFlag": false
+    }
+  ],
+  "sourceDataSha256": "d5fdeb3cb755635318685b50332012c51cbb3e0ca54ca188ff994b7d7debdd00",
+  "status": "requires-independent-review"
+}

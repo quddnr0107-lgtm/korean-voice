@@ -1,0 +1,41 @@
+{
+  "schema": "reader-assistance-display-corrections.v1",
+  "sourceDataSha256": "d5fdeb3cb755635318685b50332012c51cbb3e0ca54ca188ff994b7d7debdd00",
+  "corrections": [
+    {
+      "sourceId": "9e08cf08d8c21b76946559c09da68102262100f9ec0712b6a0ab1df1cc6eb41f",
+      "sourceIndex": 6626,
+      "status": "approved",
+      "author": "root",
+      "reviewer": "f1_backend",
+      "hidden": false,
+      "hasReconstructedSpeech": false,
+      "appendixFlag": false,
+      "evidence": [
+        {
+          "url": "https://www.law.go.kr/admRulLsInfoP.do?admRulSeq=2100000286712"
+        },
+        {
+          "source": "source/training-rule-current.html",
+          "sha256": "cb422e664e32cd867bb9b2ee6c9a4bba479b6681f913fee6295546cd4a836118"
+        }
+      ],
+      "unresolvedIssues": [],
+      "resolutions": [
+        {
+          "issue": "현재 hidden=true이지만 표 OCR가 아니라 실제 본문 1. 보류 제도의 소제목이다. remove-hide 필요를 root에 전달했다.",
+          "evidence": [
+            {
+              "url": "https://www.law.go.kr/admRulLsInfoP.do?admRulSeq=2100000286712"
+            },
+            {
+              "source": "source/training-rule-current.html",
+              "sha256": "cb422e664e32cd867bb9b2ee6c9a4bba479b6681f913fee6295546cd4a836118"
+            }
+          ],
+          "result": "공식 제23조에서 1. 보류 제도가 실제 본문 소제목임을 독립 확인했습니다. 원문·ID를 유지하며 hidden=false로 표시하는 별도 교정 승인 레코드를 작성합니다."
+        }
+      ]
+    }
+  ]
+}
