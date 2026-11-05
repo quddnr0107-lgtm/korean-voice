@@ -1,0 +1,1470 @@
+{
+  "schema": "reader-assistance-stage-exclusions.v1",
+  "count": 177,
+  "blocked": [
+    {
+      "sourceId": "029fa93ec0cc2a2f5c4cdc7784f0086e201dfbbb5514ec2b191878b63c082cd4",
+      "sourceIndex": 17,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립 검토 근거(f1_frontend): 민방위기본법 제2조의 주민 생명·재산 보호 목적에 맞는 요약이다. 근거: https://law.go.kr/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1030134797"
+      ]
+    },
+    {
+      "sourceId": "908af8452e049cf04c6bb211aeafa198504cd5eced7bb51c2f149d98f6383a65",
+      "sourceIndex": 23,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립 검토 수정(f1_frontend): 6개월을 빼는 단축으로 오해하지 않도록 복무기간을 6개월로 단축함을 명시했다."
+      ]
+    },
+    {
+      "sourceId": "bd084e8d9248be26623f5d986daa3759e8eb897b9fe41fd82180daa25005e161",
+      "sourceIndex": 159,
+      "issues": [
+        "예비전력관리 업무담당자 선발 규칙 별표2의 실제 계급표를 확보·육안검사하지 못함. 대령→중령, 중령→소령 구체 예시의 독립 검증 미완료."
+      ]
+    },
+    {
+      "sourceId": "9214178b67a378c2cfcebdb7672c98e23413b10dc76ad9d6b93b33a1a3618524",
+      "sourceIndex": 188,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "review_reserve_decree 수정: 세 해체 사유가 누적 요건으로 읽히지 않도록 어느 하나임을 명시."
+      ]
+    },
+    {
+      "sourceId": "f0c46c875014472091d0401993ce76f679643da095f02a9ceb4c94657c16f9be",
+      "sourceIndex": 191,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "review_reserve_decree 수정: 이전 중대장은 수신자가 아니라 발송을 맡는 주체임을 명확화."
+      ]
+    },
+    {
+      "sourceId": "03e380901ad21fa7a8f8d777227addceb4957263430b0800575bfea433680adc",
+      "sourceIndex": 195,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "review_reserve_decree 수정: 이전 직장의 장은 수신자가 아니라 발송을 맡는 주체임을 명확화."
+      ]
+    },
+    {
+      "sourceId": "86fbf5f5cd6f3ecb8859c149eaae46204df5cad22f53a0fe7df021586e06b738",
+      "sourceIndex": 223,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "review_reserve_decree 수정: 중대 이하라는 한정이 작전지휘 전반에도 적용되는 것처럼 읽히지 않도록 대상 분리."
+      ]
+    },
+    {
+      "sourceId": "f55fd38b6348351fa12cbdab8966e126dd39be722c6620c54b477ff1d1985af2",
+      "sourceIndex": 230,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립 검토 근거(f1_frontend): 비상대비법 제10조제1항·제3항의 인력·물적자원 실태 조사와 관계기관 공무원 참여를 확인했다. 근거: https://law.go.kr/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1016076079"
+      ]
+    },
+    {
+      "sourceId": "f783fbbdb8df3cf3e7540c127aaa365ef2160a76ed9cbc6585d8d27b07511b77",
+      "sourceIndex": 231,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립 검토 근거(f1_frontend): 2026.10.22 시행 국가공무원법 제33조 전체를 확인하여 성년후견·파산·자격 상실정지·형사처벌·파면해임의 제한이라는 예시를 대조했다. 근거: https://www.law.go.kr/lsLinkCommonInfo.do?lsJoLnkSeq=1026851095"
+      ]
+    },
+    {
+      "sourceId": "c329cc33d05b1088b585427c811fe2b83e370272bbbc6eb28f6c64f23a28a0ad",
+      "sourceIndex": 268,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "review_reserve_decree 수정: 예시만으로 동원권 범위가 넓어 보이지 않도록 지역 및 경찰력 한계를 복원."
+      ]
+    },
+    {
+      "sourceId": "c7be85e45ddf8a159e23d84bb1779b03e4bfe15c9d48628e9e976f24427382f6",
+      "sourceIndex": 338,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립 검토 근거(f1_frontend): 미세먼지법 제2조제1호의 PM10·PM2.5를 확인했고 노력의무 강도를 유지했다. 근거: https://www.law.go.kr/DRF/lawService.do?MST=283033&OC=me_pr&efYd=20260127&mobileYn=Y&target=law&type=HTML"
+      ]
+    },
+    {
+      "sourceId": "bb497903f4e714be9a2ab29faea2783e5cc73e92096886bda64c5b27b1df39c0",
+      "sourceIndex": 349,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "review_reserve_decree 수정: 준용한 제14조의 연기원서 제출기한과 제출처를 보완."
+      ]
+    },
+    {
+      "sourceId": "5203ff68cd8a8d040c2dd4cbba3efbb979cb2af29827c67dc52e51b8b38c2a35",
+      "sourceIndex": 360,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립 검토 근거(f1_frontend): 민사소송법 제189조는 일정 우편 발송 시 발송한 때 송달된 것으로 보는 발신주의임을 확인했다. 근거: https://www.law.go.kr/LSW/lsLinkCommonInfo.do?lsJoLnkSeq=1031930495"
+      ]
+    },
+    {
+      "sourceId": "004ce4d6ba96aedc50ad09517608fbfc2d6b1c0aa4f7b9580a18d3cfa98a35b4",
+      "sourceIndex": 361,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립 검토 근거(f1_frontend): 정보통신망법 제2조제1항제5호의 표준화된 전자 문서형식 자료 정의와 일치한다. 근거: https://www.law.go.kr/LSW/LsiJoLinkP.do?docType=JO&joNo=007300000&languageType=KO&lsNm=%EC%A0%95%EB%B3%B4%ED%86%B5%EC%8B%A0%EB%A7%9D+%EC%9D%B4%EC%9A%A9%EC%B4%89%EC%A7%84+%EB%B0%8F+%EC%A0%95%EB%B3%B4%EB%B3%B4%ED%98%B8+%EB%93%B1%EC%97%90+%EA%B4%80%ED%95%9C+%EB%B2%95%EB%A5%A0&paras=1"
+      ]
+    },
+    {
+      "sourceId": "2a88f5908ed25869c9d73efe50f7330726bcf51614aaf9ba980249dabacdd1c0",
+      "sourceIndex": 417,
+      "issues": [
+        "별도 1의 5쪽 PDF 텍스트는 확인했으나 실제 도면 이미지는 미확보. screenshot 도구는 이미지가 아닌 <<ImageDisplayed>> 문자열만 반환하며 직접 다운로드는 upstream timeout. 부착위치 설명을 도면과 시각 대조하지 못하여 보류. https://www.law.go.kr/LSW/flDownload.do?bylClsCd=110204&flSeq=134619705&gubun="
+      ]
+    },
+    {
+      "sourceId": "0dc5c02e21e3c59c6b07f254753d82d37950d3d02d3786a629d73db82f9c114d",
+      "sourceIndex": 419,
+      "issues": [
+        "별도 2의 2쪽 PDF 텍스트는 확인했으나 실제 도면 이미지는 미확보. screenshot 도구는 이미지가 아닌 <<ImageDisplayed>> 문자열만 반환하여 제식 도면 확인을 완료하지 못함. https://www.law.go.kr/LSW/flDownload.do?bylClsCd=110204&flSeq=156960383&gubun="
+      ]
+    },
+    {
+      "sourceId": "ccc81c7eea416c4743e3c09ea55be0c647810f324801ac9868360239d5218245",
+      "sourceIndex": 443,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "review_reserve_decree 수정: 각 호의 장소 조건과 법 제8조의 필요한 범위 및 재산 제거 요건을 복원."
+      ]
+    },
+    {
+      "sourceId": "29e2ac93738ca24aa379fde0bc43e7571a938036578d066170ba4467506db9d1",
+      "sourceIndex": 553,
+      "issues": [
+        "공식 별도1 PDF 추출문은 확인했으나 screenshot 도구가 이미지 없이 <<ImageDisplayed>> 문자열만 반환하여 실제 부대기 도면을 검사하지 못함."
+      ]
+    },
+    {
+      "sourceId": "ebf309e63f3b0003d53ca24e5f6833efbdf8b659485237e4d24adcd2db25d94f",
+      "sourceIndex": 563,
+      "issues": [
+        "별도2 예식띠 PDF 공식 URL을 열었으나 도구 접근 오류. 저장되었다는 로컬 PDF도 복구본에 없어 실제 도면·재료 대응 확인 불가."
+      ]
+    },
+    {
+      "sourceId": "cd7008aabe2aabbfd57ea641d7d890f0bfb2d66298b0f3cc218897b95862ae19",
+      "sourceIndex": 566,
+      "issues": [
+        "별도3 받침다리 및 보관상자 PDF 공식 URL을 열었으나 도구 접근 오류. 저장되었다는 로컬 PDF도 복구본에 없어 5mm 등 규격 및 실제 도면 확인 불가."
+      ]
+    },
+    {
+      "sourceId": "5f02d56a2b16c436f6730dca12d68239532d6183f33d3f05bba79a79c38f29e0",
+      "sourceIndex": 631,
+      "issues": [
+        "공식 문책기준 4쪽 PDF 추출문은 확인했으나 screenshot 도구가 실제 이미지 없이 문자열만 반환함. 표의 행·열 배치 및 유형별 기준을 육안검사하지 못함."
+      ]
+    },
+    {
+      "sourceId": "108c078bd9c3cf2f7b639308a098bc66095913c94ec81d383108612920d5e9bd",
+      "sourceIndex": 654,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "review_reserve_decree 수정: 산업단지 협의회에만 적용되는 심의사항의 범위 및 선박 지원을 명시."
+      ]
+    },
+    {
+      "sourceId": "94a67065da7938d4c7dccc4201d20d1b3eb7f5a4a4f02c3e10dc370593594c13",
+      "sourceIndex": 690,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립 검토 수정(f1_frontend): 정당한 사유 없음이 대리훈련에도 조건처럼 붙지 않도록 각 처벌 사유를 분리했다."
+      ]
+    },
+    {
+      "sourceId": "e8e09aaeaef31800f4726251013995f372f0cf6ed002a19bc6a450b22b175015",
+      "sourceIndex": 704,
+      "issues": [
+        "별표 과태료 기준 원본 그림 미확보. 공식 flSeq 128556847 및 155765117은 도구에서 unsupported image/gif, 작성자가 기록한 source/reserve-decree-fines-2023.gif 및 2025.gif는 복구 폴더에 없음. 최근 3년 기산 및 가중·감경 전체 조건과 금액표를 실제 그림으로 확인하지 못하여 보류."
+      ]
+    },
+    {
+      "sourceId": "f6d69a91c424f05f7b3ff97851f7aff9a4d388fd88cf94221982cfdebf6e87ba",
+      "sourceIndex": 717,
+      "issues": [
+        "공식 육성지원 범위 별표 2쪽 PDF 추출문은 확인했으나 실제 PDF 이미지 검사가 미완료. 표·그림 의존 행의 승인 요건에 따라 보류함."
+      ]
+    },
+    {
+      "sourceId": "a2059872a925036eaf4fcee01c689796767b6751e68d14bc5d4267665826576c",
+      "sourceIndex": 2668,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립 검토 수정(f1_frontend): 아동양육·일시보호·보호치료·공동생활가정 등의 지정 대상 의미를 확인하고 짧은 예시를 추가했다.",
+        "확인 근거: https://law.go.kr/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1002037996"
+      ]
+    },
+    {
+      "sourceId": "a4ebd3ac148c75a9898cc44aec9df36751a144f955cbab75973d6e7dafdc3760",
+      "sourceIndex": 2676,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립 검토 수정(f1_frontend): 복무기간에서 제외하는 일수의 포함·제외를 오해하지 않도록 문장을 명확히 했다."
+      ]
+    },
+    {
+      "sourceId": "80c3a4a16c071be440c87297f918f4233c23607a7adf55fe43f803f22e3081af",
+      "sourceIndex": 2732,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립 검토 수정(f1_frontend): 제1호와 제2호는 2015.6.30 삭제된 항목이다. 누락된 실질 규정은 없으며 남은 제3호·제4호를 풀이했다.",
+        "확인 근거: source/military-decree-current.html 제68조의18 (https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=290421)"
+      ]
+    },
+    {
+      "sourceId": "50c41fa0124a5438ef0a66489a5d3e71e7a7fb52270cbe4f1c95d15f556c3022",
+      "sourceIndex": 2744,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립 검토 수정(f1_frontend): 종전 미복무 비율×현역병 또는 사회복무요원 의무복무기간, 소수점 버림을 직접 확인하여 설명에 반영했다.",
+        "확인 근거: source/military-decree-current.html 제68조의19제4항; source/military-decree-artists-to-social.gif; 공식 flSeq=27516671/27516676"
+      ]
+    },
+    {
+      "sourceId": "999a8cfec538e13b05172af24602518f2a2a4103b84f92da111891e46660e0a6",
+      "sourceIndex": 2801,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립 검토 수정(f1_frontend): 수련경력·근무기간별 중위·대위 봉급 및 가족·진료수당 기준을 공식 별표에서 확인했다.",
+        "확인 근거: https://law.go.kr/flDownload.do?flSeq=43071401 (농어촌 등 보건의료를 위한 특별조치법 시행령 별표)"
+      ]
+    },
+    {
+      "sourceId": "a77920bc723f0abf9d35afe384d0bfbb349da603be7c1799055240bb34d45b27",
+      "sourceIndex": 2853,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립 검토 수정(f1_frontend): 종전 미복무 비율에 새 복무 의무기간을 곱하고 소수점을 버리는 현역·사회복무 두 산식을 확인했다.",
+        "확인 근거: source/military-decree-current.html 제70조의2제5항; source/military-decree-professionals-to-social.gif; 공식 flSeq=24130435/24130436"
+      ]
+    },
+    {
+      "sourceId": "4eae50bfb5a84e9ab4dc8a10bfd8c3c6ac52d12bc0d961556208204a4fbe9634",
+      "sourceIndex": 2855,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립 검토 수정(f1_frontend): 6개월 미만 여부는 사회복무 기간이 아닌 현역병 의무기간을 곱한 결과로 판단함을 확인·명시했다.",
+        "확인 근거: source/military-decree-current.html 제70조의2제5항제1호 및 제6항; 공식 flSeq=24130435"
+      ]
+    },
+    {
+      "sourceId": "d2817b9149aea4d8784d38d82d5a1736526f4da9e782083ed93ef180a445dfc9",
+      "sourceIndex": 3082,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립 검토 수정(f1_frontend): 선발일로부터라는 뜻을 제거하고 박사과정 수료까지의 수학기간으로 명확히 했다.",
+        "확인 근거: sourceIndex 3082의 박사학위과정 수학기간 정의"
+      ]
+    },
+    {
+      "sourceId": "34f1cd3e70a61515ea21409daf009bf3ffd3c4c8050d222f1a678c0ef4bce870",
+      "sourceIndex": 3084,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립 검토 수정(f1_frontend): 고의로 생계곤란을 만든 경우가 아닌 생계유지곤란자의 편입제한 예외를 명시했다.",
+        "확인 근거: sourceIndex 4538~4539, 병역법 제68조 전체"
+      ]
+    },
+    {
+      "sourceId": "30b401de3f5ce8ddcf8dd932b014b4ebf5c0e34de671807e2c2d988ae771ad11",
+      "sourceIndex": 3108,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립 검토 수정(f1_frontend): 세 학력단계의 기사·산업기사·기능사·해기사 범위, 소형선박조종사 및 서비스분야 제외를 대조했다.",
+        "확인 근거: https://iljari.mma.go.kr/caisBYIS/contents/byitContents.do?contents_id=BYIlTeoPI_C&menu_id=m_m2_4 의 학력별 기술자격 표 및 법제처 별표 flSeq=78202633 검색 본문"
+      ]
+    },
+    {
+      "sourceId": "643da1790005dfadfe4ce2634e93cdb048bc3b17ad8cddfa1fc07ad1af4d13c8",
+      "sourceIndex": 3129,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립 검토 수정(f1_frontend): 부모·배우자의 직계존속과 기혼 형제자매의 배우자·직계비속까지 원문에 맞게 명시했다.",
+        "확인 근거: sourceIndex 4203, 병역법 시행령 제131조제1호"
+      ]
+    },
+    {
+      "sourceId": "354b02e39a012e364dce75e61d2a1a184520507068497dc57918b107c5dbb2a5",
+      "sourceIndex": 3182,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립 검토 수정(f1_frontend): 퇴직·미복무·자격취소·무단결근 등 신고사유를 대조하고 개별복무의 본인 14일 신고 효과를 유지했다.",
+        "확인 근거: sourceIndex 3218~3229,3231~3245: 병역법 제40조 및 시행령 제91조"
+      ]
+    },
+    {
+      "sourceId": "528bd26dd0ce8f2f96ef538ebf4bbdb987451519100f33f3795acd5f52a64648",
+      "sourceIndex": 3214,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립 검토 수정(f1_frontend): (종전 의무복무기간−복무한 일수)÷종전 의무복무기간×산업기능요원 의무복무기간을 확인했다.",
+        "확인 근거: source/military-decree-current.html 제83조제3항의 공식 수식 alt; https://www.law.go.kr/LSW/flDownload.do?flSeq=27517276"
+      ]
+    },
+    {
+      "sourceId": "6e46536db2fbfa4bbc854f7d7a68c15b98fda4f13cda0fe8d027ca4410939b94",
+      "sourceIndex": 3345,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립 검토 보완(f1_frontend): 전문연구요원의 지정된 국외활동은 3개월 초과분도 산입됨을 보완; 근거: 시행령 제89조제2항 단서 및 제87조제4항, sourceIndex3341·3327"
+      ]
+    },
+    {
+      "sourceId": "d3133506e879368d59e48cee02ee546e12973ed99b313e3dd05f2fed192d821a",
+      "sourceIndex": 3368,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "별표 3의 위반유형·기간별 연장기준을 확인해 보완해야 함",
+        "독립 검토 보완(f1_frontend): 전체 표를 직접 확인하고 승인·통보 없는 교육훈련·출장·파견의 3개월/1개월 경계와 반복위반 가중을 설명; 근거: source/military-decree-appendix3.pdf 및 직접 렌더링한 military-decree-appendix3.png; https://www.law.go.kr/LSW/flDownload.do?gubun=&flSeq=169583323&bylClsCd=110201"
+      ]
+    },
+    {
+      "sourceId": "cdf522b18c4ad0f4a77a30d53295e17c9a8bc3e89a3853058df6136697a8f775",
+      "sourceIndex": 3374,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "제3항 산식의 원래 위치·분수 구조를 원본과 대조해야 함",
+        "독립 검토 보완(f1_frontend): 부정 전직 전까지의 일수만 공제하는 잔여 비율 산식을 확정; 근거: source/military-decree-current.html 제92조제3항; flSeq135363647·135365701; source/military-decree-fraud-transfer-to-social.gif 직접 확인",
+        "독립 재검토: 제92조③ 본문 3374와 뒤에 잘못 배치된 동일 항의 산식 OCR 3378·3379를 하나의 표시 그룹으로 통합합니다. 3374가 현역병·사회복무요원 두 환산식을 모두 풀며, 소수점 버림 및 부정전직 후 군사교육 기간 처리는 별도 3375에서 설명합니다. 제92조④의 3376은 이 그룹에 포함하지 않습니다."
+      ]
+    },
+    {
+      "sourceId": "e31ed8980da0ec4d00d0d0fd18efdab7a88ffd2f2d1da4baf4575b5228c5ff2c",
+      "sourceIndex": 3376,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "제4항 산식과 뒤따르는 부정 전직 문구가 서로 맞지 않아 원문 배열 대조 전 승인 금지",
+        "독립 검토 보완(f1_frontend): 제4항은 종전 의무기간에서 실제 복무한 일수를 빼는 별도 산식이며 설명에 보완; 근거: source/military-decree-current.html 제92조제4항; flSeq135363649·135363651; source/military-decree-researchers-to-social.gif 직접 확인"
+      ]
+    },
+    {
+      "sourceId": "39253ee4cb2f4b83ea96edce3093e6fcce6fb35c80e86685b2927d0e805870a5",
+      "sourceIndex": 3378,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "분수 배치와 제3항·제4항 소속이 훼손된 원문이므로 정확한 수식·위치 확인 전 승인 금지",
+        "독립 검토 보완(f1_frontend): 제3항 소속 현역병 환산식으로 확정; 원문 배열 결함을 root에 표시 교정 요청; 근거: source/military-decree-current.html 제92조제3항제1호; flSeq135363647의 LATEX alt 및 같은 항 제2호 그림 직접 확인",
+        "독립 재검토: 제92조③ 본문 3374와 뒤에 잘못 배치된 동일 항의 산식 OCR 3378·3379를 하나의 표시 그룹으로 통합합니다. 3374가 현역병·사회복무요원 두 환산식을 모두 풀며, 소수점 버림 및 부정전직 후 군사교육 기간 처리는 별도 3375에서 설명합니다. 제92조④의 3376은 이 그룹에 포함하지 않습니다."
+      ]
+    },
+    {
+      "sourceId": "77595ae10ea21a277cf7ca02b132e10a61f602b31bd62b2a66a8108aa75113c1",
+      "sourceIndex": 3379,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "분수 배치와 제3항·제4항 소속이 훼손된 원문이므로 정확한 수식·위치 확인 전 승인 금지",
+        "독립 검토 보완(f1_frontend): 제3항 소속 사회복무 환산식으로 확정; 원문 배열 결함을 root에 표시 교정 요청; 근거: source/military-decree-current.html 제92조제3항제2호; source/military-decree-fraud-transfer-to-social.gif 직접 확인",
+        "독립 재검토: 제92조③ 본문 3374와 뒤에 잘못 배치된 동일 항의 산식 OCR 3378·3379를 하나의 표시 그룹으로 통합합니다. 3374가 현역병·사회복무요원 두 환산식을 모두 풀며, 소수점 버림 및 부정전직 후 군사교육 기간 처리는 별도 3375에서 설명합니다. 제92조④의 3376은 이 그룹에 포함하지 않습니다."
+      ]
+    },
+    {
+      "sourceId": "ac895e5864b9761b42fd29ccde93ea50cf6132646e057f495ea4bcf9aa91a37c",
+      "sourceIndex": 3390,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "원문 산식의 분수·괄호 배치 확인 전 승인 금지",
+        "독립 검토 보완(f1_frontend): 종전 미복무 비율에 예술·체육요원 의무기간을 곱하는 계산을 확인; 근거: source/military-decree-current.html 제92조의2제1호 flSeq27518978의 LATEX alt"
+      ]
+    },
+    {
+      "sourceId": "b2086a7bf5661a5823b52acc7041146285883900950d7c3feaa055854179b893",
+      "sourceIndex": 3391,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "원문 산식의 분수·괄호 배치 확인 전 승인 금지",
+        "독립 검토 보완(f1_frontend): 현역 미복무 비율에 보충역 의무기간을 곱하는 계산을 확인; 근거: source/military-decree-current.html 제92조의2제2호 및 source/military-decree-active-to-social.gif 직접 확인"
+      ]
+    },
+    {
+      "sourceId": "fab7ea9d12a0c369903f2914590e543156ffbe2792853ce9f9bfb944910e295f",
+      "sourceIndex": 3413,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "대체역법 제16조제2항의 금지업무 범위는 제공된 자료 밖이므로 공식 원문 확인 필요",
+        "독립 검토 보완(f1_frontend): 무기·흉기, 살상·파괴 및 유사행위라는 금지범위를 확인하고 풀어 씀; 근거: https://law.go.kr/lsInfoP.do?lsiSeq=285515&viewCls=lsRvsDocInfoR ; 대체역의 편입 및 복무 등에 관한 법률 제16조제2항"
+      ]
+    },
+    {
+      "sourceId": "0b3e12318514eac6304a6e04964666e0316690c29fb3027ee27eb9431122960e",
+      "sourceIndex": 3487,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "준용되는 명부의 인적사항·병적기록표 기재사항 등 세부 목록은 참조 원문과 함께 독립검토",
+        "독립 검토(f1_frontend): 군병원 결과에 따른 귀가, 귀가 후 2일 송부 및 명부 인적사항을 대조하여 보완; 근거: 시행령 제18조의8제2항 후단·제3~5항, sourceIndex1715~1718"
+      ]
+    },
+    {
+      "sourceId": "0dca78828729445a3a4bb2e942a2e2a47c043fe5d1b8b7c36f1f03fcf6023257",
+      "sourceIndex": 3545,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "준용되는 귀가서류의 2일 송부기한 및 세부 명부항목을 독립검토에서 대조",
+        "독립 검토(f1_frontend): 귀가 관련 서류와 기한을 명시하고 명부 인적사항을 대조; 근거: 시행령 제18조의8제2항 후단·제3~5항, sourceIndex1715~1718"
+      ]
+    },
+    {
+      "sourceId": "dc99245b19a94c2adc59581d6a6eb26cd5d5592ff8b728b3055252d9c3b29dcf",
+      "sourceIndex": 3591,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립 검토(f1_frontend): 즉시보다 원문과 정확히 일치하는 지체 없이로 표현 교정; 근거: 해당 원문의 지체 없이 송부 규정"
+      ]
+    },
+    {
+      "sourceId": "c9fde434a4ec09d9412778f8585d6e8b6dcb4c15f72de9f929fe9c21f750649a",
+      "sourceIndex": 3629,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "폭넓은 준용 규정이므로 명부·서류·검사 세부절차는 참조 원문과 독립 대조 필요",
+        "독립 검토(f1_frontend): 사무소·인계·집결검사·원래 입영일부터 3일 이내 지연입영·귀가 전 복무기간 산입을 전부 대조; 근거: 시행령 제22~24조·제27조제1~2항, sourceIndex1774~1778·1784~1788·1795~1798·1819~1821"
+      ]
+    },
+    {
+      "sourceId": "2e46f8e91fce2693711000005652efaaf967ec6e02f189a7d8704852b87c1f1d",
+      "sourceIndex": 3633,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "조기 재검사·반복귀가·7급 등 준용 예외의 독립 대조 필요",
+        "독립 검토(f1_frontend): 원칙과 동일 질병 6개월 내 재귀가 제한을 보완하고, 조기 재검사·7급·24개월 반복처리 기준을 직접 대조; 근거: 시행령 제18조의9 전체 및 제17조제2~3항, sourceIndex1720~1733·1621~1624"
+      ]
+    },
+    {
+      "sourceId": "e20c0613826a8ea94eec6787e83e4816e40520cc36c859a9c12e1c327e92d940",
+      "sourceIndex": 3634,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립 검토(f1_frontend): 6개월 이내 대신 6개월이 지나지 않은 경우로 경계를 정확히 표현; 근거: 시행령 제18조의7제1호 sourceIndex1695"
+      ]
+    },
+    {
+      "sourceId": "e7ec69cf3bf36e531b6d96534414feeaa5165616ef0f431f58e84778a049878c",
+      "sourceIndex": 3657,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립 검토(f1_frontend): 신고일부터가 아니라 원래 입영일부터 3일 이내임을 명시; 근거: 시행령 제24조제1~2항 sourceIndex1795·1796"
+      ]
+    },
+    {
+      "sourceId": "647486a17e1bfe92fbff07f1a5de2d42540023a759d9fd9a01329d0849ef459b",
+      "sourceIndex": 3670,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립 검토(f1_frontend): 즉시보다 원문과 정확히 일치하는 지체 없이로 표현 교정; 근거: 해당 원문의 지체 없이 송부 규정"
+      ]
+    },
+    {
+      "sourceId": "ce44bd67a15d9b33d39ade2787e3f7ffb52ae14aa247f90841a733aa2b52ffed",
+      "sourceIndex": 3674,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립 검토(f1_frontend): 실제 표의 5개 계급과 기간, 현역기간 합산을 직접 확인; 근거: source/military-decree-current.html 제115조의2제2항 및 source/military-decree-reserve-promotion.gif; https://www.law.go.kr/LSW/flDownload.do?flSeq=24130438"
+      ]
+    },
+    {
+      "sourceId": "cd0fb63780a1e7f2fece36647653d9a38722a12a2645112cf7701d8594a15b56",
+      "sourceIndex": 3675,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "숨김 처리된 중복 표 행이며 sourceIndex 3674의 표와 연결해 검토; 별도 노출·중복 음성 금지",
+        "독립 검토(f1_frontend): 동일 표 내용이므로 3674를 anchor,3675를 hidden member로 연결하도록 compiler 담당에게 전달하고 설명도 동일하게 맞춤; 근거: sourceIndex3674 및 공식 그림 source/military-decree-reserve-promotion.gif 직접 확인"
+      ]
+    },
+    {
+      "sourceId": "34f1a8427ef793d9b7094b35d9da5739d3f8d42e42096002c96f608da6ffb827",
+      "sourceIndex": 3759,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립 검토(f1_frontend): 즉시보다 원문과 정확히 일치하는 지체 없이로 표현 교정; 근거: 해당 원문의 지체 없이 송부 규정"
+      ]
+    },
+    {
+      "sourceId": "fc1caf0130e64ce24d02c21f6e2b8afe644b4a312acefa2ea12320bcb5837c38",
+      "sourceIndex": 3761,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "신체등급별 준용 처분 및 외부 임용결격사유의 세부 확인 필요",
+        "독립 검토(f1_frontend): 국적·범죄경력 등 결격사유와 2~4·5·6·7급 처리 구분을 대조하여 설명 보완; 근거: 군인사법 제10조: https://www.law.go.kr/LSW/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1032036419 ; 시행령 제135조제5항 sourceIndex4318~4322 및 제17조"
+      ]
+    },
+    {
+      "sourceId": "30fc4a1f2b4b2b5517e23a4c97f6b17550766d5a0c0460f2c507228f2ac47cf6",
+      "sourceIndex": 3821,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "군인사법 제10조제2항 임용결격사유는 외부 원문 확인 필요",
+        "독립 검토 보완(f1_frontend): 국적·법정 범죄경력 등 결격사유의 실제 내용을 확인하고 간단한 예시를 추가; https://www.law.go.kr/LSW/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1032036419 (시행2026.10.2) 제10조 전체 직접 확인"
+      ]
+    },
+    {
+      "sourceId": "a66ef59751d9ba9f85e03d371402e854a02739eb04e983d5decaa642d7d2502a",
+      "sourceIndex": 3887,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립 검토 보완(f1_frontend): 즉시를 지체 없이로 바꿔 원문의 의무와 일치시킴; 해당 원문의 지체 없이 규정"
+      ]
+    },
+    {
+      "sourceId": "80c3cc1d12ab2593ab4b29dd44d10cbfba4413540636ea4b0fdf823f15b19fc2",
+      "sourceIndex": 3888,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립 검토 보완(f1_frontend): 즉시를 지체 없이로 바꿔 원문의 의무와 일치시킴; 해당 원문의 지체 없이 규정"
+      ]
+    },
+    {
+      "sourceId": "d91837cdcc09654472b67592ce1cc0db95466bb9ca5ebf2f49facbd82fbb4aec",
+      "sourceIndex": 3892,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "군인사법 제10조 임용결격사유의 구체적인 내용은 외부 원문 대조 필요",
+        "독립 검토 보완(f1_frontend): 국적·법정 범죄경력 등 결격사유의 실제 내용을 확인하고 간단한 예시를 추가; https://www.law.go.kr/LSW/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1032036419 (시행2026.10.2) 제10조 전체 직접 확인"
+      ]
+    },
+    {
+      "sourceId": "956075f486bc8faef0ca0bcf6824d72d2b86c82a68f19c57d4b9b23416a6cce7",
+      "sourceIndex": 3931,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립 검토 보완(f1_frontend): 즉시를 지체 없이로 바꿔 원문의 의무와 일치시킴; 해당 원문의 지체 없이 규정"
+      ]
+    },
+    {
+      "sourceId": "e7441e2324f65715e39a18b27981fe4a84d4a0938def0e964a08e2228339b120",
+      "sourceIndex": 3942,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립 검토 보완(f1_frontend): 즉시를 지체 없이로 바꿔 원문의 의무와 일치시킴; 해당 원문의 지체 없이 규정"
+      ]
+    },
+    {
+      "sourceId": "d4e420453f32af63e9adffd8c0d14c2f09535c085f09c0df1a2131c8e742cbce",
+      "sourceIndex": 4006,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립 검토 보완(f1_frontend): 전국대회 신기록·입상 또는 국제대회 파견 등 우수선수 정의를 추천·한국신기록/공로 요건과 구분해 풀어 씀; https://www.law.go.kr/LSW/lsLinkCommonInfo.do?lsJoLnkSeq=1022704937 국민체육진흥법 시행령 제2조제2호"
+      ]
+    },
+    {
+      "sourceId": "68dad8984ce720045eb982db189a8cd29add68c76ae3f28058ba4bb81a74dbcb",
+      "sourceIndex": 4024,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립 검토 보완(f1_frontend): 학교·연수기관장 또는 신청인에게 직접 통보한다는 원문에 맞춤; 시행령 제125조제3항 sourceIndex4024"
+      ]
+    },
+    {
+      "sourceId": "ebadd79ef0e7b6b3a2bdc33dcfcc979a6f16f20c94aeb12e77eef56eb8ce8de3",
+      "sourceIndex": 4053,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립 검토 보완(f1_frontend): 체육 분야만으로 한정하지 않고 원문이 인용한 우수자 규정의 대상을 보존; 시행령 제124조의3·제127조의2 sourceIndex4004~4007·4053"
+      ]
+    },
+    {
+      "sourceId": "0a7d8ffed7808f36a5e7d476d34ad0bd6b5da27b737b279b510431e67cf1e8d7",
+      "sourceIndex": 4111,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "원문 ‘병역준비역, 보충역 또는 대체복무요원으로 소집되지 아니한 사람’의 병렬 범위를 독립 검토 필요",
+        "독립 검토 보완(f1_frontend): 복무 중인 보충역·대체복무요원은 나이와 무관하게 허가 대상임을 대조해 소집 전 대상자 범위를 명시; source/military-decree-current.html 제128조제1항제2호; 병역법 제70조 sourceIndex4569·4570·4574; https://www.mma.go.kr/contents.do?mc=usr0000186"
+      ]
+    },
+    {
+      "sourceId": "f7584deebc9e28ff0731218848c029888a6b480762403471983b0706a76a7fea",
+      "sourceIndex": 4114,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "국내체류 합산 제외와 부모 사유의 적용 등 장문 참조의 세부 요건 독립검토 필요",
+        "독립 검토 보완(f1_frontend): 부모 동거 허가 조건, 최근 1년 합계6개월, 혼인·장례·경기60일 및 부모·배우자 비체류 상태의 재학 제외와 재외국민2세 예외를 대조; 시행령 제147조의2 전체 sourceIndex4646~4660, 특히4649·4651~4654"
+      ]
+    },
+    {
+      "sourceId": "b9ba9fd9e6380c29903870140cb86dfedf25dc692d133fd4ab46f7dc1cef1070",
+      "sourceIndex": 4231,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립 검토 보완(f1_frontend): 즉시를 지체 없이로 교정; 해당 원문의 지체 없이 규정"
+      ]
+    },
+    {
+      "sourceId": "79e7861ab5c4f415e78cf9d67a91d1b6c63794e5b26a5f9fb318a271018c7a5d",
+      "sourceIndex": 4233,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립 검토 보완(f1_frontend): 즉시를 지체 없이로 교정; 해당 원문의 지체 없이 규정"
+      ]
+    },
+    {
+      "sourceId": "11550e6b0455d3235633aabb385cca2fb44303d4ab751230e78875e5e4297550",
+      "sourceIndex": 4254,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "혈액암의 관해 후 5년 이상 경과 조건은 원문 그대로 보존했으며, 임의로 반대로 고치지 않았습니다. 독립 검토에서 공식 원문을 대조해야 합니다.",
+        "독립 검토 보완(f1_frontend): 공식 법문도 5년 이상임을 확인하여 그대로 유지하고 관해를 짧게 설명; source/military-decree-current.html 제134조제1항제7호 공식 시행2026.10.2 원문"
+      ]
+    },
+    {
+      "sourceId": "e3b8b0baf56e1109e24011a50c8b0f6b6b0d5027e05b96ce2640f2ff2ba13017",
+      "sourceIndex": 4256,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "국방부령이 정한 검사 필요 대상의 구체적인 범위는 별도 원문 대조가 필요합니다.",
+        "독립 검토 보완(f1_frontend): 별표2 장애상태뿐 아니라 진단서 불일치와 일정 재진단 미이행자도 검사 대상임을 풀어 씀; 시행규칙 제93조의2 sourceIndex4274~4279; source/military-rule-disabled-examination.pdf 5쪽 및 렌더링1~5.png 직접 확인; https://www.law.go.kr/LSW/flDownload.do?bylClsCd=110201&flSeq=156440715&gubun="
+      ]
+    },
+    {
+      "sourceId": "bc95e3ad52d6cc70bff770c2405d2980879d47b3886da4826813568ddf748883",
+      "sourceIndex": 4326,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "중증환자 산정특례 대상 상병의 구체적인 목록은 보건복지부 고시 원문 대조가 필요합니다.",
+        "독립검토 수정: 참조 조문의 실제 내용과 공식 외부 근거를 확인하여 대상·기준을 풀어 썼습니다.",
+        "독립검토 해결: 별표 3의 암·뇌혈관·심장·중증화상·중증외상 분류를 확인했다. 예시는 암으로 한정하고 별표 4 희귀·중증난치질환 전체를 포함시키지 않았다. 근거: https://www.nhis.or.kr/lm/lmxsrv/law/lawFullContent.do?SEQ=61 / https://www.nhis.or.kr/renewal_popup/poster/20260608_poster_longdesc_1.html"
+      ]
+    },
+    {
+      "sourceId": "ccfcdfd18a0cbd20f5046cba1f8af44a1d680ca38e70232c530a27fcc37090fa",
+      "sourceIndex": 4329,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "장기 국내체류 계산에서 제외되는 기간과 부모 관련 조건은 시행령 제147조의2 원문과 함께 독립 검토해야 합니다.",
+        "독립검토 해결: 최근 1년 통산 6개월, 입국일 포함·출국일 제외, 경조사·경기·재학의 제외기간 및 부모 동거 조건을 모두 확인했다. 설명의 장기체류는 이 법정 계산을 의미하며, 원문의 해제·허가 취소와 재복무 의무를 유지했다. 근거: 시행령 제147조의2 전체, sourceIndex 4646–4660"
+      ]
+    },
+    {
+      "sourceId": "7a9ac93713c505a52afc912c6ab35ec2adef4cc825fc648bd0b08271a054ba46",
+      "sourceIndex": 4355,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "입력 원문의 분수·빼기 기호가 깨져 있으므로 산식의 분자·분모를 추측해 복원하지 않았습니다. 공식 원문 산식 대조가 끝나야 승인할 수 있습니다.",
+        "독립검토 수정: 참조 조문의 실제 내용과 공식 외부 근거를 확인하여 대상·기준을 풀어 썼습니다.",
+        "독립검토 해결: 공식 그림을 직접 확인하여 (종전 의무기간−복무한 일수)/종전 의무기간×현역병 의무기간으로 풀었다. 원문 표시 결함은 root에게 별도로 전달했다. 근거: source/military-decree-current.html 제135조의2⑤; source/military-decree-social-to-active.gif; https://www.law.go.kr/LSW/flDownload.do?flSeq=31320343"
+      ]
+    },
+    {
+      "sourceId": "20af4546632cd9e44e102ea40b1f4aadf4e6cd087f475f5bccb5f93df08e17e1",
+      "sourceIndex": 4383,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "민법 제779조·제974조의 가족·부양 범위는 별도 공식 원문 대조가 필요합니다.",
+        "독립검토 수정: 참조 조문의 실제 내용과 공식 외부 근거를 확인하여 대상·기준을 풀어 썼습니다.",
+        "독립검토 해결: 민법 779조와 974조를 직접 대조했다. 자신의 부양가족이 없다는 반대 의미로 해석하지 않고 자신을 부양할 가족이 없는 경우로 풀었다. 근거: https://www.law.go.kr/lsLinkCommonInfo.do?lsJoLnkSeq=900220308 / https://www.law.go.kr/lsLinkCommonInfo.do?lsJoLnkSeq=1029699887"
+      ]
+    },
+    {
+      "sourceId": "cf2d9d7840781ecbc7953136d71ff52b8057137e1626f8441dd9ef5eefd30f86",
+      "sourceIndex": 4385,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "국적법 제5조부터 제8조까지의 세부 취득 유형은 공식 원문 대조가 필요합니다.",
+        "독립검토 수정: 참조 조문의 실제 내용과 공식 외부 근거를 확인하여 대상·기준을 풀어 썼습니다.",
+        "독립검토 해결: 일반·간이·특별귀화 및 부모 귀화 때 미성년 자녀의 수반취득을 확인했다. 미래 시행 개정의 개별 특례를 추가하지 않았다. 근거: https://law.go.kr/lsInfoP.do?lsId=001435 / https://law.go.kr/lsLinkCommonInfo.do?lsJoLnkSeq=1021454605"
+      ]
+    },
+    {
+      "sourceId": "33791a04a22e1243cab2f2d250dc2efe9dce92fea9a5e5aae76c0a286d98556a",
+      "sourceIndex": 4431,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "37세 이하 조건의 적용 범위 및 국내체류 계산·부모 요건은 원문 문장 구조와 제147조의2를 함께 독립 검토해야 합니다.",
+        "독립검토 해결: 현행 공식 문장의 미출국 또는 취소사유 해당하면서 37세 이하라는 접속순서를 그대로 유지했다. 37세 조건을 별도 분리하여 적용 범위를 확장하거나 축소하지 않았다. 체류 제외기간과 부모 관련 조건은 제147조의2 전체와 대조했다. 근거: source/military-decree-current.html 제137조①제3호 단서; sourceIndex 4646–4660"
+      ]
+    },
+    {
+      "sourceId": "86221440f81dda9914f4199ea5435a6ab3b695d054e017af145da0fec008df6f",
+      "sourceIndex": 4434,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "예술경연의 입상순위·추천인원·동률 예외와 국가무형유산의 5년 이상 전수교육 요건은 참조 조문과 함께 대조해야 합니다.",
+        "독립검토 수정: 참조 조문의 실제 내용과 공식 외부 근거를 확인하여 대상·기준을 풀어 썼습니다.",
+        "독립검토 해결: 국제경연 2위 이상·성적순 2명 이내, 지정 대회 및 1위가 없는 경우 등의 예외, 국내경연 최고성적 및 동률 추천기준을 확인했다. 짧은 설명은 이를 정해진 순위·추천기준으로 묶고 전수교육 5년 및 체육 입상기준을 명시했다. 근거: sourceIndex 2626–2640, 제68조의11 전체"
+      ]
+    },
+    {
+      "sourceId": "7572a49d1ce22baaa8a779472e650d1e16ba407dd3df75fb4fde0941cbf90d01",
+      "sourceIndex": 4436,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "군인사법 시행령상 간부 장애 전역기준은 외부 원문 대조가 필요합니다.",
+        "독립검토 수정: 참조 조문의 실제 내용과 공식 외부 근거를 확인하여 대상·기준을 풀어 썼습니다.",
+        "독립검토 해결: 군인사법 시행령 48조와 시행규칙 53조·별표 1/2의 위임 연결, 심신장애 1–9급, 전공상·비전공상별 퇴역·제적, 현역 계속복무의 예외를 읽었다. 병역판정검사 5·6급과 혼동하지 않게 별도 간부 기준으로 풀었다. 근거: https://www.law.go.kr/LSW/lsLawLinkInfo.do?chrClsCd=010202&lsJoLnkSeq=1000010759 / https://www.law.go.kr/LSW/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1030051871"
+      ]
+    },
+    {
+      "sourceId": "2672f3e28cb1c6302512207a6c3a917ed413514a7055cccffb7125ec15fd12ff",
+      "sourceIndex": 4481,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "현역 간부의 장애 전역기준은 군인사법 시행령 원문 대조가 필요합니다.",
+        "독립검토 수정: 참조 조문의 실제 내용과 공식 외부 근거를 확인하여 대상·기준을 풀어 썼습니다.",
+        "독립검토 해결: 군인사법 시행령 48조와 시행규칙 53조·별표 1/2의 위임 연결, 심신장애 1–9급, 전공상·비전공상별 퇴역·제적, 현역 계속복무의 예외를 읽었다. 병역판정검사 5·6급과 혼동하지 않게 별도 간부 기준으로 풀었다. 근거: https://www.law.go.kr/LSW/lsLawLinkInfo.do?chrClsCd=010202&lsJoLnkSeq=1000010759 / https://www.law.go.kr/LSW/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1030051871"
+      ]
+    },
+    {
+      "sourceId": "f3e143ad1cbb5fe15f9ae13320baec52969f6865baa2c65e3eccca78262dc994",
+      "sourceIndex": 4502,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "임용결격 사유의 구체적 범위는 군인사법 원문 대조가 필요합니다.",
+        "독립검토 수정: 참조 조문의 실제 내용과 공식 외부 근거를 확인하여 대상·기준을 풀어 썼습니다.",
+        "독립검토 해결: 군인사법 제10조의 외국국적·복수국적, 후견, 마약류 중독, 파산, 형사처벌별 제한 등을 대조한 뒤 두 범주만 예시했다. 근거: https://www.law.go.kr/LSW/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1032036419"
+      ]
+    },
+    {
+      "sourceId": "c628de75cd7a818b858647d1cc99c84780bf2a2c2f9f8febd3157f1dc60de8d4",
+      "sourceIndex": 4509,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "현역 간부의 장애 전역기준은 군인사법 원문 대조가 필요합니다.",
+        "독립검토 수정: 참조 조문의 실제 내용과 공식 외부 근거를 확인하여 대상·기준을 풀어 썼습니다.",
+        "독립검토 해결: 군인사법 시행령 48조와 시행규칙 53조·별표 1/2의 위임 연결, 심신장애 1–9급, 전공상·비전공상별 퇴역·제적, 현역 계속복무의 예외를 읽었다. 병역판정검사 5·6급과 혼동하지 않게 별도 간부 기준으로 풀었다. 근거: https://www.law.go.kr/LSW/lsLawLinkInfo.do?chrClsCd=010202&lsJoLnkSeq=1000010759 / https://www.law.go.kr/LSW/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1030051871"
+      ]
+    },
+    {
+      "sourceId": "6155b47232e9c36310a604f4e55f8a561f3dde3c6b3ef51e9f3b9b3a8b3a4466",
+      "sourceIndex": 4535,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립검토 수정: 원문의 지체없이를 즉시보다 강하게 해석하지 않도록 문구를 맞췄습니다."
+      ]
+    },
+    {
+      "sourceId": "7c33789f40ac6ba5e4f2ffe625a0fb7e2d1e021b3eee034dc960614b5bfd10a1",
+      "sourceIndex": 4551,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립검토 수정: 원문의 지체없이를 즉시보다 강하게 해석하지 않도록 문구를 맞췄습니다."
+      ]
+    },
+    {
+      "sourceId": "9b693586be96ebb975a803c0156a2b2d863d1055ad363d38d3d95f840985cb07",
+      "sourceIndex": 4631,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "과정별 제한연령의 세부 대응은 시행령 제124조, 박사학위 취득 시점 조건은 제147조제3항 원문과 함께 독립 검토해야 합니다.",
+        "독립검토 해결: 전문대 2년제 22세·3년제 23세·심화24세, 대학24–27세, 대학원26–28세를 확인했다. 1년 가산은 졸업·학위 취득 곤란 때 29세 이하, 박사는 30세 되는 해 6월 이전 취득 가능 때 6월 30일까지라는 별도 조건을 유지했다. 근거: sourceIndex 3981–3999, 4634–4640"
+      ]
+    },
+    {
+      "sourceId": "2645b2c2480d24f5733624be1cc3340c99c4e0244dd8833aec8efb431164c0c7",
+      "sourceIndex": 4640,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립검토 수정: 원문의 지체없이를 지체 없이로 보존했습니다."
+      ]
+    },
+    {
+      "sourceId": "b367f924bf8affd437383094f21da5733bf7932138f52dd4f21f0e82d173c30c",
+      "sourceIndex": 4652,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "부모 또는 배우자의 국내 부재 조건과 국내교육기관 범위, 선수·임원 참가 요건을 독립 검토해야 합니다.",
+        "독립검토 해결: 입국일 포함·출국일 제외 및 역산을 확인했다. 경조사·대한체육회 산하 경기 선수/임원 체류의 60일 이내 요건과, 재학 시 부모·배우자 국내 부재 조건, 고등학교 제외, 박사 예외를 대조했다. 근거: sourceIndex 4651–4653, 3981–3999"
+      ]
+    },
+    {
+      "sourceId": "6a7bf0fe89626fee353bcf5f57a8c9797c857aa360e55c5f6ea3bd7121f8bd8b",
+      "sourceIndex": 4730,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립검토 수정: 상위법의 예외 또는 공식 참조 조문의 실제 기준·절차를 풀어 썼습니다.",
+        "독립검토 해결: 상위법 74의2가 사회복무요원을 제외하므로 그 예외를 명시했다. 국가유공자법 30조의 국가기관·학교·기업 고용규모 및 일부 제조업 제외도 확인했다. 근거: sourceIndex 4727–4728; https://law.go.kr/lsLinkCommonInfo.do?lsJoLnkSeq=1032520695; https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=246155"
+      ]
+    },
+    {
+      "sourceId": "b9775f7955a3dcdb8e08a9ef9685362ca6103b6649659eb014b92b0d033a3cff",
+      "sourceIndex": 4762,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "국가유공자법·보훈보상대상자법의 등록 신청 절차는 외부 원문 대조가 필요합니다.",
+        "독립검토 수정: 상위법의 예외 또는 공식 참조 조문의 실제 기준·절차를 풀어 썼습니다.",
+        "독립검토 해결: 현행 국가유공자법 6조와 보훈보상대상자법 4조의 신청·사실확인·결정·보훈심사 연결을 읽었다. 신청 상대방을 풀어 썼다. 근거: https://www.law.go.kr/lsLinkCommonInfo.do?lsJoLnkSeq=1030198169 / https://www.law.go.kr/LSW/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1029511075"
+      ]
+    },
+    {
+      "sourceId": "f7da65e1d4b6e4928618b4e2c4b1d4597665821d20138ce5b886eb986620ce1a",
+      "sourceIndex": 4766,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립검토 수정: 원문의 지체없이를 지체 없이로 보존했습니다."
+      ]
+    },
+    {
+      "sourceId": "457067b4774bb33d7f1d783862268c6985123d07d66b4ff15f8c54c24a94a4db",
+      "sourceIndex": 4768,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "학생군사교육실시령 제11조의3의 구체적 절차는 외부 원문 대조가 필요합니다.",
+        "독립검토 수정: 상위법의 예외 또는 공식 참조 조문의 실제 기준·절차를 풀어 썼습니다.",
+        "독립검토 해결: 제11조의3 전문을 직접 확인했다. 학교장/입영부대장에게 신청, 국가·지자체 의료시설 지정, 응급 및 시설·전문의 부족 등의 민간시설 예외를 확인하고 핵심 신청·응급 절차를 풀었다. 근거: source/student-military-treatment.html; https://www.law.go.kr/LSW/lsSideInfoP.do?docCls=jo&joBrNo=03&joNo=0011&lsiSeq=198820&urlMode=lsScJoRltInfoR"
+      ]
+    },
+    {
+      "sourceId": "19787c183f0d4f6145b0080feb5def1b064d13d857dc6c50d175952a640670e9",
+      "sourceIndex": 4769,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립검토 수정: 원문의 지체없이를 지체 없이로 보존했습니다."
+      ]
+    },
+    {
+      "sourceId": "7e263fbe7368fd7e7c6ea4aff7868b3a327e772f0dfa6743989fd8b24c4dad4e",
+      "sourceIndex": 4797,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "군인 재해보상법 제39조의 지급액 산식·배수는 공식 원문 대조가 필요하여 임의로 적지 않았습니다.",
+        "독립검토 수정: 상위법의 예외 또는 공식 참조 조문의 실제 기준·절차를 풀어 썼습니다.",
+        "독립검토 해결: 제39조의 60·45·24배와 외국 근무 가산을 확인했다. 보상기준이 개인 월급이 아닌 공무원 전체 기준소득월액 평균임을 명시했다. 근거: https://law.go.kr/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1028488859"
+      ]
+    },
+    {
+      "sourceId": "51740d0f634fdf6cf0cbf8259654d0de8412d65ce4082c7f65f6cf018762af51",
+      "sourceIndex": 4799,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "군인 재해보상법 제10조의 유족 순위·분배 기준은 공식 원문 대조가 필요합니다.",
+        "독립검토 수정: 상위법의 예외 또는 공식 참조 조문의 실제 기준·절차를 풀어 썼습니다.",
+        "독립검토 해결: 급여를 받을 유족 사이의 민법상 상속순위 및 동순위 균등배분을 확인했다. 일반 상속분의 배우자 1.5배를 급여배분에 잘못 적용하지 않았다. 근거: https://law.go.kr/LSW/lsInfoP.do?ancYnChk=0&chrClsCd=010202&efYd=20250708&lsiSeq=268039&urlMode=lsInfoP 제10조; https://law.go.kr/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1026990813; https://law.go.kr/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1023595823"
+      ]
+    },
+    {
+      "sourceId": "c961e62dc52891e0e920a46330facc03e1af8e2d4c39dbbf6db58f210a77da57",
+      "sourceIndex": 4802,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "군인 재해보상법 제33조제1항·제3항의 등급별 지급기준과 금액은 공식 원문 대조가 필요합니다.",
+        "독립검토 수정: 상위법의 예외 또는 공식 참조 조문의 실제 기준·절차를 풀어 썼습니다.",
+        "독립검토 해결: 현행 제33조①③ 전문을 확인했다. 등급별9·6·4.5·3배 및 전상2.5배·특수직무공상1.88배, 해외 가산을 풀었다. 2026.5.19 공포 PTSD 특례는 시행2027.5.20이므로 현행 근거에 섞지 않았다. 근거: source/military-compensation-art33.html; https://www.law.go.kr/LSW/lsSideInfoP.do?docCls=jo&joBrNo=00&joNo=0033&lsiSeq=268039&urlMode=lsScJoRltInfoR; https://law.go.kr/lsInfoP.do?ancYnChk=0&chrClsCd=010202&efYd=20270520&lsiSeq=286093&urlMode=lsEfInfoR&viewCls=lsRvsDocInfoR"
+      ]
+    },
+    {
+      "sourceId": "d038867d1a3c744bec750c06fc3e7c36915b0af2cf7fc8a097b6bb87cb08e272",
+      "sourceIndex": 4806,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립검토 수정: 원문의 지체없이를 지체 없이로 보존했습니다."
+      ]
+    },
+    {
+      "sourceId": "85fe5cc7613cb9fe6da9058f3481dedd24eaca93de51d01f5eed21488fd0d4e9",
+      "sourceIndex": 4841,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립검토 수정: 원문의 지체없이를 지체 없이로 보존했습니다."
+      ]
+    },
+    {
+      "sourceId": "f8e00dca96b6a4aa5ada3f7e2062ec3d40a8e1fe8be8ac1190c9dbaa31a437d3",
+      "sourceIndex": 4899,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "대체역법 제18조제2항의 복무기간 불산입 사유는 외부 공식 원문 대조가 필요합니다.",
+        "독립검토 수정: 대상 범위 또는 참조 법령의 구체적 내용을 명시했습니다.",
+        "독립검토 해결: 징역·금고·구류의 집행일수 또는 복무이탈일수 불산입을 공식 원문과 대조하여 풀었다. 미결구금 전체를 형 집행일수로 잘못 넓히지 않았다. 근거: https://law.go.kr/lsInfoP.do?ancYnChk=0&chrClsCd=010202&efYd=20260421&lsiSeq=285515&urlMode=lsEfInfoR&viewCls=lsRvsDocInfoR 제18조②"
+      ]
+    },
+    {
+      "sourceId": "a6c47dce03e5fe408e5e12cdab19cabe7ea8eb0c72012b5d0f8190b474141105",
+      "sourceIndex": 4936,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "혈액암의 관해 후 5년 이상 경과 조건은 원문 그대로 보존했으며 독립 검토에서 공식 문구를 대조해야 합니다.",
+        "독립검토 해결: 현행 공식 전문에 관해 후 5년 이상 경과한 혈액암이라고 적혀 있음을 직접 확인했다. 5년 미만으로 추측 수정하지 않고 랑게르한스조직구증의 전신적 항암치료 조건도 유지했다. 근거: source/military-decree-current.html 제155조의4②5; https://www.law.go.kr/lsLinkCommonInfo.do?chrClsCd=010202&lspttninfSeq=124049"
+      ]
+    },
+    {
+      "sourceId": "90a8c017245a02db09ea4a85c3865ac054d30686f749d54e2d0522f80f9daeb1",
+      "sourceIndex": 4952,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립검토 수정: 대상 범위 또는 참조 법령의 구체적 내용을 명시했습니다."
+      ]
+    },
+    {
+      "sourceId": "a1d71fb4da607565cc7efd8a99a48699e97e971e443009825df12acace284377",
+      "sourceIndex": 5089,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "국민건강보험법 제45조제4항의 구체적인 비용 범위는 외부 공식 원문 대조가 필요합니다.",
+        "독립검토 수정: 대상 범위 또는 참조 법령의 구체적 내용을 명시했습니다.",
+        "독립검토 해결: 건강보험공단·의약계 계약 또는 기한 내 계약 불성립 때 장관 결정 후 고시하는 요양급여비용임을 확인했다. 임의의 정액이나 본인부담률로 설명하지 않았다. 근거: https://www.law.go.kr/LSW/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1031508641"
+      ]
+    },
+    {
+      "sourceId": "673db485bc8874c8332b59951a343c59ea15306a3b300b1175071538c636ec1c",
+      "sourceIndex": 5156,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립검토 수정: 원문의 지체없이를 지체 없이로 보존했습니다."
+      ]
+    },
+    {
+      "sourceId": "de14513b5bea420a76fa087ce245d696842ba507aed2febf2e1ea659e0b43d34",
+      "sourceIndex": 5158,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립검토 수정: 원문의 지체없이를 지체 없이로 보존했습니다."
+      ]
+    },
+    {
+      "sourceId": "2a2c2b573340247e15ae28255f8e47ed1b9aab619cd1e2c5f6d363c1092893f5",
+      "sourceIndex": 5160,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "4회 경고에 포함되는 위반사유의 전체 범위와 직종별 적용은 본법 제89조의3과 함께 독립 검토해야 합니다.",
+        "독립검토 수정: 참조한 법정 요건을 구체화하고 대상 범위·의무 표현을 맞췄습니다.",
+        "독립검토 해결: 사회복무 무단정보검색·열람 2회, 지정 위반 4회·이용자 폭력 등 포함 3회, 지각·무단조퇴·근무지 이탈 8회, 예술체육 허위공익실적 경고의 각 기준을 대조했다. 4회 대상의 예술체육 공익시간 미충족·기본/직무교육 미이수와 사회복무 영리행위·겸직 등 범위를 확인했다. 근거: sourceIndex 2529–2543,2702–2730,5422–5428"
+      ]
+    },
+    {
+      "sourceId": "21ee1d3df6a1b898c94c925a4f8c122966f3c8b946c6d7fc15a36ba84b37f46b",
+      "sourceIndex": 5162,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립검토 수정: 원문의 지체없이를 지체 없이로 보존했습니다."
+      ]
+    },
+    {
+      "sourceId": "04dbd970621f7f36c9c231490668753fc4ac53a4e2daee94378035f349ec87f6",
+      "sourceIndex": 5164,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "대체역법 제24조제2항의 구체적 경고사유를 공식 원문으로 대조해야 합니다.",
+        "독립검토 수정: 참조한 법정 요건을 구체화하고 대상 범위·의무 표현을 맞췄습니다.",
+        "독립검토 해결: 대체역법 24조②1–4의 근무방해·정치운동·가혹행위·영리/겸직과 5의 업무불이행 등을 직접 확인했다. 4회와 8회의 대상을 구분하고 지체없이 고발하는 의무를 유지했다. 근거: https://www.law.go.kr/LSW/LsiJoLinkP.do?docType=&joNo=&languageType=KO&lsNm=대체역의+편입+및+복무+등에+관한+법률&paras=1 제24조②; sourceIndex5425,5427"
+      ]
+    },
+    {
+      "sourceId": "0a181aad6f5a78ac229498a07541bacfc99170a551e9b881e4c02d21ab1aaab6",
+      "sourceIndex": 5166,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립검토 수정: 원문의 지체없이를 지체 없이로 보존했습니다."
+      ]
+    },
+    {
+      "sourceId": "673108507bbdfde75929302be1b0101b1a247b9274c333751b690c2d7590bd73",
+      "sourceIndex": 5167,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립검토 수정: 원문의 지체없이를 지체 없이로 보존했습니다."
+      ]
+    },
+    {
+      "sourceId": "bce1863042a5308764d377fc218640564a2674c0c88d5cc7a3502c23d0fadfac",
+      "sourceIndex": 5168,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립검토 수정: 원문의 지체없이를 지체 없이로 보존했습니다."
+      ]
+    },
+    {
+      "sourceId": "0b9b085c88e33746cfbfc179769e7593a6f792f654c9d18c2ad409ad6f96733a",
+      "sourceIndex": 5207,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립검토 수정: 참조한 법정 요건을 구체화하고 대상 범위·의무 표현을 맞췄습니다."
+      ]
+    },
+    {
+      "sourceId": "230bdec96de1db36ae0170e6b8cf736956c6a6b816ba5997b056b84169091aa6",
+      "sourceIndex": 5208,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립검토 수정: 참조한 법정 요건을 구체화하고 대상 범위·의무 표현을 맞췄습니다."
+      ]
+    },
+    {
+      "sourceId": "21cf3f494b4c203f3c906e886b694f11c5710bf917d77abea390f0fcf2df2924",
+      "sourceIndex": 5235,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립검토 수정: 참조한 법정 요건을 구체화하고 대상 범위·의무 표현을 맞췄습니다.",
+        "독립검토 해결: 독립유공자예우법 4조의 일제 항거·공로포상과 순국선열의 순국 요건을 대조했다. 모든 독립운동 참여자를 자동 인정하는 뜻으로 넓히지 않았다. 근거: https://www.nhis.or.kr/lm/lmxsrv/law/joHistoryContent.do?DATE_END=20260219&DATE_START=20260219&SEQ=304&SEQ_CONTENTS=3480162; https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=285875&viewCls=lsRvsDocInfoR 제4조"
+      ]
+    },
+    {
+      "sourceId": "677f5d4b21d463a0c1bc93dcbcc98f47fb3571af4322d8dcf9c0c445c32ee19c",
+      "sourceIndex": 5239,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "군인사법 제37조제1항제2호·제4호의 전역사유는 공식 원문 대조가 필요하여 임의로 풀지 않았습니다.",
+        "독립검토 수정: 참조한 법정 요건을 구체화하고 대상 범위·의무 표현을 맞췄습니다.",
+        "독립검토 해결: 같은 계급 2회 진급낙천(소위1회) 및 시행령49조의 능력부족·성격결함·직무수행 성의 부족/포기·군발전 저해 능력/도덕 결함을 확인하여 풀었다. 근거: https://www.law.go.kr/lsLinkCommonInfo.do?lsJoLnkSeq=1031401917 / https://www.law.go.kr/LSW/lsLinkCommonInfo.do?ancYnChk=&chrClsCd=010202&lsJoLnkSeq=1022538503"
+      ]
+    },
+    {
+      "sourceId": "40a40d448853568993ddac058219b081208406d19063f0349e4349cd0e9aba26",
+      "sourceIndex": 5240,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "군형법 제30조제1항·제2항의 구체적 범죄 범위는 공식 원문 대조가 필요합니다.",
+        "독립검토 수정: 참조한 법정 요건을 구체화하고 대상 범위·의무 표현을 맞췄습니다.",
+        "독립검토 해결: 군무기피 목적의 부대/직무 이탈과 정당한 사유 없는 상당기간 내 미복귀를 직접 확인했다. 단순 결근 전체 또는 미확정 혐의로 넓히지 않았다. 근거: https://law.go.kr/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1016003803"
+      ]
+    },
+    {
+      "sourceId": "2513344f9fb4047f446d33ae3af1be47f0de25122d23db9a8c75acc81f667e71",
+      "sourceIndex": 5314,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립검토 수정: 참조한 법정 요건을 구체화하고 대상 범위·의무 표현을 맞췄습니다."
+      ]
+    },
+    {
+      "sourceId": "e47fc1c0d624042574df69ac9168fac85344ee24deacc2a3b46f357ff4be1ca8",
+      "sourceIndex": 5319,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "독립검토 수정: 원문의 지체없이를 지체 없이로 보존했습니다."
+      ]
+    },
+    {
+      "sourceId": "06d6a71bf7156f6920f991442e782a7ed007f939aa160cbe29a9c0990cf36bce",
+      "sourceIndex": 6323,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "긴급단계 및 지속4단계 원문 표현을 유지. '4단계까지'로 확대하지 않음."
+      ]
+    },
+    {
+      "sourceId": "7c9d6fd4702aa4a421859072a23843948dacccd3dd0030fca345eb40957cf2b7",
+      "sourceIndex": 6366,
+      "issues": [
+        "지휘서신 대상·시기 표의 실제 그림 미확보. 기존 검토의 GIF와 blob 기록만 있으며 이번 독립 검토에서 대상·시기 수치를 대조하지 못함."
+      ]
+    },
+    {
+      "sourceId": "c98ea8824f26634490abdbf4f02504390c44c6c80ec4a989da4220f9d0127a8e",
+      "sourceIndex": 6384,
+      "issues": [
+        "원문에 연습사격 5발·기록사격 5발·각 2회 10발이 함께 적혀 있어 각 2회의 반복 단위와 총탄수를 확정할 수 없음. 동일 수치를 반복하는 기존 설명만으로 뜻이 해소되지 않아 공식 세부기준 또는 명확한 원본 대조 필요."
+      ]
+    },
+    {
+      "sourceId": "2334e5625dfc9bf05d786031bad9cec6bc2c33c56c3337b7fdb33fe5d3b4b7a2",
+      "sourceIndex": 6387,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "제22조1항2호의Ⅰ형 절차를 실제 읽어 승인권자·잔여전체이수로 풀었음."
+      ]
+    },
+    {
+      "sourceId": "8765d1a6376c15dc763b49e0e77879b364f06abe6b0c1d9acd5bcdff670148c7",
+      "sourceIndex": 6452,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "특전 입영훈련3차 무단불참은 편성제외, 작계훈련3차는고발로 구분."
+      ]
+    },
+    {
+      "sourceId": "e6d70ae43efbeb35318974e158fae677728744a3fc49441965f13532cd60f7ed",
+      "sourceIndex": 6458,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "단기30일이내/장기30일초과180일이내 경계 보존."
+      ]
+    },
+    {
+      "sourceId": "b293b31c0517c49a91b4949283b580a813e30e7919f76a881799d01cd73ab049",
+      "sourceIndex": 6733,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "원본 그림 49_p129.png에서 개인 사유서의 필드와 확인란을 직접 대조했다."
+      ]
+    },
+    {
+      "sourceId": "570623b9f179579033aad398d219faa688f99a82f568066133b1b381129db542",
+      "sourceIndex": 6743,
+      "issues": [
+        "원본 그림 50_p131–133.png로 원문 조각을 대조하고 행별 설명을 보강했으나 기존 coverage는 6743 한 개 anchor의 공통 설명으로 6743–6762를 묶음. 수정된 개별 설명이 실제 표시·낭독에서 누락되지 않도록 매핑 수정 및 검증 필요."
+      ]
+    },
+    {
+      "sourceId": "d056cae16cdb6a858f30aa2eaee82e4149b503792d11a8d7b88090a1478a9e8c",
+      "sourceIndex": 6744,
+      "issues": [
+        "원본 그림 50_p131–133.png로 원문 조각을 대조하고 행별 설명을 보강했으나 기존 coverage는 6743 한 개 anchor의 공통 설명으로 6743–6762를 묶음. 수정된 개별 설명이 실제 표시·낭독에서 누락되지 않도록 매핑 수정 및 검증 필요."
+      ]
+    },
+    {
+      "sourceId": "a34689a65bad29ef9901d9b17b75e052c8cc9d9d5b16999461d4f896de850ae4",
+      "sourceIndex": 6745,
+      "issues": [
+        "원본 그림 50_p131–133.png로 원문 조각을 대조하고 행별 설명을 보강했으나 기존 coverage는 6743 한 개 anchor의 공통 설명으로 6743–6762를 묶음. 수정된 개별 설명이 실제 표시·낭독에서 누락되지 않도록 매핑 수정 및 검증 필요."
+      ]
+    },
+    {
+      "sourceId": "641bfb0cf44779a8e78d37308083f9b1f68c4664e9f16015a9a728a7aa03f16f",
+      "sourceIndex": 6746,
+      "issues": [
+        "원본 그림 50_p131–133.png로 원문 조각을 대조하고 행별 설명을 보강했으나 기존 coverage는 6743 한 개 anchor의 공통 설명으로 6743–6762를 묶음. 수정된 개별 설명이 실제 표시·낭독에서 누락되지 않도록 매핑 수정 및 검증 필요."
+      ]
+    },
+    {
+      "sourceId": "cfa2f4893ee0684f21a3ffc76251ec48532c7123e074a360f0ebe31be9290686",
+      "sourceIndex": 6747,
+      "issues": [
+        "원본 그림 50_p131–133.png로 원문 조각을 대조하고 행별 설명을 보강했으나 기존 coverage는 6743 한 개 anchor의 공통 설명으로 6743–6762를 묶음. 수정된 개별 설명이 실제 표시·낭독에서 누락되지 않도록 매핑 수정 및 검증 필요."
+      ]
+    },
+    {
+      "sourceId": "c149c7903217ecd9b8368ce2191676561ee59b0dcabc34f7bdb91dd93402c6e0",
+      "sourceIndex": 6748,
+      "issues": [
+        "원본 그림 50_p131–133.png로 원문 조각을 대조하고 행별 설명을 보강했으나 기존 coverage는 6743 한 개 anchor의 공통 설명으로 6743–6762를 묶음. 수정된 개별 설명이 실제 표시·낭독에서 누락되지 않도록 매핑 수정 및 검증 필요."
+      ]
+    },
+    {
+      "sourceId": "65ba70e7e9d9dfed735d67f5b0bd83ae177e912e9c00a1c985fc3f99d7fa92cc",
+      "sourceIndex": 6749,
+      "issues": [
+        "원본 그림 50_p131–133.png로 원문 조각을 대조하고 행별 설명을 보강했으나 기존 coverage는 6743 한 개 anchor의 공통 설명으로 6743–6762를 묶음. 수정된 개별 설명이 실제 표시·낭독에서 누락되지 않도록 매핑 수정 및 검증 필요."
+      ]
+    },
+    {
+      "sourceId": "53660512bcbb7f38313352fe8a6b88927e4abe8c7d5457e174c017a1cdd2b76f",
+      "sourceIndex": 6750,
+      "issues": [
+        "원본 그림 50_p131–133.png로 원문 조각을 대조하고 행별 설명을 보강했으나 기존 coverage는 6743 한 개 anchor의 공통 설명으로 6743–6762를 묶음. 수정된 개별 설명이 실제 표시·낭독에서 누락되지 않도록 매핑 수정 및 검증 필요."
+      ]
+    },
+    {
+      "sourceId": "2835bc3236cbebb722cb17acb8d17913add14a63111baa58745daec6014b38fd",
+      "sourceIndex": 6751,
+      "issues": [
+        "원본 그림 50_p131–133.png로 원문 조각을 대조하고 행별 설명을 보강했으나 기존 coverage는 6743 한 개 anchor의 공통 설명으로 6743–6762를 묶음. 수정된 개별 설명이 실제 표시·낭독에서 누락되지 않도록 매핑 수정 및 검증 필요."
+      ]
+    },
+    {
+      "sourceId": "6a85ad1546fe4f5d1a9ad889cd8f7b12688e057bc00deed73861a22f1902adc6",
+      "sourceIndex": 6752,
+      "issues": [
+        "원본 그림 50_p131–133.png로 원문 조각을 대조하고 행별 설명을 보강했으나 기존 coverage는 6743 한 개 anchor의 공통 설명으로 6743–6762를 묶음. 수정된 개별 설명이 실제 표시·낭독에서 누락되지 않도록 매핑 수정 및 검증 필요."
+      ]
+    },
+    {
+      "sourceId": "2edad3872449b9ad9a59bd287562b120523c86904018859579770339c680e0a5",
+      "sourceIndex": 6753,
+      "issues": [
+        "원본 그림 50_p131–133.png로 원문 조각을 대조하고 행별 설명을 보강했으나 기존 coverage는 6743 한 개 anchor의 공통 설명으로 6743–6762를 묶음. 수정된 개별 설명이 실제 표시·낭독에서 누락되지 않도록 매핑 수정 및 검증 필요."
+      ]
+    },
+    {
+      "sourceId": "bc9f99bff0d0c6eb8198e4b6eea9a25143e06e14e8cc0c289dbc85c521c33601",
+      "sourceIndex": 6754,
+      "issues": [
+        "원본 그림 50_p131–133.png로 원문 조각을 대조하고 행별 설명을 보강했으나 기존 coverage는 6743 한 개 anchor의 공통 설명으로 6743–6762를 묶음. 수정된 개별 설명이 실제 표시·낭독에서 누락되지 않도록 매핑 수정 및 검증 필요."
+      ]
+    },
+    {
+      "sourceId": "9f97481c45f022fdf5c4cfaff57ab08998f4d269c51bcb235c72fbdc4a0243cb",
+      "sourceIndex": 6755,
+      "issues": [
+        "원본 그림 50_p131–133.png로 원문 조각을 대조하고 행별 설명을 보강했으나 기존 coverage는 6743 한 개 anchor의 공통 설명으로 6743–6762를 묶음. 수정된 개별 설명이 실제 표시·낭독에서 누락되지 않도록 매핑 수정 및 검증 필요."
+      ]
+    },
+    {
+      "sourceId": "b11157f1e1995abb4179d999ae0fbad6b365bb2710237d6c174ec1072eb34a8c",
+      "sourceIndex": 6756,
+      "issues": [
+        "원본 그림 50_p131–133.png로 원문 조각을 대조하고 행별 설명을 보강했으나 기존 coverage는 6743 한 개 anchor의 공통 설명으로 6743–6762를 묶음. 수정된 개별 설명이 실제 표시·낭독에서 누락되지 않도록 매핑 수정 및 검증 필요."
+      ]
+    },
+    {
+      "sourceId": "9ece39b8ba27029d867de30e7779b55a7d659dbc14ecbafe1d2c1f162ee51e0a",
+      "sourceIndex": 6757,
+      "issues": [
+        "원본 그림 50_p131–133.png로 원문 조각을 대조하고 행별 설명을 보강했으나 기존 coverage는 6743 한 개 anchor의 공통 설명으로 6743–6762를 묶음. 수정된 개별 설명이 실제 표시·낭독에서 누락되지 않도록 매핑 수정 및 검증 필요."
+      ]
+    },
+    {
+      "sourceId": "6d472a93e249892edb320cc1f9df8e84e131ee41c36e9134f669d3a883c3a2c3",
+      "sourceIndex": 6758,
+      "issues": [
+        "원본 그림 50_p131–133.png로 원문 조각을 대조하고 행별 설명을 보강했으나 기존 coverage는 6743 한 개 anchor의 공통 설명으로 6743–6762를 묶음. 수정된 개별 설명이 실제 표시·낭독에서 누락되지 않도록 매핑 수정 및 검증 필요."
+      ]
+    },
+    {
+      "sourceId": "428edc9e7e2a593448806c327f94bac9787d8bc890f5a0faec7908627af951c1",
+      "sourceIndex": 6759,
+      "issues": [
+        "원본 그림 50_p131–133.png로 원문 조각을 대조하고 행별 설명을 보강했으나 기존 coverage는 6743 한 개 anchor의 공통 설명으로 6743–6762를 묶음. 수정된 개별 설명이 실제 표시·낭독에서 누락되지 않도록 매핑 수정 및 검증 필요."
+      ]
+    },
+    {
+      "sourceId": "466cccbb0a8eb834e778307a98411124f8d15082dbf20b2db11cb416bbecdea5",
+      "sourceIndex": 6760,
+      "issues": [
+        "원본 그림 50_p131–133.png로 원문 조각을 대조하고 행별 설명을 보강했으나 기존 coverage는 6743 한 개 anchor의 공통 설명으로 6743–6762를 묶음. 수정된 개별 설명이 실제 표시·낭독에서 누락되지 않도록 매핑 수정 및 검증 필요."
+      ]
+    },
+    {
+      "sourceId": "8550c371602a3a9125a30375984ba1aba15e2bd9b152689320cbfe1d1e3c7c5e",
+      "sourceIndex": 6761,
+      "issues": [
+        "원본 그림 50_p131–133.png로 원문 조각을 대조하고 행별 설명을 보강했으나 기존 coverage는 6743 한 개 anchor의 공통 설명으로 6743–6762를 묶음. 수정된 개별 설명이 실제 표시·낭독에서 누락되지 않도록 매핑 수정 및 검증 필요."
+      ]
+    },
+    {
+      "sourceId": "495e921324dfc8315287f5f9d125ce5a6603b4a972d3b54c3cf0d7bda06d4871",
+      "sourceIndex": 6762,
+      "issues": [
+        "원본 그림 50_p131–133.png로 원문 조각을 대조하고 행별 설명을 보강했으나 기존 coverage는 6743 한 개 anchor의 공통 설명으로 6743–6762를 묶음. 수정된 개별 설명이 실제 표시·낭독에서 누락되지 않도록 매핑 수정 및 검증 필요."
+      ]
+    },
+    {
+      "sourceId": "8f8a28f8102e8df48ffcd5a23e6ef97da90653911ce3dcba481e3a8468fe773f",
+      "sourceIndex": 6763,
+      "issues": [
+        "6763은 별표7의 마지막 내용과 별지1 서식 시작이 섞인 교차 경계. 6763 설명은 두 내용을 모두 담도록 고쳤으나 기존 6763–6771 공통 설명 매핑과 불일치하므로 표시·낭독 매핑 재검증 필요."
+      ]
+    },
+    {
+      "sourceId": "db802033d6cc5d82177691b00cee095875814a67e448de42d83e2d05e042deda",
+      "sourceIndex": 6764,
+      "issues": [
+        "6763은 별표7의 마지막 내용과 별지1 서식 시작이 섞인 교차 경계. 6763 설명은 두 내용을 모두 담도록 고쳤으나 기존 6763–6771 공통 설명 매핑과 불일치하므로 표시·낭독 매핑 재검증 필요."
+      ]
+    },
+    {
+      "sourceId": "9df7a79b99705156ac4b0517ffcb6084db8d9dd07bd355fc7f992a66190f2bb2",
+      "sourceIndex": 6765,
+      "issues": [
+        "6763은 별표7의 마지막 내용과 별지1 서식 시작이 섞인 교차 경계. 6763 설명은 두 내용을 모두 담도록 고쳤으나 기존 6763–6771 공통 설명 매핑과 불일치하므로 표시·낭독 매핑 재검증 필요."
+      ]
+    },
+    {
+      "sourceId": "cb282bc26896aad9bbf933a28e65302483c98c1c44948125152a9f15012356a9",
+      "sourceIndex": 6766,
+      "issues": [
+        "6763은 별표7의 마지막 내용과 별지1 서식 시작이 섞인 교차 경계. 6763 설명은 두 내용을 모두 담도록 고쳤으나 기존 6763–6771 공통 설명 매핑과 불일치하므로 표시·낭독 매핑 재검증 필요."
+      ]
+    },
+    {
+      "sourceId": "ca14a722f483135a2bd1c889693fbe13aa0f0d13309ed6ac457ce9b0c0668309",
+      "sourceIndex": 6767,
+      "issues": [
+        "6763은 별표7의 마지막 내용과 별지1 서식 시작이 섞인 교차 경계. 6763 설명은 두 내용을 모두 담도록 고쳤으나 기존 6763–6771 공통 설명 매핑과 불일치하므로 표시·낭독 매핑 재검증 필요."
+      ]
+    },
+    {
+      "sourceId": "7249fe4149c5875dd2c9f077e45392ce2df195926689a9848b881073efb28218",
+      "sourceIndex": 6768,
+      "issues": [
+        "6763은 별표7의 마지막 내용과 별지1 서식 시작이 섞인 교차 경계. 6763 설명은 두 내용을 모두 담도록 고쳤으나 기존 6763–6771 공통 설명 매핑과 불일치하므로 표시·낭독 매핑 재검증 필요."
+      ]
+    },
+    {
+      "sourceId": "1dbfd55776fe307aad10271c0bd1dddaad936b2e7be76a4c018c90e05221eaf0",
+      "sourceIndex": 6769,
+      "issues": [
+        "6763은 별표7의 마지막 내용과 별지1 서식 시작이 섞인 교차 경계. 6763 설명은 두 내용을 모두 담도록 고쳤으나 기존 6763–6771 공통 설명 매핑과 불일치하므로 표시·낭독 매핑 재검증 필요."
+      ]
+    },
+    {
+      "sourceId": "01a815b8115ea4f1bb13a3791d932a1cd04d77b1112d51de30b209bf44c5fd96",
+      "sourceIndex": 6770,
+      "issues": [
+        "6763은 별표7의 마지막 내용과 별지1 서식 시작이 섞인 교차 경계. 6763 설명은 두 내용을 모두 담도록 고쳤으나 기존 6763–6771 공통 설명 매핑과 불일치하므로 표시·낭독 매핑 재검증 필요."
+      ]
+    },
+    {
+      "sourceId": "a1c13fefe5098b7e50349954d90d7ac0468229baf0c5db25e1f3ed637f745a74",
+      "sourceIndex": 6771,
+      "issues": [
+        "6763은 별표7의 마지막 내용과 별지1 서식 시작이 섞인 교차 경계. 6763 설명은 두 내용을 모두 담도록 고쳤으나 기존 6763–6771 공통 설명 매핑과 불일치하므로 표시·낭독 매핑 재검증 필요."
+      ]
+    },
+    {
+      "sourceId": "b0329611381067a10abe7cf3cd4487dee344dc8fb37de2cfe1512feafd511600",
+      "sourceIndex": 6772,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "원문에는 앞쪽 서식의 확인·직인란과 뒤쪽 안내사항 첫 문장 일부가 함께 있다. 서식 확인란은 6763에서 설명하고, 6772~6773의 연결된 안내문을 함께 읽었다."
+      ]
+    },
+    {
+      "sourceId": "04c899035d994ae85400c9c70f795a52b5b1e3f555aeeab776d2f4b781bd2a21",
+      "sourceIndex": 6773,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "주요업무 연기 안내문이 6772~6773에 나뉘어 있어 함께 읽어 풀이했다."
+      ]
+    },
+    {
+      "sourceId": "edfeeb4a035f08977840e8f4e3b148f963e3efe71af7092a6e2969dabf32ec90",
+      "sourceIndex": 6796,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "외부 참조 국유재산법 제30조·제31조 공식 원문을 확인했다: https://law.go.kr/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1024449091 ; https://law.go.kr/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1024448297 ."
+      ]
+    },
+    {
+      "sourceId": "200fc7ac119461ab29a8fcc41177135d16309a69c156b3f0a975527bb6461ebb",
+      "sourceIndex": 6836,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "외부 인용의 실제 결격사유를 공식 국가공무원법 제33조와 군인사법 제10조에서 확인했다. https://law.go.kr/lsLinkCommonInfo.do?lsJoLnkSeq=1031734197 ; https://www.law.go.kr/LSW/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1032036419 ."
+      ]
+    },
+    {
+      "sourceId": "ab8226fa96edcd2b6aed8dc037ed8bc8ee00ba23a20f7a2adb752f9548efa95e",
+      "sourceIndex": 6848,
+      "issues": [
+        "호송·안내의 실제 표를 확인하지 못하여 이 행이 지시하는 구간별 기준의 검증 미완료."
+      ]
+    },
+    {
+      "sourceId": "ee301539c14cd942f68271bb700e1a77ede69d069bc4be76bedec76daad55d3c",
+      "sourceIndex": 6849,
+      "issues": [
+        "입소/퇴소 호송표 실제 그림 미확보. OCR 행의 표제·본문 대응을 그림으로 대조해야 함."
+      ]
+    },
+    {
+      "sourceId": "f6efd3e8a2d8c9c4215fdf9e25616b3545252769aefd744ffd1c920b6e55a7b8",
+      "sourceIndex": 6873,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "국가계약법 시행령 제18조의 규격·기술/가격 입찰과 제43조의 제안서 평가 후 협상을 공식 원문에서 확인했다. https://www.law.go.kr/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1033523011 ; https://www.law.go.kr/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1026177749 ."
+      ]
+    },
+    {
+      "sourceId": "670bdd58a9eb70c62de1f9c4d06f24e7b7fbe75b903ecc29f5649c002d5e906e",
+      "sourceIndex": 6899,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "원본 그림 52_p145.png 전체를 직접 대조했다. 6903 OCR에서 빠진 참조는 질서위반행위규제법 시행령 제2조의2이며, 감경대상과 체납자 제외를 공식 원문 https://law.go.kr/lsLinkCommonInfo.do?lsJoLnkSeq=1009309893 에서 확인했다. 6899~6904를 사전통지서 전체 설명으로 묶었다."
+      ]
+    },
+    {
+      "sourceId": "1f84696d13d59049d958591e37680717b5ac450af6c5ddd46bcb97e329fb1804",
+      "sourceIndex": 6900,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "원본 그림 52_p145.png 전체를 직접 대조했다. 6903 OCR에서 빠진 참조는 질서위반행위규제법 시행령 제2조의2이며, 감경대상과 체납자 제외를 공식 원문 https://law.go.kr/lsLinkCommonInfo.do?lsJoLnkSeq=1009309893 에서 확인했다. 6899~6904를 사전통지서 전체 설명으로 묶었다."
+      ]
+    },
+    {
+      "sourceId": "aeea21d105b2c1b5090ef50d6f5fb7804ed4ac0d36475da789de5cba6f95144c",
+      "sourceIndex": 6901,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "원본 그림 52_p145.png 전체를 직접 대조했다. 6903 OCR에서 빠진 참조는 질서위반행위규제법 시행령 제2조의2이며, 감경대상과 체납자 제외를 공식 원문 https://law.go.kr/lsLinkCommonInfo.do?lsJoLnkSeq=1009309893 에서 확인했다. 6899~6904를 사전통지서 전체 설명으로 묶었다."
+      ]
+    },
+    {
+      "sourceId": "ebb1f63ceebc4b24e303aecc93e797bf275182de3edb44849ec081deceaccc8e",
+      "sourceIndex": 6902,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "원본 그림 52_p145.png 전체를 직접 대조했다. 6903 OCR에서 빠진 참조는 질서위반행위규제법 시행령 제2조의2이며, 감경대상과 체납자 제외를 공식 원문 https://law.go.kr/lsLinkCommonInfo.do?lsJoLnkSeq=1009309893 에서 확인했다. 6899~6904를 사전통지서 전체 설명으로 묶었다."
+      ]
+    },
+    {
+      "sourceId": "9b6ef59fa6af1b5c4553fc431660926495421e80aa97df918daf64fb5c04e1b7",
+      "sourceIndex": 6903,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "원본 그림 52_p145.png 전체를 직접 대조했다. 6903 OCR에서 빠진 참조는 질서위반행위규제법 시행령 제2조의2이며, 감경대상과 체납자 제외를 공식 원문 https://law.go.kr/lsLinkCommonInfo.do?lsJoLnkSeq=1009309893 에서 확인했다. 6899~6904를 사전통지서 전체 설명으로 묶었다."
+      ]
+    },
+    {
+      "sourceId": "1de57bfa6c505a85db0781b6638491c82e5276ea7068a16a3db740523d7264a8",
+      "sourceIndex": 6904,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "원본 그림 52_p145.png 전체를 직접 대조했다. 6903 OCR에서 빠진 참조는 질서위반행위규제법 시행령 제2조의2이며, 감경대상과 체납자 제외를 공식 원문 https://law.go.kr/lsLinkCommonInfo.do?lsJoLnkSeq=1009309893 에서 확인했다. 6899~6904를 사전통지서 전체 설명으로 묶었다."
+      ]
+    },
+    {
+      "sourceId": "0d6aaf3c0a5a0b56a3eab571c0a3259bde22c05020ce059e8287ccbb46ce702a",
+      "sourceIndex": 6905,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "6905~6912는 별지 6서식 과태료 부과 결정서의 연속 OCR이다. 기존 appendix-speech의 정리된 서식 문구와 원문을 대조했으나 studyImages 목록에 이 서식 그림이 없어 실제 그림 대조는 미완료이다. 독립 검토 때 그림 또는 공식 서식 원문 확인이 필요하다.",
+        "질서위반행위규제법 제24조의 3%·월 1.2%·60개월 한도는 공식 원문 https://www.law.go.kr/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1033704831 에서 확인했다. 제53조 신용정보 제공 https://www.law.go.kr/LSW/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1009309809 , 제54조 최대 30일 감치는 https://www.law.go.kr/LSW/lsInfoP.do?lsId=010592&urlMode=lsInfoP 의 공식 검색 본문에서 확인했다."
+      ]
+    },
+    {
+      "sourceId": "8487aec1f3e50b9feeb2c956bae5a61bc1b0cb81b049e01ac886f68ded95e270",
+      "sourceIndex": 6906,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "6905~6912는 별지 6서식 과태료 부과 결정서의 연속 OCR이다. 기존 appendix-speech의 정리된 서식 문구와 원문을 대조했으나 studyImages 목록에 이 서식 그림이 없어 실제 그림 대조는 미완료이다. 독립 검토 때 그림 또는 공식 서식 원문 확인이 필요하다.",
+        "질서위반행위규제법 제24조의 3%·월 1.2%·60개월 한도는 공식 원문 https://www.law.go.kr/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1033704831 에서 확인했다. 제53조 신용정보 제공 https://www.law.go.kr/LSW/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1009309809 , 제54조 최대 30일 감치는 https://www.law.go.kr/LSW/lsInfoP.do?lsId=010592&urlMode=lsInfoP 의 공식 검색 본문에서 확인했다."
+      ]
+    },
+    {
+      "sourceId": "9959c09fc0aeb36f444115dbecd8a9433cc1f7e1f51483cfce82fc8f226bab09",
+      "sourceIndex": 6907,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "6905~6912는 별지 6서식 과태료 부과 결정서의 연속 OCR이다. 기존 appendix-speech의 정리된 서식 문구와 원문을 대조했으나 studyImages 목록에 이 서식 그림이 없어 실제 그림 대조는 미완료이다. 독립 검토 때 그림 또는 공식 서식 원문 확인이 필요하다.",
+        "질서위반행위규제법 제24조의 3%·월 1.2%·60개월 한도는 공식 원문 https://www.law.go.kr/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1033704831 에서 확인했다. 제53조 신용정보 제공 https://www.law.go.kr/LSW/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1009309809 , 제54조 최대 30일 감치는 https://www.law.go.kr/LSW/lsInfoP.do?lsId=010592&urlMode=lsInfoP 의 공식 검색 본문에서 확인했다."
+      ]
+    },
+    {
+      "sourceId": "164e1763138e52fd87f909f920ea46a28682696b416bdc07a086265bc53f48db",
+      "sourceIndex": 6908,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "6905~6912는 별지 6서식 과태료 부과 결정서의 연속 OCR이다. 기존 appendix-speech의 정리된 서식 문구와 원문을 대조했으나 studyImages 목록에 이 서식 그림이 없어 실제 그림 대조는 미완료이다. 독립 검토 때 그림 또는 공식 서식 원문 확인이 필요하다.",
+        "질서위반행위규제법 제24조의 3%·월 1.2%·60개월 한도는 공식 원문 https://www.law.go.kr/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1033704831 에서 확인했다. 제53조 신용정보 제공 https://www.law.go.kr/LSW/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1009309809 , 제54조 최대 30일 감치는 https://www.law.go.kr/LSW/lsInfoP.do?lsId=010592&urlMode=lsInfoP 의 공식 검색 본문에서 확인했다."
+      ]
+    },
+    {
+      "sourceId": "f8710a739446ac320fc0cdada5f467376c849d20782bd3f98221d275dd683221",
+      "sourceIndex": 6909,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "6905~6912는 별지 6서식 과태료 부과 결정서의 연속 OCR이다. 기존 appendix-speech의 정리된 서식 문구와 원문을 대조했으나 studyImages 목록에 이 서식 그림이 없어 실제 그림 대조는 미완료이다. 독립 검토 때 그림 또는 공식 서식 원문 확인이 필요하다.",
+        "질서위반행위규제법 제24조의 3%·월 1.2%·60개월 한도는 공식 원문 https://www.law.go.kr/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1033704831 에서 확인했다. 제53조 신용정보 제공 https://www.law.go.kr/LSW/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1009309809 , 제54조 최대 30일 감치는 https://www.law.go.kr/LSW/lsInfoP.do?lsId=010592&urlMode=lsInfoP 의 공식 검색 본문에서 확인했다."
+      ]
+    },
+    {
+      "sourceId": "50ddf1a610c17563e468a28b7757b4b58627d4fc0c1c7896afaf76caab4ff111",
+      "sourceIndex": 6910,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "6905~6912는 별지 6서식 과태료 부과 결정서의 연속 OCR이다. 기존 appendix-speech의 정리된 서식 문구와 원문을 대조했으나 studyImages 목록에 이 서식 그림이 없어 실제 그림 대조는 미완료이다. 독립 검토 때 그림 또는 공식 서식 원문 확인이 필요하다.",
+        "질서위반행위규제법 제24조의 3%·월 1.2%·60개월 한도는 공식 원문 https://www.law.go.kr/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1033704831 에서 확인했다. 제53조 신용정보 제공 https://www.law.go.kr/LSW/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1009309809 , 제54조 최대 30일 감치는 https://www.law.go.kr/LSW/lsInfoP.do?lsId=010592&urlMode=lsInfoP 의 공식 검색 본문에서 확인했다."
+      ]
+    },
+    {
+      "sourceId": "ce206b6d4652972bcb5604186845125c25123e79adfecd977e561ca8d3f42274",
+      "sourceIndex": 6911,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "6905~6912는 별지 6서식 과태료 부과 결정서의 연속 OCR이다. 기존 appendix-speech의 정리된 서식 문구와 원문을 대조했으나 studyImages 목록에 이 서식 그림이 없어 실제 그림 대조는 미완료이다. 독립 검토 때 그림 또는 공식 서식 원문 확인이 필요하다.",
+        "질서위반행위규제법 제24조의 3%·월 1.2%·60개월 한도는 공식 원문 https://www.law.go.kr/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1033704831 에서 확인했다. 제53조 신용정보 제공 https://www.law.go.kr/LSW/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1009309809 , 제54조 최대 30일 감치는 https://www.law.go.kr/LSW/lsInfoP.do?lsId=010592&urlMode=lsInfoP 의 공식 검색 본문에서 확인했다."
+      ]
+    },
+    {
+      "sourceId": "fdd86969c3c32e8835fde1a23bd8dc509247c7da5060ffae5f39f5c210f612d9",
+      "sourceIndex": 6912,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "6905~6912는 별지 6서식 과태료 부과 결정서의 연속 OCR이다. 기존 appendix-speech의 정리된 서식 문구와 원문을 대조했으나 studyImages 목록에 이 서식 그림이 없어 실제 그림 대조는 미완료이다. 독립 검토 때 그림 또는 공식 서식 원문 확인이 필요하다.",
+        "질서위반행위규제법 제24조의 3%·월 1.2%·60개월 한도는 공식 원문 https://www.law.go.kr/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1033704831 에서 확인했다. 제53조 신용정보 제공 https://www.law.go.kr/LSW/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1009309809 , 제54조 최대 30일 감치는 https://www.law.go.kr/LSW/lsInfoP.do?lsId=010592&urlMode=lsInfoP 의 공식 검색 본문에서 확인했다."
+      ]
+    },
+    {
+      "sourceId": "97ef1b0e8cdedec68cca842d1ef23c48607831a69486e055e05e805bd4202154",
+      "sourceIndex": 6914,
+      "issues": [
+        "Approval record note-to-evidence mapping incomplete",
+        "2027년 1월 1일을 기준으로 매 3년째 12월 31일까지라는 원문 기산점·마감일을 유지했다."
+      ]
+    }
+  ]
+}

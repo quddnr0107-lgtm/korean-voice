@@ -1,0 +1,142 @@
+name: Prebake approved F1 explanations without activation
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - codex/reader-assistance-f1-stage-20261105
+    paths:
+      - .github/workflows/reader-assistance-f1-stage.yml
+      - reader-assistance/staged.json
+      - tools/reader_assistance_stage.py
+      - test/reader_assistance_stage_test.py
+
+permissions:
+  contents: read
+
+concurrency:
+  group: reviewed-reader-assistance-f1
+  cancel-in-progress: false
+
+env:
+  RA_DATA: reader-assistance/staged.json
+  HF_HUB_DISABLE_TELEMETRY: '1'
+  DO_NOT_TRACK: '1'
+  PYTHONUNBUFFERED: '1'
+  OMP_NUM_THREADS: '2'
+  OPENBLAS_NUM_THREADS: '2'
+
+jobs:
+  prepare:
+    if: github.repository == 'quddnr0107-lgtm/korean-voice'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      missing: ${{ steps.inventory.outputs.missing }}
+      buckets: ${{ steps.inventory.outputs.buckets }}
+      model-key: ${{ steps.model.outputs.key }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify frozen recipe and non-activating stage regressions
+        run: |
+          python3 -m unittest discover -s test -p reader_assistance_test.py -v
+          python3 -m unittest discover -s test -p reader_assistance_stage_test.py -v
+      - name: Validate every supplied approval without promoting blocked rows
+        run: python3 tools/reader_assistance_stage.py plan --data "$RA_DATA"
+      - name: Find only missing content-addressed clips
+        id: inventory
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tools/reader_assistance_stage.py inventory --data "$RA_DATA"
+      - name: Reuse the frozen F1 model cache identity
+        id: model
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os
+          recipe=json.load(open('reader-assistance/recipe.json'))
+          pinned=json.dumps({'assets':recipe['assets'],'helper':recipe['helper']},sort_keys=True,separators=(',',':')).encode()
+          with open(os.environ['GITHUB_OUTPUT'],'a') as output:
+              output.write('key=reader-assistance-supertonic3-'+hashlib.sha256(pinned).hexdigest()[:16]+'\n')
+          PY
+      - name: Restore the shared model cache
+        if: steps.inventory.outputs.missing != '0'
+        id: assets
+        uses: actions/cache/restore@v4
+        with:
+          path: supertonic3
+          key: ${{ steps.model.outputs.key }}
+          restore-keys: supertonic3-v1
+      - name: Download and verify pinned model bytes once
+        if: steps.inventory.outputs.missing != '0'
+        run: python3 tools/reader_assistance.py download-model
+      - name: Retain only the verified reusable model
+        if: steps.inventory.outputs.missing != '0' && steps.assets.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: supertonic3
+          key: ${{ steps.model.outputs.key }}
+
+  bake:
+    needs: prepare
+    if: needs.prepare.outputs.missing != '0'
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      max-parallel: 16
+      matrix:
+        bucket: ${{ fromJson(needs.prepare.outputs.buckets) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Restore verified model; no audio or artifact cache
+        uses: actions/cache/restore@v4
+        with:
+          path: supertonic3
+          key: ${{ needs.prepare.outputs.model-key }}
+          fail-on-cache-miss: true
+      - name: Install CPU inference dependencies
+        run: python3 -m pip install --quiet onnxruntime numpy soundfile imageio-ffmpeg
+      - name: Verify objective audio and stage failure checks
+        run: |
+          python3 -m unittest discover -s test -p reader_assistance_test.py -v
+          python3 -m unittest discover -s test -p reader_assistance_stage_test.py -v
+      - name: Bake only exact approved content into reusable immutable packs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RA_BUCKET: ${{ matrix.bucket }}
+        run: python3 tools/reader_assistance_stage.py bake --data "$RA_DATA" --bucket "$RA_BUCKET"
+
+  report:
+    needs: [prepare, bake]
+    if: always() && needs.prepare.result == 'success' && (needs.bake.result == 'success' || needs.bake.result == 'skipped')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify staged coverage without publishing a production catalog
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tools/reader_assistance_stage.py report --data "$RA_DATA"

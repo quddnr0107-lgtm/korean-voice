@@ -33,7 +33,7 @@ The exact source data file's SHA-256 is recorded independently. Whitespace or te
 
 ## Cost and storage
 
-`korean-voice` is public. The workflow uses standard `ubuntu-latest` CPU runners, with at most four synthesis jobs in parallel. GitHub's [Actions billing documentation](https://docs.github.com/en/actions/concepts/billing-and-usage) states that standard hosted runners are free for public repositories. Larger/GPU runners are not used.
+`korean-voice` is public. The workflow uses standard `ubuntu-latest` CPU runners, with at most sixteen synthesis jobs in parallel. GitHub's [Actions billing documentation](https://docs.github.com/en/actions/concepts/billing-and-usage) states that standard hosted runners are free for public repositories. Larger/GPU runners are not used.
 
 One verified Supertonic model cache is shared across jobs. A loaded model and F1 style are reused inside each job; existing audio keys skip model synthesis. The same text under the same recipe is baked once even when multiple legal rows use it. No audio is committed to Git or Git LFS, and no Actions audio artifact is retained.
 
@@ -84,6 +84,49 @@ The `attach` command refuses a partial catalog, different source bytes, differen
 
 The workflow runs on explicit dispatch or the dedicated pilot/bake branches. It is not scheduled daily, and an unchanged data set performs no new synthesis or pack uploads.
 
+## Approved-content staging while source review continues
+
+`tools/reader_assistance_stage.py` accepts a `reader-assistance.v1` export containing only the exact approved explanations. Every supplied entry still needs `review.status: approved` and its current `textSha256`; one unapproved or changed entry stops the entire stage. The exporter must keep the true corpus count and the remaining unexplained count. This wrapper never creates an approval record or silently filters an invalid one.
+
+The separate `reader-assistance-f1-stage.yml` workflow runs on explicit dispatch or the `codex/reader-assistance-f1-stage-20261105` branch. It reads `reader-assistance/staged.json`, uses the unchanged F1 recipe and renderer, and publishes only missing content-addressed packs. It uses the same concurrency group and immutable Release as the final workflow, so staged and final runs cannot race or rebake unchanged clips.
+
+Staging always forces `completeEligible: false`, even if its input happens to contain the full corpus. Its commands are limited to `plan`, `inventory`, `bake`, and an evidence-only `report`. It has no production catalog, attachment, Worker or study-site activation command. Its final job has read-only GitHub permissions. No audio artifact is retained.
+
+When all source explanations are reviewed, the normal production commands must independently validate the complete export and assemble every required audio key. Existing staged clips then satisfy matching keys without loading the TTS model again. Until that complete pass succeeds, staged generation is evidence of generated audio only.
+
+```bash
+python3 -m unittest discover -s test -p reader_assistance_stage_test.py -v
+python3 tools/reader_assistance_stage.py plan --data reader-assistance/staged.json
+python3 tools/reader_assistance_stage.py bake --data reader-assistance/staged.json --bucket 0
+python3 tools/reader_assistance_stage.py report --data reader-assistance/staged.json
+```
+
 ## Version-one limitation
 
 This first production recipe is intentionally frozen. Its source pin includes the complete bake script, so even a transport-only edit changes the recipe hash. Existing packs from a different recipe hash are rejected in this version's namespace. Do not describe an arbitrary settings/code change as an automatic in-place upgrade. A future renderer change needs a reviewed new recipe/namespace (or a separately reviewed compatibility migration); it must not clobber v1 audio. ASR evaluation lives in a separate module and does not change the selected F1 synthesis recipe or its audio keys.
+
+### Independent pilot cross-check
+
+`tools/reader_assistance_asr.py --model medium --export-review-clips reader-assistance-review-clips --publish`
+transcribes the same seven immutable MP3 clips with the official
+`Systran/faster-whisper-medium` CPU int8 model, without a target-text prompt or
+any synthesis. The default remains `--model small`. The accepted model names
+are an explicit allowlist, and the actual model revision is recorded.
+
+Push the isolated `codex/reader-assistance-f1-asr-medium-20261105` branch to run
+this cross-check. Medium evidence is published as
+`reader-assistance/asr-report-medium.json` on `data/reader-assistance-f1-asr-pilot`;
+the existing `reader-assistance/asr-report.json` small-model evidence is retained.
+The comparison reads the previous small report by immutable Git blob
+`4e3726531285baad83cb4d5efc2f224761aa1dc6`, verifies every text/audio identity,
+and exports only clips that either model marks for review. The temporary Actions
+artifact contains exact MP3 bytes plus both reports and a comparison JSON, with
+one-day retention and no audio re-encoding. Model cache saving runs even when
+transcription disagreement makes the final job fail; such a failure never marks
+the audio or full corpus as approved.
+
+The first successful small-model pilot assessed 106.06 seconds of audio in
+20.346 CPU seconds (RTF 0.1918). All seven had matching extracted critical legal
+tokens, two had exact normalized transcripts, and five required review for other
+transcription disagreements. These are limited pilot measurements, not a claim
+that the spoken words were manually checked or that all-corpus accuracy is known.
