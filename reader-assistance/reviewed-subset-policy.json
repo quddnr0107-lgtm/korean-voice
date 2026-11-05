@@ -1,0 +1,18 @@
+{
+  "approvedEntries": 6072,
+  "bodyRows": 6073,
+  "excluded": [
+    {
+      "id": "c98ea8824f26634490abdbf4f02504390c44c6c80ec4a989da4220f9d0127a8e",
+      "originalSha256": "4eee08ecc7ce252c06bf054d21a12e34668b0e1d8f61de9570842661f6c93e28",
+      "reason": "현행 훈령 제3216호 전문 PDF에도 연습사격 5발·기록사격 5발·각 2회 10발이 함께 적혀 있다. 원본 누락은 해소했으나 각 2회의 반복 단위와 총탄수는 확정할 수 없다. 발령기관의 명확한 세부기준 또는 공식 해석 확보 전 총 10발 또는 20발로 풀이하지 않는다.",
+      "reviewRecordSha256": "621d28d7bd44b3a01ac98c75a1ff18c235e798cdbbb089d68778075b18ca3a75",
+      "sourceIndex": 6384,
+      "textSha256": "faaf719c141fb8e27780ccb568fb58e3f3f756bdc85b724f9b7fb702238f4426"
+    }
+  ],
+  "kind": "reviewed-subset",
+  "schema": "reader-assistance-reviewed-subset-policy.v1",
+  "sourceCorpusSha256": "96b4a911edc3665687003234f3d72ba02510d6cfd3d0067c2ba5f551e5752d65",
+  "sourceRowsSha256": "4598d7f7a1f79f5a3a64dda96c76d5d90ee8be959809a1179bc2b10c63af6fb5"
+}
