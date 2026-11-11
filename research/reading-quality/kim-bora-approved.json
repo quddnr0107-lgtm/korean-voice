@@ -1,0 +1,15 @@
+{
+  "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+  "speaker": "Sohee",
+  "instruction": "Speak Korean to one learner. Ask the questions with genuine curiosity, then explain with clear, conversational phrasing. Keep a consistent speaking voice throughout the paragraph.",
+  "temperature": 0.8,
+  "top_p": 0.9,
+  "non_streaming_mode": true,
+  "name": "김보라 개선본",
+  "accepted_on": "2026-11-12",
+  "pilot_seed": 5192,
+  "pilot_wav_sha256": "3d0e5045ba6221eb3ba9671f6602c75f10c70fc2feeadd9c4e78d7950c485a67",
+  "selection": "independent ASR comparison across candidates; perceptual approval remains separate",
+  "pitch_shift": 0,
+  "tempo_factor": 1
+}
