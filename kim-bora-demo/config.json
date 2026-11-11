@@ -1,0 +1,10 @@
+{
+  "count": 34,
+  "model": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+  "revision": "85e237c12c027371202489a0ec509ded67b5e4b5",
+  "speaker": "Sohee",
+  "seed": 836,
+  "receiver_public": "bWZZvsCnguxui/4Ik11MVSMMHV90ahWCpazvjCXmlAw=",
+  "source_sha256": "ce6872fbb554f4c42097ee2b2130d706995c893b77f3bcae5cdd724c8eca9276",
+  "source_blob": "82065918dd6d1367388898c5ebc7d3bf789afb77"
+}
