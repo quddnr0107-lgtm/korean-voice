@@ -8,7 +8,7 @@ permissions:
   actions: read
 concurrency:
   group: kim-bora-one-lecture-20261111
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   plan:
     runs-on: ubuntu-24.04
@@ -59,10 +59,18 @@ jobs:
           p=snapshot_download(c['model'],revision=c['revision'],local_dir=os.path.join(os.environ['RUNNER_TEMP'],'bora-model'),ignore_patterns=['*.md','.gitattributes'])
           with open(os.environ['GITHUB_ENV'],'a') as f:f.write('BORA_MODEL='+p+'\nBORA_RECEIVER='+os.path.join(os.environ['RUNNER_TEMP'],'bora-receiver')+'\n')
           PY
-      - name: Verify existing wrapped source receiver
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: python lecture-military-b/code/delivery.py receiver --destination "$BORA_RECEIVER"
+      - name: Verify durable wrapped source receiver
+        run: |
+          python - <<'PYCODE'
+          import hashlib,os,shutil
+          from pathlib import Path
+          expected={'receiver-public.json':'b0dde8e8106b2325e47b51dc2535fb618d4a9c1e9fa62ee61b90d8da32e9ae2a','receiver-wrapped.json':'e28c9edd2f478bbb81cb113126261f1b392f07cf03a053777b2e238e679a2cfa'}
+          d=Path(os.environ['BORA_RECEIVER']);d.mkdir()
+          for n,h in expected.items():
+              p=Path('kim-bora-demo')/n
+              assert hashlib.sha256(p.read_bytes()).hexdigest()==h
+              shutil.copyfile(p,d/n)
+          PYCODE
       - name: Generate one part and seal for requester without plaintext logs
         env:
           ADMIN_LAW_PREMIUM_SOURCE_KEY_B64: ${{ secrets.ADMIN_LAW_PREMIUM_SOURCE_KEY_B64 }}
