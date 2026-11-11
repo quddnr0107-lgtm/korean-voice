@@ -1,0 +1,10 @@
+{
+  "version": "legal-reading-quality/1",
+  "generated_cases": 119988,
+  "focused_regressions": 6,
+  "transcript_gate_cases": 5,
+  "failures": 0,
+  "corpus_sha256": "2c62b5b4dd052c1bd7c96d9c6916d12f5251fb56e194185f6a9482c01d950c1c",
+  "audio_cases_synthesized": 0,
+  "scope": "text preparation and transcript mismatch tests, NOT audio validation or model training"
+}
