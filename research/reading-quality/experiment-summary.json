@@ -1,0 +1,136 @@
+{
+  "date": "2026-11-12",
+  "papers_reviewed": 6,
+  "generated_candidates": 2,
+  "selected": "seed-5192",
+  "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+  "speaker": "Sohee",
+  "baseline": {
+    "seed": 8112
+  },
+  "candidate_seeds": [
+    5192,
+    7319
+  ],
+  "changed_factors": [
+    "instruction",
+    "seed"
+  ],
+  "non_streaming_mode": "true; unchanged from baseline default",
+  "human_listening_completed": false,
+  "model_training": false,
+  "metrics": [
+    {
+      "name": "baseline",
+      "content": {
+        "character_errors": 4,
+        "reference_characters": 132,
+        "cer": 0.030303030303030304,
+        "missing_critical": [
+          "소지의무"
+        ],
+        "status": "review"
+      },
+      "signal": {
+        "seconds": 32.08,
+        "peak": 0.7734375,
+        "clipped_fraction": 0.0,
+        "energy_silence_fraction": 0.4332917705735661,
+        "pauses_seconds": [
+          0.54,
+          0.44,
+          0.64,
+          0.16,
+          0.62,
+          1.58,
+          1.18,
+          0.46,
+          0.3,
+          1.32,
+          1.12,
+          0.44,
+          1.7,
+          0.22
+        ],
+        "longest_energy_silence_seconds": 1.7,
+        "f0_median_hz": 224.96857795060998,
+        "f0_iqr_hz": 63.18042558690371,
+        "note": "F0/energy are approximate diagnostics; not naturalness, emotion, or speaker-identity scores"
+      },
+      "technical_review": []
+    },
+    {
+      "name": "seed-5192",
+      "content": {
+        "character_errors": 1,
+        "reference_characters": 132,
+        "cer": 0.007575757575757576,
+        "missing_critical": [],
+        "status": "review"
+      },
+      "signal": {
+        "seconds": 30.24,
+        "peak": 0.75390625,
+        "clipped_fraction": 0.0,
+        "energy_silence_fraction": 0.4365079365079365,
+        "pauses_seconds": [
+          0.44,
+          0.24,
+          0.9,
+          0.5,
+          1.26,
+          1.9000000000000001,
+          0.34,
+          1.36,
+          1.06,
+          0.36,
+          1.72
+        ],
+        "longest_energy_silence_seconds": 1.9000000000000001,
+        "f0_median_hz": 254.84216966186193,
+        "f0_iqr_hz": 80.1308435218586,
+        "note": "F0/energy are approximate diagnostics; not naturalness, emotion, or speaker-identity scores"
+      },
+      "technical_review": []
+    },
+    {
+      "name": "seed-7319",
+      "content": {
+        "character_errors": 3,
+        "reference_characters": 132,
+        "cer": 0.022727272727272728,
+        "missing_critical": [],
+        "status": "review"
+      },
+      "signal": {
+        "seconds": 31.68,
+        "peak": 0.7578125,
+        "clipped_fraction": 0.0,
+        "energy_silence_fraction": 0.4393939393939394,
+        "pauses_seconds": [
+          0.88,
+          0.28,
+          0.18,
+          0.84,
+          0.2,
+          0.56,
+          1.26,
+          0.18,
+          1.1400000000000001,
+          0.56,
+          0.16,
+          1.42,
+          1.34,
+          0.24,
+          1.1400000000000001
+        ],
+        "longest_energy_silence_seconds": 1.42,
+        "f0_median_hz": 232.95182038936645,
+        "f0_iqr_hz": 63.156589291886434,
+        "note": "F0/energy are approximate diagnostics; not naturalness, emotion, or speaker-identity scores"
+      },
+      "technical_review": []
+    }
+  ],
+  "limit": "one excerpt; ASR errors are not ground-truth speech errors; no naturalness improvement established"
+}
