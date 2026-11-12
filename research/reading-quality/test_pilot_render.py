@@ -2,12 +2,71 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock,patch
 
 from paragraph_plan import build_plan
 from pilot_render import (canonical, check_plan, choose_candidate, file_hash,
                           digest_bytes, export_subset, identity, quarantine_review_candidate,
-                          Renderer, reusable_record, signal_stats, transcript_score, unit_key)
+                          Renderer, reusable_record, signal_stats, transcript_score, unit_key,
+                          candidate_cannot_be_beaten)
+
+
+class CandidateEarlyExitTests(unittest.TestCase):
+    @staticmethod
+    def candidate(seed,errors=0,missing=(),signal_blocked=False,asr_blocked=False):
+        return dict(seed=seed,signal={'blocked':signal_blocked},asr=dict(blocked=asr_blocked,
+            missing_critical=list(missing),character_errors=errors))
+
+    def generate(self,rows):
+        renderer=Renderer.__new__(Renderer)
+        renderer.settings={'seeds':[row['seed'] for row in rows]}
+        renderer.candidate=Mock(side_effect=rows)
+        produced=renderer.candidate_pool({'id':'synthetic'},0,'key')
+        return produced,renderer.candidate.call_count
+
+    def test_perfect_first_lower_seed_generates_only_once(self):
+        rows=[self.candidate(5192),self.candidate(7319)]
+        produced,count=self.generate(rows)
+        self.assertEqual(count,1)
+        self.assertIs(choose_candidate(produced),choose_candidate(rows))
+
+    def test_errors_missing_critical_signal_failure_or_asr_blockage_still_generate_second(self):
+        cases=[dict(errors=1),dict(missing=('핵심',),asr_blocked=True),
+               dict(signal_blocked=True),dict(asr_blocked=True)]
+        for change in cases:
+            rows=[self.candidate(5192,**change),self.candidate(7319)]
+            with self.subTest(change=change):
+                produced,count=self.generate(rows)
+                self.assertEqual(count,2)
+                self.assertIs(choose_candidate(produced),choose_candidate(rows))
+
+    def test_remaining_smaller_seed_prevents_exit_even_after_perfect_first(self):
+        rows=[self.candidate(7319),self.candidate(5192)]
+        produced,count=self.generate(rows)
+        self.assertEqual(count,2)
+        self.assertEqual(choose_candidate(produced)['seed'],5192)
+
+    def test_equal_remaining_seed_preserves_stable_first_candidate(self):
+        rows=[self.candidate(5192),self.candidate(5192)]
+        produced,count=self.generate(rows)
+        self.assertEqual(count,1)
+        self.assertIs(choose_candidate(produced),rows[0])
+        self.assertIs(choose_candidate(rows),rows[0])
+
+    def test_selector_equivalence_across_quality_and_seed_orders(self):
+        import itertools
+        qualities=[{},dict(errors=1),dict(errors=9,asr_blocked=True),
+            dict(missing=('핵심',),errors=1,asr_blocked=True),dict(signal_blocked=True)]
+        for seeds in [(5192,7319),(7319,5192)]:
+            for first,second in itertools.product(qualities,repeat=2):
+                rows=[self.candidate(seeds[0],**first),self.candidate(seeds[1],**second)]
+                produced,_=self.generate(rows)
+                self.assertIs(choose_candidate(produced),choose_candidate(rows))
+
+    def test_unknown_flags_or_noninteger_error_count_do_not_trigger_exit(self):
+        for field,value in [('blocked',None),('character_errors',False)]:
+            row=self.candidate(5192);row['asr'][field]=value
+            self.assertFalse(candidate_cannot_be_beaten(row,[7319]))
 
 
 class RenderGateTests(unittest.TestCase):

@@ -78,12 +78,31 @@ def transcript_score(expected, recognized, critical_terms=(), max_cer=.08):
                 review_required=bool(errors or missing), perceptual_review_required=True)
 
 
+def candidate_rank(candidate):
+    return (bool(candidate['signal']['blocked']), bool(candidate['asr']['blocked']),
+            len(candidate['asr']['missing_critical']), candidate['asr']['character_errors'],
+            candidate['seed'])
+
+
 def choose_candidate(candidates):
     if not candidates:
         raise ValueError('no candidates')
-    return min(candidates, key=lambda x: (
-        bool(x['signal']['blocked']), bool(x['asr']['blocked']),
-        len(x['asr']['missing_critical']), x['asr']['character_errors'], x['seed']))
+    return min(candidates, key=candidate_rank)
+
+
+def candidate_cannot_be_beaten(candidate, remaining_seeds):
+    """Prove selection is final using the selector's exact lower bound.
+
+    A future candidate can at best rank (False, False, 0, 0, its_seed).
+    Equal ranks keep the already-generated candidate because min() is stable.
+    This skips redundant synthesis, never relaxes transcript/signal checks.
+    """
+    asr=candidate['asr'];seed=candidate['seed']
+    if (candidate['signal'].get('blocked') is not False or asr.get('blocked') is not False
+            or asr.get('missing_critical') != [] or type(asr.get('character_errors')) is not int
+            or asr['character_errors'] != 0 or type(seed) is not int):
+        return False
+    return all(type(other) is int and seed <= other for other in remaining_seeds)
 
 
 def save_json(path, value):
@@ -320,6 +339,16 @@ class Renderer:
             seconds=signal['seconds'], errors=asr['character_errors'], blocked=signal['blocked'] or asr['blocked'])), flush=True)
         return record
 
+    def candidate_pool(self, unit, index, key):
+        candidates=[]
+        seeds=self.settings['seeds']
+        for position,seed in enumerate(seeds):
+            candidates.append(self.candidate(unit,index,seed,key))
+            best=choose_candidate(candidates)
+            if candidate_cannot_be_beaten(best,seeds[position+1:]):
+                break
+        return candidates
+
     def render_unit(self, unit, index):
         key = unit_key(self.plan, unit, self.settings)
         folder = self.directory/'units'/f'{index:04d}'
@@ -329,7 +358,7 @@ class Renderer:
             if reusable_record(record, key, folder, 'selected'):
                 print(json.dumps(dict(event='reused', unit=index)), flush=True)
                 return record
-        candidates = [self.candidate(unit, index, seed, key) for seed in self.settings['seeds']]
+        candidates = self.candidate_pool(unit,index,key)
         selected = choose_candidate(candidates)
         blocked = selected['signal']['blocked'] or selected['asr']['blocked']
         if blocked:
