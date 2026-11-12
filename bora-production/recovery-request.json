@@ -1,0 +1,14 @@
+{
+  "schema": "bora-recovery-diagnostic-request/v1",
+  "purpose": "read-only-authenticated-diagnostics",
+  "incident": {
+    "run_id": "43213606878",
+    "lesson_id": "TB-018",
+    "asset_id": 739850091,
+    "asset_name": "TB-018-s002-r43213606878-a1.zip",
+    "asset_bytes": 84917112,
+    "asset_sha256": "acc96ece684673dfc29cc18d9ba81cd9d3a981430eac3801ace46b19795b0b24",
+    "recipe_sha256": "d3d35666712d276c0fa60bb5c5b1f7ab7d11c7042d490c95bb6fb8846682502d",
+    "render_settings_sha256": "930c8341302f36e0058eeb0deb3a0821cc6177dc6edc162d41547f93299a0822"
+  }
+}

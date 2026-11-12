@@ -1,0 +1,82 @@
+name: Bora sealed checkpoint recovery diagnostics
+on:
+  push:
+    branches: [integrated-lectures-premium-20261028]
+    paths: ['bora-production/recovery-request.json']
+permissions:
+  contents: read
+concurrency:
+  group: bora-recovery-diagnostics-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  transport:
+    if: github.repository == 'quddnr0107-lgtm/korean-voice' && github.ref == 'refs/heads/integrated-lectures-premium-20261028' && github.event_name == 'push'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    # GitHub requires push access to read this existing draft release.
+    # All remote calls below are GET; no release upload/update/delete is called.
+    permissions:
+      contents: write
+    outputs:
+      checkpoint_artifact_id: ${{ steps.saved.outputs.artifact-id }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with: {python-version: '3.12'}
+      - name: Install envelope validation only, no TTS models or source keys
+        run: python -m pip install --disable-pip-version-check cryptography==50.0.0
+      - name: Transport regression and no-plaintext diagnostics tests
+        run: |
+          python -m unittest discover -s bora-production -p 'test_transport.py'
+          python -m unittest discover -s bora-production -p 'test_recovery_diagnostics.py'
+      - name: Verify the repaired draft URL path and download one pinned ciphertext checkpoint
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python bora-production/recovery_diagnostics.py download --directory "$RUNNER_TEMP/bora-recovery-cipher"
+      - id: saved
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: bora-recovery-cipher-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/bora-recovery-cipher/TB-018-s002-r43213606878-a1.zip
+            ${{ runner.temp }}/bora-recovery-cipher/transport-report.json
+          retention-days: 3
+          if-no-files-found: error
+  diagnose:
+    needs: transport
+    if: needs.transport.result == 'success'
+    runs-on: ubuntu-24.04
+    environment: admin-law-premium-production
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with: {python-version: '3.12'}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: ${{ needs.transport.outputs.checkpoint_artifact_id }}
+          merge-multiple: true
+          path: ${{ runner.temp }}/bora-recovery-cipher
+      - name: Install cryptography before any secret-bearing step
+        run: python -m pip install --disable-pip-version-check cryptography==50.0.0
+      - name: Authenticate saved source and receipts offline, emit fixed counters only
+        env:
+          ADMIN_LAW_PREMIUM_SOURCE_KEY_B64: ${{ secrets.ADMIN_LAW_PREMIUM_SOURCE_KEY_B64 }}
+          ADMIN_LAW_PREMIUM_MEDIA_KEY_B64: ${{ secrets.ADMIN_LAW_PREMIUM_MEDIA_KEY_B64 }}
+        run: |
+          umask 077
+          export BORA_HOST_NETNS="$(readlink /proc/self/ns/net)"
+          sudo --preserve-env=ADMIN_LAW_PREMIUM_SOURCE_KEY_B64,ADMIN_LAW_PREMIUM_MEDIA_KEY_B64,BORA_HOST_NETNS,GITHUB_REPOSITORY,GITHUB_EVENT_NAME,GITHUB_REF,GITHUB_WORKFLOW_REF,RUNNER_TEMP \
+            unshare --net --setgid "$(id -g)" --setuid "$(id -u)" -- "$(command -v python)" \
+            bora-production/recovery_diagnostics.py inspect \
+            --directory "$RUNNER_TEMP/bora-recovery-cipher" --output "$RUNNER_TEMP/bora-recovery-summary.json"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: bora-recovery-summary-${{ github.run_id }}
+          path: ${{ runner.temp }}/bora-recovery-summary.json
+          retention-days: 3
+          if-no-files-found: error
