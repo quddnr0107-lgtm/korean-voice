@@ -5,6 +5,32 @@ complete course on 2026-11-12. Order: TB (25), RL (34), DR (78), MS (166).
 Keep the existing audio and releases. Do not buy additional compute or switch
 to a different voice, quantization or engine to improve throughput.
 
+## First launch record
+
+Run `43211498455`, commit `8dfa45d31686ea46462ac8e01e83d45d41f1009b`,
+started 2026-11-12 11:42 UTC. Real keyless FP32 TTS/ASR/MP3 preflight passed,
+and the authenticated TB plan passed: 25 lessons, 95 shards, 3665 units.
+704 units have unresolved source review flags and are intentionally withheld
+without wasting synthesis time. Diagnose their actual reasons; a waived flag
+or green workflow is not a quality fix. Current compatible passed units remain
+valuable encrypted evidence. Investigate before changing a planner fingerprint
+because the current conservative reuse gate binds the full plan and settings.
+
+The first 40 render jobs were approved through the existing environment UI.
+Each later render wave and assembly can request that environment's approval
+again. GitHub's bulk UI approval temporarily returned a server timeout while
+approving part of the wave; re-reading the run showed exactly which requests
+remained, and approving only those completed the wave. Verify actual pending
+deployment state; do not infer failure from a timeout or disable the gate.
+
+Site adapter PR #1012 merged at `d52c352446d05741f9c5f0dcb9852694a023417d`.
+Worker deployment run `43212212246` succeeded, version
+`dddea002-1bea-4f73-b2dd-3b41f9773092`. All old pins/catalog entries are retained;
+no new course is activated. CI and deployed access-boundary checks passed.
+Authenticated live lecture playback must still be checked when a course is
+activated. Check current GitHub state rather than treating this launch record
+as a current completion report.
+
 ## Entry point
 
 Repository: `quddnr0107-lgtm/korean-voice`.
@@ -67,10 +93,10 @@ approval may be exercised normally; do not remove the gate to get a run through.
 ## Site activation after a course completes
 
 Repository: `quddnr0107-lgtm/yebijun-muhanhoidok234`.
-The prepared course-release adapter registers old and new release pairs, leaving
+The deployed course-release adapter registers old and new release pairs, leaving
 new releases disabled until their explicit `BORA_TB_INDEX_SHA256` (or RL/DR/MS)
-pin is configured. Its source is in the `bora-course-release-20261112` branch once
-pushed. Follow `docs/BORA_COURSE_RELEASES_20261112.md` there.
+pin is configured. Its source is merged into main through PR #1012.
+Follow `docs/BORA_COURSE_RELEASES_20261112.md` there.
 
 Verify the new entire-course index and all referenced encrypted objects. Deploy
 the Worker with the added course pin while preserving all old pins. Then update

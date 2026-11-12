@@ -34,11 +34,12 @@ class RuntimeTests(unittest.TestCase):
     def envelope(self):
         return r.seal_unit(self.key,self.plan,0,self.receipt,self.root,self.recipe,self.settings)
 
-    def test_campaign_exact_303_and_first_subject(self):
+    def test_campaign_exact_303_and_selected_subject(self):
         campaign,recipe,request,ids=r.config()
         self.assertEqual(len(campaign['inputs']),303)
-        self.assertEqual(ids,[f'TB-{i:03d}' for i in range(1,26)])
-        self.assertFalse(request['retry_blocked'])
+        expected=[f"{request['course']}-{i:03d}" for i in range(1,r.LIMITS[request['course']]+1)]
+        self.assertEqual(ids,sorted(request.get('lesson_ids',expected)))
+        self.assertIsInstance(request['retry_blocked'],bool)
         self.assertEqual(recipe['selection'],3)
 
     def test_all_course_crypto_namespaces(self):
