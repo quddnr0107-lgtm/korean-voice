@@ -13,8 +13,8 @@ import urllib.error
 import urllib.request
 
 SOURCE_RUN = "43177833903"
-MODEL_REPOSITORY = "Systran/faster-whisper-small"
-MODEL_REVISION = "536b0662742c02347bc0e980a01041f333bce120"
+MODEL_REPOSITORY = "Systran/faster-whisper-medium"
+MODEL_REVISION = "08e178d48790749d25932bbc082711ddcfdfbc4f"
 MODEL_FILES = ("model.bin", "config.json", "tokenizer.json", "vocabulary.txt")
 HERE = Path(__file__).resolve().parent
 ARTICLE = re.compile(r"제\s*(?:83|팔십삼)\s*조\s*의\s*(?:3|삼)(?![0-9십백천만])")
