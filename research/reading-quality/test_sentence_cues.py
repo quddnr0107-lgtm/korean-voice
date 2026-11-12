@@ -24,6 +24,21 @@ def fixture(source, max_chars=220, word_groups=None, reading_spans=()):
         source_sha256=plan['source_sha256'], units=recognitions)
 
 
+def add_prefix(args, prefix='자, ', unit_index=0, words=None):
+    """Synthetic final-PCM observation, with a distinct hash for changed audio."""
+    plan, measurements, recognitions = args
+    unit, row = plan['units'][unit_index], recognitions['units'][unit_index]
+    unit['source_spoken'] = unit['spoken']
+    unit['delivery_prefix'] = prefix
+    unit['spoken'] = prefix + unit['source_spoken']
+    row['spoken_sha256'] = digest(unit['spoken'])
+    row['pcm_sha256'] = measurements['units'][unit_index]['pcm_sha256'] = digest(row['pcm_sha256'] + prefix)
+    row['words'] = words if words is not None else [
+        dict(text=token, start_s=.1+i*.4, end_s=.3+i*.4, probability=.95)
+        for i, token in enumerate(unit['spoken'].split())]
+    return args
+
+
 class SentenceCuesTests(unittest.TestCase):
     def test_exact_word_edges_and_unchanged_source(self):
         args = fixture('첫 문장입니다. 다음 문장입니다.')
@@ -150,6 +165,97 @@ class SentenceCuesTests(unittest.TestCase):
                     args[2]['units'][1] = copy.deepcopy(args[2]['units'][0])
                 else:
                     args[2]['units'][1]['id'] = 'unknown'
+                with self.assertRaises(ValueError):
+                    build_sentence_cues(*args)
+
+    def test_prefix_has_separate_measured_cue_and_no_source_offset(self):
+        source = '핵심입니다. 다음입니다.'
+        args = add_prefix(fixture(source), words=[
+            dict(text='자,', start_s=.2, end_s=.83, probability=.9),
+            dict(text='핵심입니다.', start_s=1.71, end_s=2.46, probability=.96),
+            dict(text='다음입니다.', start_s=3.38, end_s=4.93, probability=.91)])
+        before = copy.deepcopy(args)
+        result = build_sentence_cues(*args)
+        self.assertEqual(args, before)
+        self.assertEqual(args[0]['source'], source)
+        self.assertTrue(result['complete'])
+        self.assertEqual(result['flags'], [])
+        self.assertEqual([(c['start_sample'], c['end_sample']) for c in result['segments']], [(171, 246), (338, 493)])
+        self.assertEqual([c['start_utf16'] for c in result['segments']], [0, len('핵심입니다. ')])
+        delivery = result['delivery_cues'][0]
+        self.assertEqual((delivery['type'], delivery['start_sample'], delivery['end_sample']), ('prefix', 20, 83))
+        self.assertNotIn('start_utf16', delivery)
+        self.assertNotIn('end_utf16', delivery)
+
+    def test_um_prefix_uses_measured_unit_gap_and_repeated_sentence_order(self):
+        args = add_prefix(fixture('앞 문장입니다.\n맞습니다. 맞습니다.'), prefix='음, ', unit_index=1)
+        result = build_sentence_cues(*args)
+        self.assertTrue(result['complete'])
+        self.assertEqual([c['start_sample'] for c in result['segments']], [10, 10075, 10115])
+        self.assertEqual(result['delivery_cues'][0]['start_sample'], 10035)
+
+    def test_unrecognized_prefix_does_not_become_source_timing(self):
+        args = add_prefix(fixture('핵심입니다.'))
+        args[2]['units'][0]['words'].pop(0)
+        result = build_sentence_cues(*args)
+        self.assertEqual(result['segments'], [])
+        self.assertEqual(result['delivery_cues'], [])
+        self.assertFalse(result['complete'])
+        self.assertIn('delivery_prefix_not_verified', [f['reason'] for f in result['flags']])
+
+    def test_prefix_attached_to_source_asr_word_is_not_interpolated(self):
+        args = add_prefix(fixture('핵심입니다.'), words=[
+            dict(text='자, 핵심입니다.', start_s=.2, end_s=1.91, probability=.9)])
+        result = build_sentence_cues(*args)
+        self.assertEqual(result['segments'], [])
+        self.assertEqual(result['delivery_cues'], [])
+        self.assertIn('delivery_prefix_boundary_inside_asr_word', [f['reason'] for f in result['flags']])
+
+    def test_changed_source_spoken_does_not_relabel_the_original(self):
+        args = add_prefix(fixture('원문입니다.'))
+        unit = args[0]['units'][0]
+        unit.update(source_spoken='바꾼 내용입니다.', spoken='자, 바꾼 내용입니다.')
+        args[2]['units'][0]['spoken_sha256'] = digest(unit['spoken'])
+        result = build_sentence_cues(*args)
+        self.assertEqual(result['segments'], [])
+        self.assertEqual(result['delivery_cues'], [])
+        self.assertIn('source_to_spoken_mapping_requires_review', [f['reason'] for f in result['flags']])
+
+    def test_reading_or_unapproved_or_inconsistent_prefix_rejected(self):
+        for mutation in ('reading', 'unsupported', 'inconsistent', 'missing_source_spoken'):
+            with self.subTest(mutation=mutation):
+                args = add_prefix(fixture('원문입니다.'))
+                unit = args[0]['units'][0]
+                if mutation == 'reading':
+                    unit['mode'] = 'reading'
+                elif mutation == 'unsupported':
+                    unit.update(delivery_prefix='그러니까, ', spoken='그러니까, '+unit['source_spoken'])
+                elif mutation == 'inconsistent':
+                    unit['spoken'] = '음, '+unit['source_spoken']
+                else:
+                    del unit['source_spoken']
+                args[2]['units'][0]['spoken_sha256'] = digest(unit['spoken'])
+                with self.assertRaises(ValueError):
+                    build_sentence_cues(*args)
+
+    def test_prefix_timestamps_overlap_or_low_probability_fail_closed(self):
+        for mutation in ('overlap', 'low_probability'):
+            with self.subTest(mutation=mutation):
+                args = add_prefix(fixture('원문입니다.'))
+                words = args[2]['units'][0]['words']
+                if mutation == 'overlap':
+                    words[1]['start_s'] = .2
+                else:
+                    words[0]['probability'] = .1
+                result = build_sentence_cues(*args)
+                self.assertEqual(result['segments'], [])
+                self.assertEqual(result['delivery_cues'], [])
+
+    def test_prefix_keeps_final_pcm_and_spoken_hash_binding(self):
+        for mutation in ('pcm_sha256', 'spoken_sha256'):
+            with self.subTest(mutation=mutation):
+                args = add_prefix(fixture('원문입니다.'))
+                args[2]['units'][0][mutation] = 'a'*64
                 with self.assertRaises(ValueError):
                     build_sentence_cues(*args)
 

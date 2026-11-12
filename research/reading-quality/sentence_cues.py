@@ -20,6 +20,7 @@ _SPACE = '[' + re.escape(JS_SPACE) + ']+'
 _SPLIT = re.compile(r'(?<=[다요죠네까습음]\.)' + _SPACE + r'|(?<=[?!])' +
                     _SPACE + r'|(?<=다\.)(?=[가-힣])|(?<=요\.)(?=[가-힣])')
 _HASH = re.compile(r'[a-f0-9]{64}')
+_DELIVERY_PREFIXES = frozenset(('자, ', '음, '))
 
 
 def canonical(text):
@@ -119,6 +120,22 @@ def _occurrences(text, needle):
         start = index + 1
 
 
+def _source_spoken_and_prefix(unit):
+    """Validate optional delivery words separately from unchanged source text."""
+    if 'delivery_prefix' not in unit and 'source_spoken' not in unit:
+        return unit['spoken'], ''
+    prefix = unit.get('delivery_prefix')
+    source_spoken = unit.get('source_spoken')
+    if not isinstance(prefix, str) or prefix not in _DELIVERY_PREFIXES:
+        raise ValueError('unsupported delivery prefix')
+    if unit.get('mode') != 'explain':
+        raise ValueError('delivery prefix forbidden for reading units')
+    if (not isinstance(source_spoken, str) or not canonical(source_spoken) or
+            unit['spoken'] != prefix + source_spoken):
+        raise ValueError('delivery prefix/source spoken integrity')
+    return source_spoken, prefix
+
+
 def build_sentence_cues(plan, measurements, recognitions, min_probability=.5):
     """Return only exact, unique, monotonic sentence-fragment word anchors.
 
@@ -129,6 +146,9 @@ def build_sentence_cues(plan, measurements, recognitions, min_probability=.5):
     local to each final unit, excluding gap_before_samples. Full-unit exact
     transcript matches permit repeated sentences by their known order. Otherwise
     a fragment must occur exactly once in the unit's recognized transcript.
+    Reviewed explanation-only prefixes ('자, ', '음, ') require source_spoken
+    and spoken == delivery_prefix + source_spoken. They receive delivery_cues
+    without source offsets, only after an exact full-unit transcript match.
     """
     if type(min_probability) not in (int, float) or not 0 <= min_probability <= 1:
         raise ValueError('probability threshold')
@@ -146,7 +166,7 @@ def build_sentence_cues(plan, measurements, recognitions, min_probability=.5):
     source = plan['source']
     cp = {utf16(source[:i]): i for i in range(len(source) + 1)}
     sentences = sentence_spans(plan)
-    flags, fragments = [], {s['index']: [] for s in sentences}
+    flags, fragments, delivery_cues = [], {s['index']: [] for s in sentences}, []
     expected_parts = {s['index']: 0 for s in sentences}
 
     def flag(reason, unit_id=None, sentence_index=None):
@@ -160,6 +180,7 @@ def build_sentence_cues(plan, measurements, recognitions, min_probability=.5):
     for unit, timing in zip(plan['units'], timeline['segments']):
         row = recognized[unit['id']]
         _validate_recognition(unit, measured[unit['id']], row)
+        source_spoken, prefix = _source_spoken_and_prefix(unit)
         parts = []
         for sentence in sentences:
             a = max(sentence['start_utf16'], unit['start_utf16'])
@@ -176,7 +197,7 @@ def build_sentence_cues(plan, measurements, recognitions, min_probability=.5):
             expected_parts[sentence['index']] += 1
             parts.append((sentence['index'], normalized))
         expected = canonical(unit['spoken'])
-        if ''.join(text for _, text in parts) != expected:
+        if ''.join(text for _, text in parts) != canonical(source_spoken):
             flag('source_to_spoken_mapping_requires_review', unit['id'])
             continue
         try:
@@ -189,8 +210,28 @@ def build_sentence_cues(plan, measurements, recognitions, min_probability=.5):
             flag('unit_transcript_disagreement', unit['id'])
         starts = {w['start']: w for w in words}
         ends = {w['end']: w for w in words}
-        cursor = 0
-        previous_actual_end = 0
+        prefix_length = len(canonical(prefix))
+        if prefix:
+            # A missing/reordered/ambiguous prefix must never shift source cues
+            # backward or fall through to substring matching in the narration.
+            if not exact:
+                flag('delivery_prefix_not_verified', unit['id'])
+                continue
+            if 0 not in starts or prefix_length not in ends or prefix_length not in starts:
+                flag('delivery_prefix_boundary_inside_asr_word', unit['id'])
+                continue
+            prefix_words = [w for w in words if w['end'] <= prefix_length]
+            if any(w['low_probability'] for w in prefix_words):
+                flag('low_probability_delivery_prefix', unit['id'])
+                continue
+            start_sample, end_sample = starts[0]['start_sample'], ends[prefix_length]['end_sample']
+            delivery_cues.append(dict(type='prefix', unit_id=unit['id'],
+                paragraph_id=unit['paragraph_id'], prefix=prefix,
+                start_sample=start_sample, end_sample=end_sample,
+                start_s=start_sample/timeline['sample_rate'], end_s=end_sample/timeline['sample_rate'],
+                anchor_basis='exact_delivery_prefix_at_final_pcm_asr_word_edges'))
+        cursor = prefix_length
+        previous_actual_end = prefix_length
         for sentence_index, text in parts:
             locations = [cursor] if exact else list(_occurrences(actual, text))
             cursor += len(text)
@@ -232,5 +273,6 @@ def build_sentence_cues(plan, measurements, recognitions, min_probability=.5):
     return dict(schema=SCHEMA, lesson_id=plan['lesson_id'], source_sha256=plan['source_sha256'],
         sample_rate=timeline['sample_rate'], total_samples=timeline['total_samples'],
         sentence_count=len(sentences), aligned_sentence_count=len(cues), segments=cues,
+        delivery_cues=delivery_cues,
         flags=flags, complete=len(cues) == len(sentences), perceptual_review_required=True,
         production_ready=False, status='review_required' if flags else 'sentence_cues_prepared_for_review')

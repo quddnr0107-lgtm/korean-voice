@@ -13,6 +13,7 @@ import os
 from pathlib import Path
 import re
 import shutil
+import stat
 import sys
 import tempfile
 import zipfile
@@ -30,6 +31,8 @@ SOURCE_HASH = 'bceadf7509da807f9fd00c4bd7ca6cf8aa13e5797ccb078d853db8eaf2342915'
 DOMAIN = b'kim-bora-tb-pilot-recipient/v1'
 DIAGNOSTIC_DOMAIN = b'kim-bora-tb-pilot-source-diagnostic/v1'
 MAX_ZIP = 64 * 1024 * 1024
+MAX_AUDIO_FILE_BYTES = 16 * 1024 * 1024
+MAX_SUBSET_METADATA_BYTES = 4 * 1024 * 1024
 
 
 class PilotFailure(ValueError):
@@ -96,6 +99,18 @@ def validate_config(cfg):
     terms = cfg.get('critical_terms', [])
     if not isinstance(terms, list) or any(not isinstance(x, str) or not x or len(x) > 100 for x in terms):
         raise ValueError('critical terms')
+    prefixes = cfg.get('delivery_prefixes', [])
+    if not isinstance(prefixes, list) or len(prefixes) > 4:
+        raise ValueError('delivery prefix bounds')
+    prefix_indices = set()
+    for item in prefixes:
+        if (not isinstance(item, dict) or set(item) != {'unit_index', 'prefix'}
+                or type(item.get('unit_index')) is not int
+                or not 0 <= item['unit_index'] < count
+                or item.get('prefix') not in ('자, ', '음, ')
+                or item['unit_index'] in prefix_indices):
+            raise ValueError('delivery prefix configuration')
+        prefix_indices.add(item['unit_index'])
     accepted = cfg.get('accepted_sources', [])
     if not isinstance(accepted, list) or len(accepted) > 12:
         raise ValueError('accepted source bounds')
@@ -155,6 +170,27 @@ def build_reviewed_plan(source, cfg):
         for old, new in cfg.get('spoken_replacements', []):
             unit['spoken'] = unit['spoken'].replace(old, new)
         unit['critical_terms'] = [t for t in cfg.get('critical_terms', []) if t in unit['spoken']]
+    prefixes = cfg.get('delivery_prefixes', [])
+    if not isinstance(prefixes, list) or len(prefixes) > 4:
+        raise ValueError('delivery prefix bounds')
+    used = set()
+    for item in prefixes:
+        if (not isinstance(item, dict) or set(item) != {'unit_index', 'prefix'}
+                or type(item.get('unit_index')) is not int
+                or not 0 <= item['unit_index'] < len(plan['units'])
+                or item.get('prefix') not in ('자, ', '음, ')
+                or item['unit_index'] in used):
+            raise ValueError('delivery prefix configuration')
+        index = item['unit_index']
+        unit = plan['units'][index]
+        if (unit['mode'] != 'explain'
+                or (index and plan['units'][index-1]['paragraph_id'] == unit['paragraph_id'])
+                or re.match(r'^(?:자|음)(?:[,，…\.\s]|$)', unit['spoken'].lstrip())):
+            raise ValueError('delivery prefix placement')
+        unit['source_spoken'] = unit['spoken']
+        unit['delivery_prefix'] = item['prefix']
+        unit['spoken'] = item['prefix'] + unit['source_spoken']
+        used.add(index)
     if len(plan['units']) != spec['unit_count'] or len(plan['paragraphs']) != spec['paragraph_count']:
         raise ValueError('plan shape')
     if digest(enc(plan)) != spec['expected_plan_sha256']:
@@ -195,24 +231,66 @@ def open_plan(cfg):
 
 
 def archive_subset(directory, manifest):
-    directory = Path(directory).resolve()
-    names = ['subset.json']
+    directory = Path(directory)
+    if directory.is_symlink():
+        raise ValueError('unsafe subset directory')
+    directory = directory.resolve()
+    members = [('subset.json', None, MAX_SUBSET_METADATA_BYTES, None)]
     for row in manifest['units']:
         if row.get('blocked'):
-            continue
-        name = row.get('relative_file', '')
-        if name != f'units/{row["unit_index"]:04d}/final.wav':
-            raise ValueError('unexpected subset file')
-        names.append(name)
-    if len(names) != len(set(names)):
+            if 'relative_file' in row or 'file' in row:
+                raise ValueError('blocked audio cannot be an accepted file')
+            if 'review_relative_file' not in row:
+                if row.get('review_file') is not None:
+                    raise ValueError('missing review file reference')
+                continue
+            index = row.get('unit_index')
+            name = row['review_relative_file']
+            size = row.get('review_size_bytes')
+            if (type(index) is not int or index < 0 or name != f'units/{index:04d}/review.wav'
+                    or row.get('review_file') != 'review.wav' or row.get('review_only') is not True
+                    or row.get('production_eligible') is not False
+                    or row.get('review_kind') != 'raw_candidate_for_listening_only'
+                    or row.get('review_signal',{}).get('blocked') is not False
+                    or type(size) is not int or not 0 < size <= MAX_AUDIO_FILE_BYTES):
+                raise ValueError('unexpected quarantined review file')
+            members.append((name,row.get('review_sha256'),MAX_AUDIO_FILE_BYTES,size))
+        else:
+            index = row.get('unit_index');name = row.get('relative_file', '')
+            if (type(index) is not int or index < 0 or name != f'units/{index:04d}/final.wav'
+                    or 'review_relative_file' in row or row.get('review_file') is not None):
+                raise ValueError('unexpected subset file')
+            members.append((name,row.get('sha256'),MAX_AUDIO_FILE_BYTES,None))
+    if len(members) != len({name for name,_,_,_ in members}):
         raise ValueError('duplicate subset file')
     result = io.BytesIO()
+    total_bytes = 0
     with zipfile.ZipFile(result, 'w', compression=zipfile.ZIP_DEFLATED) as z:
-        for name in names:
-            p = directory/name
-            if p.is_symlink() or not p.is_file() or directory not in p.resolve().parents:
+        for name, expected_hash, maximum, expected_size in members:
+            p = directory
+            for part in Path(name).parts:
+                p /= part
+                if p.is_symlink():
+                    raise ValueError('unsafe subset symlink')
+            if directory not in p.resolve().parents:
                 raise ValueError('unsafe subset file')
-            z.write(p, name)
+            fd = os.open(p, os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0))
+            with os.fdopen(fd, 'rb') as file:
+                info = os.fstat(file.fileno())
+                if not stat.S_ISREG(info.st_mode) or not 0 < info.st_size <= maximum:
+                    raise ValueError('subset file size')
+                raw = file.read(maximum + 1)
+            if len(raw) != info.st_size or (expected_size is not None and len(raw) != expected_size):
+                raise ValueError('subset file size changed')
+            if name == 'subset.json':
+                if enc(json.loads(raw)) != enc(manifest):
+                    raise ValueError('subset metadata changed')
+            elif not isinstance(expected_hash,str) or not re.fullmatch('[a-f0-9]{64}',expected_hash) or digest(raw) != expected_hash:
+                raise ValueError('subset file hash mismatch')
+            total_bytes += len(raw)
+            if total_bytes > MAX_ZIP:
+                raise ValueError('subset uncompressed size')
+            z.writestr(name, raw)
     value = result.getvalue()
     if len(value) > MAX_ZIP:
         raise ValueError('subset too large')

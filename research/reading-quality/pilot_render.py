@@ -7,12 +7,14 @@ text. ASR disagreement is a review signal, not proof of a speech defect.
 """
 import argparse
 import hashlib
+import io
 import json
 import math
 import os
 from pathlib import Path
 import re
 import subprocess
+import tempfile
 import unicodedata
 
 from paragraph_plan import measured_timeline
@@ -21,6 +23,7 @@ from quality import number
 MODEL = 'Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice'
 MODEL_REVISION = '0c0e3051f131929182e2c023b9537f8b1c68adfe'
 ASR_REVISION = '536b0662742c02347bc0e980a01041f333bce120'
+MAX_REVIEW_AUDIO_BYTES = 16 * 1024 * 1024
 STYLES = {
     'explain': 'Speak Korean to one learner. Ask the questions with genuine curiosity, then explain with clear, conversational phrasing. Keep a consistent speaking voice throughout the paragraph. Allow occasional quiet, unforced inhalations and small thoughtful pauses at natural phrase boundaries when the meaning calls for them. Keep the vocal affect appropriate to the subject, and keep the spoken words clear and complete.',
     'reading': 'Formal recitation of a Korean legal provision. Crisp, distinct consonants and a confident, clearly projected voice. Maintain steady supported vocal energy through every final syllable. Measured phrasing with clear pauses at clause boundaries.',
@@ -158,6 +161,49 @@ def reusable_record(record, expected_key, directory, kind):
     return path.is_file() and file_hash(path) == record.get('sha256')
 
 
+def quarantine_review_candidate(candidates, directory, index, expected_key, sf, max_seconds):
+    """Keep one signal-valid raw candidate for listening; never an accepted unit."""
+    usable = [c for c in candidates if c['signal'].get('blocked') is False]
+    if not usable:
+        return {}
+    candidate = choose_candidate(usable)
+    name = candidate.get('file')
+    if (type(index) is not int or index < 0 or candidate.get('key') != expected_key
+            or type(candidate.get('seed')) is not int
+            or name != f'candidate-{candidate["seed"]}.wav'
+            or not re.fullmatch('[a-f0-9]{64}', candidate.get('sha256',''))):
+        raise ValueError('review candidate identity')
+    directory = Path(directory)
+    folder = directory/'units'/f'{index:04d}'
+    source = folder/name
+    if any(p.is_symlink() for p in (directory, directory/'units', folder, source)):
+        raise ValueError('review candidate symlink')
+    if not source.is_file() or not 0 < source.stat().st_size <= MAX_REVIEW_AUDIO_BYTES:
+        raise ValueError('review candidate size')
+    raw = source.read_bytes()
+    if not 0 < len(raw) <= MAX_REVIEW_AUDIO_BYTES or digest_bytes(raw) != candidate['sha256']:
+        raise ValueError('review candidate integrity')
+    # Recheck the bytes actually delivered, not only the cached signal claim.
+    wave, sr = sf.read(io.BytesIO(raw), dtype='float32')
+    signal = signal_stats(wave, sr, max_seconds)
+    if (signal['blocked'] or signal['samples'] != candidate['signal']['samples']
+            or sr != candidate['signal']['sample_rate']):
+        raise ValueError('review candidate signal')
+    target = folder/'review.wav'
+    if target.is_symlink():
+        raise ValueError('review output symlink')
+    with tempfile.NamedTemporaryFile(dir=folder, prefix='.review-', suffix='.wav', delete=False) as file:
+        temp = Path(file.name)
+        file.write(raw)
+    try:
+        os.replace(temp, target)
+    finally:
+        temp.unlink(missing_ok=True)
+    return dict(review_file='review.wav', review_sha256=digest_bytes(raw), review_size_bytes=len(raw),
+                review_seed=candidate['seed'], review_signal=signal, review_only=True,
+                production_eligible=False, review_kind='raw_candidate_for_listening_only')
+
+
 def export_subset(plan, records, start, stop, directory, indices=None, settings=None):
     """Private checkpoint manifest; caller may encrypt it for remote delivery."""
     rows = []
@@ -170,7 +216,14 @@ def export_subset(plan, records, start, stop, directory, indices=None, settings=
                    start_utf16=unit['start_utf16'], end_utf16=unit['end_utf16'],
                    spoken_sha256=digest_bytes(unit['spoken'].encode()))
         if not row.get('blocked'):
+            if row.get('review_file') is not None:
+                raise ValueError('review audio cannot be an accepted unit')
             row['relative_file'] = f'units/{index:04d}/{record["file"]}'
+        elif row.get('review_file') is not None:
+            if (row['review_file'] != 'review.wav' or row.get('review_only') is not True
+                    or row.get('production_eligible') is not False or 'file' in row or 'relative_file' in row):
+                raise ValueError('invalid quarantined review audio')
+            row['review_relative_file'] = f'units/{index:04d}/review.wav'
         rows.append(row)
     manifest = dict(schema='kim-bora-private-subset/v1', lesson_id=plan['lesson_id'],
         source_sha256=plan['source_sha256'], plan_sha256=identity(plan),
@@ -282,11 +335,13 @@ class Renderer:
         if blocked:
             save_json(folder/'review.json', dict(unit_id=unit['id'], key=key,
                 status='blocked_requires_review', candidates=candidates))
-            # Keep diagnosis in the encrypted subset even when raw candidates
-            # are intentionally omitted from remote delivery.
+            # One signal-valid raw candidate remains available ONLY for private
+            # listening review; ASR blockage and production assembly stay blocked.
             diagnostics = [dict(seed=c['seed'], signal=c['signal'], asr=c['asr']) for c in candidates]
+            review = quarantine_review_candidate(candidates, self.directory, index, key,
+                self.sf, self.args.max_new_tokens/12.5*.97)
             return dict(blocked=True, unit_id=unit['id'], key=key,
-                        candidate_diagnostics=diagnostics)
+                        candidate_diagnostics=diagnostics, **review)
         processed = folder/'processed.wav'
         subprocess.run(['ffmpeg','-v','error','-y','-i',str(folder/selected['file']),
             '-af',FILTERS[unit['mode']],'-ar',str(self.args.sample_rate),'-ac','1',

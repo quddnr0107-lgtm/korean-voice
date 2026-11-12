@@ -8,7 +8,7 @@ permissions:
   contents: read
 concurrency:
   group: kim-bora-tb001-pilot-20261112
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   plan:
     if: github.repository == 'quddnr0107-lgtm/korean-voice' && github.ref == 'refs/heads/integrated-lectures-premium-20261028' && github.event_name == 'push'

@@ -165,16 +165,61 @@ class BoundaryTests(unittest.TestCase):
     def test_archive_whitelist_excludes_candidates_and_rejects_traversal(self):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp);(root/'units/0000').mkdir(parents=True)
-            (root/'subset.json').write_text('{}')
             (root/'units/0000/final.wav').write_bytes(b'wave')
             (root/'units/0000/candidate.wav').write_bytes(b'should not be copied')
-            manifest={'units':[dict(unit_index=0,relative_file='units/0000/final.wav',blocked=False),dict(blocked=True)]}
+            manifest={'units':[dict(unit_index=0,relative_file='units/0000/final.wav',blocked=False,sha256=run.digest(b'wave')),dict(blocked=True)]}
+            (root/'subset.json').write_text(json.dumps(manifest))
             data=run.archive_subset(root,manifest)
             with zipfile.ZipFile(io.BytesIO(data)) as archive:
                 self.assertEqual(archive.namelist(),['subset.json','units/0000/final.wav'])
             manifest['units'][0]['relative_file']='../escape.wav'
             with self.assertRaises(ValueError):
                 run.archive_subset(root,manifest)
+
+    def test_archive_includes_only_quarantined_review_with_explicit_nonproduction_status(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);folder=root/'units/0000';folder.mkdir(parents=True)
+            raw=b'private review waveform';(folder/'review.wav').write_bytes(raw)
+            (folder/'candidate-5192.wav').write_bytes(b'excluded')
+            (folder/'final.wav').write_bytes(b'also excluded')
+            row=dict(blocked=True,unit_index=0,review_file='review.wav',review_relative_file='units/0000/review.wav',
+                review_sha256=run.digest(raw),review_size_bytes=len(raw),review_only=True,production_eligible=False,
+                review_kind='raw_candidate_for_listening_only',review_signal={'blocked':False})
+            manifest={'status':'blocked_requires_review','units':[row]}
+            (root/'subset.json').write_text(json.dumps(manifest))
+            data=run.archive_subset(root,manifest)
+            with zipfile.ZipFile(io.BytesIO(data)) as archive:
+                self.assertEqual(archive.namelist(),['subset.json','units/0000/review.wav'])
+                self.assertEqual(archive.read('units/0000/review.wav'),raw)
+                self.assertTrue(json.loads(archive.read('subset.json'))['units'][0]['blocked'])
+            for changes in [dict(review_relative_file='../review.wav'),dict(review_sha256='a'*64),
+                            dict(review_size_bytes=len(raw)+1),dict(production_eligible=True),
+                            dict(relative_file='units/0000/final.wav'),dict(review_signal={'blocked':True}),dict(blocked=False)]:
+                mutated={'status':'blocked_requires_review','units':[dict(row,**changes)]}
+                (root/'subset.json').write_text(json.dumps(mutated))
+                with self.subTest(changes=changes),self.assertRaises(ValueError):run.archive_subset(root,mutated)
+            (root/'subset.json').write_text(json.dumps(manifest))
+            with patch.object(run,'MAX_AUDIO_FILE_BYTES',len(raw)-1):
+                with self.assertRaises(ValueError):run.archive_subset(root,manifest)
+            (folder/'review.wav').unlink();outside=root/'outside.wav';outside.write_bytes(raw)
+            (folder/'review.wav').symlink_to(outside)
+            with self.assertRaises(ValueError):run.archive_subset(root,manifest)
+
+    def test_archive_rejects_normal_audio_hash_mismatch_and_parent_symlink(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);folder=root/'units/0000';folder.mkdir(parents=True)
+            (folder/'final.wav').write_bytes(b'wave')
+            row=dict(blocked=False,unit_index=0,relative_file='units/0000/final.wav',sha256=run.digest(b'wave'))
+            manifest={'units':[row]};(root/'subset.json').write_text(json.dumps(manifest))
+            (folder/'final.wav').write_bytes(b'changed')
+            with self.assertRaises(ValueError):run.archive_subset(root,manifest)
+            (folder/'final.wav').write_bytes(b'wave');folder.rename(root/'actual-folder');folder.symlink_to(root/'actual-folder')
+            with self.assertRaises(ValueError):run.archive_subset(root,manifest)
+
+    def test_archive_rejects_metadata_different_from_checked_manifest(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);(root/'subset.json').write_text(json.dumps({'units':[]}))
+            with self.assertRaises(ValueError):run.archive_subset(root,{'units':[{'blocked':True}]})
 
 
 if __name__ == '__main__':

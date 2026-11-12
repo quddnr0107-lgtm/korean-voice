@@ -2,10 +2,12 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from paragraph_plan import build_plan
 from pilot_render import (canonical, check_plan, choose_candidate, file_hash,
-                          digest_bytes, export_subset, identity, reusable_record, transcript_score, unit_key)
+                          digest_bytes, export_subset, identity, quarantine_review_candidate,
+                          Renderer, reusable_record, signal_stats, transcript_score, unit_key)
 
 
 class RenderGateTests(unittest.TestCase):
@@ -84,6 +86,65 @@ class RenderGateTests(unittest.TestCase):
             m=export_subset(p,[dict(blocked=True)],0,1,Path(name))
             self.assertEqual(m['status'],'blocked_requires_review')
             self.assertNotIn('relative_file',m['units'][0])
+
+    def review_fixture(self, root):
+        import numpy as np
+        import soundfile as sf
+        folder=Path(root)/'units/0000';folder.mkdir(parents=True)
+        wave=(.08*np.sin(np.arange(12000)*.1)).astype('float32')
+        candidates=[]
+        for seed,errors in [(5192,2),(7319,1)]:
+            path=folder/f'candidate-{seed}.wav';sf.write(path,wave,24000,subtype='FLOAT')
+            candidates.append(dict(seed=seed,key='review-key',file=path.name,sha256=file_hash(path),
+                signal=signal_stats(wave,24000),asr=dict(blocked=True,missing_critical=['핵심'],character_errors=errors)))
+        return sf,candidates
+
+    def test_signal_valid_best_raw_review_is_kept_without_production_promotion(self):
+        with tempfile.TemporaryDirectory() as name:
+            root=Path(name);sf,candidates=self.review_fixture(root)
+            review=quarantine_review_candidate(candidates,root,0,'review-key',sf,60)
+            self.assertEqual(review['review_seed'],7319)
+            self.assertEqual((root/'units/0000/review.wav').read_bytes(),(root/'units/0000/candidate-7319.wav').read_bytes())
+            p=build_plan('첫째입니다.')
+            row=dict(blocked=True,**review)
+            manifest=export_subset(p,[row],0,1,root)
+            exported=manifest['units'][0]
+            self.assertEqual(manifest['status'],'blocked_requires_review')
+            self.assertTrue(exported['blocked']);self.assertFalse(exported['production_eligible'])
+            self.assertEqual(exported['review_relative_file'],'units/0000/review.wav')
+            self.assertNotIn('relative_file',exported);self.assertNotIn('file',exported)
+            renderer=Renderer.__new__(Renderer);renderer.plan=p
+            with self.assertRaises(ValueError):renderer.assemble([row])
+
+    def test_all_signal_invalid_candidates_have_no_review_audio(self):
+        candidates=[dict(signal={'blocked':True}),dict(signal={'blocked':True})]
+        self.assertEqual(quarantine_review_candidate(candidates,Path('.'),0,'key',None,60),{})
+
+    def test_review_candidate_rejects_changed_hash_size_and_symlink(self):
+        with tempfile.TemporaryDirectory() as name:
+            root=Path(name);sf,candidates=self.review_fixture(root)
+            selected=candidates[1];path=root/'units/0000'/selected['file']
+            with patch('pilot_render.MAX_REVIEW_AUDIO_BYTES',4):
+                with self.assertRaises(ValueError):quarantine_review_candidate(candidates,root,0,'review-key',sf,60)
+            original=path.read_bytes();path.write_bytes(original+b'changed')
+            with self.assertRaises(ValueError):quarantine_review_candidate(candidates,root,0,'review-key',sf,60)
+            path.unlink();outside=root/'outside.wav';outside.write_bytes(original);path.symlink_to(outside)
+            with self.assertRaises(ValueError):quarantine_review_candidate(candidates,root,0,'review-key',sf,60)
+
+    def test_review_signal_is_rechecked_even_if_cached_claim_and_hash_agree(self):
+        import numpy as np
+        with tempfile.TemporaryDirectory() as name:
+            root=Path(name);sf,candidates=self.review_fixture(root)
+            selected=candidates[1];path=root/'units/0000'/selected['file']
+            sf.write(path,np.zeros(12000,dtype='float32'),24000,subtype='FLOAT')
+            selected['sha256']=file_hash(path)
+            with self.assertRaises(ValueError):quarantine_review_candidate(candidates,root,0,'review-key',sf,60)
+
+    def test_accepted_subset_cannot_carry_quarantined_review_file(self):
+        p=build_plan('첫째입니다.')
+        with tempfile.TemporaryDirectory() as name:
+            with self.assertRaises(ValueError):
+                export_subset(p,[dict(blocked=False,file='final.wav',review_file='review.wav')],0,1,Path(name))
 
 
 if __name__=='__main__':unittest.main()
