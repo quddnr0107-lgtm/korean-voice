@@ -1,0 +1,7 @@
+{
+  "schema": "kim-bora-tb-pilot-request/v1",
+  "lesson_id": "TB-001",
+  "purpose": "one-lesson-private-preview",
+  "requested_on": "2026-11-12",
+  "config_sha256": "a8e2aab7b561756bbb3a45ee67a0ef8353577ff2afc1e6702a29b85ba3cca3e1"
+}
