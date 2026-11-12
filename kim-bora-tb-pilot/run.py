@@ -127,11 +127,26 @@ def validate_config(cfg):
 
 
 def validate_request(request, cfg):
-    if (request.get('schema') != 'kim-bora-tb-pilot-request/v1'
+    if (not isinstance(request,dict) or request.get('schema') != 'kim-bora-tb-pilot-request/v1'
             or request.get('purpose') != 'one-lesson-private-preview'
             or request.get('config_sha256') != digest(enc(cfg))):
         raise PilotFailure('request_configuration_mismatch')
+    if 'render_groups' in request:
+        groups=request['render_groups']
+        if (not isinstance(groups,list) or not 1 <= len(groups) <= len(cfg['groups'])
+                or any(type(group) is not int or not 0 <= group < len(cfg['groups']) for group in groups)
+                or len(set(groups)) != len(groups)):
+            raise PilotFailure('request_render_groups_invalid')
     return request
+
+
+def request_scope(request,cfg):
+    validate_request(request,cfg)
+    all_groups=list(range(len(cfg['groups'])))
+    groups=sorted(request.get('render_groups',all_groups))
+    full_run=groups==all_groups
+    return dict(matrix=dict(group=groups),full_run=full_run,
+                render_timeout_minutes=90 if full_run else 180)
 
 
 def require_context(env=os.environ):
@@ -416,8 +431,8 @@ def main():
     args = parser.parse_args()
     os.umask(0o077)
     cfg = validate_config(json.loads(args.config.read_text()))
-    validate_request(json.loads((HERE/'request.json').read_text()), cfg)
-    if not args.check_only and (args.group is None or not 0 <= args.group < len(cfg['groups'])):
+    scope=request_scope(json.loads((HERE/'request.json').read_text()),cfg)
+    if not args.check_only and args.group not in scope['matrix']['group']:
         raise ValueError('group selection')
     args.output.mkdir(mode=0o700, parents=True, exist_ok=True)
     if args.output.is_symlink():
@@ -437,8 +452,7 @@ def main():
     if args.check_only:
         result = dict(schema='kim-bora-tb-pilot-public-check/v1', status='source_and_plan_match',
             source_sha256=plan['source_sha256'], plan_sha256=digest(enc(plan)),
-            groups=len(cfg['groups']), unit_count=len(plan['units']),
-            matrix=dict(group=list(range(len(cfg['groups'])))))
+            groups=len(scope['matrix']['group']), unit_count=len(plan['units']),**scope)
         (args.output/'plan-public.json').write_bytes(enc(result))
         print(json.dumps(dict(status=result['status'], units=result['unit_count'], groups=result['groups'])))
         return

@@ -42,7 +42,7 @@ def main():
                               trimmed_faded,unit_key)
     from paragraph_plan import build_plan
     from download_models import verify_assets,QWEN_REQUIRED,ASR_REQUIRED,MODEL_REVISION,ASR_REVISION
-    from run import validate_config,validate_request,enc,digest
+    from run import validate_config,request_scope,enc,digest
     assert_offline()
     if os.geteuid()==0:
         raise RuntimeError('smoke must use the same unprivileged runner UID as rendering')
@@ -61,7 +61,7 @@ def main():
             or model_config.get('tts_model_size')!='1b7'):
         raise ValueError('wrong model architecture')
     cfg=validate_config(json.loads((HERE/'config.json').read_text()))
-    validate_request(json.loads((HERE/'request.json').read_text()),cfg)
+    scope=request_scope(json.loads((HERE/'request.json').read_text()),cfg)
     parent=Path(os.environ['RUNNER_TEMP'])
     if not parent.is_dir() or not os.access(parent,os.W_OK):
         raise RuntimeError('runner temporary directory is not writable')
@@ -102,11 +102,12 @@ def main():
             packages=versions,model_revision=MODEL_REVISION,asr_revision=ASR_REVISION,
             generic_audio_seconds=candidate['signal']['seconds'],asr_cer=candidate['asr']['cer'],
             asr_word_count=len(candidate['asr']['words']),dsp_checks=results,
-            config_sha256=digest(enc(cfg)),matrix=dict(group=list(range(len(cfg['groups'])))))
+            config_sha256=digest(enc(cfg)),**scope)
     args.output.parent.mkdir(parents=True,exist_ok=True)
     args.output.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
     print(json.dumps(dict(status=report['status'],generic_audio_seconds=report['generic_audio_seconds'],
-        asr_cer=report['asr_cer'],dsp_modes=len(results),groups=len(cfg['groups']))))
+        asr_cer=report['asr_cer'],dsp_modes=len(results),groups=len(scope['matrix']['group']),
+        full_run=scope['full_run'])))
 
 
 if __name__=='__main__':

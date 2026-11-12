@@ -60,6 +60,17 @@ class KeylessPreflightTests(unittest.TestCase):
             self.assertTrue(any('unshare --net --setgid' in call for call in calls))
         self.assertFalse(any('upload-artifact' in step.get('uses','') for step in public['steps']))
 
+    def test_partial_recovery_cannot_trigger_full_release_collection(self):
+        import yaml
+        workflow=yaml.safe_load((HERE.parent/'.github/workflows/kim-bora-tb-pilot.yml').read_text())
+        jobs=workflow['jobs'];collect=jobs['collect'];public=jobs['preflight']
+        self.assertEqual(set(collect['needs']),{'preflight','render'})
+        self.assertIn("needs.preflight.outputs.full_run == 'true'",collect['if'])
+        self.assertIn("needs.render.result == 'success'",collect['if'])
+        self.assertIn('steps.matrix.outputs.full_run',public['outputs']['full_run'])
+        self.assertIn('steps.matrix.outputs.render_timeout_minutes',public['outputs']['render_timeout_minutes'])
+        self.assertIn('needs.preflight.outputs.render_timeout_minutes',jobs['render']['timeout-minutes'])
+
 
 if __name__=='__main__':
     unittest.main()

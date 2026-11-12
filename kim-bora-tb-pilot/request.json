@@ -4,5 +4,9 @@
   "purpose": "one-lesson-private-preview",
   "requested_on": "2026-11-12",
   "config_sha256": "a7f6f2ff9f3619a625364c2e0fddf4a586ce222b7ec80704c391b57f2c448930",
-  "request_id": "native-audio-preflight-before-protected-render-5"
+  "request_id": "recover-only-missing-groups-24-and-28-20261112",
+  "render_groups": [
+    24,
+    28
+  ]
 }

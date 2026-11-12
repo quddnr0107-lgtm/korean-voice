@@ -46,6 +46,37 @@ class BoundaryTests(unittest.TestCase):
         with self.assertRaises(run.PilotFailure):
             run.validate_request(dict(request,purpose='replace_site'),cfg)
 
+    def test_request_subset_is_exact_nonempty_unique_integer_inventory(self):
+        cfg,_=fixture()
+        request=dict(schema='kim-bora-tb-pilot-request/v1',purpose='one-lesson-private-preview',config_sha256=run.digest(run.enc(cfg)))
+        self.assertEqual(run.request_scope(request,cfg),dict(matrix={'group':[0,1]},full_run=True,render_timeout_minutes=90))
+        self.assertEqual(run.request_scope(dict(request,render_groups=[1]),cfg),dict(matrix={'group':[1]},full_run=False,render_timeout_minutes=180))
+        self.assertTrue(run.request_scope(dict(request,render_groups=[1,0]),cfg)['full_run'])
+        for groups in (None,[],[0,0],[-1],[2],[True],[1.0],['1'],{},'1',[[]],[0,1,2]):
+            with self.subTest(groups=groups),self.assertRaises(run.PilotFailure):
+                run.request_scope(dict(request,render_groups=groups),cfg)
+
+    def test_recovery_selection_preserves_existing_unit_ranges_and_config(self):
+        cfg=run.validate_config(json.loads((Path(run.__file__).parent/'config.json').read_text()))
+        before=run.digest(run.enc(cfg))
+        request=dict(schema='kim-bora-tb-pilot-request/v1',purpose='one-lesson-private-preview',config_sha256=before,render_groups=[24,28])
+        scope=run.request_scope(request,cfg)
+        self.assertEqual(scope['matrix'],{'group':[24,28]})
+        self.assertFalse(scope['full_run'])
+        self.assertEqual([cfg['groups'][i] for i in scope['matrix']['group']],[[34,36],[40,42]])
+        self.assertEqual(run.digest(run.enc(cfg)),before)
+
+    def test_unrequested_protected_group_stops_before_source_decryption(self):
+        cfg,_=fixture()
+        request=dict(schema='kim-bora-tb-pilot-request/v1',purpose='one-lesson-private-preview',config_sha256=run.digest(run.enc(cfg)),render_groups=[1])
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);(root/'config.json').write_text(json.dumps(cfg));(root/'request.json').write_text(json.dumps(request))
+            argv=['run.py','--config',str(root/'config.json'),'--group','0','--output',str(root/'out')]
+            with patch.object(run,'HERE',root),patch.object(run,'open_plan') as decrypt,patch('sys.argv',argv):
+                with self.assertRaisesRegex(ValueError,'group selection'):run.main()
+                decrypt.assert_not_called()
+            self.assertFalse((root/'out').exists())
+
     def test_config_rejects_missing_overlap_other_lesson_or_replacement(self):
         cfg, _ = fixture()
         run.validate_config(cfg)

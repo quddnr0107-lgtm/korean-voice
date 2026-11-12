@@ -16,6 +16,8 @@ jobs:
     timeout-minutes: 30
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
+      full_run: ${{ steps.matrix.outputs.full_run }}
+      render_timeout_minutes: ${{ steps.matrix.outputs.render_timeout_minutes }}
     env:
       OMP_NUM_THREADS: '2'
       OPENBLAS_NUM_THREADS: '2'
@@ -54,13 +56,15 @@ jobs:
           assert checked['source_key_used'] is False and checked['private_manuscript_read'] is False
           with open(os.environ['GITHUB_OUTPUT'],'a') as f:
               f.write('matrix='+json.dumps(checked['matrix'],separators=(',',':'))+'\n')
+              f.write('full_run='+json.dumps(checked['full_run'])+'\n')
+              f.write('render_timeout_minutes='+str(checked['render_timeout_minutes'])+'\n')
           PY
   render:
     needs: preflight
     if: needs.preflight.result == 'success'
     runs-on: ubuntu-24.04
     environment: admin-law-premium-production
-    timeout-minutes: 90
+    timeout-minutes: ${{ fromJSON(needs.preflight.outputs.render_timeout_minutes) }}
     strategy:
       fail-fast: false
       max-parallel: 40
@@ -100,7 +104,8 @@ jobs:
           retention-days: 3
           if-no-files-found: error
   collect:
-    needs: render
+    needs: [preflight, render]
+    if: needs.preflight.outputs.full_run == 'true' && needs.render.result == 'success'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
