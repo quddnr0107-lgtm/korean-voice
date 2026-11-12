@@ -1,0 +1,78 @@
+name: Bora public minute listening comparison
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [bora-minute-comparison-20261112]
+    paths:
+      - '.github/workflows/bora-minute-public.yml'
+      - 'benchmarks/bora_minute/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bora-public-minute-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  listening-sample:
+    if: ${{ github.event.repository.private == false && github.ref == 'refs/heads/bora-minute-comparison-20261112' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        profile: [native_bf16_t4, native_int8_t4, python_fp32_t4]
+    env:
+      BORA_MINUTE_PROFILE: ${{ matrix.profile }}
+    steps:
+      - name: Public repository and wall-clock boundary
+        env:
+          REPO_PRIVATE: ${{ github.event.repository.private }}
+        run: |
+          set -euo pipefail
+          test "$REPO_PRIVATE" = false
+          mkdir -p "$RUNNER_TEMP/bora-minute-$BORA_MINUTE_PROFILE-results"
+          echo "BORA_BENCH_DEADLINE=$(( $(date +%s) + 1440 ))" >> "$GITHUB_ENV"
+
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+
+      - name: Prepare pinned public model and engines
+        timeout-minutes: 7
+        run: |
+          set -euo pipefail
+          bash benchmarks/bora_minute/prepare.sh 2>&1 | tee "$RUNNER_TEMP/bora-minute-$BORA_MINUTE_PROFILE-results/prepare.log"
+
+      - name: Generate this profile's listening sample
+        timeout-minutes: 19
+        env:
+          HF_HUB_OFFLINE: '1'
+          TRANSFORMERS_OFFLINE: '1'
+          HF_HUB_DISABLE_IMPLICIT_TOKEN: '1'
+          HF_HUB_DISABLE_TELEMETRY: '1'
+          DO_NOT_TRACK: '1'
+        run: |
+          python benchmarks/bora_minute/run_benchmark.py \
+            --only-profile "$BORA_MINUTE_PROFILE" \
+            --model "$BORA_BENCH_MODEL" \
+            --native "$BORA_BENCH_NATIVE" \
+            --output "$BORA_BENCH_OUTPUT"
+
+      - name: Upload this profile's public audio and evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: bora-public-minute-${{ matrix.profile }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/bora-minute-${{ matrix.profile }}-results/
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
