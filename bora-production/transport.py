@@ -332,6 +332,19 @@ def _release(backend, tag, create=False):
 
 
 def _assets(backend, release):
+    # GitHub exposes draft-release assets under a temporary untagged slug.
+    # Bind that slug to this exact release's canonical html_url before trusting
+    # the browser_download_url. Published assets must use the final tag.
+    download_tag = release['tag_name']
+    if release.get('draft') and 'html_url' in release:
+        prefix = f'https://github.com/{REPOSITORY}/releases/tag/'
+        html_url = release['html_url']
+        require(isinstance(html_url, str) and html_url.startswith(prefix),
+                'release_draft_url')
+        slug = html_url[len(prefix):]
+        require(slug == download_tag or re.fullmatch(r'untagged-[a-f0-9]{20}', slug),
+                'release_draft_url')
+        download_tag = slug
     result = {}
     for asset in backend.assets(release):
         require(isinstance(asset, dict) and _int(asset.get('id'), 1, 2**53-1)
@@ -341,7 +354,7 @@ def _assets(backend, release):
             _asset_url(asset['url'], host='api.github.com', path=f'/repos/{REPOSITORY}/releases/assets/{asset["id"]}')
         if 'browser_download_url' in asset:
             _asset_url(asset['browser_download_url'], host='github.com',
-                       path=f'/{REPOSITORY}/releases/download/{release["tag_name"]}/{quote(asset["name"], safe="")}')
+                       path=f'/{REPOSITORY}/releases/download/{download_tag}/{quote(asset["name"], safe="")}')
         result[asset['name']] = asset
     return result
 

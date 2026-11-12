@@ -270,6 +270,29 @@ class TransportTests(unittest.TestCase):
         with self.assertRaisesRegex(t.TransportError, 'asset_url'):
             t.upload_directory(self.root, 'TB', self.backend)
 
+    def test_real_draft_untagged_asset_url_is_bound_to_release(self):
+        self.bundle()
+        release = self.backend.create(t.tag_for('TB'))
+        slug = 'untagged-' + 'a' * 20
+        release['html_url'] = f'https://github.com/{t.REPOSITORY}/releases/tag/{slug}'
+        self.backend.upload(release, next(self.root.glob('*.zip')))
+        row = next(iter(self.backend.data.values()))[0]
+        original = row['browser_download_url']
+        row['browser_download_url'] = original.replace(
+            '/releases/download/' + release['tag_name'] + '/',
+            '/releases/download/' + slug + '/')
+        self.assertEqual(t.upload_directory(self.root, 'TB', self.backend)['skipped'], 1)
+        release['html_url'] = f'https://github.com/{t.REPOSITORY}/releases/tag/untagged-' + 'b' * 20
+        with self.assertRaisesRegex(t.TransportError, 'asset_url'):
+            t.upload_directory(self.root, 'TB', self.backend)
+        release['html_url'] = 'https://github.com.evil.test/release'
+        with self.assertRaisesRegex(t.TransportError, 'release_draft_url'):
+            t.upload_directory(self.root, 'TB', self.backend)
+        release['html_url'] = f'https://github.com/{t.REPOSITORY}/releases/tag/{slug}'
+        release['draft'] = False
+        with self.assertRaisesRegex(t.TransportError, 'asset_url'):
+            t.upload_directory(self.root, 'TB', self.backend)
+
     def test_remote_upload_url_must_be_github(self):
         self.bundle()
         release = self.backend.create(t.tag_for('TB'))
