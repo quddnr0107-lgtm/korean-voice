@@ -1,0 +1,70 @@
+name: Bora public CPU speed screen
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [bora-speed-research-20261112]
+    paths:
+      - '.github/workflows/bora-speed-public.yml'
+      - 'benchmarks/bora_speed/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bora-public-speed-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  benchmark:
+    if: ${{ github.event.repository.private == false && github.ref == 'refs/heads/bora-speed-research-20261112' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Public repository and wall-clock boundary
+        env:
+          REPO_PRIVATE: ${{ github.event.repository.private }}
+        run: |
+          set -euo pipefail
+          test "$REPO_PRIVATE" = false
+          mkdir -p "$RUNNER_TEMP/bora-speed-results"
+          echo "BORA_BENCH_DEADLINE=$(( $(date +%s) + 1080 ))" >> "$GITHUB_ENV"
+
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+
+      - name: Prepare one public model and both engines
+        timeout-minutes: 7
+        run: |
+          set -euo pipefail
+          bash benchmarks/bora_speed/prepare.sh 2>&1 | tee "$RUNNER_TEMP/bora-speed-results/prepare.log"
+
+      - name: Sequential comparison on this CPU
+        timeout-minutes: 15
+        env:
+          HF_HUB_OFFLINE: '1'
+          TRANSFORMERS_OFFLINE: '1'
+          HF_HUB_DISABLE_IMPLICIT_TOKEN: '1'
+          HF_HUB_DISABLE_TELEMETRY: '1'
+          DO_NOT_TRACK: '1'
+        run: |
+          python benchmarks/bora_speed/run_benchmark.py \
+            --model "$BORA_BENCH_MODEL" \
+            --native "$BORA_BENCH_NATIVE" \
+            --output "$BORA_BENCH_OUTPUT"
+
+      - name: Upload public measurements, logs, and trial audio
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: bora-public-speed-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/bora-speed-results/
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
