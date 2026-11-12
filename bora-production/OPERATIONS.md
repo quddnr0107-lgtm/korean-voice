@@ -24,7 +24,14 @@ threads, sampling and DSP settings remain unchanged. Current conservative reuse
 binds the full plan and render fingerprint, so old incompatible checkpoints are
 preserved but not mixed with the corrected plan.
 
-The first 40 render jobs were approved through the existing environment UI.
+Corrected run `43213606878` uses commit
+`85d78a4cb034a53c9cac3dc651a240f14586bb78`. Its real preflight and protected
+operating-source plan both passed; the latter authenticated all 25 lessons,
+95 shards and 3665 units with zero source-review units. Its first 40 render jobs
+were confirmed in progress with zero pending deployments at this handoff.
+This is a launch observation, not a completion claim.
+
+The first 40 corrected render jobs were approved through the existing environment UI.
 Each later render wave and assembly can request that environment's approval
 again. GitHub's bulk UI approval temporarily returned a server timeout while
 approving part of the wave; re-reading the run showed exactly which requests
@@ -53,6 +60,16 @@ inventory and `recipe.json`. The protected plan authenticates the exact operatin
 source before deriving source-preserving paragraph units. Public plans expose
 only IDs, counts and hashes. No manuscript, ASR transcript, plaintext audio or
 private requester recovery key belongs in this repository, logs or artifacts.
+
+## Remaining-course source review
+
+[remaining-source-review.json](remaining-source-review.json) records the RL, DR
+and MS aggregate source-review counts, planner hashes and verified Git source
+basis. It contains no manuscripts, notation examples, unit ranges or private
+file paths. These repository-document diagnostics do not authenticate operating
+payloads or approve audio: each subsequent protected plan must independently
+pass the zero-source-review gate. They do not change the active TB request or
+its production settings.
 
 ## Execution and gates
 

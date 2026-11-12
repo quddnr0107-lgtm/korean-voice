@@ -1,0 +1,63 @@
+{
+  "status": "read_only_diagnostics_production_code_frozen",
+  "source_revision": "d3cb5276162c9194bbc8089282431209af04cac0",
+  "source_provenance": "all source files verified against Git blob SHA; original docs only, not authenticated operating payloads",
+  "operating_source_hashes_verified": false,
+  "courses": [
+    {
+      "course": "RL",
+      "verified_blobs": 34,
+      "total_units": 4957,
+      "blocked_units": 240,
+      "middle_dot_only_blocked_units": 240,
+      "flag_counts": {
+        "normalization_unreviewed_middle_dot_lexeme": 239,
+        "review_remaining_middot_do_not_globally_split": 240,
+        "normalization_unreviewed_middle_dot_notation": 2
+      },
+      "unique_normalization_notations": 0,
+      "unique_middle_dot_notations": 186,
+      "planner_sha256": "e80e717ac16a071264985d125b8f10f42be41c72dc34ed56bcb6094779d67aba",
+      "lessons_with_review": 28
+    },
+    {
+      "course": "DR",
+      "verified_blobs": 78,
+      "total_units": 8491,
+      "blocked_units": 277,
+      "middle_dot_only_blocked_units": 274,
+      "flag_counts": {
+        "normalization_unreviewed_middle_dot_lexeme": 273,
+        "review_remaining_middot_do_not_globally_split": 274,
+        "normalization_unreviewed_middle_dot_notation": 1,
+        "normalization_english-word-review": 3
+      },
+      "unique_normalization_notations": 14,
+      "unique_middle_dot_notations": 119,
+      "planner_sha256": "e80e717ac16a071264985d125b8f10f42be41c72dc34ed56bcb6094779d67aba",
+      "lessons_with_review": 69
+    },
+    {
+      "course": "MS",
+      "verified_blobs": 166,
+      "total_units": 18949,
+      "blocked_units": 1199,
+      "middle_dot_only_blocked_units": 1181,
+      "flag_counts": {
+        "normalization_unreviewed_middle_dot_lexeme": 1172,
+        "review_remaining_middot_do_not_globally_split": 1186,
+        "reading_mode_ambiguous_legal_fragment": 17,
+        "normalization_unreviewed_middle_dot_notation": 24,
+        "normalization_han-reading-review": 1
+      },
+      "unique_normalization_notations": 1,
+      "unique_middle_dot_notations": 575,
+      "planner_sha256": "e80e717ac16a071264985d125b8f10f42be41c72dc34ed56bcb6094779d67aba",
+      "lessons_with_review": 134
+    }
+  ],
+  "total_lessons": 278,
+  "total_units": 32397,
+  "blocked_units": 1716,
+  "middle_dot_only_blocked_units": 1695
+}
