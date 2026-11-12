@@ -22,7 +22,7 @@ MODEL = 'Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice'
 MODEL_REVISION = '0c0e3051f131929182e2c023b9537f8b1c68adfe'
 ASR_REVISION = '536b0662742c02347bc0e980a01041f333bce120'
 STYLES = {
-    'explain': 'Speak Korean to one learner. Ask the questions with genuine curiosity, then explain with clear, conversational phrasing. Keep a consistent speaking voice throughout the paragraph.',
+    'explain': 'Speak Korean to one learner. Ask the questions with genuine curiosity, then explain with clear, conversational phrasing. Keep a consistent speaking voice throughout the paragraph. Allow occasional quiet, unforced inhalations and small thoughtful pauses at natural phrase boundaries when the meaning calls for them. Keep the vocal affect appropriate to the subject, and keep the spoken words clear and complete.',
     'reading': 'Formal recitation of a Korean legal provision. Crisp, distinct consonants and a confident, clearly projected voice. Maintain steady supported vocal energy through every final syllable. Measured phrasing with clear pauses at clause boundaries.',
 }
 FILTERS = {

@@ -504,6 +504,20 @@
       ],
       "unit_count": 58,
       "paragraph_count": 46
+    },
+    {
+      "label": "verified_operating_encrypted_source_43135047561",
+      "source_sha256": "0a9cd28fc054be1e394ff15390874da6f5602753318bf80e143c58c83a3ae487",
+      "expected_plan_sha256": "c5fa60bec4413dcc0c2d18418172973ed65ef811b7c09ef9a4c0dd1082ac8a60",
+      "reading_spans": [
+        [1112, 1221],
+        [2191, 2207],
+        [2981, 3020],
+        [3596, 3644],
+        [4238, 4276]
+      ],
+      "unit_count": 58,
+      "paragraph_count": 46
     }
   ]
 }
