@@ -92,6 +92,36 @@ Staging tags: `bora-fp32-{tb,rl,dr,ms}-staging-20261112`.
 Final tags: `bora-fp32-{tb,rl,dr,ms}-v1-20261112`.
 These tags are distinct from the old three production releases.
 
+## 2026-11-12 failed-render transport incident (needs operator intervention)
+
+Corrected TB run 43213606878 is **not healthy** despite its successful protected
+source plan: three first-wave render jobs completed synthesis and generated
+public shard reports, then failed in the keyless ciphertext upload verification
+with `asset_url`. GitHub's draft staging release advertises
+`browser_download_url` paths under its temporary `untagged-<hex>` slug,
+while the initial transport assumed the requested staging tag. One ciphertext
+checkpoint bundle is present in draft staging; do not treat other job-local
+checkpoints as persisted. Visible shard reports have blocked ASR/QA units;
+zero-input-review does not imply zero-output-QA failures.
+
+Fix committed as `18befe9938defc1947ac687aa2751fafbce8a392`:
+`transport.py` now validates the draft temporary download slug against the
+canonical release `html_url` and preserves strict published-tag URL checks.
+Regression tests cover matching draft, mismatch, malicious host, published
+mismatch, and idempotent re-download. Existing running jobs are pinned to the
+older checkout and **cannot** receive this fix retroactively. Do not approve
+their queued waves to spend more CPU on the known-broken transport. At last
+read, three first-wave failures, 37 in progress, 52 queued and three waiting
+for existing environment approval. No final TB index or site activation.
+
+**Recovery:** cancel the failed 43213606878 run through the authorized GitHub
+Actions UI, then trigger one new request.json `request_id` on the repaired
+branch after re-checking HEAD and use the existing encrypted checkpoint in
+staging. Keep `retry_blocked=false`. Before broad production, inspect persisted
+public shard reports and safely diagnose *why* ASR/EOS gates block units,
+without disclosing manuscript/audio or relaxing QA. Do not rerun cancelled
+43211498455. No environment rules or model settings were changed.
+
 ## Resumption
 
 Check workflow jobs and public shard reports, not only the overall conclusion.
