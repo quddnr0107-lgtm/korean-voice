@@ -311,6 +311,7 @@ class FP32Renderer:
                 ROOT / 'bora-production/paragraph_plan.py',
                 ROOT / 'bora-production/production_plan.py',
                 ROOT / 'bora-production/planning.py',
+                ROOT / 'bora-production/middot_readings.py',
                 ROOT / 'bora-production/tts_normalize.py',
                 ROOT / 'bora-production/approved-tb-annotations.json')}, **assets)
         self.settings_sha256 = identity(self.settings)

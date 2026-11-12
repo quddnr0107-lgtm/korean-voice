@@ -5,6 +5,7 @@ IDs, counts and fingerprints; source, ASR text and candidate audio stay sealed.
 """
 from __future__ import annotations
 import argparse
+from collections import Counter
 import base64
 import contextlib
 import hashlib
@@ -193,9 +194,10 @@ def public_plan(args):
     campaign,recipe,request,ids=config()
     check(HASH.fullmatch(args.settings_sha or ''), 'preflight_settings_hash')
     source_key,_=protected_keys()
-    records=[]; matrix=[]
+    records=[]; matrix=[]; review_counts=Counter()
     for ident in ids:
         plan,_=source_plan(ident,campaign,source_key)
+        review_counts.update(flag for unit in plan['units'] for flag in set(unit.get('review',[])+unit.get('review_flags',[])))
         groups=shards(plan,recipe['shard_chars'])
         records.append(dict(lesson_id=ident,source_sha256=plan['source_sha256'],
             plan_sha256=identity(plan),unit_count=len(plan['units']),paragraph_count=len(plan['paragraphs']),
@@ -213,14 +215,17 @@ def public_plan(args):
         campaign_sha256=identity(campaign),recipe_sha256=identity(recipe),
         request_sha256=identity(request),render_settings_sha256=args.settings_sha,lessons=records)
     atomic(args.output,enc(manifest))
+    unresolved=sum(v['review_units'] for v in records)
+    print(json.dumps(dict(status='sources_authenticated',course=request['course'],lessons=len(ids),
+        shards=len(matrix),units=sum(v['unit_count'] for v in records),
+        review_units=unresolved,review_counts=dict(review_counts))),flush=True)
+    # Resolve manuscript pronunciation before spending a full matrix of CPU.
+    check(unresolved==0, 'source_review_required_before_render')
     if args.github_output:
         with open(args.github_output,'a') as f:
             f.write('matrix='+enc(dict(include=matrix)).decode()+'\n')
             f.write('lessons='+enc(dict(include=[dict(lesson_id=i) for i in ids])).decode()+'\n')
             f.write('course='+request['course']+'\n')
-    print(json.dumps(dict(status='sources_authenticated',course=request['course'],lessons=len(ids),
-        shards=len(matrix),units=sum(v['unit_count'] for v in records),
-        review_units=sum(v['review_units'] for v in records))))
 
 
 def matched_plan(args, campaign, recipe, request, key):

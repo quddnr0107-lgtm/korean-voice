@@ -20,6 +20,7 @@ if str(QUALITY_DIR) not in sys.path:
 import production_plan
 import quality
 import tts_normalize
+import middot_readings
 from lecture_crypto import namespace_for
 
 SCHEMA = 'bora-production-plan/v1'
@@ -146,6 +147,8 @@ def _pronunciation(raw):
         if count:
             spoken = spoken.replace(old, new)
             substitutions.append(dict(original=old, replacement=new, occurrences=count))
+    middot_input_sha256 = production_plan.digest(spoken)
+    spoken, middot_edits, middot_flags = middot_readings.normalize(spoken)
     review = list(prepared['review'])
     resolved = []
     for flag, remains in (
@@ -159,6 +162,7 @@ def _pronunciation(raw):
         if remains and flag not in review:
             review.append(flag)
     review.extend('normalization_' + flag['reason'] for flag in flags)
+    review.extend('normalization_' + flag['reason'] for flag in middot_flags)
     if normalization_error:
         review.append('normalization_error_requires_review')
     provenance = dict(
@@ -169,6 +173,8 @@ def _pronunciation(raw):
         spoken_sha256=production_plan.digest(spoken),
         edits_basis='quality.prepare_output_codepoints', edits=edits,
         review_details=flags, exact_substitutions=substitutions,
+        middot_ruleset=middot_readings.RULESET, middot_input_sha256=middot_input_sha256,
+        middot_edits=middot_edits, middot_review_details=middot_flags,
         resolved_preparation_flags=sorted(resolved), failed=normalization_error)
     return spoken, sorted(set(review)), provenance
 

@@ -10,11 +10,19 @@ to a different voice, quantization or engine to improve throughput.
 Run `43211498455`, commit `8dfa45d31686ea46462ac8e01e83d45d41f1009b`,
 started 2026-11-12 11:42 UTC. Real keyless FP32 TTS/ASR/MP3 preflight passed,
 and the authenticated TB plan passed: 25 lessons, 95 shards, 3665 units.
-704 units have unresolved source review flags and are intentionally withheld
-without wasting synthesis time. Diagnose their actual reasons; a waived flag
-or green workflow is not a quality fix. Current compatible passed units remain
-valuable encrypted evidence. Investigate before changing a planner fingerprint
-because the current conservative reuse gate binds the full plan and settings.
+The initial plan found 704 source-review units, all caused by middle-dot legal
+enumerations missing from the finite pronunciation dictionary. The first run
+was cancelled early to avoid generating an entire course against that incomplete
+dictionary. A reviewed dictionary of 243 exact whole lexemes now maps their
+separators to spoken pauses without changing any lexical content or raw source.
+Applying it to all 25 repository manuscripts resolves all 704 cases (1143 exact
+substitutions); unknown notation still blocks. The protected operating-source
+plan must independently reproduce zero review units before any new render matrix
+starts. The new request is `tb-reviewed-enumerations-20261112`; read its latest
+run rather than resuming cancelled run 43211498455. Option 3 model, voice, dtype,
+threads, sampling and DSP settings remain unchanged. Current conservative reuse
+binds the full plan and render fingerprint, so old incompatible checkpoints are
+preserved but not mixed with the corrected plan.
 
 The first 40 render jobs were approved through the existing environment UI.
 Each later render wave and assembly can request that environment's approval

@@ -110,6 +110,18 @@ class RuntimeTests(unittest.TestCase):
         with self.assertRaises(ValueError): r.make_index(argparse.Namespace(course='TB',directory=self.root))
         self.assertFalse((self.root/'index.json').exists())
 
+    def test_unresolved_pronunciation_stops_before_render_matrix(self):
+        plan=copy.deepcopy(self.plan); plan['paragraphs']=[]
+        plan['units'][0]['review']=['review_remaining_middot_do_not_globally_split']
+        args=argparse.Namespace(settings_sha='a'*64,output=self.root/'public-plan.json',
+                                github_output=self.root/'github-output')
+        with patch.object(r,'config',return_value=({},dict(shard_chars=4000),dict(course='TB'),['TB-001'])), \
+             patch.object(r,'protected_keys',return_value=(self.key,b'')), \
+             patch.object(r,'source_plan',return_value=(plan,{})):
+            with self.assertRaisesRegex(ValueError,'source_review_required_before_render'):
+                r.public_plan(args)
+        self.assertFalse(args.github_output.exists())
+
     def test_unapproved_branch_fails_before_key_access(self):
         with patch.dict(os.environ,{'GITHUB_REPOSITORY':r.REPO,'GITHUB_REF':'refs/heads/other',
                                    'ADMIN_LAW_PREMIUM_SOURCE_KEY_B64':'SECRET-TEST-PLACEHOLDER'}):
