@@ -2,15 +2,28 @@
 import hashlib
 import json
 import os
+import re
+import sys
 from pathlib import Path
 import urllib.error
 import urllib.parse
 import urllib.request
 
-from run import REPO, enc, digest, unb, validate_config, validate_request
+from run import REPO, enc, digest, unb, validate_config, validate_request, accepted_identities
 
 TAG = 'kim-bora-tb001-preview-20261112'
 API = 'https://api.github.com/repos/' + REPO
+
+
+def validate_group_context(headers, cfg, run_id):
+    """One run and one actual text/offset map, including partial job retries."""
+    if len(headers) != len(cfg['groups']):
+        raise ValueError('group inventory count')
+    identities = {(h.get('source_sha256'),h.get('plan_sha256')) for h in headers}
+    if len(identities) != 1 or not identities <= accepted_identities(cfg):
+        raise ValueError('mixed operating source or offset map')
+    if any(h.get('run_id') != str(run_id) or not re.fullmatch(r'[1-9][0-9]{0,19}',h.get('attempt','')) for h in headers):
+        raise ValueError('mixed workflow run identity')
 
 
 def main():
@@ -19,29 +32,45 @@ def main():
             or os.environ.get('ADMIN_LAW_PREMIUM_SOURCE_KEY_B64')):
         raise RuntimeError('publish context')
     token = os.environ['GH_TOKEN']
+    diagnostic = '--source-diagnostic' in sys.argv
+    tag = 'kim-bora-tb001-source-check-'+os.environ['GITHUB_RUN_ID']+'-'+os.environ['GITHUB_RUN_ATTEMPT'] if diagnostic else TAG
     cfg = validate_config(json.loads(Path('kim-bora-tb-pilot/config.json').read_text()))
     validate_request(json.loads(Path('kim-bora-tb-pilot/request.json').read_text()), cfg)
-    directory = Path('bora-cipher')
+    directory = Path('source-diagnostic' if diagnostic else 'bora-cipher')
     paths = sorted(directory.glob('*.sealed.json'))
-    expected = [f'group_{i:03d}.sealed.json' for i in range(len(cfg['groups']))]
+    expected = ['source-diagnostic.sealed.json'] if diagnostic else [f'group_{i:03d}.sealed.json' for i in range(len(cfg['groups']))]
     if [p.name for p in paths] != expected:
         raise ValueError('incomplete encrypted group inventory')
     blocked_groups = []
+    group_headers = []
     for i, path in enumerate(paths):
         data = json.loads(path.read_text())
         if set(data) != {'header', 'cipher_sha256', 'cipher'}:
             raise ValueError('unexpected public fields')
         header = data['header']
+        if diagnostic:
+            if (header.get('schema')!='kim-bora-tb-source-diagnostic-envelope/v1'
+                    or header.get('lesson_id')!='TB-001' or header.get('config_sha256')!=digest(enc(cfg))
+                    or header.get('recipient_public')!=cfg['receiver_public']
+                    or header.get('run_id')!=os.environ['GITHUB_RUN_ID']
+                    or not re.fullmatch(r'[1-9][0-9]{0,19}',header.get('attempt',''))
+                    or digest(unb(data['cipher']))!=data['cipher_sha256']):
+                raise ValueError('source diagnostic identity')
+            continue
         if (header.get('schema') != 'kim-bora-tb-pilot-envelope/v1'
                 or header.get('lesson_id') != 'TB-001'
                 or header.get('group') != i or header.get('unit_range') != cfg['groups'][i]
                 or header.get('config_sha256') != digest(enc(cfg))
                 or header.get('recipient_public') != cfg['receiver_public']
+                or (header.get('source_sha256'),header.get('plan_sha256')) not in accepted_identities(cfg)
                 or header.get('quality_status') not in ('private_pcm_subset_complete','blocked_requires_review')
                 or digest(unb(data['cipher'])) != data['cipher_sha256']):
             raise ValueError('encrypted group identity')
         if header['quality_status'] == 'blocked_requires_review':
             blocked_groups.append(i)
+        group_headers.append(header)
+    if not diagnostic:
+        validate_group_context(group_headers,cfg,os.environ['GITHUB_RUN_ID'])
 
     def request(url, method='GET', data=None, content_type='application/json'):
         if urllib.parse.urlsplit(url).hostname not in ('api.github.com', 'uploads.github.com'):
@@ -55,7 +84,7 @@ def main():
             return json.load(response)
 
     try:
-        request(API+'/releases/tags/'+TAG)
+        request(API+'/releases/tags/'+tag)
     except urllib.error.HTTPError as exc:
         if exc.code != 404:
             raise
@@ -65,7 +94,10 @@ def main():
     body = 'AI 합성 음성 검토용 암호문입니다. 사이트의 기존 강의와 음원은 변경하지 않았습니다. 음질·문장별 동기화 검토 후에만 교체합니다.'
     if blocked_groups:
         body += '\n자동 검증을 통과하지 못한 구간이 '+str(len(blocked_groups))+'개 작업에 포함되어 있습니다. 이 결과는 완성 음원이 아니며, 암호화 진단 자료를 확인하고 해당 구간을 수정해야 합니다.'
-    release = request(API+'/releases', 'POST', dict(tag_name=TAG,
+    if diagnostic:
+        title='통합방위법 1강 원고 일치 검사 — 암호화 진단'
+        body='운영 원고가 사전 검토한 원고 해시와 달라 합성을 시작하지 않았습니다. 수신자 전용 암호화 진단 자료입니다. 기존 음원과 사이트는 변경하지 않았습니다.'
+    release = request(API+'/releases', 'POST', dict(tag_name=tag,
         target_commitish=os.environ['GITHUB_SHA'], name=title, body=body,
         draft=True, prerelease=True))
     upload = release['upload_url'].split('{')[0]
@@ -75,7 +107,7 @@ def main():
     if sorted(x['name'] for x in inventory) != expected:
         raise ValueError('release inventory mismatch')
     final = request(API+'/releases/'+str(release['id']), 'PATCH', dict(draft=False))
-    print(json.dumps(dict(status='encrypted_diagnostics_release_created' if blocked_groups else 'encrypted_preview_release_created',
+    print(json.dumps(dict(status='source_diagnostic_release_created' if diagnostic else 'encrypted_diagnostics_release_created' if blocked_groups else 'encrypted_preview_release_created',
                           url=final['html_url'], groups=len(paths), blocked_groups=blocked_groups)))
 
 

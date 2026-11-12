@@ -271,5 +271,239 @@
       58
     ]
   ],
-  "receiver_public": "WeM1GThjs6wj+ULWdtqQGwozZ6cISezEAbYgxp56OH0="
+  "receiver_public": "WeM1GThjs6wj+ULWdtqQGwozZ6cISezEAbYgxp56OH0=",
+  "accepted_sources": [
+    {
+      "label": "repository_exact_lf",
+      "source_sha256": "bceadf7509da807f9fd00c4bd7ca6cf8aa13e5797ccb078d853db8eaf2342915",
+      "expected_plan_sha256": "89ea42123a322ae76ab405751fd1e99955112eede6f2d5fac23f8161d113f5db",
+      "reading_spans": [
+        [
+          1110,
+          1219
+        ],
+        [
+          2189,
+          2205
+        ],
+        [
+          2979,
+          3018
+        ],
+        [
+          3594,
+          3642
+        ],
+        [
+          4236,
+          4274
+        ]
+      ],
+      "unit_count": 58,
+      "paragraph_count": 46
+    },
+    {
+      "label": "repository_exact_crlf",
+      "source_sha256": "d86b2afef5dc8cd04bd3f8a50b749f26f2e92c17e08aabbef55443f780f4d0bf",
+      "expected_plan_sha256": "3839cffba43cd5c034899e05ce7b51b5e8c89241c4b42dfe862622862249cc9b",
+      "reading_spans": [
+        [
+          1130,
+          1239
+        ],
+        [
+          2223,
+          2239
+        ],
+        [
+          3027,
+          3066
+        ],
+        [
+          3652,
+          3700
+        ],
+        [
+          4304,
+          4342
+        ]
+      ],
+      "unit_count": 58,
+      "paragraph_count": 46
+    },
+    {
+      "label": "trailing_newline_removed_lf",
+      "source_sha256": "6e858a163c3b94f59af3f038a9bdfd817defd0e6481e10a3a9874227095fbbcd",
+      "expected_plan_sha256": "1b9edf365a4a798e67647a51ec0b5d4c8b564272653f039a952d5f94f0fae34e",
+      "reading_spans": [
+        [
+          1110,
+          1219
+        ],
+        [
+          2189,
+          2205
+        ],
+        [
+          2979,
+          3018
+        ],
+        [
+          3594,
+          3642
+        ],
+        [
+          4236,
+          4274
+        ]
+      ],
+      "unit_count": 58,
+      "paragraph_count": 46
+    },
+    {
+      "label": "trailing_newline_removed_crlf",
+      "source_sha256": "75d9300c8ed3e8b8bc0a1cf027c78126b94360ce609254f731b8748a6ace88cf",
+      "expected_plan_sha256": "7f12586448db57e96b563afd125bcc6286e1350773811a03c6f392aaf7a4ea1f",
+      "reading_spans": [
+        [
+          1130,
+          1239
+        ],
+        [
+          2223,
+          2239
+        ],
+        [
+          3027,
+          3066
+        ],
+        [
+          3652,
+          3700
+        ],
+        [
+          4304,
+          4342
+        ]
+      ],
+      "unit_count": 58,
+      "paragraph_count": 46
+    },
+    {
+      "label": "blank_lines_collapsed_lf",
+      "source_sha256": "e8cc412b0ea1883a0efca3f5264245d88042d71b11090aee28211f671a8dc1a6",
+      "expected_plan_sha256": "fdeef6c5dececc7211a1fe9e8636f22ba29a6662f743597a559932af829ec278",
+      "reading_spans": [
+        [
+          1100,
+          1209
+        ],
+        [
+          2172,
+          2188
+        ],
+        [
+          2955,
+          2994
+        ],
+        [
+          3565,
+          3613
+        ],
+        [
+          4202,
+          4240
+        ]
+      ],
+      "unit_count": 58,
+      "paragraph_count": 46
+    },
+    {
+      "label": "blank_lines_collapsed_crlf",
+      "source_sha256": "18fa29aa9b8ef86cecedeb997eee521a0fedabab71cdaf4eb582c95804c7a514",
+      "expected_plan_sha256": "7c211b36b5540809c2ac0b64ee79fde682390ff82bbe365a0b9bfffc6b3eaf08",
+      "reading_spans": [
+        [
+          1110,
+          1219
+        ],
+        [
+          2189,
+          2205
+        ],
+        [
+          2979,
+          3018
+        ],
+        [
+          3594,
+          3642
+        ],
+        [
+          4236,
+          4274
+        ]
+      ],
+      "unit_count": 58,
+      "paragraph_count": 46
+    },
+    {
+      "label": "blank_lines_collapsed_no_final_newline_lf",
+      "source_sha256": "cfea607f1c9a6b5d195132cfac257c88fa5727454b15473c5c635661dafad03e",
+      "expected_plan_sha256": "e90629830b11dbb5fb88483e916aeb068dd7f7b2e839802bdd9813808ea56d26",
+      "reading_spans": [
+        [
+          1100,
+          1209
+        ],
+        [
+          2172,
+          2188
+        ],
+        [
+          2955,
+          2994
+        ],
+        [
+          3565,
+          3613
+        ],
+        [
+          4202,
+          4240
+        ]
+      ],
+      "unit_count": 58,
+      "paragraph_count": 46
+    },
+    {
+      "label": "blank_lines_collapsed_no_final_newline_crlf",
+      "source_sha256": "61cd41a8ca7a19d212b711e8c46683559f33caba3e86c0c8ed719f06d5b573f7",
+      "expected_plan_sha256": "f608316c914b3b8010b3a337b6deed8e6bf27c1e703c0abe41062e6e45157b76",
+      "reading_spans": [
+        [
+          1110,
+          1219
+        ],
+        [
+          2189,
+          2205
+        ],
+        [
+          2979,
+          3018
+        ],
+        [
+          3594,
+          3642
+        ],
+        [
+          4236,
+          4274
+        ]
+      ],
+      "unit_count": 58,
+      "paragraph_count": 46
+    }
+  ]
 }

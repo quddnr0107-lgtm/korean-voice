@@ -17,6 +17,7 @@ jobs:
     timeout-minutes: 10
     outputs:
       matrix: ${{ steps.plan.outputs.matrix }}
+      status: ${{ steps.plan.outputs.status }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -34,7 +35,7 @@ jobs:
         run: |
           umask 077
           export BORA_HOST_NETNS="$(readlink /proc/self/ns/net)"
-          sudo --preserve-env=ADMIN_LAW_PREMIUM_SOURCE_KEY_B64,BORA_HOST_NETNS,GITHUB_REPOSITORY,GITHUB_EVENT_NAME,GITHUB_REF,RUNNER_TEMP \
+          sudo --preserve-env=ADMIN_LAW_PREMIUM_SOURCE_KEY_B64,BORA_HOST_NETNS,GITHUB_REPOSITORY,GITHUB_EVENT_NAME,GITHUB_REF,GITHUB_RUN_ID,GITHUB_RUN_ATTEMPT,RUNNER_TEMP \
             unshare --net --setgid "$(id -g)" --setuid "$(id -u)" -- "$(command -v python)" \
             kim-bora-tb-pilot/run.py --check-only --output "$RUNNER_TEMP/bora-check"
       - id: plan
@@ -44,12 +45,22 @@ jobs:
           import json,os
           from pathlib import Path
           checked=json.loads((Path(os.environ['RUNNER_TEMP'])/'bora-check'/'plan-public.json').read_text())
-          assert checked['status']=='source_and_plan_match'
+          assert checked['status'] in ('source_and_plan_match','source_mismatch_render_not_started')
           with open(os.environ['GITHUB_OUTPUT'],'a') as f:
-              f.write('matrix='+json.dumps(checked['matrix'],separators=(',',':'))+'\n')
+              f.write('status='+checked['status']+'\n')
+              if checked['status']=='source_and_plan_match':
+                  f.write('matrix='+json.dumps(checked['matrix'],separators=(',',':'))+'\n')
           PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: steps.plan.outputs.status == 'source_mismatch_render_not_started'
+        with:
+          name: bora-tb001-source-diagnostic
+          path: ${{ runner.temp }}/bora-check/source-diagnostic.sealed.json
+          retention-days: 3
+          if-no-files-found: error
   render:
     needs: plan
+    if: needs.plan.outputs.status == 'source_and_plan_match'
     runs-on: ubuntu-24.04
     environment: admin-law-premium-production
     timeout-minutes: 90
@@ -119,3 +130,22 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: python kim-bora-tb-pilot/publish_cipher.py
+  source-diagnostic:
+    needs: plan
+    if: needs.plan.outputs.status == 'source_mismatch_render_not_started'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: bora-tb001-source-diagnostic
+          path: source-diagnostic
+      - name: Publish only the recipient-encrypted source diagnostic
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python kim-bora-tb-pilot/publish_cipher.py --source-diagnostic

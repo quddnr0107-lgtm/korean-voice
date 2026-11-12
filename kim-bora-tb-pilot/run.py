@@ -28,11 +28,18 @@ REPO = 'quddnr0107-lgtm/korean-voice'
 REF = 'refs/heads/integrated-lectures-premium-20261028'
 SOURCE_HASH = 'bceadf7509da807f9fd00c4bd7ca6cf8aa13e5797ccb078d853db8eaf2342915'
 DOMAIN = b'kim-bora-tb-pilot-recipient/v1'
+DIAGNOSTIC_DOMAIN = b'kim-bora-tb-pilot-source-diagnostic/v1'
 MAX_ZIP = 64 * 1024 * 1024
 
 
 class PilotFailure(ValueError):
     """A bounded machine-readable failure code containing no manuscript text."""
+
+
+class SourceMismatch(PilotFailure):
+    def __init__(self, source):
+        super().__init__('operating_source_hash_mismatch')
+        self.source = source
 
 
 def enc(value):
@@ -89,6 +96,18 @@ def validate_config(cfg):
     terms = cfg.get('critical_terms', [])
     if not isinstance(terms, list) or any(not isinstance(x, str) or not x or len(x) > 100 for x in terms):
         raise ValueError('critical terms')
+    accepted = cfg.get('accepted_sources', [])
+    if not isinstance(accepted, list) or len(accepted) > 12:
+        raise ValueError('accepted source bounds')
+    seen = set()
+    for spec in accepted:
+        if (not isinstance(spec, dict) or not re.fullmatch('[a-f0-9]{64}', spec.get('source_sha256', ''))
+                or not re.fullmatch('[a-f0-9]{64}', spec.get('expected_plan_sha256', ''))
+                or spec.get('unit_count') != count or spec.get('paragraph_count') != cfg.get('paragraph_count')
+                or not isinstance(spec.get('reading_spans'), list)
+                or spec['source_sha256'] in seen):
+            raise ValueError('accepted source identity')
+        seen.add(spec['source_sha256'])
     return cfg
 
 
@@ -109,18 +128,36 @@ def require_context(env=os.environ):
         raise RuntimeError('offline namespace required')
 
 
+def source_spec(source, cfg):
+    actual = digest(source.encode('utf-8'))
+    candidates = [dict(source_sha256=cfg['source_sha256'], expected_plan_sha256=cfg['expected_plan_sha256'],
+        reading_spans=cfg.get('reading_spans', []), unit_count=cfg['unit_count'], paragraph_count=cfg['paragraph_count'])]
+    candidates += cfg.get('accepted_sources', [])
+    matches = [s for s in candidates if s['source_sha256'] == actual]
+    if not matches:
+        raise SourceMismatch(source)
+    identities = {(s['expected_plan_sha256'], enc(s['reading_spans'])) for s in matches}
+    if len(identities) != 1:
+        raise PilotFailure('conflicting_source_variant')
+    return matches[0]
+
+
+def accepted_identities(cfg):
+    return {(cfg['source_sha256'],cfg['expected_plan_sha256'])} | {
+        (s['source_sha256'],s['expected_plan_sha256']) for s in cfg.get('accepted_sources',[])}
+
+
 def build_reviewed_plan(source, cfg):
     from paragraph_plan import build_plan
-    if digest(source.encode('utf-8')) != cfg['source_sha256']:
-        raise PilotFailure('operating_source_hash_mismatch')
-    plan = build_plan(source, 'TB-001', cfg['max_chars'], cfg.get('reading_spans', []))
+    spec = source_spec(source, cfg)
+    plan = build_plan(source, 'TB-001', cfg['max_chars'], spec['reading_spans'])
     for unit in plan['units']:
         for old, new in cfg.get('spoken_replacements', []):
             unit['spoken'] = unit['spoken'].replace(old, new)
         unit['critical_terms'] = [t for t in cfg.get('critical_terms', []) if t in unit['spoken']]
-    if len(plan['units']) != cfg['unit_count'] or len(plan['paragraphs']) != cfg['paragraph_count']:
+    if len(plan['units']) != spec['unit_count'] or len(plan['paragraphs']) != spec['paragraph_count']:
         raise ValueError('plan shape')
-    if digest(enc(plan)) != cfg['expected_plan_sha256']:
+    if digest(enc(plan)) != spec['expected_plan_sha256']:
         raise PilotFailure('reviewed_plan_hash_mismatch')
     return plan
 
@@ -182,7 +219,8 @@ def archive_subset(directory, manifest):
     return value
 
 
-def seal_result(plain, cfg, group, run_id, attempt, quality_status='private_pcm_subset_complete'):
+def seal_result(plain, cfg, group, run_id, attempt, quality_status='private_pcm_subset_complete',
+                source_sha256=None, plan_sha256=None):
     from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey, X25519PublicKey
     from cryptography.hazmat.primitives import hashes, serialization
     from cryptography.hazmat.primitives.kdf.hkdf import HKDF
@@ -195,10 +233,14 @@ def seal_result(plain, cfg, group, run_id, attempt, quality_status='private_pcm_
     header = dict(schema='kim-bora-tb-pilot-envelope/v1', lesson_id='TB-001',
         config_sha256=digest(enc(cfg)), group=group, unit_range=cfg['groups'][group],
         quality_status=quality_status,
+        source_sha256=source_sha256 or cfg['source_sha256'],
+        plan_sha256=plan_sha256 or cfg['expected_plan_sha256'],
         run_id=str(run_id), attempt=str(attempt), plain_sha256=digest(plain),
         recipient_public=cfg['receiver_public'],
         sender_public=b64(sender.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw)),
         salt=b64(salt), nonce=b64(nonce))
+    if (header['source_sha256'],header['plan_sha256']) not in accepted_identities(cfg):
+        raise ValueError('unreviewed source identity')
     key = HKDF(algorithm=hashes.SHA256(), length=32, salt=salt, info=DOMAIN).derive(
         sender.exchange(X25519PublicKey.from_public_bytes(unb(cfg['receiver_public']))))
     cipher = AESGCM(key).encrypt(nonce, plain, enc(header))
@@ -215,7 +257,8 @@ def open_result(envelope, cfg, group, recipient_private):
     if (header.get('schema') != 'kim-bora-tb-pilot-envelope/v1' or header.get('lesson_id') != 'TB-001'
             or header.get('config_sha256') != digest(enc(cfg)) or header.get('group') != group
             or header.get('unit_range') != cfg['groups'][group]
-            or header.get('recipient_public') != cfg['receiver_public']):
+            or header.get('recipient_public') != cfg['receiver_public']
+            or (header.get('source_sha256'),header.get('plan_sha256')) not in accepted_identities(cfg)):
         raise ValueError('recipient context')
     private = X25519PrivateKey.from_private_bytes(recipient_private)
     public = private.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw)
@@ -232,6 +275,60 @@ def open_result(envelope, cfg, group, recipient_private):
     return plain
 
 
+def seal_source_diagnostic(source, cfg, run_id, attempt):
+    from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey, X25519PublicKey
+    from cryptography.hazmat.primitives import hashes, serialization
+    from cryptography.hazmat.primitives.kdf.hkdf import HKDF
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+    actual_hash = digest(source.encode())
+    payload = dict(schema='kim-bora-tb-source-diagnostic/v1', lesson_id='TB-001', actual_source=source,
+        actual_source_sha256=actual_hash, actual_utf8_bytes=len(source.encode()),
+        actual_utf16_length=len(source.encode('utf-16-le'))//2,
+        expected_source_sha256=cfg['source_sha256'],
+        source_repository=cfg.get('source_repository'), source_revision=cfg.get('source_revision'),
+        source_blob=cfg.get('source_blob'), config_sha256=digest(enc(cfg)),
+        status='source_mismatch_render_not_started')
+    plain = enc(payload)
+    if len(plain) > MAX_ZIP:
+        raise ValueError('source diagnostic bounds')
+    sender = X25519PrivateKey.generate(); salt,nonce = os.urandom(32),os.urandom(12)
+    header = dict(schema='kim-bora-tb-source-diagnostic-envelope/v1', lesson_id='TB-001',
+        config_sha256=digest(enc(cfg)), run_id=str(run_id), attempt=str(attempt),
+        actual_source_sha256=actual_hash, recipient_public=cfg['receiver_public'], plain_sha256=digest(plain),
+        sender_public=b64(sender.public_key().public_bytes(serialization.Encoding.Raw,serialization.PublicFormat.Raw)),
+        salt=b64(salt),nonce=b64(nonce))
+    key=HKDF(algorithm=hashes.SHA256(),length=32,salt=salt,info=DIAGNOSTIC_DOMAIN).derive(
+        sender.exchange(X25519PublicKey.from_public_bytes(unb(cfg['receiver_public']))))
+    cipher=AESGCM(key).encrypt(nonce,plain,enc(header))
+    return dict(header=header,cipher_sha256=digest(cipher),cipher=b64(cipher))
+
+
+def open_source_diagnostic(envelope,cfg,recipient_private):
+    from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey, X25519PublicKey
+    from cryptography.hazmat.primitives import hashes, serialization
+    from cryptography.hazmat.primitives.kdf.hkdf import HKDF
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+    h=envelope['header']
+    if (h.get('schema')!='kim-bora-tb-source-diagnostic-envelope/v1' or h.get('lesson_id')!='TB-001'
+            or h.get('config_sha256')!=digest(enc(cfg)) or h.get('recipient_public')!=cfg['receiver_public']):
+        raise ValueError('diagnostic context')
+    private=X25519PrivateKey.from_private_bytes(recipient_private)
+    if b64(private.public_key().public_bytes(serialization.Encoding.Raw,serialization.PublicFormat.Raw))!=cfg['receiver_public']:
+        raise ValueError('diagnostic recipient')
+    cipher=unb(envelope['cipher'])
+    if len(cipher)>MAX_ZIP+16 or digest(cipher)!=envelope['cipher_sha256']:
+        raise ValueError('diagnostic cipher integrity')
+    key=HKDF(algorithm=hashes.SHA256(),length=32,salt=unb(h['salt']),info=DIAGNOSTIC_DOMAIN).derive(
+        private.exchange(X25519PublicKey.from_public_bytes(unb(h['sender_public']))))
+    plain=AESGCM(key).decrypt(unb(h['nonce']),cipher,enc(h))
+    if digest(plain)!=h['plain_sha256']:
+        raise ValueError('diagnostic plaintext integrity')
+    data=json.loads(plain)
+    if digest(data['actual_source'].encode())!=h['actual_source_sha256']:
+        raise ValueError('diagnostic source integrity')
+    return data
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=Path, default=HERE/'config.json')
@@ -244,13 +341,24 @@ def main():
     validate_request(json.loads((HERE/'request.json').read_text()), cfg)
     if not args.check_only and (args.group is None or not 0 <= args.group < len(cfg['groups'])):
         raise ValueError('group selection')
-    plan = open_plan(cfg)
     args.output.mkdir(mode=0o700, parents=True, exist_ok=True)
     if args.output.is_symlink():
         raise ValueError('output symlink')
+    try:
+        plan = open_plan(cfg)
+    except SourceMismatch as exc:
+        if not args.check_only:
+            raise
+        sealed = seal_source_diagnostic(exc.source,cfg,os.environ['GITHUB_RUN_ID'],os.environ['GITHUB_RUN_ATTEMPT'])
+        (args.output/'source-diagnostic.sealed.json').write_bytes(enc(sealed))
+        result=dict(schema='kim-bora-tb-pilot-public-check/v1',status='source_mismatch_render_not_started',
+                    actual_source_sha256=sealed['header']['actual_source_sha256'])
+        (args.output/'plan-public.json').write_bytes(enc(result))
+        print(json.dumps(dict(status=result['status'])))
+        return
     if args.check_only:
         result = dict(schema='kim-bora-tb-pilot-public-check/v1', status='source_and_plan_match',
-            source_sha256=plan['source_sha256'], plan_sha256=cfg['expected_plan_sha256'],
+            source_sha256=plan['source_sha256'], plan_sha256=digest(enc(plan)),
             groups=len(cfg['groups']), unit_count=len(plan['units']),
             matrix=dict(group=list(range(len(cfg['groups'])))))
         (args.output/'plan-public.json').write_bytes(enc(result))
@@ -269,7 +377,8 @@ def main():
                 list(range(start, stop)), threads=2, max_new_tokens=900)
         archive = archive_subset(directory, manifest)
         result = seal_result(archive, cfg, args.group, os.environ['GITHUB_RUN_ID'],
-                             os.environ['GITHUB_RUN_ATTEMPT'], manifest['status'])
+                             os.environ['GITHUB_RUN_ATTEMPT'], manifest['status'],
+                             plan['source_sha256'],digest(enc(plan)))
         path = args.output/f'group_{args.group:03d}.sealed.json'
         with path.open('x') as file:
             json.dump(result, file, separators=(',', ':'))
