@@ -1,0 +1,91 @@
+name: Verify public service-card audio with independent ASR
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [bora-service-card-20261112]
+    paths:
+      - '.github/workflows/bora-service-card-verify.yml'
+      - 'benchmarks/bora_service_card_verify/**'
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: bora-public-service-card-verify-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    if: ${{ github.event.repository.private == false && github.ref == 'refs/heads/bora-service-card-20261112' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Set public verification boundary
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/bora-service-card-asr-results"
+          echo "BORA_VERIFY_DEADLINE=$(( $(date +%s) + 840 ))" >> "$GITHUB_ENV"
+
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+
+      - name: Prepare lightweight ASR dependencies while synthesis finishes
+        timeout-minutes: 3
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check faster-whisper==1.2.1 soundfile==0.14.0 numpy==2.5.4 scipy==1.18.1
+          python -m pip check
+          python -m pip freeze > "$RUNNER_TEMP/bora-service-card-asr-results/pip-freeze.txt"
+          python benchmarks/bora_service_card_verify/verify.py prepare \
+            --model-cache "$RUNNER_TEMP/bora-service-card-asr-model" \
+            --output "$RUNNER_TEMP/bora-service-card-asr-results"
+
+      - name: Wait for the fixed synthesis run
+        timeout-minutes: 11
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python benchmarks/bora_service_card_verify/verify.py wait \
+            --output "$RUNNER_TEMP/bora-service-card-asr-results"
+
+      - name: Download only the fixed run's public paragraph artifacts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: '43177833903'
+          pattern: bora-public-service-card-part-*
+          merge-multiple: false
+          path: ${{ runner.temp }}/bora-service-card-source-audio
+
+      - name: Transcribe and compare all four public paragraphs
+        timeout-minutes: 4
+        env:
+          HF_HUB_DISABLE_IMPLICIT_TOKEN: '1'
+          HF_HUB_DISABLE_TELEMETRY: '1'
+          DO_NOT_TRACK: '1'
+          OMP_NUM_THREADS: '4'
+          OPENBLAS_NUM_THREADS: '4'
+        run: |
+          python benchmarks/bora_service_card_verify/verify.py transcribe \
+            --artifacts "$RUNNER_TEMP/bora-service-card-source-audio" \
+            --model-cache "$RUNNER_TEMP/bora-service-card-asr-model" \
+            --output "$RUNNER_TEMP/bora-service-card-asr-results"
+
+      - name: Upload ASR reports and dependency versions
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: bora-public-service-card-asr-${{ github.run_id }}
+          path: ${{ runner.temp }}/bora-service-card-asr-results/
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
