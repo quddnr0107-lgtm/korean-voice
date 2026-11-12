@@ -1,1 +1,1 @@
-{"campaign_sha256":"60e9763ab344e8a59264ec634a47ee60321667bc426108100f2973a04cfdca76","course":"TB","request_id":"tb-reviewed-enumerations-20261112","retry_blocked":false,"schema":"bora-fp32-request/v1"}
+{"campaign_sha256":"60e9763ab344e8a59264ec634a47ee60321667bc426108100f2973a04cfdca76","course":"TB","lesson_ids":["TB-001"],"request_id":"tb001-transport-recovery-owner-20261113-01","retry_blocked":false,"schema":"bora-fp32-request/v1"}
