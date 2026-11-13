@@ -1,0 +1,55 @@
+name: Original Kim Bora FP32 Code Predictor compile screening
+on:
+  push:
+    branches: [bora-original-speed-lab-20261113]
+    paths: ['benchmarks/original_speed/compile_request.json']
+permissions:
+  contents: read
+concurrency:
+  group: original-bora-cp-compile-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  cpu-compile:
+    if: github.repository == 'quddnr0107-lgtm/korean-voice'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      HF_HUB_DISABLE_TELEMETRY: '1'
+      HF_HUB_DISABLE_IMPLICIT_TOKEN: '1'
+      HF_HUB_DISABLE_PROGRESS_BARS: '1'
+      DO_NOT_TRACK: '1'
+      ORT_DISABLE_TELEMETRY: '1'
+      OMP_NUM_THREADS: '4'
+      OPENBLAS_NUM_THREADS: '4'
+      MKL_NUM_THREADS: '4'
+      TORCHINDUCTOR_FREEZING: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false, fetch-depth: 2}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with: {python-version: '3.12'}
+      - name: Validate public compilation experiment and unchanged production
+        run: |
+          git diff --exit-code HEAD^ HEAD -- bora-production/request.json bora-production/campaign.json bora-production/recipe.json bora-production/runtime.py bora-production/fp32_renderer.py bora-production/pilot_render.py .github/workflows/bora-fp32-production.yml
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          assert json.loads(Path('benchmarks/original_speed/compile_request.json').read_text()) == {'schema':'original-bora-cp-compile/v1','production':False,'private_sources':False,'gpu':False,'precision':'float32','scope':'five-code-predictor-mlps'}
+          PY
+          python -m unittest discover -s benchmarks/original_speed -p 'test_*.py' -v
+      - name: Install the existing original CPU runtime
+        run: bash bora-production/setup_runtime.sh
+      - name: Verify the unchanged model revision and all asset hashes
+        run: python benchmarks/original_speed/download_same_model.py --output "$RUNNER_TEMP/original-bora-model"
+      - name: Compare original FP32 with compiled FP32 Code Predictor MLPs
+        env: {HF_HUB_OFFLINE: '1', TRANSFORMERS_OFFLINE: '1'}
+        run: |
+          python benchmarks/original_speed/cp_compile_bench.py --model "$RUNNER_TEMP/original-bora-model" --output "$RUNNER_TEMP/original-bora-cp-compile" --repeats 2 --call-timeout 180 --compile-timeout 420 --total-timeout 1500
+      - name: Preserve public waveforms and exact-code comparison evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: original-bora-cp-compile-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/original-bora-cp-compile
+          retention-days: 7
+          if-no-files-found: warn
