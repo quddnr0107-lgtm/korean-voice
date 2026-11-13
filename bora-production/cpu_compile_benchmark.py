@@ -26,13 +26,18 @@ from cpu_precision_benchmark import hardware
 from cpu_thread_benchmark import rss_snapshot, validate_native_threads
 
 SCHEMA = 'sohee-public-cpu-compile/v1'
-MODES = ('eager', 'compiled_predictor')
+COMPILED_MODE = 'compiled_predictor_eager_masks'
+MODES = ('eager', COMPILED_MODE)
+MASK_ALIASES = ('create_causal_mask', 'create_sliding_window_causal_mask')
+COMPILE_SCOPE = 'outer-predictor-forward-original-eager-causal-masks'
 CALL_SECONDS = 360
 WORKER_SECONDS = 1240
 MAX_GRAPHS = 32
 MODELING_SHA256 = '25c42656bcf810f06ef6bc1839bd7083f3c8cfedac3a147c4060b4262b1c96a0'
 SOURCES = [
     'https://docs.pytorch.org/docs/2.8/generated/torch.compile.html',
+    'https://docs.pytorch.org/docs/2.8/generated/torch.compiler.disable.html',
+    'https://github.com/huggingface/transformers/issues/42320',
     'https://github.com/pytorch/pytorch/blob/v2.8.0/torch/_inductor/config.py',
     'https://github.com/QwenLM/Qwen3-TTS/blob/022e286b98fbec7e1e916cb940cdf532cd9f488e/qwen_tts/core/models/modeling_qwen3_tts.py']
 
@@ -54,9 +59,10 @@ def dump(path, value):
 def validate_request():
     request = json.loads(Path(__file__).with_name('cpu-compile-request.json').read_text())
     require(request == dict(schema=SCHEMA,
-        request_id='public-sohee-fp32-predictor-compile-20261113-02',
+        request_id='public-sohee-fp32-predictor-compile-20261113-03',
         model_revision=REVISION, fixture_count=2, threads=4, interop_threads=1,
         modes=list(MODES), call_timeout_seconds=CALL_SECONDS,
+        compile_scope=COMPILE_SCOPE, eager_mask_aliases=list(MASK_ALIASES),
         compile_threads=1, maximum_compiled_graphs=MAX_GRAPHS,
         production=False, secrets=False, gpu=False))
 
@@ -68,6 +74,33 @@ def bounded_text(value, limit):
     marker = '\n...[truncated]...\n'
     remaining = limit-len(marker)
     return text[:remaining//2] + marker + text[-(remaining-remaining//2):]
+
+
+def compiler_error_excerpt(text, limit=1600):
+    """Prioritize the first real compiler error, which can be mid-message."""
+    lines = text.splitlines()
+    indices = [i for i, line in enumerate(lines)
+        if re.search(r'\b(?:fatal\s+)?error\s*:', line, re.IGNORECASE)]
+    if not indices:
+        return ''
+    first = indices[0]
+    # Keep the exact error line first; include neighboring source and notes.
+    chosen = [f'first compiler error at original line {first+1}:',
+        bounded_text(lines[first], min(600, limit//2))]
+    chosen.extend(bounded_text(line, 200) for line in lines[first+1:first+4])
+    chosen.append('preceding context:')
+    chosen.extend(bounded_text(line, 150) for line in lines[max(0, first-2):first])
+    return bounded_text('\n'.join(chosen), limit)
+
+
+def diagnostic_message(text, limit=2000):
+    if len(text) <= limit:
+        return text
+    excerpt = compiler_error_excerpt(text, limit-400)
+    if excerpt:
+        return bounded_text(text[:200]+'\n...[compiler error prioritized]...\n'+excerpt
+            +'\n...[tail]...\n'+text[-100:], limit)
+    return bounded_text(text, limit)
 
 
 def public_error_report(error):
@@ -84,8 +117,23 @@ def public_error_report(error):
             message = '<exception message unavailable>'
         row = dict(type=bounded_text(type(current).__name__, 200),
             module=bounded_text(type(current).__module__, 200),
-            relation=relation, message=bounded_text(message, 2000),
+            relation=relation, message=diagnostic_message(message, 2000),
             message_truncated=len(message) > 2000)
+        excerpt = compiler_error_excerpt(message)
+        if excerpt:
+            row['compiler_error_excerpt'] = excerpt
+        if isinstance(current, subprocess.CalledProcessError):
+            row['subprocess_returncode'] = current.returncode
+            row['subprocess_streams'] = {}
+            for field in ('output', 'stderr'):
+                stream = getattr(current, field, None)
+                if isinstance(stream, bytes):
+                    stream = stream.decode('utf-8', errors='replace')
+                if isinstance(stream, str):
+                    row['subprocess_streams'][field] = dict(
+                        text=diagnostic_message(stream, 4000), original_characters=len(stream),
+                        truncated=len(stream) > 4000,
+                        compiler_error_excerpt=compiler_error_excerpt(stream))
         chain.append(row)
         trace.append(f"\n{relation}: {row['module']}.{row['type']}\nTraceback (most recent call last):\n")
         trace.extend(bounded_text(frame, 1000)
@@ -100,6 +148,7 @@ def public_error_report(error):
         chain_limit_reached=current is not None and len(chain) == 4,
         chain_cycle_detected=current is not None and id(current) in seen,
         maximum_chain_depth=4, maximum_message_characters=2000,
+        maximum_subprocess_stream_characters=4000, compiler_error_line_prioritized=True,
         traceback=bounded_text(trace_text, 12000), traceback_truncated=len(trace_text) > 12000,
         maximum_traceback_characters=12000,
         diagnosis='Recorded compiler failure; does not establish a hardware or support limitation.')
@@ -136,6 +185,37 @@ def compiled_forward(predictor, compiler, backend, counts):
         predictor.forward = original
 
 
+@contextlib.contextmanager
+def eager_causal_masks(modeling_module, disable):
+    """Keep original mask calculations; exclude only their tracing."""
+    originals = {name: getattr(modeling_module, name) for name in MASK_ALIASES}
+    require(all(callable(fn) for fn in originals.values()))
+    disabled = {name: disable(fn, recursive=True) for name, fn in originals.items()}
+    require(all(callable(fn) for fn in disabled.values()))
+    state = dict(aliases=list(MASK_ALIASES), original_calculation_retained=True,
+        restored_on_exit=False,
+        originals={name: fn.__module__+'.'+fn.__name__ for name, fn in originals.items()})
+    for name, fn in disabled.items():
+        setattr(modeling_module, name, fn)
+    try:
+        yield state
+    finally:
+        for name, fn in originals.items():
+            setattr(modeling_module, name, fn)
+        state['restored_on_exit'] = True
+
+
+@contextlib.contextmanager
+def execution_mode(mode, predictor, modeling_module, compiler, disable, backend, counts):
+    require(mode in MODES)
+    if mode == 'eager':
+        yield None
+        return
+    with eager_causal_masks(modeling_module, disable) as mask_state:
+        with compiled_forward(predictor, compiler, backend, counts):
+            yield mask_state
+
+
 def summarize(rows, counts):
     expected = [(mode, fixture) for mode in MODES for fixture in range(2)]
     require(isinstance(rows, list) and len(rows) <= len(expected)
@@ -154,7 +234,7 @@ def summarize(rows, counts):
     executed = (counts.get('backend_graphs_compiled', 0) > 0
         and counts.get('compiled_graph_invocations', 0) > 0
         and all(r.get('compiled_graph_invocations_during_call', 0) > 0
-                for r in rows if r['mode'] == 'compiled_predictor'))
+                for r in rows if r['mode'] == COMPILED_MODE))
     valid = complete and executed
     totals = {}
     for mode in MODES:
@@ -162,7 +242,7 @@ def summarize(rows, counts):
         elapsed, audio = sum(r['tts_seconds'] for r in selected), sum(r['audio_seconds'] for r in selected)
         totals[mode] = dict(tts_seconds=round(elapsed, 6), audio_seconds=round(audio, 6),
             synthesis_seconds_per_audio_second=round(elapsed / audio, 6) if valid else None)
-    compiled_rows = [r for r in rows if r['mode'] == 'compiled_predictor']
+    compiled_rows = [r for r in rows if r['mode'] == COMPILED_MODE]
     return dict(schema=SCHEMA,
         status='compiled_graph_timing_trial_no_quality_approval' if valid else 'incomplete_or_no_compiled_execution_no_speed_claim',
         model=MODEL, model_revision=REVISION, device='cpu', dtype='float32', threads=4,
@@ -170,23 +250,24 @@ def summarize(rows, counts):
         complete_natural_eos_and_signal=complete, compiled_execution_observed=executed,
         compile_counters=dict(counts),
         observed_pair_wall_ratio_eager_over_compiled=round(totals['eager']['tts_seconds'] /
-            totals['compiled_predictor']['tts_seconds'], 6) if valid else None,
+            totals[COMPILED_MODE]['tts_seconds'], 6) if valid else None,
         observed_rtf_ratio_eager_over_compiled=round(totals['eager']['synthesis_seconds_per_audio_second'] /
-            totals['compiled_predictor']['synthesis_seconds_per_audio_second'], 6) if valid else None,
+            totals[COMPILED_MODE]['synthesis_seconds_per_audio_second'], 6) if valid else None,
         first_compiled_call_includes_compilation=True,
         first_compiled_call_seconds=compiled_rows[0]['tts_seconds'] if compiled_rows else None,
         second_compiled_call_seconds=compiled_rows[1]['tts_seconds'] if len(compiled_rows) == 2 else None,
         second_compiled_call_new_graphs=compiled_rows[1]['new_graphs_compiled_during_call'] if len(compiled_rows) == 2 else None,
         second_call_proven_steady_state=bool(len(compiled_rows) == 2
             and compiled_rows[1]['new_graphs_compiled_during_call'] == 0),
-        compile_scope='model.model.talker.code_predictor.forward only; sampler and generate stay eager',
+        compile_scope=COMPILE_SCOPE, mode_order=list(MODES), eager_mask_aliases=list(MASK_ALIASES),
+        compile_scope_details='The same outer model.model.talker.code_predictor.forward is compiled. Only the two Qwen modeling-module causal-mask aliases call their original functions with tracing disabled; sampler and generate stay eager.',
         backend='inductor', fullgraph=False, dynamic=True, compile_threads=1,
         maximum_compiled_graphs=MAX_GRAPHS,
         entire_predictor_compiled_coverage_claimed=False,
         model_load_included_in_tts=False, asr_performed=False, dsp_performed=False,
         production_eligible=False, human_listening_verified=False,
         full_course_forecast_validated=False, sources=SOURCES,
-        caveat='One eager-then-compiled trial, two short public fixtures, one resident model. Graph breaks can leave eager regions; backend counters prove some compiled code ran, not full compiled coverage. First compiled TTS includes compilation; the second is steady only if it compiled no new graph. FP32 fusion may change floating-point results and sampled audio. No pronunciation or full-course equivalence claim.')
+        caveat='A separate eager-mask isolation experiment, not a successful rerun claim for earlier failed scopes. One eager-then-compiled trial, two public fixtures, one resident model. Original causal-mask calculations execute eagerly and restore afterward. Shared modeling aliases also serve the already-eager talker. Graph breaks can leave eager regions; counters prove some compiled code ran, not full coverage. First compiled TTS includes compilation; the second is steady only without new graphs. FP32 fusion may change results. No pronunciation or full-course equivalence claim.')
 
 
 def dynamo_counts(counters):
@@ -239,6 +320,8 @@ def worker(model_path, output):
     require(all(p.dtype == torch.float32 and p.device.type == 'cpu'
         for p in model.model.parameters() if p.is_floating_point()))
     predictor = model.model.talker.code_predictor
+    modeling_module = inspect.getmodule(type(predictor))
+    require(modeling_module is not None)
     require(type(predictor).__name__ == 'Qwen3TTSTalkerCodePredictorModelForConditionalGeneration')
     metadata.update(memory_after_load=rss_snapshot(),
         original_predictor_source_sha256=digest(inspect.getsourcefile(type(predictor))))
@@ -249,13 +332,15 @@ def worker(model_path, output):
     mode = 'eager'; fixture = 0
     try:
         for mode in MODES:
-            if mode == 'compiled_predictor':
+            if mode == COMPILED_MODE:
                 torch._dynamo.reset(); counters.clear()
             started = time.perf_counter()
-            context = compiled_forward(predictor, torch.compile,
-                tracked_backend(lookup_backend('inductor'), counts), counts) if mode == 'compiled_predictor' else contextlib.nullcontext()
-            with context:
-                metadata['compiled_wrapper_setup_seconds' if mode == 'compiled_predictor' else 'eager_wrapper_setup_seconds'] = time.perf_counter()-started
+            context = execution_mode(mode, predictor, modeling_module, torch.compile,
+                torch.compiler.disable, tracked_backend(lookup_backend('inductor'), counts), counts)
+            with context as mask_state:
+                metadata['compiled_wrapper_setup_seconds' if mode == COMPILED_MODE else 'eager_wrapper_setup_seconds'] = time.perf_counter()-started
+                if mode == COMPILED_MODE:
+                    metadata['eager_causal_mask_patch'] = mask_state
                 for fixture, text in enumerate(FIXTURES):
                     before = dict(counts)
                     talker = model.model.talker; original = talker.generate; observed = []

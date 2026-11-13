@@ -18,8 +18,8 @@ class CompileTests(unittest.TestCase):
             audio_seconds=5.0, signal_valid=True, natural_eos=True,
             wav_sha256='a'*64, pcm_sha256='b'*64, talker_sequence_sha256='c'*64,
             generation_args=b.generation_args('production_style', b.FIXTURES[i]),
-            compiled_graph_invocations_during_call=10 if mode == 'compiled_predictor' else 0,
-            new_graphs_compiled_during_call=1 if mode == 'compiled_predictor' and i == 0 else 0)
+            compiled_graph_invocations_during_call=10 if mode == b.COMPILED_MODE else 0,
+            new_graphs_compiled_during_call=1 if mode == b.COMPILED_MODE and i == 0 else 0)
             for mode in b.MODES for i in range(2)]
 
     def test_request_and_voice_controls_remain_original(self):
@@ -28,6 +28,7 @@ class CompileTests(unittest.TestCase):
         self.assertEqual({k: args[k] for k in SAMPLING}, SAMPLING)
         self.assertEqual(args['instruct'], STYLES['explain'])
         self.assertEqual(args['speaker'], 'Sohee')
+        self.assertEqual(b.MODES, ('eager', 'compiled_predictor_eager_masks'))
 
     def test_backend_requires_actual_returned_code_invocation(self):
         counts = dict.fromkeys(self.counts(), 0)
@@ -41,17 +42,42 @@ class CompileTests(unittest.TestCase):
             b.tracked_backend(lambda graph, inputs: (_ for _ in ()).throw(RuntimeError()), counts)(None, [])
         self.assertEqual(counts['backend_graphs_compiled'], 1)
 
-    def test_forward_patch_only_preserves_arguments_and_restores_after_error(self):
+    def test_forward_and_original_mask_calls_preserve_arguments_and_restore_after_error(self):
         original = lambda value, scale=1: value*scale
         predictor = SimpleNamespace(forward=original)
         counts = dict.fromkeys(self.counts(), 0); seen = []
         def compiler(target, **kwargs):
             seen.append((target, kwargs)); return target
+        full = lambda value, **kwargs: (value, kwargs)
+        sliding = lambda value, **kwargs: kwargs['mask']
+        module = SimpleNamespace(create_causal_mask=full, create_sliding_window_causal_mask=sliding)
+        disable_calls, mask_calls = [], []
+        def disable(fn, recursive):
+            disable_calls.append((fn, recursive))
+            def call(*args, **kwargs):
+                mask_calls.append((fn, args, kwargs)); return fn(*args, **kwargs)
+            return call
+        # The eager baseline must not call either compiler or disable.
+        with b.execution_mode('eager', predictor, module, compiler, disable, 'backend', counts) as state:
+            self.assertIsNone(state)
+            self.assertIs(module.create_causal_mask, full)
+            self.assertIs(module.create_sliding_window_causal_mask, sliding)
+        self.assertEqual(disable_calls, []); self.assertEqual(seen, [])
+        marker = object()
         with self.assertRaises(RuntimeError):
-            with b.compiled_forward(predictor, compiler, 'backend', counts):
+            with b.execution_mode(b.COMPILED_MODE, predictor, module, compiler,
+                    disable, 'backend', counts) as state:
                 self.assertEqual(predictor.forward(3, scale=2), 6)
+                self.assertEqual(module.create_causal_mask(7, mask=marker), full(7, mask=marker))
+                self.assertIs(module.create_sliding_window_causal_mask(9, mask=marker), marker)
+                self.assertFalse(state['restored_on_exit'])
                 raise RuntimeError()
         self.assertIs(predictor.forward, original)
+        self.assertIs(module.create_causal_mask, full)
+        self.assertIs(module.create_sliding_window_causal_mask, sliding)
+        self.assertTrue(state['restored_on_exit'])
+        self.assertEqual(disable_calls, [(full, True), (sliding, True)])
+        self.assertEqual(mask_calls, [(full, (7,), {'mask': marker}), (sliding, (9,), {'mask': marker})])
         self.assertEqual(counts['predictor_forward_calls'], 1)
         self.assertEqual(seen, [(original, dict(backend='backend', fullgraph=False, dynamic=True))])
 
@@ -59,7 +85,7 @@ class CompileTests(unittest.TestCase):
         rows, counts = self.rows(), self.counts(); before = copy.deepcopy(rows)
         rows[2]['tts_seconds'] = 30
         out = b.summarize(rows, counts)
-        self.assertEqual(out['totals']['compiled_predictor']['tts_seconds'], 40)
+        self.assertEqual(out['totals'][b.COMPILED_MODE]['tts_seconds'], 40)
         self.assertEqual(out['observed_pair_wall_ratio_eager_over_compiled'], .5)
         self.assertTrue(out['second_call_proven_steady_state'])
         rows[3]['new_graphs_compiled_during_call'] = 1
@@ -94,6 +120,17 @@ class CompileTests(unittest.TestCase):
         self.assertTrue(diagnostic['exception_chain'][1]['message_truncated'])
         self.assertTrue(all(len(row['message']) <= 2000 for row in diagnostic['exception_chain']))
         self.assertLessEqual(len(diagnostic['traceback']), 12000)
+        stream = 'C++ diagnostic preamble\n'+'P'*16000+'\npublic.cpp:173:25: error: tmp2 was not declared\nTORCH_CHECK(tmp2 < ks1)\n'+'N'*16000
+        process_error = b.subprocess.CalledProcessError(1, ['g++'], output=stream.encode(), stderr=stream)
+        process_diagnostic = b.public_error_report(process_error)['exception_chain'][0]
+        for field in ('output', 'stderr'):
+            captured = process_diagnostic['subprocess_streams'][field]
+            self.assertLessEqual(len(captured['text']), 4000)
+            self.assertIn('error: tmp2 was not declared', captured['text'])
+            self.assertIn('TORCH_CHECK(tmp2 < ks1)', captured['compiler_error_excerpt'])
+        middle_error = b.public_error_report(RuntimeError(stream))['exception_chain'][0]
+        self.assertLessEqual(len(middle_error['message']), 2000)
+        self.assertIn('error: tmp2 was not declared', middle_error['message'])
         current = outer
         for _ in range(6):
             child = RuntimeError('nested error'); current.__context__ = child; current = child
