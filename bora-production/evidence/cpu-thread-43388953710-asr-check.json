@@ -1,0 +1,93 @@
+{
+  "schema": "sohee-public-cpu-thread-asr/v1",
+  "run_id": 43388953710,
+  "scope": "six-short-public-thread-fixtures-only-not-production-approval",
+  "model": "Systran/faster-whisper-small",
+  "revision": "536b0662742c02347bc0e980a01041f333bce120",
+  "settings": {
+    "device": "cpu",
+    "compute_type": "int8",
+    "cpu_threads": 1,
+    "num_workers": 1,
+    "language": "ko",
+    "beam_size": 5,
+    "temperature": 0,
+    "condition_on_previous_text": false,
+    "vad_filter": false,
+    "word_timestamps": true,
+    "initial_prompt": null,
+    "max_cer": 0.0
+  },
+  "rows": [
+    {
+      "fixture": 0,
+      "threads": 4,
+      "wav_sha256": "026642a2bec300b2482201e5a2e070cdd600c3adf4c65326f6d4a85b5c20f65f",
+      "expected": "오늘 배운 내용을 잠깐 덮고, 자기 말로 한 번 설명해 보세요.",
+      "recognized": "오늘 배운 내용을 잠깐 덮고 자기말로 한번 설명해 보세요",
+      "character_errors": 0,
+      "missing_critical_count": 0,
+      "exact_canonical_match": true,
+      "asr_seconds": 4.3575
+    },
+    {
+      "fixture": 0,
+      "threads": 2,
+      "wav_sha256": "041fb92a2347477375d094baaaa93f24e8391e5b06f14b3197864c237e6783b8",
+      "expected": "오늘 배운 내용을 잠깐 덮고, 자기 말로 한 번 설명해 보세요.",
+      "recognized": "오늘 배운 내용을 잠깐 덮고 자기말로 한번 설명해 보세요",
+      "character_errors": 0,
+      "missing_critical_count": 0,
+      "exact_canonical_match": true,
+      "asr_seconds": 4.0893
+    },
+    {
+      "fixture": 0,
+      "threads": 1,
+      "wav_sha256": "f0b56a440b73ed86dcc756bae48993fd392d4ac55e4874abc951c74978ae73f6",
+      "expected": "오늘 배운 내용을 잠깐 덮고, 자기 말로 한 번 설명해 보세요.",
+      "recognized": "오늘 배운 내용을 잠깐 덮고 자기말로 한번 설명해 보세요",
+      "character_errors": 0,
+      "missing_critical_count": 0,
+      "exact_canonical_match": true,
+      "asr_seconds": 4.1809
+    },
+    {
+      "fixture": 1,
+      "threads": 1,
+      "wav_sha256": "c72cef8e7ff2f3b4b024c8824186ff236e27492bd626cdda6f7b6fc3fa206f59",
+      "expected": "지금은 조금 느려도 괜찮습니다. 한 문장씩 차분하게 읽어 보세요.",
+      "recognized": "지금은 조금 느려도 괜찮습니다 한 문장씩 차분하게 읽어보세요",
+      "character_errors": 0,
+      "missing_critical_count": 0,
+      "exact_canonical_match": true,
+      "asr_seconds": 3.9771
+    },
+    {
+      "fixture": 1,
+      "threads": 2,
+      "wav_sha256": "708a6772ead90fbb38f38e6e7f65bf384296af4c863f5eeb6c356b6f39e19d99",
+      "expected": "지금은 조금 느려도 괜찮습니다. 한 문장씩 차분하게 읽어 보세요.",
+      "recognized": "지금은 조금 느려도 괜찮습니다 한 문장씩 차분하게 읽어보세요",
+      "character_errors": 0,
+      "missing_critical_count": 0,
+      "exact_canonical_match": true,
+      "asr_seconds": 3.7497
+    },
+    {
+      "fixture": 1,
+      "threads": 4,
+      "wav_sha256": "29c3402605dbfbfeeb4e1aaadd939da62e173da979f42bde990ce8e8f4e8b4b7",
+      "expected": "지금은 조금 느려도 괜찮습니다. 한 문장씩 차분하게 읽어 보세요.",
+      "recognized": "지금은 조금 느려도 괜찮습니다 한 문장씩 차분하게 읽어보세요",
+      "character_errors": 0,
+      "missing_critical_count": 0,
+      "exact_canonical_match": true,
+      "asr_seconds": 3.8982
+    }
+  ],
+  "all_six_exact": true,
+  "total_character_errors": 0,
+  "production_eligible": false,
+  "human_listening_verified": false
+}

@@ -1,0 +1,562 @@
+{
+  "schema": "bora-public-cache-observation/v1",
+  "run_id": 43390521891,
+  "run_attempt": 1,
+  "commit": "e98850f3be887a0f8cbb2fec978bb1c7b1a7fe8c",
+  "run_url": "https://github.com/quddnr0107-lgtm/korean-voice/actions/runs/43390521891",
+  "jobs_api_url": "https://api.github.com/repos/quddnr0107-lgtm/korean-voice/actions/runs/43390521891/jobs",
+  "public_only": true,
+  "inference_started": false,
+  "production_workflow_applied": false,
+  "model_files": 15,
+  "public_model_bytes": 5006371958,
+  "compressed_cache_bytes": 4043249801,
+  "cache_key": "bora-public-assets-probe-v1-Linux-936edb7c32bc867f44d3563187ad7723a269a9f9fb6029f042baf758cb9586d4-43390521891-1",
+  "pin_validation": {
+    "all_three_phases_match_manifest_and_pinset": true,
+    "original_renderer_verifier_compatible_all_phases": true,
+    "baseline_original_hf_metadata_preserved": true,
+    "restore_exact_hit_without_fresh_download": true,
+    "manifest_sha256": "d690603d1456fab3c5e512fa21f0468d23851537f2ac9455778cb2a7236bbdab",
+    "pinset_sha256": "a30041e1d234f965722bae755b969d4e320d1f79613f61a76c051acd63dbf8b6",
+    "manifest_path": "bora-production/pinned-public-assets.json",
+    "verification_basis": "Probe verified sizes and SHA256 of every required file; existing renderer verifier returned the same manifest hash map. No model inference ran."
+  },
+  "phase_records": [
+    {
+      "timestamp": "2026-11-13T08:06:25.4434397Z",
+      "data": {
+        "all_pinned_files_verified": true,
+        "commit": "e98850f3be887a0f8cbb2fec978bb1c7b1a7fe8c",
+        "download_and_size_json_verify_seconds": 30.94252459999999,
+        "file_count": 15,
+        "manifest_sha256": "d690603d1456fab3c5e512fa21f0468d23851537f2ac9455778cb2a7236bbdab",
+        "markers": {},
+        "original_baseline_total_seconds": 34.09838464199999,
+        "original_hf_metadata_preserved": true,
+        "original_renderer_verifier_compatible": true,
+        "phase": "baseline",
+        "pinned_bytes": 5006371958,
+        "pinset_sha256": "a30041e1d234f965722bae755b969d4e320d1f79613f61a76c051acd63dbf8b6",
+        "private_inputs_used": false,
+        "production_eligible": false,
+        "renderer_compatibility_verify_seconds": 3.1558579479999906,
+        "request_sha256": "08dba22e935f51ad94d37d5d53af0b0b299258130349a43861b7109614aff7f2",
+        "run_attempt": "1",
+        "run_id": "43390521891",
+        "schema": "bora-public-cache-probe/v1",
+        "synthesis_started": false
+      }
+    },
+    {
+      "timestamp": "2026-11-13T08:07:02.0198355Z",
+      "data": {
+        "all_pinned_files_verified": true,
+        "cache_action_bracket_includes_step_transitions": true,
+        "cache_action_bracket_seconds": 23.748794285,
+        "cache_action_outcome": "success",
+        "cache_hit": false,
+        "commit": "e98850f3be887a0f8cbb2fec978bb1c7b1a7fe8c",
+        "file_count": 15,
+        "fresh_download": true,
+        "manifest_sha256": "d690603d1456fab3c5e512fa21f0468d23851537f2ac9455778cb2a7236bbdab",
+        "markers": {
+          "save_end": 95403433733,
+          "save_start": 71654639448
+        },
+        "original_renderer_verifier_compatible": true,
+        "phase": "fill",
+        "pinned_bytes": 5006371958,
+        "pinset_sha256": "a30041e1d234f965722bae755b969d4e320d1f79613f61a76c051acd63dbf8b6",
+        "prepare_seconds": 37.384090548,
+        "private_inputs_used": false,
+        "production_eligible": false,
+        "renderer_compatibility_verify_seconds": 3.181914883999994,
+        "request_sha256": "08dba22e935f51ad94d37d5d53af0b0b299258130349a43861b7109614aff7f2",
+        "run_attempt": "1",
+        "run_id": "43390521891",
+        "schema": "bora-public-cache-probe/v1",
+        "synthesis_started": false,
+        "verify_seconds": 3.005997523000005
+      }
+    },
+    {
+      "timestamp": "2026-11-13T08:08:05.7928519Z",
+      "data": {
+        "all_pinned_files_verified": true,
+        "cache_action_bracket_includes_step_transitions": true,
+        "cache_action_bracket_seconds": 36.505119714,
+        "cache_action_outcome": "success",
+        "cache_hit": true,
+        "commit": "e98850f3be887a0f8cbb2fec978bb1c7b1a7fe8c",
+        "file_count": 15,
+        "fresh_download": false,
+        "manifest_sha256": "d690603d1456fab3c5e512fa21f0468d23851537f2ac9455778cb2a7236bbdab",
+        "markers": {
+          "restore_end": 63454062438,
+          "restore_start": 26948942724
+        },
+        "original_renderer_verifier_compatible": true,
+        "phase": "restore",
+        "pinned_bytes": 5006371958,
+        "pinset_sha256": "a30041e1d234f965722bae755b969d4e320d1f79613f61a76c051acd63dbf8b6",
+        "prepare_seconds": 3.53773932,
+        "private_inputs_used": false,
+        "production_eligible": false,
+        "renderer_compatibility_verify_seconds": 3.749922755,
+        "request_sha256": "08dba22e935f51ad94d37d5d53af0b0b299258130349a43861b7109614aff7f2",
+        "run_attempt": "1",
+        "run_id": "43390521891",
+        "schema": "bora-public-cache-probe/v1",
+        "synthesis_started": false,
+        "verify_seconds": 3.533445028999992
+      }
+    }
+  ],
+  "aggregate": {
+    "auxiliary_new_cold_prepare_verify_seconds": 40.39008807100001,
+    "auxiliary_new_path_prepare_seconds_saved": -3.186215991999987,
+    "auxiliary_new_warm_restore_prepare_verify_seconds": 43.576304062999995,
+    "baseline": {
+      "all_pinned_files_verified": true,
+      "commit": "e98850f3be887a0f8cbb2fec978bb1c7b1a7fe8c",
+      "download_and_size_json_verify_seconds": 30.94252459999999,
+      "file_count": 15,
+      "manifest_sha256": "d690603d1456fab3c5e512fa21f0468d23851537f2ac9455778cb2a7236bbdab",
+      "markers": {},
+      "original_baseline_total_seconds": 34.09838464199999,
+      "original_hf_metadata_preserved": true,
+      "original_renderer_verifier_compatible": true,
+      "phase": "baseline",
+      "pinned_bytes": 5006371958,
+      "pinset_sha256": "a30041e1d234f965722bae755b969d4e320d1f79613f61a76c051acd63dbf8b6",
+      "private_inputs_used": false,
+      "production_eligible": false,
+      "renderer_compatibility_verify_seconds": 3.1558579479999906,
+      "request_sha256": "08dba22e935f51ad94d37d5d53af0b0b299258130349a43861b7109614aff7f2",
+      "run_attempt": "1",
+      "run_id": "43390521891",
+      "schema": "bora-public-cache-probe/v1",
+      "synthesis_started": false
+    },
+    "cache_faster_than_original": false,
+    "fill": {
+      "all_pinned_files_verified": true,
+      "cache_action_bracket_includes_step_transitions": true,
+      "cache_action_bracket_seconds": 23.748794285,
+      "cache_action_outcome": "success",
+      "cache_hit": false,
+      "commit": "e98850f3be887a0f8cbb2fec978bb1c7b1a7fe8c",
+      "file_count": 15,
+      "fresh_download": true,
+      "manifest_sha256": "d690603d1456fab3c5e512fa21f0468d23851537f2ac9455778cb2a7236bbdab",
+      "markers": {
+        "save_end": 95403433733,
+        "save_start": 71654639448
+      },
+      "original_renderer_verifier_compatible": true,
+      "phase": "fill",
+      "pinned_bytes": 5006371958,
+      "pinset_sha256": "a30041e1d234f965722bae755b969d4e320d1f79613f61a76c051acd63dbf8b6",
+      "prepare_seconds": 37.384090548,
+      "private_inputs_used": false,
+      "production_eligible": false,
+      "renderer_compatibility_verify_seconds": 3.181914883999994,
+      "request_sha256": "08dba22e935f51ad94d37d5d53af0b0b299258130349a43861b7109614aff7f2",
+      "run_attempt": "1",
+      "run_id": "43390521891",
+      "schema": "bora-public-cache-probe/v1",
+      "synthesis_started": false,
+      "verify_seconds": 3.005997523000005
+    },
+    "fill_with_cache_save_seconds": 64.13888235600001,
+    "limitations": [
+      "Cache action brackets include runner step transitions; they are not pure transfer time.",
+      "Independent fresh runners can have different CPU, disk and network performance.",
+      "One trial measures public model preparation only; installation, queues and inference are excluded.",
+      "Primary comparison includes the original renderer hash verification on both baseline and warm paths.",
+      "New cold-vs-new warm figures are auxiliary and cannot establish an improvement over the original downloader.",
+      "The isolated run-specific probe cache does not measure production cache hit frequency.",
+      "Negative savings are retained; no overall lecture-production speedup is established."
+    ],
+    "observed_prepare_reduction_pct": -38.79316370813319,
+    "observed_prepare_seconds_saved": -13.227842176000003,
+    "original_production_prepare_seconds": 34.09838464199999,
+    "private_inputs_used": false,
+    "production_eligible": false,
+    "proposed_warm_production_prepare_seconds": 47.326226817999995,
+    "restore": {
+      "all_pinned_files_verified": true,
+      "cache_action_bracket_includes_step_transitions": true,
+      "cache_action_bracket_seconds": 36.505119714,
+      "cache_action_outcome": "success",
+      "cache_hit": true,
+      "commit": "e98850f3be887a0f8cbb2fec978bb1c7b1a7fe8c",
+      "file_count": 15,
+      "fresh_download": false,
+      "manifest_sha256": "d690603d1456fab3c5e512fa21f0468d23851537f2ac9455778cb2a7236bbdab",
+      "markers": {
+        "restore_end": 63454062438,
+        "restore_start": 26948942724
+      },
+      "original_renderer_verifier_compatible": true,
+      "phase": "restore",
+      "pinned_bytes": 5006371958,
+      "pinset_sha256": "a30041e1d234f965722bae755b969d4e320d1f79613f61a76c051acd63dbf8b6",
+      "prepare_seconds": 3.53773932,
+      "private_inputs_used": false,
+      "production_eligible": false,
+      "renderer_compatibility_verify_seconds": 3.749922755,
+      "request_sha256": "08dba22e935f51ad94d37d5d53af0b0b299258130349a43861b7109614aff7f2",
+      "run_attempt": "1",
+      "run_id": "43390521891",
+      "schema": "bora-public-cache-probe/v1",
+      "synthesis_started": false,
+      "verify_seconds": 3.533445028999992
+    },
+    "schema": "bora-public-cache-probe/v1",
+    "status": "cache_restore_verified",
+    "synthesis_started": false,
+    "warm_cache_verified": true
+  },
+  "derived_summary": {
+    "original_baseline_seconds": 34.09838464199999,
+    "cached_warm_seconds": 47.326226817999995,
+    "cached_extra_seconds": 13.227842176000003,
+    "cached_extra_percent": 38.79316370813319,
+    "fill_prepare_verify_renderer_and_save_seconds": 67.32079724,
+    "recommendation": "Do not apply this cache draft to production based on this trial; warm preparation was slower than the original path.",
+    "fill_auxiliary_field_note": "aggregate.fill_with_cache_save_seconds excludes fill renderer compatibility verification. The derived fill total above includes it."
+  },
+  "jobs": [
+    {
+      "id": 131769040337,
+      "name": "baseline",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/quddnr0107-lgtm/korean-voice/actions/runs/43390521891/job/131769040337",
+      "created_at": "2026-11-13T08:05:43Z",
+      "started_at": "2026-11-13T08:05:45Z",
+      "completed_at": "2026-11-13T08:06:27Z",
+      "runner_id": 1000023419,
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-13T08:05:46Z",
+          "completed_at": "2026-11-13T08:05:46Z"
+        },
+        {
+          "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-13T08:05:46Z",
+          "completed_at": "2026-11-13T08:05:48Z"
+        },
+        {
+          "name": "Run actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-13T08:05:48Z",
+          "completed_at": "2026-11-13T08:05:48Z"
+        },
+        {
+          "name": "Confirm this launch does not change production or protected inputs",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-13T08:05:48Z",
+          "completed_at": "2026-11-13T08:05:48Z"
+        },
+        {
+          "name": "Install only the same public asset downloader",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-13T08:05:48Z",
+          "completed_at": "2026-11-13T08:05:51Z"
+        },
+        {
+          "name": "Time original download, size checks and original renderer hash verification",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-13T08:05:51Z",
+          "completed_at": "2026-11-13T08:06:25Z"
+        },
+        {
+          "name": "Post Run actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-13T08:06:25Z",
+          "completed_at": "2026-11-13T08:06:25Z"
+        },
+        {
+          "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-11-13T08:06:25Z",
+          "completed_at": "2026-11-13T08:06:25Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-11-13T08:06:25Z",
+          "completed_at": "2026-11-13T08:06:25Z"
+        }
+      ]
+    },
+    {
+      "id": 131769040818,
+      "name": "fill",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/quddnr0107-lgtm/korean-voice/actions/runs/43390521891/job/131769040818",
+      "created_at": "2026-11-13T08:05:43Z",
+      "started_at": "2026-11-13T08:05:45Z",
+      "completed_at": "2026-11-13T08:07:05Z",
+      "runner_id": 1000023420,
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-13T08:05:46Z",
+          "completed_at": "2026-11-13T08:05:47Z"
+        },
+        {
+          "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-13T08:05:47Z",
+          "completed_at": "2026-11-13T08:05:48Z"
+        },
+        {
+          "name": "Run actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-13T08:05:48Z",
+          "completed_at": "2026-11-13T08:05:49Z"
+        },
+        {
+          "name": "Confirm this launch does not change production or protected inputs",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-13T08:05:49Z",
+          "completed_at": "2026-11-13T08:05:49Z"
+        },
+        {
+          "name": "Install only the public asset downloader",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-13T08:05:49Z",
+          "completed_at": "2026-11-13T08:05:54Z"
+        },
+        {
+          "name": "Time fresh download and complete pinned verification without inference",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-13T08:05:54Z",
+          "completed_at": "2026-11-13T08:06:38Z"
+        },
+        {
+          "name": "Start the cache save bracket",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-13T08:06:38Z",
+          "completed_at": "2026-11-13T08:06:38Z"
+        },
+        {
+          "name": "Save only the fifteen public model files",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-13T08:06:38Z",
+          "completed_at": "2026-11-13T08:07:01Z"
+        },
+        {
+          "name": "Report cold preparation and cache save bracket times",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-13T08:07:01Z",
+          "completed_at": "2026-11-13T08:07:02Z"
+        },
+        {
+          "name": "Post Run actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17,
+          "started_at": "2026-11-13T08:07:02Z",
+          "completed_at": "2026-11-13T08:07:02Z"
+        },
+        {
+          "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 18,
+          "started_at": "2026-11-13T08:07:02Z",
+          "completed_at": "2026-11-13T08:07:02Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19,
+          "started_at": "2026-11-13T08:07:02Z",
+          "completed_at": "2026-11-13T08:07:02Z"
+        }
+      ]
+    },
+    {
+      "id": 131769618760,
+      "name": "restore",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/quddnr0107-lgtm/korean-voice/actions/runs/43390521891/job/131769618760",
+      "created_at": "2026-11-13T08:07:05Z",
+      "started_at": "2026-11-13T08:07:07Z",
+      "completed_at": "2026-11-13T08:08:10Z",
+      "runner_id": 1000023421,
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-13T08:07:08Z",
+          "completed_at": "2026-11-13T08:07:09Z"
+        },
+        {
+          "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-13T08:07:09Z",
+          "completed_at": "2026-11-13T08:07:12Z"
+        },
+        {
+          "name": "Run actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-13T08:07:12Z",
+          "completed_at": "2026-11-13T08:07:12Z"
+        },
+        {
+          "name": "Install only the public asset downloader",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-13T08:07:12Z",
+          "completed_at": "2026-11-13T08:07:17Z"
+        },
+        {
+          "name": "Start the cache restore bracket on a separate runner",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-13T08:07:17Z",
+          "completed_at": "2026-11-13T08:07:17Z"
+        },
+        {
+          "name": "Restore the exact public cache saved by this run",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-13T08:07:17Z",
+          "completed_at": "2026-11-13T08:07:53Z"
+        },
+        {
+          "name": "End the cache restore bracket",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-13T08:07:53Z",
+          "completed_at": "2026-11-13T08:07:54Z"
+        },
+        {
+          "name": "Time cached preparation and independently verify every pinned file",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-13T08:07:54Z",
+          "completed_at": "2026-11-13T08:08:05Z"
+        },
+        {
+          "name": "Report verified preparation and cache restore bracket times",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-13T08:08:05Z",
+          "completed_at": "2026-11-13T08:08:05Z"
+        },
+        {
+          "name": "Print the public comparison and limits of this measurement",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-13T08:08:05Z",
+          "completed_at": "2026-11-13T08:08:05Z"
+        },
+        {
+          "name": "Post Run actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19,
+          "started_at": "2026-11-13T08:08:05Z",
+          "completed_at": "2026-11-13T08:08:05Z"
+        },
+        {
+          "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 20,
+          "started_at": "2026-11-13T08:08:05Z",
+          "completed_at": "2026-11-13T08:08:06Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 21,
+          "started_at": "2026-11-13T08:08:06Z",
+          "completed_at": "2026-11-13T08:08:06Z"
+        }
+      ]
+    }
+  ],
+  "limits": [
+    "Cache action brackets include runner step transitions; they are not pure transfer time.",
+    "Independent fresh runners can have different CPU, disk and network performance.",
+    "One trial measures public model preparation only; installation, queues and inference are excluded.",
+    "Primary comparison includes the original renderer hash verification on both baseline and warm paths.",
+    "New cold-vs-new warm figures are auxiliary and cannot establish an improvement over the original downloader.",
+    "The isolated run-specific probe cache does not measure production cache hit frequency.",
+    "Negative savings are retained; no overall lecture-production speedup is established."
+  ]
+}

@@ -1,0 +1,109 @@
+{
+  "schema": "sohee-public-cpu-batch-asr/v1",
+  "source_run_id": 43389825340,
+  "source_summary_sha256": "3f2f8b07328e9b64dcce1b2be6acd7afad4754956a9c83af524826d39e8c3a4e",
+  "artifact_provenance": {
+    "run_id": 43389825340,
+    "head_sha": "7efacfd4ac44504ead41cd6a6f97e243beb7d0ce",
+    "artifact_id": 14020830352,
+    "artifact_name": "sohee-cpu-batch-43389825340",
+    "archive_sha256": "02f74e06432be01ed5bd0791a81b73277dd9a453f3d5ab3b78afc2536166650f",
+    "github_digest_verified": true,
+    "archive_bytes": 2055499,
+    "extracted_files": 6,
+    "total_uncompressed_bytes": 2230756,
+    "path_traversal_and_symlink_checks_passed": true,
+    "files": {
+      "batch2-0.wav": {
+        "bytes": 453200,
+        "sha256": "9f61bcccb1d728b8799905afbedf5625cd097f7d33bf8976616e8327cbb3a18b"
+      },
+      "batch2-1.wav": {
+        "bytes": 821840,
+        "sha256": "10f7719586707ef59a8dc1ce200608dc07b40c04693c72da3a1b03965a06b6a7"
+      },
+      "partial-calls-and-rows.json": {
+        "bytes": 9479,
+        "sha256": "7b4149f94905da6ba0f54ea6f4b95f7ff79b10263dbd7c662ee052a3f4dbd1de"
+      },
+      "serial-0.wav": {
+        "bytes": 460880,
+        "sha256": "5dbfd57bb06073b3a4eecabc0b8cf577d8e462e488a9f64e3ea73206c5ad2b29"
+      },
+      "summary.json": {
+        "bytes": 16797,
+        "sha256": "3f2f8b07328e9b64dcce1b2be6acd7afad4754956a9c83af524826d39e8c3a4e"
+      },
+      "serial-1.wav": {
+        "bytes": 468560,
+        "sha256": "81a0926071ef22422470e5c3829e06ecd1cad111113577130238d036bd558456"
+      }
+    }
+  },
+  "scope": "Only four public FP32 batch comparison WAVs; ASR disagreement is not proof of pronunciation error.",
+  "model": "Systran/faster-whisper-small",
+  "revision": "536b0662742c02347bc0e980a01041f333bce120",
+  "asr_model_sha256": "3e305921506d8872816023e4c273e75d2419fb89b24da97b4fe7bce14170d671",
+  "settings": {
+    "device": "cpu",
+    "compute_type": "int8",
+    "cpu_threads": 1,
+    "num_workers": 1,
+    "language": "ko",
+    "beam_size": 5,
+    "temperature": 0,
+    "condition_on_previous_text": false,
+    "vad_filter": false,
+    "initial_prompt": null,
+    "word_timestamps": true
+  },
+  "rows": [
+    {
+      "mode": "serial",
+      "fixture": 0,
+      "wav_file": "serial-0.wav",
+      "wav_sha256": "5dbfd57bb06073b3a4eecabc0b8cf577d8e462e488a9f64e3ea73206c5ad2b29",
+      "expected": "오늘 배운 내용을 잠깐 덮고, 자기 말로 한 번 설명해 보세요.",
+      "recognized": "오늘 배운 내용을 잠깐 덮고 자기말로 한번 설명해 보세요",
+      "character_errors": 0,
+      "expected_characters": 23,
+      "asr_seconds": 4.100925
+    },
+    {
+      "mode": "serial",
+      "fixture": 1,
+      "wav_file": "serial-1.wav",
+      "wav_sha256": "81a0926071ef22422470e5c3829e06ecd1cad111113577130238d036bd558456",
+      "expected": "지금은 조금 느려도 괜찮습니다. 한 문장씩 차분하게 읽어 보세요.",
+      "recognized": "지금은 조금 누려도 괜찮습니다. 한 문장씩 차분하게 읽어보세요.",
+      "character_errors": 1,
+      "expected_characters": 26,
+      "asr_seconds": 3.968791
+    },
+    {
+      "mode": "batch2",
+      "fixture": 0,
+      "wav_file": "batch2-0.wav",
+      "wav_sha256": "9f61bcccb1d728b8799905afbedf5625cd097f7d33bf8976616e8327cbb3a18b",
+      "expected": "오늘 배운 내용을 잠깐 덮고, 자기 말로 한 번 설명해 보세요.",
+      "recognized": "오늘 배운 내용을 잠깐 덮고 자기말로 한번 설명해 보세요.",
+      "character_errors": 0,
+      "expected_characters": 23,
+      "asr_seconds": 3.722182
+    },
+    {
+      "mode": "batch2",
+      "fixture": 1,
+      "wav_file": "batch2-1.wav",
+      "wav_sha256": "10f7719586707ef59a8dc1ce200608dc07b40c04693c72da3a1b03965a06b6a7",
+      "expected": "지금은 조금 느려도 괜찮습니다. 한 문장씩 차분하게 읽어 보세요.",
+      "recognized": "지금은 조금 느려도 괜찮습니다 한 문장씩 차분하게 읽어보세요",
+      "character_errors": 0,
+      "expected_characters": 26,
+      "asr_seconds": 3.647852
+    }
+  ],
+  "exact_matches": 3,
+  "human_listening_verified": false,
+  "production_eligible": false
+}

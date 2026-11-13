@@ -1,0 +1,473 @@
+{
+  "schema": "sohee-public-cpu-batch/v1",
+  "status": "timing_trial_no_quality_approval",
+  "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+  "model_revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+  "device": "cpu",
+  "dtype": "float32",
+  "threads": 4,
+  "interop_threads": 1,
+  "speaker": "Sohee",
+  "language": "Korean",
+  "fixtures": [
+    "오늘 배운 내용을 잠깐 덮고, 자기 말로 한 번 설명해 보세요.",
+    "지금은 조금 느려도 괜찮습니다. 한 문장씩 차분하게 읽어 보세요."
+  ],
+  "sampling": {
+    "non_streaming_mode": true,
+    "do_sample": true,
+    "temperature": 0.8,
+    "top_p": 0.9,
+    "top_k": 50,
+    "repetition_penalty": 1.05,
+    "subtalker_dosample": true,
+    "subtalker_temperature": 0.9,
+    "subtalker_top_p": 1.0,
+    "subtalker_top_k": 50,
+    "max_new_tokens": 1100
+  },
+  "mode_seed": 5192,
+  "totals": {
+    "serial": {
+      "tts_seconds": 57.133364,
+      "audio_seconds": 9.68,
+      "complete_natural_eos_and_signal": true,
+      "synthesis_seconds_per_audio_second": 5.902207
+    },
+    "batch2": {
+      "tts_seconds": 56.331907,
+      "audio_seconds": 13.28,
+      "complete_natural_eos_and_signal": true,
+      "synthesis_seconds_per_audio_second": 4.24186
+    }
+  },
+  "complete_natural_eos_and_signal": true,
+  "observed_pair_wall_ratio_serial_over_batch": 1.014227,
+  "observed_rtf_ratio_serial_over_batch": 1.39142,
+  "model_load_count": 1,
+  "model_load_included_in_tts": false,
+  "model_resident_between_modes": true,
+  "mode_order": [
+    "serial",
+    "batch2"
+  ],
+  "per_unit_seed_equivalence_claimed": false,
+  "seed_relation": "manual_seed(5192) once before each mode. Serial calls share one advancing stream; batch draws and padding consume that stream differently.",
+  "production_eligible": false,
+  "quality_equivalence_verified": false,
+  "full_course_forecast_validated": false,
+  "caveat": "One serial-then-batch trial on two short public texts. The batch follows the serial warmup, and RNG draw order differs. Different waveform durations can affect wall ratios. No promise of speedup, same pronunciation or full-course savings.",
+  "cpu": {
+    "cpu_models": [
+      "Intel(R) Xeon(R) 6975P-C"
+    ],
+    "logical_cpus": 4,
+    "bf16_instruction_flags": [
+      "amx_bf16",
+      "avx512_bf16"
+    ],
+    "bf16_instruction_available": true,
+    "cpu_flags": [
+      "3dnowprefetch",
+      "abm",
+      "adx",
+      "aes",
+      "amx_bf16",
+      "amx_int8",
+      "amx_tile",
+      "aperfmperf",
+      "apic",
+      "arat",
+      "arch_capabilities",
+      "arch_perfmon",
+      "avx",
+      "avx2",
+      "avx512_bf16",
+      "avx512_bitalg",
+      "avx512_fp16",
+      "avx512_vbmi2",
+      "avx512_vnni",
+      "avx512_vpopcntdq",
+      "avx512bw",
+      "avx512cd",
+      "avx512dq",
+      "avx512f",
+      "avx512ifma",
+      "avx512vbmi",
+      "avx512vl",
+      "avx_vnni",
+      "bmi1",
+      "bmi2",
+      "bus_lock_detect",
+      "cldemote",
+      "clflush",
+      "clflushopt",
+      "clwb",
+      "cmov",
+      "constant_tsc",
+      "cpuid",
+      "cpuid_fault",
+      "cx16",
+      "cx8",
+      "de",
+      "ept",
+      "ept_ad",
+      "erms",
+      "f16c",
+      "flexpriority",
+      "flush_l1d",
+      "fma",
+      "fpu",
+      "fsgsbase",
+      "fxsr",
+      "gfni",
+      "ht",
+      "hypervisor",
+      "ibpb",
+      "ibrs",
+      "ibrs_enhanced",
+      "ida",
+      "invpcid",
+      "lahf_lm",
+      "lm",
+      "mca",
+      "mce",
+      "md_clear",
+      "mmx",
+      "monitor",
+      "movbe",
+      "movdir64b",
+      "movdiri",
+      "msr",
+      "mtrr",
+      "nonstop_tsc",
+      "nopl",
+      "nx",
+      "ospke",
+      "pae",
+      "pat",
+      "pcid",
+      "pclmulqdq",
+      "pdcm",
+      "pdpe1gb",
+      "pge",
+      "pku",
+      "pni",
+      "popcnt",
+      "pse",
+      "pse36",
+      "rdpid",
+      "rdrand",
+      "rdseed",
+      "rdtscp",
+      "rep_good",
+      "sep",
+      "serialize",
+      "sha_ni",
+      "smap",
+      "smep",
+      "ss",
+      "ssbd",
+      "sse",
+      "sse2",
+      "sse4_1",
+      "sse4_2",
+      "ssse3",
+      "stibp",
+      "syscall",
+      "tme",
+      "tpr_shadow",
+      "tsc",
+      "tsc_adjust",
+      "tsc_deadline_timer",
+      "tsc_known_freq",
+      "umip",
+      "vaes",
+      "vme",
+      "vmx",
+      "vnmi",
+      "vpclmulqdq",
+      "vpid",
+      "waitpkg",
+      "wbnoinvd",
+      "x2apic",
+      "xgetbv1",
+      "xsave",
+      "xsavec",
+      "xsaveopt",
+      "xsaves",
+      "xtopology"
+    ]
+  },
+  "installed_packages": {
+    "torch": "2.8.0+cpu",
+    "torchaudio": "2.8.0+cpu",
+    "qwen-tts": "0.1.1",
+    "transformers": "4.57.3",
+    "soundfile": "0.14.0",
+    "numpy": "2.5.4",
+    "scipy": "1.18.1"
+  },
+  "native_threads": {
+    "intraop_threads": 4,
+    "interop_threads": 1,
+    "omp_get_max_threads": 4,
+    "mkl_get_max_threads": 4
+  },
+  "script_sha256": "c08c7a8997c4ec3aa299278eb48980f87557df475d86152914af3321836ede4c",
+  "model_weights_sha256": "38b1d5971bdbd982b561cccec982669a53b0537c3cf5e9bd4778ed07bb2f5137",
+  "codec_weights_sha256": "836b7b357f5ea43e889936a3709af68dfe3751881acefe4ecf0dbd30ba571258",
+  "recipe_source_sha256": {
+    "pilot_render.py": "b90b5761b841c69088a1c0c01988c1c7f41fae714142a518b8f6f06d7ef95e21",
+    "fp32_renderer.py": "9806f419fe98b59f7689b42bf0a46f98d158d3ce0612ec4eba5d7186f7a18d18"
+  },
+  "model_load_seconds": 1.739503,
+  "floating_parameter_dtypes": [
+    "float32"
+  ],
+  "memory_after_load": {
+    "current_rss_kib": 8652588,
+    "peak_rss_kib": 11885136
+  },
+  "memory_after_synthesis": {
+    "current_rss_kib": 9173472,
+    "peak_rss_kib": 11885136
+  },
+  "runtime_source_contract": {
+    "source_files_sha256": {
+      "modeling": "25c42656bcf810f06ef6bc1839bd7083f3c8cfedac3a147c4060b4262b1c96a0",
+      "inference": "e1da450732857c1f5fe3e36ebab85db2f6dc6a48caaff6973f463384e30275e4",
+      "hf_generation": "a20024b1e82ed5361a524d238d2197be5407abc91297dd9888c57e8284d63fef"
+    },
+    "decode_upsample_rate": 1920,
+    "official_batch_trim_contract_verified": true,
+    "eos_basis": "qwen-tts 0.1.1 cuts audio codes before first codebook-0 EOS; HF 4.57.3 pads completed rows with resolved _pad_token_tensor; actual runtime values are observed.",
+    "sources": [
+      "https://github.com/QwenLM/Qwen3-TTS/blob/022e286b98fbec7e1e916cb940cdf532cd9f488e/qwen_tts/core/models/modeling_qwen3_tts.py#L2280",
+      "https://github.com/huggingface/transformers/blob/v4.57.3/src/transformers/generation/utils.py"
+    ]
+  },
+  "source_run_id": 43389825340,
+  "source_run_url": "https://github.com/quddnr0107-lgtm/korean-voice/actions/runs/43389825340",
+  "artifact_provenance": {
+    "run_id": 43389825340,
+    "head_sha": "7efacfd4ac44504ead41cd6a6f97e243beb7d0ce",
+    "artifact_id": 14020830352,
+    "artifact_name": "sohee-cpu-batch-43389825340",
+    "archive_sha256": "02f74e06432be01ed5bd0791a81b73277dd9a453f3d5ab3b78afc2536166650f",
+    "github_digest_verified": true,
+    "archive_bytes": 2055499,
+    "extracted_files": 6,
+    "total_uncompressed_bytes": 2230756,
+    "path_traversal_and_symlink_checks_passed": true,
+    "files": {
+      "batch2-0.wav": {
+        "bytes": 453200,
+        "sha256": "9f61bcccb1d728b8799905afbedf5625cd097f7d33bf8976616e8327cbb3a18b"
+      },
+      "batch2-1.wav": {
+        "bytes": 821840,
+        "sha256": "10f7719586707ef59a8dc1ce200608dc07b40c04693c72da3a1b03965a06b6a7"
+      },
+      "partial-calls-and-rows.json": {
+        "bytes": 9479,
+        "sha256": "7b4149f94905da6ba0f54ea6f4b95f7ff79b10263dbd7c662ee052a3f4dbd1de"
+      },
+      "serial-0.wav": {
+        "bytes": 460880,
+        "sha256": "5dbfd57bb06073b3a4eecabc0b8cf577d8e462e488a9f64e3ea73206c5ad2b29"
+      },
+      "summary.json": {
+        "bytes": 16797,
+        "sha256": "3f2f8b07328e9b64dcce1b2be6acd7afad4754956a9c83af524826d39e8c3a4e"
+      },
+      "serial-1.wav": {
+        "bytes": 468560,
+        "sha256": "81a0926071ef22422470e5c3829e06ecd1cad111113577130238d036bd558456"
+      }
+    }
+  },
+  "source_summary_sha256": "3f2f8b07328e9b64dcce1b2be6acd7afad4754956a9c83af524826d39e8c3a4e",
+  "asr_exact_matches": 3,
+  "asr_character_errors": [
+    0,
+    1,
+    0,
+    0
+  ],
+  "calls": [
+    {
+      "id": "serial-0",
+      "mode": "serial",
+      "fixtures": [
+        0
+      ],
+      "mode_seed": 5192,
+      "seed_reset_before_call": true,
+      "tts_seconds": 28.301376,
+      "resolved_special_tokens": {
+        "pad": 2150,
+        "eos": [
+          2150
+        ]
+      },
+      "memory": {
+        "current_rss_kib": 9045824,
+        "peak_rss_kib": 11885136
+      }
+    },
+    {
+      "id": "serial-1",
+      "mode": "serial",
+      "fixtures": [
+        1
+      ],
+      "mode_seed": 5192,
+      "seed_reset_before_call": false,
+      "tts_seconds": 28.831988,
+      "resolved_special_tokens": {
+        "pad": 2150,
+        "eos": [
+          2150
+        ]
+      },
+      "memory": {
+        "current_rss_kib": 9147592,
+        "peak_rss_kib": 11885136
+      }
+    },
+    {
+      "id": "batch2-0",
+      "mode": "batch2",
+      "fixtures": [
+        0,
+        1
+      ],
+      "mode_seed": 5192,
+      "seed_reset_before_call": true,
+      "tts_seconds": 56.331907,
+      "resolved_special_tokens": {
+        "pad": 2150,
+        "eos": [
+          2150
+        ]
+      },
+      "memory": {
+        "current_rss_kib": 9173444,
+        "peak_rss_kib": 11885136
+      }
+    }
+  ],
+  "rows": [
+    {
+      "mode": "serial",
+      "fixture": 0,
+      "call_id": "serial-0",
+      "mode_seed": 5192,
+      "per_unit_seed_assigned": false,
+      "audio_seconds": 4.8,
+      "sample_rate": 24000,
+      "pcm_samples": 115200,
+      "signal_valid": true,
+      "wav_file": "serial-0.wav",
+      "wav_sha256": "5dbfd57bb06073b3a4eecabc0b8cf577d8e462e488a9f64e3ea73206c5ad2b29",
+      "eos_token_id": 2150,
+      "resolved_pad_token_id": 2150,
+      "returned_sequence_tokens": 61,
+      "first_eos_index": 60,
+      "actual_tokens_through_eos": 61,
+      "post_eos_padding_tokens": 0,
+      "post_eos_padding_verified": true,
+      "eos_before_safety_cap": true,
+      "decoder_code_frames": 60,
+      "decoder_code_frames_match_first_eos": true,
+      "decode_upsample_rate": 1920,
+      "pcm_frame_coverage_verified": true,
+      "natural_eos": true,
+      "talker_sequence_sha256": "111d5938951412865d3022ad7633bb963eeb78765427a7eb5b0792ba86d4cc63"
+    },
+    {
+      "mode": "serial",
+      "fixture": 1,
+      "call_id": "serial-1",
+      "mode_seed": 5192,
+      "per_unit_seed_assigned": false,
+      "audio_seconds": 4.88,
+      "sample_rate": 24000,
+      "pcm_samples": 117120,
+      "signal_valid": true,
+      "wav_file": "serial-1.wav",
+      "wav_sha256": "81a0926071ef22422470e5c3829e06ecd1cad111113577130238d036bd558456",
+      "eos_token_id": 2150,
+      "resolved_pad_token_id": 2150,
+      "returned_sequence_tokens": 62,
+      "first_eos_index": 61,
+      "actual_tokens_through_eos": 62,
+      "post_eos_padding_tokens": 0,
+      "post_eos_padding_verified": true,
+      "eos_before_safety_cap": true,
+      "decoder_code_frames": 61,
+      "decoder_code_frames_match_first_eos": true,
+      "decode_upsample_rate": 1920,
+      "pcm_frame_coverage_verified": true,
+      "natural_eos": true,
+      "talker_sequence_sha256": "78421227a6c90113818f36e68aa03e5b29da7f7773642e162931834016cd20dd"
+    },
+    {
+      "mode": "batch2",
+      "fixture": 0,
+      "call_id": "batch2-0",
+      "mode_seed": 5192,
+      "per_unit_seed_assigned": false,
+      "audio_seconds": 4.72,
+      "sample_rate": 24000,
+      "pcm_samples": 113280,
+      "signal_valid": true,
+      "wav_file": "batch2-0.wav",
+      "wav_sha256": "9f61bcccb1d728b8799905afbedf5625cd097f7d33bf8976616e8327cbb3a18b",
+      "eos_token_id": 2150,
+      "resolved_pad_token_id": 2150,
+      "returned_sequence_tokens": 108,
+      "first_eos_index": 59,
+      "actual_tokens_through_eos": 60,
+      "post_eos_padding_tokens": 48,
+      "post_eos_padding_verified": true,
+      "eos_before_safety_cap": true,
+      "decoder_code_frames": 59,
+      "decoder_code_frames_match_first_eos": true,
+      "decode_upsample_rate": 1920,
+      "pcm_frame_coverage_verified": true,
+      "natural_eos": true,
+      "talker_sequence_sha256": "f85000bdb7df63871048b93a781676666d81c25d56d343704642b67280a6943c"
+    },
+    {
+      "mode": "batch2",
+      "fixture": 1,
+      "call_id": "batch2-0",
+      "mode_seed": 5192,
+      "per_unit_seed_assigned": false,
+      "audio_seconds": 8.56,
+      "sample_rate": 24000,
+      "pcm_samples": 205440,
+      "signal_valid": true,
+      "wav_file": "batch2-1.wav",
+      "wav_sha256": "10f7719586707ef59a8dc1ce200608dc07b40c04693c72da3a1b03965a06b6a7",
+      "eos_token_id": 2150,
+      "resolved_pad_token_id": 2150,
+      "returned_sequence_tokens": 108,
+      "first_eos_index": 107,
+      "actual_tokens_through_eos": 108,
+      "post_eos_padding_tokens": 0,
+      "post_eos_padding_verified": true,
+      "eos_before_safety_cap": true,
+      "decoder_code_frames": 107,
+      "decoder_code_frames_match_first_eos": true,
+      "decode_upsample_rate": 1920,
+      "pcm_frame_coverage_verified": true,
+      "natural_eos": true,
+      "talker_sequence_sha256": "7ffc24063861b4b173dc937d54d81e6dec0c3bc80dffde9f4eb1d8c87b385705"
+    }
+  ],
+  "independent_asr_performed": true,
+  "independent_asr_evidence_sha256": "9fd043c3c8ea369b5df1e40eab77040076e7f3b24e4add0c3f050efff07c6c17"
+}
