@@ -217,8 +217,12 @@ def main(argv=None):
             and b.file_hash(inspect.getsourcefile(wrapper_module)) == b.WRAPPER_CODE_SHA256,
             'pinned_model_source_mismatch')
         dynamo_config.suppress_errors = False
+        # Five frozen weight sets each need both prompt and decode graphs.
+        # Keep a bounded allowance above Dynamo's default eight specializations.
+        dynamo_config.recompile_limit = 32
         inductor_config.cpp_wrapper = True
-        b.require(dynamo_config.suppress_errors is False and inductor_config.cpp_wrapper is True,
+        b.require(dynamo_config.suppress_errors is False and dynamo_config.recompile_limit == 32
+            and inductor_config.cpp_wrapper is True,
             'compiler_config_not_applied')
         torch.set_num_threads(4)
         load_started = time.perf_counter()
@@ -238,7 +242,7 @@ def main(argv=None):
             trial_order=trial_order(args.repeats), packages=packages, dtype='float32', attention='sdpa',
             compile_scope=[f'talker.code_predictor.model.layers.{i}.mlp' for i in range(5)],
             compile_options=dict(mode='max-autotune', dynamic=True, fullgraph=True,
-                cpp_wrapper=True, freezing=True, suppress_errors=False),
+                cpp_wrapper=True, freezing=True, suppress_errors=False, recompile_limit=32),
             script_sha256=b.file_hash(__file__), helper_sha256=b.file_hash(b.__file__),
             model_weights_sha256=weights, model_load_seconds=load_seconds, cpu_threads=torch.get_num_threads(),
             platform=platform.platform(), cpuinfo=Path('/proc/cpuinfo').read_text(),

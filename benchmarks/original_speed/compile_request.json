@@ -1,1 +1,8 @@
-{"schema":"original-bora-cp-compile/v1","production":false,"private_sources":false,"gpu":false,"precision":"float32","scope":"five-code-predictor-mlps"}
+{
+  "schema": "original-bora-cp-compile/v1",
+  "production": false,
+  "private_sources": false,
+  "gpu": false,
+  "precision": "float32",
+  "scope": "five-code-predictor-mlps"
+}
