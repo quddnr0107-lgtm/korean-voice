@@ -1,0 +1,83 @@
+{
+  "schema": "sohee-public-cpu-compile-resident/v1",
+  "request_id": "public-sohee-fp32-predictor-resident-20261113-01",
+  "model_revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+  "fixture_count": 2,
+  "threads": 4,
+  "interop_threads": 1,
+  "call_timeout_seconds": 360,
+  "worker_timeout_seconds": 1240,
+  "compile_scope": "inner-predictor-model-forward-original-eager-causal-masks",
+  "compile_target_path": "model.model.talker.code_predictor.model.forward",
+  "eager_mask_aliases": [
+    "create_causal_mask",
+    "create_sliding_window_causal_mask"
+  ],
+  "compile_threads": 1,
+  "maximum_compiled_graphs": 64,
+  "schedule": [
+    [
+      "baseline",
+      "eager",
+      0
+    ],
+    [
+      "baseline",
+      "eager",
+      1
+    ],
+    [
+      "cold",
+      "compiled_inner_predictor_eager_masks",
+      0
+    ],
+    [
+      "cold",
+      "compiled_inner_predictor_eager_masks",
+      1
+    ],
+    [
+      "measured",
+      "eager",
+      0
+    ],
+    [
+      "measured",
+      "compiled_inner_predictor_eager_masks",
+      0
+    ],
+    [
+      "measured",
+      "compiled_inner_predictor_eager_masks",
+      1
+    ],
+    [
+      "measured",
+      "eager",
+      1
+    ],
+    [
+      "measured",
+      "compiled_inner_predictor_eager_masks",
+      0
+    ],
+    [
+      "measured",
+      "eager",
+      0
+    ],
+    [
+      "measured",
+      "eager",
+      1
+    ],
+    [
+      "measured",
+      "compiled_inner_predictor_eager_masks",
+      1
+    ]
+  ],
+  "production": false,
+  "secrets": false,
+  "gpu": false
+}
