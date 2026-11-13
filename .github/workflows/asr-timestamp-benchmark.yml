@@ -1,0 +1,72 @@
+name: Public ASR word timestamp comparison
+on:
+  push:
+    branches: [integrated-lectures-premium-20261028]
+    paths: ['bora-production/asr-timestamp-request.json']
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: public-asr-timestamp-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  compare:
+    if: github.repository == 'quddnr0107-lgtm/korean-voice'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      HF_HUB_DISABLE_TELEMETRY: '1'
+      HF_HUB_DISABLE_IMPLICIT_TOKEN: '1'
+      HF_HUB_DISABLE_PROGRESS_BARS: '1'
+      ORT_DISABLE_TELEMETRY: '1'
+      DO_NOT_TRACK: '1'
+      OMP_NUM_THREADS: '1'
+      OPENBLAS_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false, fetch-depth: 2}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with: {python-version: '3.12'}
+      - name: Confirm production code and protected inputs are unchanged
+        run: |
+          git diff --exit-code HEAD^ HEAD -- bora-production/request.json bora-production/campaign.json bora-production/recipe.json bora-production/runtime.py bora-production/fp32_renderer.py bora-production/pilot_render.py bora-production/quality.py bora-production/assemble.py .github/workflows/bora-fp32-production.yml
+          python -m unittest discover -s bora-production -p 'test_asr_timestamp_benchmark.py' -v
+      - name: Download only the four existing public sample WAVs
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: basic-sohee-cpu-43374157929
+          run-id: 43374157929
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/public-sohee-audio
+      - name: Install only the existing pinned recognition dependencies
+        run: |
+          python -m pip install --disable-pip-version-check faster-whisper==1.2.1 ctranslate2==4.9.0 onnxruntime==1.31.1 huggingface-hub==0.36.2 numpy==2.5.4 scipy==1.18.1 soundfile==0.14.0
+          python -m pip check
+      - name: Download the exact existing ASR revision without TTS or secrets
+        run: |
+          python - <<'PY'
+          import sys,os
+          from pathlib import Path
+          sys.path.insert(0,'bora-production')
+          from download_models import require_keyless,ASR_REQUIRED,ASR_REPOSITORY,ASR_REVISION,verify_assets
+          from huggingface_hub import snapshot_download
+          require_keyless()
+          target=Path(os.environ['RUNNER_TEMP'])/'public-asr-model'
+          snapshot_download(ASR_REPOSITORY,revision=ASR_REVISION,local_dir=target,allow_patterns=list(ASR_REQUIRED),max_workers=4)
+          verify_assets(target,ASR_REQUIRED)
+          PY
+      - name: Recognize identical public WAVs with and without word alignment
+        env:
+          HF_HUB_OFFLINE: '1'
+          TRANSFORMERS_OFFLINE: '1'
+        run: |
+          python bora-production/asr_timestamp_benchmark.py \
+            --audio "$RUNNER_TEMP/public-sohee-audio" --model "$RUNNER_TEMP/public-asr-model" \
+            --output "$RUNNER_TEMP/asr-timestamp-summary.json"
+      - name: Retain only public numeric comparison evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: public-asr-timestamp-summary-${{ github.run_id }}
+          path: ${{ runner.temp }}/asr-timestamp-summary.json
+          retention-days: 3
+          if-no-files-found: error
