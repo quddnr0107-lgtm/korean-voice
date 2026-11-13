@@ -1,0 +1,83 @@
+name: Bora encrypted owner listening preview
+on:
+  push:
+    branches: [integrated-lectures-premium-20261028]
+    paths: ['bora-production/listening-preview-request.json']
+permissions:
+  contents: read
+concurrency:
+  group: bora-owner-listening-preview-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  transport:
+    if: github.repository == 'quddnr0107-lgtm/korean-voice' && github.ref == 'refs/heads/integrated-lectures-premium-20261028' && github.event_name == 'push'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    # Only GETs against the existing draft release; no publication or edits.
+    permissions:
+      contents: write
+    outputs:
+      cipher_artifact_id: ${{ steps.saved.outputs.artifact-id }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false, fetch-depth: 2}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with: {python-version: '3.12'}
+      - name: Verify the listening request leaves production and keys unchanged
+        run: |
+          git diff --exit-code HEAD^ HEAD -- bora-production/request.json bora-production/campaign.json bora-production/recipe.json bora-production/runtime.py bora-production/fp32_renderer.py bora-production/quality.py bora-production/tts_normalize.py bora-production/pilot_render.py bora-production/recovery_diagnostics.py bora-production/tb001_full_diagnostic.py bora-production/transport.py bora-production/assemble.py .github/workflows/bora-fp32-production.yml
+          python -m pip install --disable-pip-version-check cryptography==50.0.0
+          python -m unittest discover -s bora-production -p 'test_listening_preview.py' -v
+          python -m py_compile bora-production/listening_preview.py
+          python -c "import sys; sys.path.insert(0,'bora-production'); import listening_preview as p; p.check_request(); print('Owner public-key request validated')"
+      - name: Download only both original hash-pinned encrypted bundles
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python bora-production/listening_preview.py download --directory "$RUNNER_TEMP/bora-owner-cipher"
+      - id: saved
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: bora-owner-preview-cipher-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/bora-owner-cipher/TB-001-s000-r43275117254-a1.zip
+            ${{ runner.temp }}/bora-owner-cipher/TB-001-s001-r43275117254-a1.zip
+          retention-days: 1
+          if-no-files-found: error
+  preview:
+    needs: transport
+    if: needs.transport.result == 'success'
+    runs-on: ubuntu-24.04
+    environment: admin-law-premium-production
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with: {python-version: '3.12'}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: ${{ needs.transport.outputs.cipher_artifact_id }}
+          merge-multiple: true
+          path: ${{ runner.temp }}/bora-owner-cipher
+      - name: Install envelope cryptography without model weights or protected keys
+        run: python -m pip install --disable-pip-version-check cryptography==50.0.0
+      - name: Encrypt up to three blocked originals for the owner in the offline namespace
+        env:
+          ADMIN_LAW_PREMIUM_SOURCE_KEY_B64: ${{ secrets.ADMIN_LAW_PREMIUM_SOURCE_KEY_B64 }}
+          ADMIN_LAW_PREMIUM_MEDIA_KEY_B64: ${{ secrets.ADMIN_LAW_PREMIUM_MEDIA_KEY_B64 }}
+        run: |
+          umask 077
+          export BORA_HOST_NETNS="$(readlink /proc/self/ns/net)"
+          sudo --preserve-env=ADMIN_LAW_PREMIUM_SOURCE_KEY_B64,ADMIN_LAW_PREMIUM_MEDIA_KEY_B64,BORA_HOST_NETNS,GITHUB_REPOSITORY,GITHUB_EVENT_NAME,GITHUB_REF,GITHUB_WORKFLOW_REF,RUNNER_TEMP \
+            unshare --net --setgid "$(id -g)" --setuid "$(id -u)" -- "$(command -v python)" \
+            bora-production/listening_preview.py export --directory "$RUNNER_TEMP/bora-owner-cipher" \
+            --output "$RUNNER_TEMP/encrypted-owner-preview-envelope.json"
+      - name: Preserve only the owner-encrypted preview envelope
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: bora-owner-preview-envelope-${{ github.run_id }}
+          path: ${{ runner.temp }}/encrypted-owner-preview-envelope.json
+          retention-days: 1
+          if-no-files-found: error
