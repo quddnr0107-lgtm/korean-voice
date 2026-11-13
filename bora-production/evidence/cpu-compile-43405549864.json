@@ -1,0 +1,386 @@
+{
+  "schema": "sohee-public-cpu-compile/v1",
+  "status": "compiled_graph_timing_trial_no_quality_approval",
+  "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+  "model_revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+  "device": "cpu",
+  "dtype": "float32",
+  "threads": 4,
+  "interop_threads": 1,
+  "speaker": "Sohee",
+  "fixtures": [
+    "오늘 배운 내용을 잠깐 덮고, 자기 말로 한 번 설명해 보세요.",
+    "지금은 조금 느려도 괜찮습니다. 한 문장씩 차분하게 읽어 보세요."
+  ],
+  "totals": {
+    "eager": {
+      "tts_seconds": 108.602071,
+      "audio_seconds": 11.12,
+      "synthesis_seconds_per_audio_second": 9.766373
+    },
+    "compiled_inner_predictor_eager_masks": {
+      "tts_seconds": 144.23408,
+      "audio_seconds": 11.12,
+      "synthesis_seconds_per_audio_second": 12.970691
+    }
+  },
+  "complete_natural_eos_and_signal": true,
+  "compiled_execution_observed": true,
+  "compile_counters": {
+    "backend_compile_attempts": 5,
+    "backend_graphs_compiled": 3,
+    "compiled_graph_invocations": 2085,
+    "predictor_forward_calls": 2085
+  },
+  "observed_pair_wall_ratio_eager_over_compiled": 0.752957,
+  "observed_rtf_ratio_eager_over_compiled": 0.752957,
+  "first_compiled_call_includes_compilation": true,
+  "first_compiled_call_seconds": 88.78277797500002,
+  "second_compiled_call_seconds": 55.45130235300002,
+  "second_compiled_call_new_graphs": 0,
+  "second_call_proven_steady_state": true,
+  "compile_scope": "inner-predictor-model-forward-original-eager-causal-masks",
+  "mode_order": [
+    "eager",
+    "compiled_inner_predictor_eager_masks"
+  ],
+  "eager_mask_aliases": [
+    "create_causal_mask",
+    "create_sliding_window_causal_mask"
+  ],
+  "compile_target_path": "model.model.talker.code_predictor.model.forward",
+  "compile_scope_details": "Only code_predictor.model.forward is compiled. The outer code_predictor.forward, 15 output-head selections, generation_steps branches, sampler and generate remain original Python. The two Qwen modeling-module causal-mask aliases retain their original calculations with tracing disabled.",
+  "execution_counter_wrapper_copies_compiler_private_attributes": false,
+  "predictor_forward_calls_counter_scope": "model.model.talker.code_predictor.model.forward",
+  "backend": "inductor",
+  "fullgraph": false,
+  "dynamic": true,
+  "compile_threads": 1,
+  "maximum_compiled_graphs": 64,
+  "entire_predictor_compiled_coverage_claimed": false,
+  "model_load_included_in_tts": false,
+  "asr_performed": false,
+  "dsp_performed": false,
+  "production_eligible": false,
+  "human_listening_verified": false,
+  "full_course_forecast_validated": false,
+  "sources": [
+    "https://docs.pytorch.org/docs/2.8/generated/torch.compile.html",
+    "https://docs.pytorch.org/docs/2.8/generated/torch.compiler.disable.html",
+    "https://github.com/huggingface/transformers/issues/42320",
+    "https://github.com/pytorch/pytorch/blob/v2.8.0/torch/_inductor/config.py",
+    "https://github.com/QwenLM/Qwen3-TTS/blob/022e286b98fbec7e1e916cb940cdf532cd9f488e/qwen_tts/core/models/modeling_qwen3_tts.py"
+  ],
+  "caveat": "A separate inner-model compilation experiment with corrected execution-counter wrappers; no retroactive success claim for earlier scopes. Outer predictor/head selection stays eager. One eager-then-compiled trial, two public fixtures, one resident model. Original causal masks execute eagerly and restore afterward; shared aliases also serve the already-eager talker. Graph breaks can leave eager regions; counters prove some compiled code ran, not full coverage. First compiled TTS includes compilation; the second is steady only without new graphs. FP32 fusion may change results. No pronunciation or full-course equivalence claim.",
+  "native_threads": {
+    "intraop_threads": 4,
+    "interop_threads": 1,
+    "omp_get_max_threads": 4,
+    "mkl_get_max_threads": 4
+  },
+  "torch_version": "2.8.0+cpu",
+  "compiler_version": "g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+  "model_assets_sha256": {
+    "model.safetensors": "38b1d5971bdbd982b561cccec982669a53b0537c3cf5e9bd4778ed07bb2f5137",
+    "speech_tokenizer/model.safetensors": "836b7b357f5ea43e889936a3709af68dfe3751881acefe4ecf0dbd30ba571258",
+    "config.json": "17a07f527a1c25ea30b4e023a184482a23d3e279d697b1dc81b1bde498d29cf9",
+    "generation_config.json": "f1b90b4513f3b34c62851049e2492d7b4c5940daf1276f89c82b8ef04127f3aa",
+    "tokenizer_config.json": "dc3c31c3bdaedd5016382bb3cbe07323026775ad51f5a4fb564505992ae4a670",
+    "preprocessor_config.json": "efdde1022ea9d76928bf7a9cd53139138f5ba2e466e837f08f6105ab1af1c119",
+    "vocab.json": "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910",
+    "merges.txt": "599bab54075088774b1733fde865d5bd747cbcc7a547c5bc12610e874e26f5e3",
+    "speech_tokenizer/config.json": "ee65bb901c876664ab8707c487157aa1a6ee57c65969b28fb5ec9dc211e68167",
+    "speech_tokenizer/configuration.json": "6bc26d64eb5024b4d1dab5a52371958b429256d6c9d59787f1f5294a54e0cebd",
+    "speech_tokenizer/preprocessor_config.json": "fcb3805e597e786d4067706e602f6688524640f8d3396790e2e09b5942fcbdfb"
+  },
+  "model_load_seconds": 1.8003335979999946,
+  "memory_after_load": {
+    "current_rss_kib": 8664008,
+    "peak_rss_kib": 11884672
+  },
+  "original_predictor_source_sha256": "25c42656bcf810f06ef6bc1839bd7083f3c8cfedac3a147c4060b4262b1c96a0",
+  "compiled_module_type": "Qwen3TTSTalkerCodePredictorModel",
+  "outer_predictor_forward_unchanged": true,
+  "eager_wrapper_setup_seconds": 0.16499863600000708,
+  "compiled_wrapper_setup_seconds": 0.004941139000010253,
+  "eager_causal_mask_patch": {
+    "aliases": [
+      "create_causal_mask",
+      "create_sliding_window_causal_mask"
+    ],
+    "original_calculation_retained": true,
+    "restored_on_exit": true,
+    "originals": {
+      "create_causal_mask": "transformers.masking_utils.create_causal_mask",
+      "create_sliding_window_causal_mask": "transformers.masking_utils.create_sliding_window_causal_mask"
+    }
+  },
+  "memory_after_synthesis": {
+    "current_rss_kib": 9246856,
+    "peak_rss_kib": 11884672
+  },
+  "cpu": {
+    "cpu_models": [
+      "AMD EPYC 9V74 80-Core Processor"
+    ],
+    "logical_cpus": 4,
+    "bf16_instruction_flags": [
+      "avx512_bf16"
+    ],
+    "bf16_instruction_available": true
+  },
+  "rows": [
+    {
+      "mode": "eager",
+      "fixture": 0,
+      "seed": 5192,
+      "tts_seconds": 46.86171859400001,
+      "audio_seconds": 4.8,
+      "sample_rate": 24000,
+      "pcm_samples": 115200,
+      "signal_valid": true,
+      "sequence_tokens": 61,
+      "eos_seen": true,
+      "cap_reached": false,
+      "natural_eos": true,
+      "talker_sequence_sha256": "111d5938951412865d3022ad7633bb963eeb78765427a7eb5b0792ba86d4cc63",
+      "wav_file": "eager-0.wav",
+      "wav_sha256": "74b2a2e6b892f7ad398fe04e6e89dc35d9a94a53b487e53709fe1f3ed4a00091",
+      "pcm_sha256": "811c90b35b8198a71e618ecc81ab08a3adb864c88e9595b410b9052343fdacd4",
+      "compiled_graph_invocations_during_call": 0,
+      "new_graphs_compiled_during_call": 0,
+      "predictor_forward_calls_during_call": 0,
+      "dynamo_counters": {
+        "frames": {},
+        "stats": {},
+        "inductor": {},
+        "graph_break": {},
+        "unimplemented": {}
+      },
+      "memory": {
+        "current_rss_kib": 9139948,
+        "peak_rss_kib": 11884672
+      }
+    },
+    {
+      "mode": "eager",
+      "fixture": 1,
+      "seed": 5193,
+      "tts_seconds": 61.740352607000005,
+      "audio_seconds": 6.32,
+      "sample_rate": 24000,
+      "pcm_samples": 151680,
+      "signal_valid": true,
+      "sequence_tokens": 80,
+      "eos_seen": true,
+      "cap_reached": false,
+      "natural_eos": true,
+      "talker_sequence_sha256": "4e446e68e7c722167eb666d7408a80a0e6997f830f40422b1c9573dc00c8157c",
+      "wav_file": "eager-1.wav",
+      "wav_sha256": "808bf9ef66acb564bb506c49b1718c04004478358940b5c82f84b7c8e89432b0",
+      "pcm_sha256": "f2a2bbc45884e450bef284aaae789a09e3745f98f5ce989b469fa53b7ab474be",
+      "compiled_graph_invocations_during_call": 0,
+      "new_graphs_compiled_during_call": 0,
+      "predictor_forward_calls_during_call": 0,
+      "dynamo_counters": {
+        "frames": {},
+        "stats": {},
+        "inductor": {},
+        "graph_break": {},
+        "unimplemented": {}
+      },
+      "memory": {
+        "current_rss_kib": 9147076,
+        "peak_rss_kib": 11884672
+      }
+    },
+    {
+      "mode": "compiled_inner_predictor_eager_masks",
+      "fixture": 0,
+      "seed": 5192,
+      "tts_seconds": 88.78277797500002,
+      "audio_seconds": 4.8,
+      "sample_rate": 24000,
+      "pcm_samples": 115200,
+      "signal_valid": true,
+      "sequence_tokens": 61,
+      "eos_seen": true,
+      "cap_reached": false,
+      "natural_eos": true,
+      "talker_sequence_sha256": "111d5938951412865d3022ad7633bb963eeb78765427a7eb5b0792ba86d4cc63",
+      "wav_file": "compiled_inner_predictor_eager_masks-0.wav",
+      "wav_sha256": "f24f1e602366f2b82a039288afa0f94dfad8741b992641dd68481b4a9841cb43",
+      "pcm_sha256": "811c90b35b8198a71e618ecc81ab08a3adb864c88e9595b410b9052343fdacd4",
+      "compiled_graph_invocations_during_call": 900,
+      "new_graphs_compiled_during_call": 3,
+      "predictor_forward_calls_during_call": 900,
+      "dynamo_counters": {
+        "frames": {
+          "total": 10,
+          "ok": 10
+        },
+        "stats": {
+          "calls_captured": 2095,
+          "unique_graphs": 3
+        },
+        "inductor": {
+          "pattern_matcher_count": 496,
+          "pattern_matcher_nodes": 556,
+          "fxgraph_cache_miss": 3,
+          "extern_calls": 116
+        },
+        "graph_break": {
+          "Skip calling `torch.compiler.disable()`d function\n  Explanation: Skip calling function `<function create_causal_mask at 0x7f7778735440>` since it was wrapped wi": 4
+        },
+        "unimplemented": {}
+      },
+      "memory": {
+        "current_rss_kib": 9246912,
+        "peak_rss_kib": 11884672
+      }
+    },
+    {
+      "mode": "compiled_inner_predictor_eager_masks",
+      "fixture": 1,
+      "seed": 5193,
+      "tts_seconds": 55.45130235300002,
+      "audio_seconds": 6.32,
+      "sample_rate": 24000,
+      "pcm_samples": 151680,
+      "signal_valid": true,
+      "sequence_tokens": 80,
+      "eos_seen": true,
+      "cap_reached": false,
+      "natural_eos": true,
+      "talker_sequence_sha256": "4e446e68e7c722167eb666d7408a80a0e6997f830f40422b1c9573dc00c8157c",
+      "wav_file": "compiled_inner_predictor_eager_masks-1.wav",
+      "wav_sha256": "5b1bd278f6d62e781a147d215ae1b2794bd22a3dd5a8d3713ed7d12f46faf08c",
+      "pcm_sha256": "f2a2bbc45884e450bef284aaae789a09e3745f98f5ce989b469fa53b7ab474be",
+      "compiled_graph_invocations_during_call": 1185,
+      "new_graphs_compiled_during_call": 0,
+      "predictor_forward_calls_during_call": 1185,
+      "dynamo_counters": {
+        "frames": {
+          "total": 10,
+          "ok": 10
+        },
+        "stats": {
+          "calls_captured": 2095,
+          "unique_graphs": 3
+        },
+        "inductor": {
+          "pattern_matcher_count": 496,
+          "pattern_matcher_nodes": 556,
+          "fxgraph_cache_miss": 3,
+          "extern_calls": 116
+        },
+        "graph_break": {
+          "Skip calling `torch.compiler.disable()`d function\n  Explanation: Skip calling function `<function create_causal_mask at 0x7f7778735440>` since it was wrapped wi": 4
+        },
+        "unimplemented": {}
+      },
+      "memory": {
+        "current_rss_kib": 9246856,
+        "peak_rss_kib": 11884672
+      }
+    }
+  ],
+  "source_run_id": 43405549864,
+  "source_run_url": "https://github.com/quddnr0107-lgtm/korean-voice/actions/runs/43405549864",
+  "artifact_provenance": {
+    "artifact_id": 14026768957,
+    "run_id": 43405549864,
+    "source_commit": "68b6b362ddaa264ff09a5741a3f4531fbbb6368e",
+    "zip_bytes": 1994050,
+    "zip_sha256": "235563bd49e3326013918fa446a640d4e124bb49b98af89620be77132fed0a29",
+    "github_digest_matches": true,
+    "archive_size_matches": true,
+    "traversal_symlink_duplicate_extracted_size_checks_passed": true,
+    "extracted_bytes": 2152709,
+    "members": [
+      "compiled_inner_predictor_eager_masks-0.wav",
+      "compiled_inner_predictor_eager_masks-1.wav",
+      "eager-0.wav",
+      "eager-1.wav",
+      "summary.json"
+    ]
+  },
+  "source_summary_sha256": "d7b44ad31a229612d722317d59b4357b4a6d251577974bebfc784fa34b0d5af9",
+  "asr_evidence": "cpu-compile-43405549864-asr-check.json",
+  "asr_evidence_sha256": "8c24a28c0e9af25e0ae044a80ab67c9ed1ae42a816461c4db62722eba701e298",
+  "asr_exact_matches": 4,
+  "asr_character_errors": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "direct_pcm_comparisons_no_alignment_or_resampling": [
+    {
+      "fixture": 0,
+      "same_sample_rate": true,
+      "eager_samples": 115200,
+      "compiled_samples": 115200,
+      "same_sample_count": true,
+      "identical_pcm_sha256": true,
+      "identical_first_talker_sequence_sha256": true,
+      "max_absolute_pcm_difference": 0.0,
+      "rms_pcm_difference": 0.0
+    },
+    {
+      "fixture": 1,
+      "same_sample_rate": true,
+      "eager_samples": 151680,
+      "compiled_samples": 151680,
+      "same_sample_count": true,
+      "identical_pcm_sha256": true,
+      "identical_first_talker_sequence_sha256": true,
+      "max_absolute_pcm_difference": 0.0,
+      "rms_pcm_difference": 0.0
+    }
+  ],
+  "independent_timing_interpretation": {
+    "matching_fixture_comparisons": [
+      {
+        "fixture": 0,
+        "eager_tts_seconds": 46.86171859400001,
+        "compiled_tts_seconds": 88.78277797500002,
+        "eager_audio_seconds": 4.8,
+        "compiled_audio_seconds": 4.8,
+        "matching_audio_duration": true,
+        "compiled_call_includes_new_graph_compilation": true,
+        "new_graphs": 3,
+        "actual_compiled_invocations": 900,
+        "wall_seconds_saved": -41.921059381000006,
+        "wall_reduction_pct": -89.45693977678278,
+        "identical_decoded_pcm_sha256": true,
+        "identical_returned_first_talker_sequence": true
+      },
+      {
+        "fixture": 1,
+        "eager_tts_seconds": 61.740352607000005,
+        "compiled_tts_seconds": 55.45130235300002,
+        "eager_audio_seconds": 6.32,
+        "compiled_audio_seconds": 6.32,
+        "matching_audio_duration": true,
+        "compiled_call_includes_new_graph_compilation": false,
+        "new_graphs": 0,
+        "actual_compiled_invocations": 1185,
+        "wall_seconds_saved": 6.289050253999989,
+        "wall_reduction_pct": 10.186288202842151,
+        "identical_decoded_pcm_sha256": true,
+        "identical_returned_first_talker_sequence": true
+      }
+    ],
+    "whole_two_fixture_tts_wall_seconds_eager": 108.602071,
+    "whole_two_fixture_tts_wall_seconds_compiled_including_first_compile": 144.23408,
+    "whole_two_fixture_time_increase_pct": 32.80969568250684,
+    "observed_second_fixture_steady_time_reduction_pct": 10.186288202842151,
+    "second_fixture_proven_no_new_graphs": true,
+    "compiled_wrapper_setup_seconds_excluded_from_tts_totals": 0.004941139000010253,
+    "cold_start_pair_speedup_claimed": false,
+    "long_job_amortization_measured": false,
+    "voice_scope": "Both fixture pairs have byte-identical decoded FP32 PCM and identical first talker sequences. All four independently transcribed with zero canonical character errors. This is not a full-course or human-listening approval.",
+    "counter_reliability": "This request returns a plain execution callback, preserves only _boxed_call when present, and does not copy compiler unwrapping/disable metadata. The observed 2085 compiled invocations equal all 2085 counted inner-model forward calls."
+  }
+}

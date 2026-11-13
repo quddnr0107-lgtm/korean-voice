@@ -1,0 +1,95 @@
+{
+  "schema": "sohee-public-cpu-compile-asr/v1",
+  "source_run_id": 43405549864,
+  "source_summary_sha256": "d7b44ad31a229612d722317d59b4357b4a6d251577974bebfc784fa34b0d5af9",
+  "artifact_provenance": {
+    "artifact_id": 14026768957,
+    "run_id": 43405549864,
+    "source_commit": "68b6b362ddaa264ff09a5741a3f4531fbbb6368e",
+    "zip_bytes": 1994050,
+    "zip_sha256": "235563bd49e3326013918fa446a640d4e124bb49b98af89620be77132fed0a29",
+    "github_digest_matches": true,
+    "archive_size_matches": true,
+    "traversal_symlink_duplicate_extracted_size_checks_passed": true,
+    "extracted_bytes": 2152709,
+    "members": [
+      "compiled_inner_predictor_eager_masks-0.wav",
+      "compiled_inner_predictor_eager_masks-1.wav",
+      "eager-0.wav",
+      "eager-1.wav",
+      "summary.json"
+    ]
+  },
+  "model": "Systran/faster-whisper-small",
+  "revision": "536b0662742c02347bc0e980a01041f333bce120",
+  "asr_model_sha256": "3e305921506d8872816023e4c273e75d2419fb89b24da97b4fe7bce14170d671",
+  "settings": {
+    "device": "cpu",
+    "compute_type": "int8",
+    "cpu_threads": 1,
+    "num_workers": 1,
+    "language": "ko",
+    "beam_size": 5,
+    "temperature": 0,
+    "condition_on_previous_text": false,
+    "vad_filter": false,
+    "initial_prompt": null,
+    "word_timestamps": true,
+    "max_cer": 0.0
+  },
+  "rows": [
+    {
+      "mode": "eager",
+      "fixture": 0,
+      "wav_file": "eager-0.wav",
+      "wav_sha256": "74b2a2e6b892f7ad398fe04e6e89dc35d9a94a53b487e53709fe1f3ed4a00091",
+      "pcm_sha256": "811c90b35b8198a71e618ecc81ab08a3adb864c88e9595b410b9052343fdacd4",
+      "expected": "오늘 배운 내용을 잠깐 덮고, 자기 말로 한 번 설명해 보세요.",
+      "recognized": "오늘 배운 내용을 잠깐 덮고 자기말로 한번 설명해 보세요.",
+      "character_errors": 0,
+      "exact_canonical_match": true,
+      "asr_seconds": 3.837483
+    },
+    {
+      "mode": "eager",
+      "fixture": 1,
+      "wav_file": "eager-1.wav",
+      "wav_sha256": "808bf9ef66acb564bb506c49b1718c04004478358940b5c82f84b7c8e89432b0",
+      "pcm_sha256": "f2a2bbc45884e450bef284aaae789a09e3745f98f5ce989b469fa53b7ab474be",
+      "expected": "지금은 조금 느려도 괜찮습니다. 한 문장씩 차분하게 읽어 보세요.",
+      "recognized": "지금은 조금 느려도 괜찮습니다 한 문장씩 차분하게 읽어보세요",
+      "character_errors": 0,
+      "exact_canonical_match": true,
+      "asr_seconds": 3.607962
+    },
+    {
+      "mode": "compiled_inner_predictor_eager_masks",
+      "fixture": 0,
+      "wav_file": "compiled_inner_predictor_eager_masks-0.wav",
+      "wav_sha256": "f24f1e602366f2b82a039288afa0f94dfad8741b992641dd68481b4a9841cb43",
+      "pcm_sha256": "811c90b35b8198a71e618ecc81ab08a3adb864c88e9595b410b9052343fdacd4",
+      "expected": "오늘 배운 내용을 잠깐 덮고, 자기 말로 한 번 설명해 보세요.",
+      "recognized": "오늘 배운 내용을 잠깐 덮고 자기말로 한번 설명해 보세요.",
+      "character_errors": 0,
+      "exact_canonical_match": true,
+      "asr_seconds": 3.740368
+    },
+    {
+      "mode": "compiled_inner_predictor_eager_masks",
+      "fixture": 1,
+      "wav_file": "compiled_inner_predictor_eager_masks-1.wav",
+      "wav_sha256": "5b1bd278f6d62e781a147d215ae1b2794bd22a3dd5a8d3713ed7d12f46faf08c",
+      "pcm_sha256": "f2a2bbc45884e450bef284aaae789a09e3745f98f5ce989b469fa53b7ab474be",
+      "expected": "지금은 조금 느려도 괜찮습니다. 한 문장씩 차분하게 읽어 보세요.",
+      "recognized": "지금은 조금 느려도 괜찮습니다 한 문장씩 차분하게 읽어보세요",
+      "character_errors": 0,
+      "exact_canonical_match": true,
+      "asr_seconds": 4.159919
+    }
+  ],
+  "exact_matches": 4,
+  "total_character_errors": 0,
+  "scope": "Actual saved public trial WAVs only. Partial compiler failure does not imply quality or speed improvement. ASR difference is not proof of a speech defect.",
+  "human_listening_verified": false,
+  "production_eligible": false
+}
