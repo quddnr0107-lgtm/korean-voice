@@ -1,0 +1,325 @@
+{
+  "schema": "cpu-lab-20261113-public-sampling/v1",
+  "source_repository": "https://github.com/gabriele-mastrapasqua/qwen3-tts.git",
+  "source_revision": "ef339be58a778b062e1c14382347964552eae007",
+  "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+  "model_revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+  "speaker": "Sohee",
+  "language": "Korean",
+  "device": "cpu",
+  "threads": 4,
+  "cases": [
+    "baseline",
+    "talker",
+    "both"
+  ],
+  "flags": {
+    "baseline": [
+      0,
+      0
+    ],
+    "talker": [
+      1,
+      0
+    ],
+    "both": [
+      1,
+      1
+    ]
+  },
+  "public_fixtures": [
+    "오늘 배운 내용을 잠깐 덮고, 자기 말로 한 번 설명해 보세요.",
+    "지금은 조금 느려도 괜찮습니다. 한 문장씩 차분하게 읽어 보세요."
+  ],
+  "recipe": {
+    "styles": {
+      "explain": "Speak Korean to one learner. Ask the questions with genuine curiosity, then explain with clear, conversational phrasing. Keep a consistent speaking voice throughout the paragraph. Allow occasional quiet, unforced inhalations and small thoughtful pauses at natural phrase boundaries when the meaning calls for them. Keep the vocal affect appropriate to the subject, and keep the spoken words clear and complete.",
+      "reading": "Formal recitation of a Korean legal provision. Crisp, distinct consonants and a confident, clearly projected voice. Maintain steady supported vocal energy through every final syllable. Measured phrasing with clear pauses at clause boundaries."
+    },
+    "filters": {
+      "explain": "highpass=f=65,loudnorm=I=-18:TP=-2:LRA=11,alimiter=limit=0.84:level=false",
+      "reading": "highpass=f=65,equalizer=f=2600:t=q:w=0.85:g=1.2,acompressor=threshold=0.08:ratio=2:attack=15:release=120:makeup=1,loudnorm=I=-16:TP=-2:LRA=7,alimiter=limit=0.89:level=false"
+    },
+    "sampling": {
+      "non_streaming_mode": true,
+      "do_sample": true,
+      "temperature": 0.8,
+      "top_p": 0.9,
+      "top_k": 50,
+      "repetition_penalty": 1.05,
+      "subtalker_dosample": true,
+      "subtalker_temperature": 0.9,
+      "subtalker_top_p": 1.0,
+      "subtalker_top_k": 50
+    },
+    "seed": 5192,
+    "token_cap": 1100,
+    "source_sha256": {
+      "pilot_render.py": "b90b5761b841c69088a1c0c01988c1c7f41fae714142a518b8f6f06d7ef95e21",
+      "fp32_renderer.py": "9806f419fe98b59f7689b42bf0a46f98d158d3ce0612ec4eba5d7186f7a18d18"
+    }
+  },
+  "rows": [
+    {
+      "case": "baseline",
+      "fixture": 0,
+      "seed": 5192,
+      "process_wall_seconds": 18.019704,
+      "native_returncode": 0,
+      "log_file": "baseline-0.log",
+      "log_sha256": "eb1f07b61863e44a5d498557c1c838ed48fdcf38d45af3bbe9fae4c7785e28a0",
+      "native_option_markers_verified": true,
+      "hf_sampler_enabled": false,
+      "cp_sampling_enabled": false,
+      "wav_file": "baseline-0.wav",
+      "wav_sha256": "ca36c22da7880bf2eafffe5efcf2e3999f46037454ecd98860da3e965a9a0472",
+      "audio_seconds": 5.76,
+      "signal": {
+        "sample_rate": 24000,
+        "samples": 138240,
+        "seconds": 5.76,
+        "peak": 0.348876953125,
+        "rms": 0.05742416312220648,
+        "clipped_samples": 0,
+        "reasons": [],
+        "blocked": false
+      },
+      "signal_valid": true,
+      "decoded_pcm_frame_coverage_verified": true,
+      "eos_frame": 72,
+      "generated_frames": 72,
+      "eos_strategy": "off",
+      "natural_eos_observed": true,
+      "eos_assistance_enabled": false,
+      "eos_parser_version": "pinned-cbackend-inline-progress/v2"
+    },
+    {
+      "case": "talker",
+      "fixture": 0,
+      "seed": 5192,
+      "process_wall_seconds": 18.484555,
+      "native_returncode": 0,
+      "log_file": "talker-0.log",
+      "log_sha256": "4a89c43f103736dc7cbdb93af6444d0f49a8bf80c86bb3ccaadf48079907cd69",
+      "native_option_markers_verified": true,
+      "hf_sampler_enabled": true,
+      "cp_sampling_enabled": false,
+      "wav_file": "talker-0.wav",
+      "wav_sha256": "136e53812cc05ba99a5afa25d7c038fb8726d82e40693aa577fced1dc5622da9",
+      "audio_seconds": 6.08,
+      "signal": {
+        "sample_rate": 24000,
+        "samples": 145920,
+        "seconds": 6.08,
+        "peak": 0.348876953125,
+        "rms": 0.06541438947853723,
+        "clipped_samples": 0,
+        "reasons": [],
+        "blocked": false
+      },
+      "signal_valid": true,
+      "decoded_pcm_frame_coverage_verified": true,
+      "eos_frame": 76,
+      "generated_frames": 76,
+      "eos_strategy": "off",
+      "natural_eos_observed": true,
+      "eos_assistance_enabled": false,
+      "eos_parser_version": "pinned-cbackend-inline-progress/v2"
+    },
+    {
+      "case": "both",
+      "fixture": 0,
+      "seed": 5192,
+      "process_wall_seconds": 17.007566,
+      "native_returncode": 0,
+      "log_file": "both-0.log",
+      "log_sha256": "6b82a7d7b06518c4ea104bbc300c019f62a37a1f3c065f8ddbc231a9d018b8c3",
+      "native_option_markers_verified": true,
+      "hf_sampler_enabled": true,
+      "cp_sampling_enabled": true,
+      "wav_file": "both-0.wav",
+      "wav_sha256": "946e7770ac22cfc6f82939d01ec45fb8668888230e695fddc4f484ad29adb2d9",
+      "audio_seconds": 5.6,
+      "signal": {
+        "sample_rate": 24000,
+        "samples": 134400,
+        "seconds": 5.6,
+        "peak": 0.51483154296875,
+        "rms": 0.09901860069923675,
+        "clipped_samples": 0,
+        "reasons": [],
+        "blocked": false
+      },
+      "signal_valid": true,
+      "decoded_pcm_frame_coverage_verified": true,
+      "eos_frame": 70,
+      "generated_frames": 70,
+      "eos_strategy": "off",
+      "natural_eos_observed": true,
+      "eos_assistance_enabled": false,
+      "eos_parser_version": "pinned-cbackend-inline-progress/v2"
+    },
+    {
+      "case": "both",
+      "fixture": 1,
+      "seed": 5193,
+      "process_wall_seconds": 18.686292,
+      "native_returncode": 0,
+      "log_file": "both-1.log",
+      "log_sha256": "ef07b3dd79e4eb6e64d691116a71a03b285a8848cc29d63bdfdc743bdaec1084",
+      "native_option_markers_verified": true,
+      "hf_sampler_enabled": true,
+      "cp_sampling_enabled": true,
+      "wav_file": "both-1.wav",
+      "wav_sha256": "1a335aeda787846b8fea437470b9816e7eb9138621d77f9e9f98b8ab286e89cd",
+      "audio_seconds": 6.24,
+      "signal": {
+        "sample_rate": 24000,
+        "samples": 149760,
+        "seconds": 6.24,
+        "peak": 0.56689453125,
+        "rms": 0.08471637024166778,
+        "clipped_samples": 0,
+        "reasons": [],
+        "blocked": false
+      },
+      "signal_valid": true,
+      "decoded_pcm_frame_coverage_verified": true,
+      "eos_frame": 78,
+      "generated_frames": 78,
+      "eos_strategy": "off",
+      "natural_eos_observed": true,
+      "eos_assistance_enabled": false,
+      "eos_parser_version": "pinned-cbackend-inline-progress/v2"
+    },
+    {
+      "case": "talker",
+      "fixture": 1,
+      "seed": 5193,
+      "process_wall_seconds": 20.107649,
+      "native_returncode": 0,
+      "log_file": "talker-1.log",
+      "log_sha256": "c22fcb5eea75d814d72b2fae64dbc656ec3824246a06d8f4768de77acca064e0",
+      "native_option_markers_verified": true,
+      "hf_sampler_enabled": true,
+      "cp_sampling_enabled": false,
+      "wav_file": "talker-1.wav",
+      "wav_sha256": "b6147a0e60fd99f61d59ed45ea0cd4c7e943dae774de00d692bd51c90b0d0ab9",
+      "audio_seconds": 6.64,
+      "signal": {
+        "sample_rate": 24000,
+        "samples": 159360,
+        "seconds": 6.64,
+        "peak": 0.448883056640625,
+        "rms": 0.06875109818216589,
+        "clipped_samples": 0,
+        "reasons": [],
+        "blocked": false
+      },
+      "signal_valid": true,
+      "decoded_pcm_frame_coverage_verified": true,
+      "eos_frame": 83,
+      "generated_frames": 83,
+      "eos_strategy": "off",
+      "natural_eos_observed": true,
+      "eos_assistance_enabled": false,
+      "eos_parser_version": "pinned-cbackend-inline-progress/v2"
+    },
+    {
+      "case": "baseline",
+      "fixture": 1,
+      "seed": 5193,
+      "process_wall_seconds": 22.192336,
+      "native_returncode": 0,
+      "log_file": "baseline-1.log",
+      "log_sha256": "d50d228b4b8c36bff37345b235820e8a64ad11b2eaf41a927e2d767fbbe5f980",
+      "native_option_markers_verified": true,
+      "hf_sampler_enabled": false,
+      "cp_sampling_enabled": false,
+      "wav_file": "baseline-1.wav",
+      "wav_sha256": "948bfa24d3ba9854cd7523133454bcafd41bb5eeb4cbdfa8f4674965b9f8766f",
+      "audio_seconds": 7.52,
+      "signal": {
+        "sample_rate": 24000,
+        "samples": 180480,
+        "seconds": 7.52,
+        "peak": 0.495269775390625,
+        "rms": 0.06765767730505443,
+        "clipped_samples": 0,
+        "reasons": [],
+        "blocked": false
+      },
+      "signal_valid": true,
+      "decoded_pcm_frame_coverage_verified": true,
+      "eos_frame": 94,
+      "generated_frames": 94,
+      "eos_strategy": "off",
+      "natural_eos_observed": true,
+      "eos_assistance_enabled": false,
+      "eos_parser_version": "pinned-cbackend-inline-progress/v2"
+    }
+  ],
+  "totals": {
+    "baseline": {
+      "process_wall_seconds": 40.21204,
+      "audio_seconds": 13.28,
+      "complete_natural_eos_and_signal": true,
+      "process_seconds_per_audio_second": 3.02802
+    },
+    "talker": {
+      "process_wall_seconds": 38.592204,
+      "audio_seconds": 12.72,
+      "complete_natural_eos_and_signal": true,
+      "process_seconds_per_audio_second": 3.03398
+    },
+    "both": {
+      "process_wall_seconds": 35.693858,
+      "audio_seconds": 11.84,
+      "complete_natural_eos_and_signal": true,
+      "process_seconds_per_audio_second": 3.01468
+    }
+  },
+  "complete_natural_eos_and_signal": true,
+  "execution_budget_seconds": 900,
+  "call_timeout_seconds": 180,
+  "process_time_includes_each_model_load": true,
+  "quantization_enabled": false,
+  "dsp_performed": false,
+  "asr_performed": false,
+  "retries_performed": false,
+  "human_listening_verified": false,
+  "production_eligible": false,
+  "sampling_rule_changes": [
+    "Talker repetition penalty once per token ID instead of once per past occurrence",
+    "Talker top-p applied to probabilities renormalized after top-k",
+    "Single BF16 CPU code predictor full logits sampled with temperature 0.9, top-k 50, top-p 1.0 instead of argmax"
+  ],
+  "limitations": [
+    "Rule changes are experimental; no claim of matching PyTorch random draws, floating-point results or voice quality",
+    "The code predictor draws from the native Talker RNG stream; enabling it also changes subsequent RNG draws",
+    "No sampled code predictor support for server, batching, GPU or quantized paths",
+    "Native EOS policy and numerical kernels still differ from the official Python implementation",
+    "One paired trial on two short authored public fixtures; no full-course speed or content-quality conclusion"
+  ],
+  "call_order": "Fixture 0 baseline/talker/both; fixture 1 both/talker/baseline",
+  "patch_sha256": "0e596420ac2c29dd25755fe35c46181bb1eb7deb9c2f98ebf27a2435c2e71e50",
+  "source_files_sha256": {
+    "qwen_tts_sampling.c": "3326deb1e348cf9869cc94310c4e93ba844e4db303395950d07d14136723eba7",
+    "qwen_tts_code_predictor.c": "1017b7c412c572674ddaafe5657fae952cf3c24606638cad4ff621d406f2b76f"
+  },
+  "patched_source_files_sha256": {
+    "qwen_tts_sampling.c": "ed78c6cef894fc57f9f3bf01dfc44777ad5d71926f6a8dc02eff4935b34c68c0",
+    "qwen_tts_code_predictor.c": "3efbd5137f322823aca0fdb5505941bdc17745e559236f594ff4c377a1b0e4c9"
+  },
+  "binary_sha256": {
+    "baseline": "c6c5c8377eef0ed6823349ed447333fb29be95854712df425e9693c88825e0c6",
+    "experimental": "d74554272e3af3ac7d30580b7c9b1e0b0c15ae242ea0923354e9750fd863b013"
+  },
+  "script_sha256": "3ebf47877510c4960eb9218bf5d746779c3f59f33c413debfde47ccfbd8ba413",
+  "model_weights_sha256": "38b1d5971bdbd982b561cccec982669a53b0537c3cf5e9bd4778ed07bb2f5137",
+  "codec_weights_sha256": "836b7b357f5ea43e889936a3709af68dfe3751881acefe4ecf0dbd30ba571258",
+  "cpu_count": 4,
+  "platform": "Linux-7.0.0-1017-azure-x86_64-with-glibc2.39",
+  "cpu_model": "AMD EPYC 9V74 80-Core Processor",
+  "cpu_flags": "fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves user_shstk avx512_bf16 clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm"
+}

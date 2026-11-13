@@ -1,0 +1,192 @@
+{
+  "status": "forward_completed_content_and_voice_quality_unverified",
+  "source": {
+    "path": "/workspace/scratch/5937c5713c4f/voice-sample/sample-raw.wav",
+    "sha256": "39ebf019629a587c8a2127d58bfbcf9245f357fccf473f5ae6cc035baa3ae10f",
+    "original_sample_rate": 44100,
+    "original_samples": 2166633,
+    "original_channels": 1,
+    "crop_start_seconds": 0,
+    "crop_end_seconds": 8.76,
+    "crop_end_original_sample": 386316,
+    "resampled_samples": 193158,
+    "resampled_sample_rate": 22050,
+    "crop_sha256": "691e1a5e9b483732af90549989e4ad3d7f00d6247c972db94f9c5c654be01170"
+  },
+  "reference": {
+    "path": "/workspace/scratch/5937c5713c4f/voice-sample/bora-gpu-demo.wav",
+    "sha256": "ded64b998bcce4fb9fd97c26b0e6b4d732ee323cb8b49518a6f658b865347171",
+    "original_sample_rate": 24000,
+    "original_samples": 1273215,
+    "original_channels": 1,
+    "crop_start_seconds": 0,
+    "crop_end_seconds": 12.0,
+    "crop_end_original_sample": 288000,
+    "resampled_samples": 264600,
+    "resampled_sample_rate": 22050,
+    "crop_sha256": "544e00260717a4d317b081f012b50b89c817d171f3b35a0a4100257fbb273ce6"
+  },
+  "model": {
+    "repo": "TigreGotico/voiceclonnx-openvoice-v2",
+    "revision": "34d010c192c97f763207f488f6057fd07fee42ad",
+    "quantized": false,
+    "files": {
+      "tone_ref_encoder.onnx": {
+        "bytes": 3259275,
+        "sha256": "3dd4918cab90e1acf7fa5c6f7539c27710e7a3cdfba550468c5ea49399178bf7"
+      },
+      "tone_converter.onnx": {
+        "bytes": 128051288,
+        "sha256": "7d7ee834c230037ead5cd6b64d44fcd842fbab5cd4cf6fe3ab381fad763325e9"
+      }
+    }
+  },
+  "runtime": {
+    "onnxruntime": "1.31.1",
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "python": "3.12.14",
+    "intra_op_threads": 2,
+    "inter_op_threads": 1,
+    "execution_mode": "sequential",
+    "seed": 20261113
+  },
+  "graphs": {
+    "encoder": {
+      "inputs": [
+        {
+          "name": "spec",
+          "shape": [
+            "batch",
+            "time",
+            513
+          ],
+          "type": "tensor(float)"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "tone_embedding",
+          "shape": [
+            "batch",
+            256
+          ],
+          "type": "tensor(float)"
+        }
+      ],
+      "providers": [
+        "CPUExecutionProvider"
+      ]
+    },
+    "converter": {
+      "inputs": [
+        {
+          "name": "spec",
+          "shape": [
+            "batch",
+            513,
+            "time"
+          ],
+          "type": "tensor(float)"
+        },
+        {
+          "name": "spec_lengths",
+          "shape": [
+            "batch"
+          ],
+          "type": "tensor(int64)"
+        },
+        {
+          "name": "src_g",
+          "shape": [
+            "batch",
+            256,
+            1
+          ],
+          "type": "tensor(float)"
+        },
+        {
+          "name": "tgt_g",
+          "shape": [
+            "batch",
+            256,
+            1
+          ],
+          "type": "tensor(float)"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "audio",
+          "shape": [
+            "batch",
+            1,
+            "samples"
+          ],
+          "type": "tensor(float)"
+        }
+      ],
+      "providers": [
+        "CPUExecutionProvider"
+      ]
+    }
+  },
+  "preprocessing": {
+    "sampling_rate": 22050,
+    "n_fft": 1024,
+    "hop": 256,
+    "win": 1024,
+    "window": "periodic_hann",
+    "reflect_pad_each_side": 384,
+    "center": false,
+    "normalised_fft": false,
+    "epsilon": 1e-06,
+    "compression": "none",
+    "source_spec_shape": [
+      1,
+      513,
+      754
+    ],
+    "reference_spec_shape": [
+      1,
+      513,
+      1033
+    ],
+    "independent_scipy_stft_max_abs_delta": 3.814697265625e-06,
+    "resampling": "scipy.signal.resample_poly default Kaiser(5), constant pad",
+    "deviation_from_upstream": "Upstream librosa resampler unavailable; polyphase resampling used. No direct PyTorch numerical parity validation available.",
+    "reference_extraction": "Single full crop, matching upstream extract_se direct encoder; no VAD segmentation",
+    "output_postprocessing": "none; raw float WAV, no watermark"
+  },
+  "timings_seconds": {
+    "preprocess": 0.10125190499820746,
+    "session_load": 0.8523419060002198,
+    "source_embedding": 0.03140494400213356,
+    "target_embedding": 0.039686415999312885,
+    "conversion": 4.0265304499989725,
+    "embedding_plus_conversion": 4.097621810000419,
+    "total_wall": 5.527215695998166
+  },
+  "output": {
+    "file": "haeun-to-bora-openvoice-fp32.wav",
+    "sha256": "a77c4c484d936c3683f0fdc85e8f950ec9bad0e7a20e0b67bc8e543fd98425aa",
+    "shape": [
+      1,
+      1,
+      193024
+    ],
+    "sample_rate": 22050,
+    "samples": 193024,
+    "seconds": 8.753922902494331,
+    "duration_ratio": 0.9993062674080286,
+    "peak": 0.6765246987342834,
+    "rms": 0.12321247160434723,
+    "clipping_sample_count": 0,
+    "conversion_real_time_factor": 0.4596495947487412
+  },
+  "limitations": [
+    "No ASR or human listening performed here",
+    "Model parity reports are exporter claims; not independently reproduced",
+    "No GPU, no INT8, no external upload, no production change"
+  ]
+}

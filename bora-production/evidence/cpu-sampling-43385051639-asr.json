@@ -1,0 +1,63 @@
+{
+  "scope": "short-public-cpu-lab-fixtures-only-not-production-approval",
+  "model": "Systran/faster-whisper-small",
+  "revision": "536b0662742c02347bc0e980a01041f333bce120",
+  "rows": [
+    {
+      "variant": "baseline",
+      "fixture": 0,
+      "wav_sha256": "ca36c22da7880bf2eafffe5efcf2e3999f46037454ecd98860da3e965a9a0472",
+      "expected": "오늘 배운 내용을 잠깐 덮고, 자기 말로 한 번 설명해 보세요.",
+      "recognized": "오늘 배운 내용을 잠깐 덮고 자기말로 한번 설명해 보세요.",
+      "character_errors": 0,
+      "asr_seconds": 3.933622378997825
+    },
+    {
+      "variant": "talker",
+      "fixture": 0,
+      "wav_sha256": "136e53812cc05ba99a5afa25d7c038fb8726d82e40693aa577fced1dc5622da9",
+      "expected": "오늘 배운 내용을 잠깐 덮고, 자기 말로 한 번 설명해 보세요.",
+      "recognized": "오늘 배운 내용을 잠깐 덮고 자기 말로 한번 설명해 보세요.",
+      "character_errors": 0,
+      "asr_seconds": 3.652246040997852
+    },
+    {
+      "variant": "both",
+      "fixture": 0,
+      "wav_sha256": "946e7770ac22cfc6f82939d01ec45fb8668888230e695fddc4f484ad29adb2d9",
+      "expected": "오늘 배운 내용을 잠깐 덮고, 자기 말로 한 번 설명해 보세요.",
+      "recognized": "오늘 배운 내용을 잠깐 덮고 자기말로 한번 설명해 보세요.",
+      "character_errors": 0,
+      "asr_seconds": 3.5859560260032595
+    },
+    {
+      "variant": "both",
+      "fixture": 1,
+      "wav_sha256": "1a335aeda787846b8fea437470b9816e7eb9138621d77f9e9f98b8ab286e89cd",
+      "expected": "지금은 조금 느려도 괜찮습니다. 한 문장씩 차분하게 읽어 보세요.",
+      "recognized": "지금은 조금 느려도 괜찮습니다. 한 문장씩 차분하게 읽어보세요.",
+      "character_errors": 0,
+      "asr_seconds": 4.190772272002505
+    },
+    {
+      "variant": "talker",
+      "fixture": 1,
+      "wav_sha256": "b6147a0e60fd99f61d59ed45ea0cd4c7e943dae774de00d692bd51c90b0d0ab9",
+      "expected": "지금은 조금 느려도 괜찮습니다. 한 문장씩 차분하게 읽어 보세요.",
+      "recognized": "지금은 조금 느려도 괜찮습니다. 한 문장씩 차분하게 읽어보세요.",
+      "character_errors": 0,
+      "asr_seconds": 4.0300541409997095
+    },
+    {
+      "variant": "baseline",
+      "fixture": 1,
+      "wav_sha256": "948bfa24d3ba9854cd7523133454bcafd41bb5eeb4cbdfa8f4674965b9f8766f",
+      "expected": "지금은 조금 느려도 괜찮습니다. 한 문장씩 차분하게 읽어 보세요.",
+      "recognized": "지금은 조금 느려도 괜찮습니다. 한 문장씩 차분하게 읽어보세요.",
+      "character_errors": 0,
+      "asr_seconds": 3.954137353000988
+    }
+  ],
+  "production_eligible": false,
+  "human_listening_verified": false
+}

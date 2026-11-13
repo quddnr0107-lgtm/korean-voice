@@ -1,0 +1,284 @@
+{
+  "status": "single_forward_completed_content_and_voice_quality_unverified",
+  "pipeline": "Fresh Supertonic3 F2 first-two-sentence synthesis -> OpenVoiceV2 FP32 cached tone embeddings",
+  "timing_scope": "Same process after imports: model initialization + cached-vector load + fresh TTS + identical trim/fade/pauses + PCM16 write/read + resample/STFT + conversion + raw float WAV save. No ASR, download, hash calculation or import time.",
+  "hardware": {
+    "vendor_id": "AuthenticAMD",
+    "model name": "AMD EPYC 9V74 80-Core Processor",
+    "cpu MHz": "2596.136",
+    "flags": "fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology nonstop_tsc cpuid extd_apicid tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext cpuid_fault vmmcall fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves avx512_bf16 clzero xsaveerptr arat npt nrip_save tsc_scale vmcb_clean flushbyasid pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm arch_capabilities",
+    "logical_cpus_visible": 9,
+    "affinity": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "/sys/fs/cgroup/cpu.max": "unavailable",
+    "/sys/fs/cgroup/memory.max": "unavailable"
+  },
+  "runtime": {
+    "python": "3.12.14",
+    "onnxruntime": "1.31.1",
+    "numpy": "2.5.4",
+    "providers": [
+      "CPUExecutionProvider"
+    ],
+    "intra_op_threads": 2,
+    "inter_op_threads": 1,
+    "execution_mode": "sequential",
+    "OMP_NUM_THREADS": "2",
+    "OPENBLAS_NUM_THREADS": "2",
+    "quantized": false
+  },
+  "base_tts": {
+    "engine": "Supertonic3",
+    "voice": "F2",
+    "steps": 16,
+    "sample_rate": 44100,
+    "segments": [
+      {
+        "index": 0,
+        "text": "통합방위법을 공부할 때, 처음부터 모든 문장을 외우려고 하면 금방 지칩니다.",
+        "seed": 20261113,
+        "speed": 0.95,
+        "pause_seconds": 0.55,
+        "raw_predicted_seconds": 6.590595722198486,
+        "pretrim_samples": 290645,
+        "trim_start_sample": 16317,
+        "trim_end_sample": 264600,
+        "actual_samples": 248283,
+        "actual_seconds": 5.63,
+        "tts_inference_seconds": 3.2083234099991387,
+        "segment_including_trim_fade_seconds": 3.2117027999993297
+      },
+      {
+        "index": 1,
+        "text": "먼저, 큰 그림을 떠올려 보세요.",
+        "seed": 20261114,
+        "speed": 0.93,
+        "pause_seconds": 0.65,
+        "raw_predicted_seconds": 2.950319290161133,
+        "pretrim_samples": 130109,
+        "trim_start_sample": 17640,
+        "trim_end_sample": 102753,
+        "actual_samples": 85113,
+        "actual_seconds": 1.93,
+        "tts_inference_seconds": 1.8210610759997508,
+        "segment_including_trim_fade_seconds": 1.8232213590017636
+      }
+    ],
+    "trim": "10ms RMS > -48dB; retain 80ms leading/160ms trailing",
+    "fade_milliseconds": 8,
+    "normalization_peak": 0.86,
+    "normalization_gain": 2.576281814592026,
+    "normalization_scope": "These two newly generated sentences; original sample-raw.wav normalization covered all nine sentences",
+    "actual_voice_seconds_excluding_inserted_pauses": 7.56,
+    "inserted_pause_seconds": 1.2000000000000002,
+    "source_total_seconds": 8.76
+  },
+  "openvoice": {
+    "repo": "TigreGotico/voiceclonnx-openvoice-v2",
+    "revision": "34d010c192c97f763207f488f6057fd07fee42ad",
+    "graph": {
+      "inputs": [
+        {
+          "name": "spec",
+          "shape": [
+            "batch",
+            513,
+            "time"
+          ],
+          "type": "tensor(float)"
+        },
+        {
+          "name": "spec_lengths",
+          "shape": [
+            "batch"
+          ],
+          "type": "tensor(int64)"
+        },
+        {
+          "name": "src_g",
+          "shape": [
+            "batch",
+            256,
+            1
+          ],
+          "type": "tensor(float)"
+        },
+        {
+          "name": "tgt_g",
+          "shape": [
+            "batch",
+            256,
+            1
+          ],
+          "type": "tensor(float)"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "audio",
+          "shape": [
+            "batch",
+            1,
+            "samples"
+          ],
+          "type": "tensor(float)"
+        }
+      ],
+      "providers": [
+        "CPUExecutionProvider"
+      ]
+    },
+    "input_spec_shape": [
+      1,
+      513,
+      754
+    ],
+    "embedding_reuse": {
+      "encoder_load_seconds": 0.03534287799993763,
+      "cache_creation_total_seconds": 0.1428484269999899,
+      "records": {
+        "source": {
+          "wave": "source-haeun-8.76s.wav",
+          "wave_sha256": "691e1a5e9b483732af90549989e4ad3d7f00d6247c972db94f9c5c654be01170",
+          "embedding_sha256": "ac823087ed6dcd033b0343423b02bccd613aba2f5a56421ae375a22322c7521c",
+          "embedding_shape": [
+            1,
+            256,
+            1
+          ],
+          "preprocess_extract_save_seconds": 0.0509630640008254
+        },
+        "target": {
+          "wave": "reference-bora-12s.wav",
+          "wave_sha256": "544e00260717a4d317b081f012b50b89c817d171f3b35a0a4100257fbb273ce6",
+          "embedding_sha256": "7853f3880a583bcea27d853d2d3ce08c6faa86921f315af23daf1bae01b4d0f5",
+          "embedding_shape": [
+            1,
+            256,
+            1
+          ],
+          "preprocess_extract_save_seconds": 0.054185853001399664
+        }
+      },
+      "purpose": "Same prior pilot crops; reusable voice embeddings; cache construction excluded from subsequent cached-embedding pipeline timing"
+    },
+    "resampling": "scipy polyphase 44100->22050; differs from unavailable upstream librosa resampler",
+    "STFT": "Official-equivalent algorithm: 1024 FFT, hop256, periodic Hann, reflect384, centerFalse, sqrt(Re²+Im²+1e-6), no log",
+    "postprocessing": "none, raw float WAV; no watermark"
+  },
+  "timings_seconds": {
+    "base_model_load": 1.4025326939990919,
+    "converter_and_embedding_cache_load": 0.7621417549999023,
+    "models_and_cache_load_total": 2.164674448998994,
+    "base_tts_inference_total": 5.029384485998889,
+    "base_render_including_trim_fade_normalize_and_write": 5.044502543001727,
+    "conversion_preprocess": 0.016263754001556663,
+    "conversion_forward": 3.203669385999092,
+    "conversion_output_write": 0.013208111999119865,
+    "base_render_plus_conversion_forward": 8.248171929000819,
+    "cached_models_processing_total": 8.277643795001495,
+    "end_to_end_including_model_load": 10.445676012001059
+  },
+  "output": {
+    "file": "pipeline-haeun-to-bora.wav",
+    "sample_rate": 22050,
+    "shape": [
+      1,
+      1,
+      193024
+    ],
+    "seconds": 8.753922902494331,
+    "duration_ratio_to_source": 0.9993062674080286,
+    "peak": 0.7471836805343628,
+    "rms": 0.1437019258737564,
+    "clipping_samples": 0,
+    "end_to_end_real_time_factor": 1.1932565694660942,
+    "cached_models_processing_real_time_factor": 0.9455924946109446
+  },
+  "files": {
+    "render.py": {
+      "bytes": 3163,
+      "sha256": "b3927bd4671dcf9fe2b7dd260c72ca5660f48e6546ba405e0b172625f66e89d9"
+    },
+    "assets/py/helper.py": {
+      "bytes": 15027,
+      "sha256": "b14b1da8a018aa4db6ca8cbb927c32590bfc889b49116ea344c56e8351d94279"
+    },
+    "assets/voice_styles/F2.json": {
+      "bytes": 292423,
+      "sha256": "7c722c6a72707b1a77f035d67f0d1351ba187738e06f7683e8c72b1df3477fc6"
+    },
+    "openvoice-cpu-pilot/run_pipeline.py": {
+      "bytes": 11169,
+      "sha256": "ffde6ef5fb16d6acc7131dee3572a6c62912157a4b91be5d70b14a4d589c394f"
+    },
+    "openvoice-cpu-pilot/run_pilot.py": {
+      "bytes": 8631,
+      "sha256": "58f0f140503821316b42fc57b62644db3ed991fc7fa14b21cebf48343f389e40"
+    },
+    "openvoice-cpu-pilot/source-embedding.npy": {
+      "bytes": 1152,
+      "sha256": "ac823087ed6dcd033b0343423b02bccd613aba2f5a56421ae375a22322c7521c"
+    },
+    "openvoice-cpu-pilot/target-embedding.npy": {
+      "bytes": 1152,
+      "sha256": "7853f3880a583bcea27d853d2d3ce08c6faa86921f315af23daf1bae01b4d0f5"
+    },
+    "openvoice-cpu-pilot/tone_converter.onnx": {
+      "bytes": 128051288,
+      "sha256": "7d7ee834c230037ead5cd6b64d44fcd842fbab5cd4cf6fe3ab381fad763325e9"
+    },
+    "openvoice-cpu-pilot/tone_ref_encoder.onnx": {
+      "bytes": 3259275,
+      "sha256": "3dd4918cab90e1acf7fa5c6f7539c27710e7a3cdfba550468c5ea49399178bf7"
+    },
+    "openvoice-cpu-pilot/pipeline-haeun-source.wav": {
+      "bytes": 772676,
+      "sha256": "4e4dc1127d1bc168d73ebf8041082d2181101a6d647bd3f763e91500b3bcae55"
+    },
+    "openvoice-cpu-pilot/pipeline-haeun-to-bora.wav": {
+      "bytes": 772176,
+      "sha256": "307f8ae1511cc8cd0b28844968ceab2283ecc936bd0bb4e8bfd476aa2188394c"
+    },
+    "assets/onnx/duration_predictor.onnx": {
+      "bytes": 3700147,
+      "sha256": "c3eb91414d5ff8a7a239b7fe9e34e7e2bf8a8140d8375ffb14718b1c639325db"
+    },
+    "assets/onnx/text_encoder.onnx": {
+      "bytes": 36416150,
+      "sha256": "c7befd5ea8c3119769e8a6c1486c4edc6a3bc8365c67621c881bbb774b9902ff"
+    },
+    "assets/onnx/tts.json": {
+      "bytes": 8253,
+      "sha256": "42078d3aef1cd43ab43021f3c54f47d2d75ceb4e75f627f118890128b06a0d09"
+    },
+    "assets/onnx/unicode_indexer.json": {
+      "bytes": 277676,
+      "sha256": "9bf7346e43883a81f8645c81224f786d43c5b57f3641f6e7671a7d6c493cb24f"
+    },
+    "assets/onnx/vector_estimator.onnx": {
+      "bytes": 256534781,
+      "sha256": "883ac868ea0275ef0e991524dc64f16b3c0376efd7c320af6b53f5b780d7c61c"
+    },
+    "assets/onnx/vocoder.onnx": {
+      "bytes": 101424195,
+      "sha256": "085de76dd8e8d5836d6ca66826601f615939218f90e519f70ee8a36ed2a4c4ba"
+    }
+  },
+  "limitations": [
+    "One measurement, shared host, filesystem cache state uncontrolled",
+    "No ASR or listening assessment in this script",
+    "No production changes, installs or external voice upload",
+    "The two embedding vectors were prepared separately from previous pilot crops; first-use cache creation cost is explicitly recorded, excluded from cached-vector end-to-end timing",
+    "No direct PyTorch preprocessing parity test; exporter parity not independently reproduced"
+  ]
+}

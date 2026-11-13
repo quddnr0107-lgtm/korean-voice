@@ -1,0 +1,45 @@
+{
+  "scope": "two-public-source-sentences-only-not-production-approval",
+  "model": "Systran/faster-whisper-small",
+  "revision": "536b0662742c02347bc0e980a01041f333bce120",
+  "rows": [
+    {
+      "variant": "source-haeun",
+      "file": "source-haeun-8.76s.wav",
+      "wav_sha256": "691e1a5e9b483732af90549989e4ad3d7f00d6247c972db94f9c5c654be01170",
+      "expected": "통합방위법을 공부할 때, 처음부터 모든 문장을 외우려고 하면 금방 지칩니다. 먼저, 큰 그림을 떠올려 보세요.",
+      "recognized": "통합방입법을 공부할 때 처음부터 모든 문장을 외우려고 하면 금방 지칩니다. 먼저 큰 그림을 떠올려보세요.",
+      "character_errors": 1,
+      "asr_seconds": 5.327991576999921
+    },
+    {
+      "variant": "haeun-to-bora",
+      "file": "haeun-to-bora-openvoice-fp32.wav",
+      "wav_sha256": "a77c4c484d936c3683f0fdc85e8f950ec9bad0e7a20e0b67bc8e543fd98425aa",
+      "expected": "통합방위법을 공부할 때, 처음부터 모든 문장을 외우려고 하면 금방 지칩니다. 먼저, 큰 그림을 떠올려 보세요.",
+      "recognized": "통합 방위법을 공부할 때 처음부터 모든 문장을 외우려고 하면 금방 지칩니다. 먼저 큰 그림을 떠올려보세요.",
+      "character_errors": 0,
+      "asr_seconds": 4.874843711000722
+    },
+    {
+      "variant": "fresh-source-haeun",
+      "file": "pipeline-haeun-source.wav",
+      "wav_sha256": "4e4dc1127d1bc168d73ebf8041082d2181101a6d647bd3f763e91500b3bcae55",
+      "expected": "통합방위법을 공부할 때, 처음부터 모든 문장을 외우려고 하면 금방 지칩니다. 먼저, 큰 그림을 떠올려 보세요.",
+      "recognized": "통합방입법을 공부할 때 처음부터 모든 문장을 외우려고 하면 금방 지칩니다. 먼저 큰 그림을 떠올려보세요.",
+      "character_errors": 1,
+      "asr_seconds": 4.81446236299962
+    },
+    {
+      "variant": "complete-pipeline",
+      "file": "pipeline-haeun-to-bora.wav",
+      "wav_sha256": "307f8ae1511cc8cd0b28844968ceab2283ecc936bd0bb4e8bfd476aa2188394c",
+      "expected": "통합방위법을 공부할 때, 처음부터 모든 문장을 외우려고 하면 금방 지칩니다. 먼저, 큰 그림을 떠올려 보세요.",
+      "recognized": "통합방입법을 공부할 때 처음부터 모든 문장을 외우려고 하면 금방 지칩니다. 먼저 큰 그림을 떠올려보세요.",
+      "character_errors": 1,
+      "asr_seconds": 4.855270988999109
+    }
+  ],
+  "production_eligible": false,
+  "human_listening_verified": false
+}

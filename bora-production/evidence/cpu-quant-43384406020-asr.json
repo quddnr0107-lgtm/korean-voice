@@ -1,0 +1,45 @@
+{
+  "scope": "short-public-cpu-lab-fixtures-only-not-production-approval",
+  "model": "Systran/faster-whisper-small",
+  "revision": "536b0662742c02347bc0e980a01041f333bce120",
+  "rows": [
+    {
+      "variant": "fp32_baseline",
+      "fixture": 0,
+      "wav_sha256": "3adc7bad8c772def1a0f49437ecdc155b3e362e2c29d13f3e703209024f70b73",
+      "expected": "오늘 배운 내용을 잠깐 덮고, 자기 말로 한 번 설명해 보세요.",
+      "recognized": "오늘 배운 내용을 잠깐 덮고 자기말로 한번 설명해 보세요",
+      "character_errors": 0,
+      "asr_seconds": 3.9988737720013887
+    },
+    {
+      "variant": "fp32_baseline",
+      "fixture": 1,
+      "wav_sha256": "4188faa935f2027aed96213524b08dc39e5a867f021533f2856c7176e67aafe0",
+      "expected": "지금은 조금 느려도 괜찮습니다. 한 문장씩 차분하게 읽어 보세요.",
+      "recognized": "지금은 조금 느려도 괜찮습니다 한 문장씩 차분하게 읽어보세요",
+      "character_errors": 0,
+      "asr_seconds": 4.198634953001601
+    },
+    {
+      "variant": "fp32_mlp_dynamic_int8",
+      "fixture": 0,
+      "wav_sha256": "30c235f2bd6fcd3710b47909fc5724f139c12cce7f34f3ace78d9745d86169fe",
+      "expected": "오늘 배운 내용을 잠깐 덮고, 자기 말로 한 번 설명해 보세요.",
+      "recognized": "오늘 배운 내용을 정관됐고 자기말로 한번 선명해 보지요",
+      "character_errors": 5,
+      "asr_seconds": 3.875257869000052
+    },
+    {
+      "variant": "fp32_mlp_dynamic_int8",
+      "fixture": 1,
+      "wav_sha256": "ba17135a7ce7df12f72844b72ced9f74260f61df7d84f2ec67b1ad11d317c41e",
+      "expected": "지금은 조금 느려도 괜찮습니다. 한 문장씩 차분하게 읽어 보세요.",
+      "recognized": "지금은 조금 느려도 괜찮니다. 한 분정씩 차분하게 요거 보제요.",
+      "character_errors": 6,
+      "asr_seconds": 3.955101190997084
+    }
+  ],
+  "production_eligible": false,
+  "human_listening_verified": false
+}
