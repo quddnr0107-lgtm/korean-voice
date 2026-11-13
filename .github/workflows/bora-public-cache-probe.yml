@@ -1,0 +1,93 @@
+name: Public pinned model cache timing
+on:
+  push:
+    branches: [integrated-lectures-premium-20261028]
+    paths: ['bora-production/public-cache-probe-request.json']
+permissions:
+  contents: read
+concurrency:
+  group: bora-public-cache-probe-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  baseline:
+    if: github.repository == 'quddnr0107-lgtm/korean-voice'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    outputs:
+      summary: ${{ steps.baseline_summary.outputs.summary }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false, fetch-depth: 2}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with: {python-version: '3.12'}
+      - name: Confirm this launch does not change production or protected inputs
+        run: git diff --exit-code HEAD^ HEAD -- bora-production/request.json bora-production/campaign.json bora-production/recipe.json bora-production/runtime.py bora-production/fp32_renderer.py bora-production/pilot_render.py bora-production/quality.py bora-production/assemble.py .github/workflows/bora-fp32-production.yml
+      - name: Install only the same public asset downloader
+        run: python -m pip install --disable-pip-version-check huggingface-hub==0.36.2
+      - id: baseline_summary
+        name: Time original download, size checks and original renderer hash verification
+        run: python bora-production/public_cache_probe.py baseline --state "$RUNNER_TEMP/bora-public-cache-probe.json"
+  fill:
+    if: github.repository == 'quddnr0107-lgtm/korean-voice'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    outputs:
+      summary: ${{ steps.fill_summary.outputs.summary }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false, fetch-depth: 2}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with: {python-version: '3.12'}
+      - name: Confirm this launch does not change production or protected inputs
+        run: |
+          git diff --exit-code HEAD^ HEAD -- bora-production/request.json bora-production/campaign.json bora-production/recipe.json bora-production/runtime.py bora-production/fp32_renderer.py bora-production/pilot_render.py bora-production/quality.py bora-production/assemble.py .github/workflows/bora-fp32-production.yml
+          python -m unittest discover -s bora-production -p 'test_public_asset_cache.py' -v
+          python -m unittest discover -s bora-production -p 'test_public_cache_probe.py' -v
+      - name: Install only the public asset downloader
+        run: python -m pip install --disable-pip-version-check huggingface-hub==0.36.2
+      - name: Time fresh download and complete pinned verification without inference
+        run: python bora-production/public_cache_probe.py prepare --phase fill --state "$RUNNER_TEMP/bora-public-cache-probe.json"
+      - name: Start the cache save bracket
+        run: python bora-production/public_cache_probe.py mark --name save_start --state "$RUNNER_TEMP/bora-public-cache-probe.json"
+      - id: cache_save
+        name: Save only the fifteen public model files
+        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        continue-on-error: true
+        with:
+          path: ${{ runner.temp }}/bora-public-assets
+          key: bora-public-assets-probe-v1-${{ runner.os }}-${{ hashFiles('bora-production/pinned-public-assets.json') }}-${{ github.run_id }}-${{ github.run_attempt }}
+      - id: fill_summary
+        name: Report cold preparation and cache save bracket times
+        run: python bora-production/public_cache_probe.py finish --phase fill --cache-outcome '${{ steps.cache_save.outcome }}' --state "$RUNNER_TEMP/bora-public-cache-probe.json"
+  restore:
+    needs: [fill, baseline]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with: {python-version: '3.12'}
+      - name: Install only the public asset downloader
+        run: python -m pip install --disable-pip-version-check huggingface-hub==0.36.2
+      - name: Start the cache restore bracket on a separate runner
+        run: python bora-production/public_cache_probe.py mark --name restore_start --state "$RUNNER_TEMP/bora-public-cache-probe.json"
+      - id: cache_restore
+        name: Restore the exact public cache saved by this run
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        continue-on-error: true
+        with:
+          path: ${{ runner.temp }}/bora-public-assets
+          key: bora-public-assets-probe-v1-${{ runner.os }}-${{ hashFiles('bora-production/pinned-public-assets.json') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          lookup-only: false
+      - name: End the cache restore bracket
+        run: python bora-production/public_cache_probe.py mark --name restore_end --state "$RUNNER_TEMP/bora-public-cache-probe.json"
+      - name: Time cached preparation and independently verify every pinned file
+        run: python bora-production/public_cache_probe.py prepare --phase restore --cache-hit '${{ steps.cache_restore.outputs.cache-hit }}' --state "$RUNNER_TEMP/bora-public-cache-probe.json"
+      - name: Report verified preparation and cache restore bracket times
+        run: python bora-production/public_cache_probe.py finish --phase restore --cache-outcome '${{ steps.cache_restore.outcome }}' --state "$RUNNER_TEMP/bora-public-cache-probe.json"
+      - name: Print the public comparison and limits of this measurement
+        env:
+          FILL_SUMMARY_JSON: ${{ needs.fill.outputs.summary }}
+          BASELINE_SUMMARY_JSON: ${{ needs.baseline.outputs.summary }}
+        run: python bora-production/public_cache_probe.py aggregate --state "$RUNNER_TEMP/bora-public-cache-probe.json"

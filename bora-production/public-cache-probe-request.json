@@ -1,0 +1,9 @@
+{
+  "schema": "bora-public-cache-probe-request/v1",
+  "request_id": "public-cache-probe-20261113-01",
+  "purpose": "three-fresh-runners-original-vs-cached-public-model-timing",
+  "public_asset_count": 15,
+  "synthesis": false,
+  "private_inputs": false,
+  "production_changed": false
+}
