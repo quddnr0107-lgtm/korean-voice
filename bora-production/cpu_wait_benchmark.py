@@ -1,10 +1,12 @@
-"""Original FP32 Sohee: default waiting versus passive OpenMP hints.
+"""Original FP32 Sohee waiting confirmation: passive then default.
 
 Each variant gets a fresh sequential subprocess and one resident model. Waiting
 environment is fixed before Python starts, without changing forward, sampler,
 weights, arithmetic precision, text, instruction, or requested thread count.
 OpenMP hints may be ignored by a runtime; requested values are not proof that
-the native library applied them. Four public TTS calls; no production writes.
+the native library applied them. This second suite uses one explanation with
+legal names and one formal-reading test sentence, never substantive law text.
+Four public TTS calls; no production writes.
 """
 from __future__ import annotations
 
@@ -20,12 +22,19 @@ import subprocess
 import sys
 import time
 
-from basic_sohee_benchmark import FIXTURES, MODEL, REVISION, generation_args, observe_eos
+from basic_sohee_benchmark import MODEL, REVISION, observe_eos
 from cpu_precision_benchmark import hardware
 from cpu_thread_benchmark import rss_snapshot, validate_native_threads
+from fp32_renderer import SAMPLING, SEEDS, STYLES
 
-SCHEMA = 'sohee-public-cpu-wait/v1'
-VARIANTS = ('default', 'passive')
+SCHEMA = 'sohee-public-cpu-wait/v2'
+SUITE = 'legal-names-and-formal-reading-reversed-wait-order/v2'
+VARIANTS = ('passive', 'default')
+FIXTURE_MODES = ('explain', 'reading')
+FIXTURES = (
+    '다음 표현을 또박또박 읽겠습니다. 통합방위법, 예비군법, 병역법.',
+    '제삼조 제일항. 이 문장은 음성 합성 속도를 비교하기 위한 시험 문장입니다.',
+)
 WAIT_KEYS = ('OMP_WAIT_POLICY', 'GOMP_SPINCOUNT', 'KMP_BLOCKTIME')
 PASSIVE = dict(OMP_WAIT_POLICY='PASSIVE', GOMP_SPINCOUNT='0', KMP_BLOCKTIME='0')
 THREADS = 4
@@ -55,10 +64,18 @@ def file_hash(path):
 def validate_request():
     obj = json.loads(Path(__file__).with_name('cpu-wait-request.json').read_text())
     require(obj == dict(schema=SCHEMA,
-        request_id='public-sohee-fp32-wait-20261113-01', model_revision=REVISION,
-        fixture_count=len(FIXTURES), variants=list(VARIANTS), threads=4,
+        request_id='public-sohee-fp32-wait-20261113-02', suite=SUITE, model_revision=REVISION,
+        fixture_count=len(FIXTURES), fixture_modes=list(FIXTURE_MODES),
+        variants=list(VARIANTS), threads=4,
         interop_threads=1, worker_timeout_seconds=WORKER_SECONDS,
         production=False, secrets=False, gpu=False))
+    require(SEEDS[0] == 5192 and len(FIXTURES) == len(FIXTURE_MODES) == 2)
+
+
+def generation_args(fixture):
+    require(type(fixture) is int and 0 <= fixture < len(FIXTURES))
+    return dict(SAMPLING, max_new_tokens=1100, text=FIXTURES[fixture],
+        language='Korean', speaker='Sohee', instruct=STYLES[FIXTURE_MODES[fixture]])
 
 
 def policy_environment(variant, inherited):
@@ -91,7 +108,8 @@ def totals(rows, variant):
             and row.get('seed') == 5192 + i and row.get('device') == 'cpu'
             and row.get('dtype') == 'float32' and row.get('threads') == 4
             and row.get('interop_threads') == 1
-            and row.get('generation_args') == generation_args('production_style', FIXTURES[i])
+            and row.get('voice_mode') == FIXTURE_MODES[i]
+            and row.get('generation_args') == generation_args(i)
             and type(row.get('natural_eos')) is bool and type(row.get('signal_valid')) is bool)
         for field in ('tts_seconds', 'audio_seconds', 'process_cpu_seconds'):
             value = row.get(field)
@@ -116,6 +134,8 @@ def compare_results(variants, cpu):
             and result.get('device') == 'cpu' and result.get('parameter_dtypes') == ['float32']
             and result.get('threads') == 4 and result.get('interop_threads') == 1
             and result.get('fixtures') == list(FIXTURES)
+            and result.get('suite') == SUITE and result.get('fixture_modes') == list(FIXTURE_MODES)
+            and result.get('fixture_order') == [0, 1]
             and result.get('wait_environment') == (PASSIVE if variant == 'passive' else {}))
         validate_native_threads(4, result['native_threads']['intraop_threads'],
             result['native_threads']['interop_threads'], result['parallel_info'])
@@ -124,7 +144,8 @@ def compare_results(variants, cpu):
     baseline, passive = aggregate['default'], aggregate['passive']
     return dict(schema=SCHEMA,
         status='timing_trial_no_quality_approval' if valid else 'incomplete_output_no_speed_claim',
-        model=MODEL, model_revision=REVISION, device='cpu', dtype='float32', cpu=cpu,
+        suite=SUITE, variant_order=list(VARIANTS), fixture_modes=list(FIXTURE_MODES),
+        fixture_order=[0, 1], model=MODEL, model_revision=REVISION, device='cpu', dtype='float32', cpu=cpu,
         threads=4, interop_threads=1, speaker='Sohee', fixtures=list(FIXTURES),
         variants=variants, totals=aggregate, complete_natural_eos_and_signal=valid,
         observed_pair_wall_ratio_default_over_passive=round(baseline['tts_seconds']/passive['tts_seconds'], 6)
@@ -141,7 +162,7 @@ def compare_results(variants, cpu):
         retries_performed=False, production_eligible=False, human_listening_verified=False,
         quality_equivalence_verified=False, full_course_forecast_validated=False,
         documentation=DOCUMENTATION,
-        caveat='One default-then-passive trial on two short public texts in sequential fresh processes on one runner. Both models process fixtures 0 then 1. Order, shared file cache and host noise remain. The three passive hints change together; their individual effects are not isolated. Requested hints may be ignored by a particular runtime. Same seeds do not prove waveform or quality equivalence.')
+        caveat='One passive-then-default confirmation trial on two new short public texts, explanation then formal reading, in sequential fresh processes on one runner. Both models process fixtures 0 then 1. Legal names and a synthetic reading-test sentence are used, not substantive law text. Order, shared file cache and host noise remain. The three passive hints change together; their individual effects are not isolated. Requested hints may be ignored by a particular runtime. Same seeds do not prove waveform or quality equivalence.')
 
 
 def worker(model_path, output, variant):
@@ -195,7 +216,7 @@ def worker(model_path, output, variant):
         started, cpu_started = time.perf_counter(), time.process_time()
         try:
             with torch.inference_mode():
-                waves, sr = model.generate_custom_voice(**generation_args('production_style', text))
+                waves, sr = model.generate_custom_voice(**generation_args(i))
             elapsed, cpu_elapsed = time.perf_counter() - started, time.process_time() - cpu_started
         finally:
             signal.alarm(0)
@@ -206,17 +227,18 @@ def worker(model_path, output, variant):
             and np.max(np.abs(wave)) < 1.0 and np.sqrt(np.mean(wave.astype('float64')**2)) > 1e-5)
         target = output / f'{variant}-{i}.wav'
         sf.write(target, wave, sr, subtype='FLOAT')
-        row = dict(variant=variant, fixture=i, seed=5192+i, dtype='float32', device='cpu',
+        row = dict(variant=variant, fixture=i, voice_mode=FIXTURE_MODES[i], seed=5192+i, dtype='float32', device='cpu',
             threads=4, interop_threads=1, tts_seconds=round(elapsed, 6),
             process_cpu_seconds=round(cpu_elapsed, 6), audio_seconds=round(len(wave)/sr, 6),
             sample_rate=sr, pcm_samples=len(wave), signal_valid=valid, wav_file=target.name,
             wav_sha256=file_hash(target), raw_pcm_f32le_sha256=hashlib.sha256(np.asarray(wave, dtype='<f4').tobytes()).hexdigest(),
-            generation_args=generation_args('production_style', text), memory=rss_snapshot(), **observations[0])
+            generation_args=generation_args(i), memory=rss_snapshot(), **observations[0])
         rows.append(row)
         dump(output/'partial-rows.json', rows)
         print(json.dumps(row, sort_keys=True), flush=True)
     report = dict(variant=variant, model=MODEL, model_revision=REVISION, device='cpu', threads=4,
         interop_threads=1, parameter_dtypes=floating, wait_environment=wait_values(os.environ),
+        suite=SUITE, fixture_modes=list(FIXTURE_MODES), fixture_order=[0, 1],
         cpu=hardware(), fixtures=list(FIXTURES), native_threads=native, parallel_info=parallel,
         model_assets_sha256=actual_hashes, model_load_seconds=round(load_seconds, 6),
         memory_after_load=after_load, memory_after_synthesis=rss_snapshot(),

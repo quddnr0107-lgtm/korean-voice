@@ -1,6 +1,8 @@
 import copy
+import os
 import unittest
 from types import SimpleNamespace
+from unittest.mock import patch
 
 import cpu_compile_benchmark as b
 from fp32_renderer import SAMPLING, STYLES
@@ -73,7 +75,7 @@ class CompileTests(unittest.TestCase):
         rows = self.rows(); rows[0]['tts_seconds'] = float('nan')
         with self.assertRaises(ValueError): b.summarize(rows, self.counts())
 
-    def test_failed_worker_keeps_completed_baseline_and_suppresses_ratios(self):
+    def test_failed_worker_and_public_diagnostic_preserve_baseline_and_bound_chain(self):
         report = b.summarize(self.rows()[:2], self.counts())
         before = copy.deepcopy(report)
         failed = b.failed_worker_report(report, -9)
@@ -82,6 +84,26 @@ class CompileTests(unittest.TestCase):
         self.assertEqual(failed['status'], 'compile_worker_failed')
         self.assertIsNone(failed['observed_rtf_ratio_eager_over_compiled'])
         self.assertEqual(report, before)
+        inner = RuntimeError('C++ header failure: '+'X'*20000+' final stderr: missing include')
+        outer = ValueError('public compile wrapper'); outer.__cause__ = inner
+        diagnostic = b.public_error_report(outer)
+        self.assertEqual([row['type'] for row in diagnostic['exception_chain']], ['ValueError', 'RuntimeError'])
+        self.assertEqual(diagnostic['exception_chain'][1]['module'], 'builtins')
+        self.assertIn('C++ header failure:', diagnostic['exception_chain'][1]['message'])
+        self.assertIn('final stderr: missing include', diagnostic['exception_chain'][1]['message'])
+        self.assertTrue(diagnostic['exception_chain'][1]['message_truncated'])
+        self.assertTrue(all(len(row['message']) <= 2000 for row in diagnostic['exception_chain']))
+        self.assertLessEqual(len(diagnostic['traceback']), 12000)
+        current = outer
+        for _ in range(6):
+            child = RuntimeError('nested error'); current.__context__ = child; current = child
+        outer.__cause__ = None
+        self.assertEqual(len(b.public_error_report(outer)['exception_chain']), 4)
+        self.assertTrue(b.public_error_report(outer)['chain_limit_reached'])
+        inner.__cause__ = outer; outer.__cause__ = inner
+        self.assertTrue(b.public_error_report(outer)['chain_cycle_detected'])
+        with patch.dict(os.environ, ADMIN_LAW_PREMIUM_SOURCE_KEY_B64='synthetic'):
+            with self.assertRaises(RuntimeError): b.public_error_report(outer)
 
 
 if __name__ == '__main__':

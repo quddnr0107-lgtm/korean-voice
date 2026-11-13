@@ -19,6 +19,7 @@ import signal
 import subprocess
 import sys
 import time
+import traceback
 
 from basic_sohee_benchmark import FIXTURES, MODEL, REVISION, generation_args, observe_eos
 from cpu_precision_benchmark import hardware
@@ -53,11 +54,55 @@ def dump(path, value):
 def validate_request():
     request = json.loads(Path(__file__).with_name('cpu-compile-request.json').read_text())
     require(request == dict(schema=SCHEMA,
-        request_id='public-sohee-fp32-predictor-compile-20261113-01',
+        request_id='public-sohee-fp32-predictor-compile-20261113-02',
         model_revision=REVISION, fixture_count=2, threads=4, interop_threads=1,
         modes=list(MODES), call_timeout_seconds=CALL_SECONDS,
         compile_threads=1, maximum_compiled_graphs=MAX_GRAPHS,
         production=False, secrets=False, gpu=False))
+
+
+def bounded_text(value, limit):
+    text = str(value)
+    if len(text) <= limit:
+        return text
+    marker = '\n...[truncated]...\n'
+    remaining = limit-len(marker)
+    return text[:remaining//2] + marker + text[-(remaining-remaining//2):]
+
+
+def public_error_report(error):
+    """Only public-fixture trials may save bounded compiler error details."""
+    from download_models import require_keyless
+    require_keyless()
+    chain, trace, seen = [], [], set()
+    current, relation = error, 'raised'
+    while current is not None and len(chain) < 4 and id(current) not in seen:
+        seen.add(id(current))
+        try:
+            message = str(current)
+        except Exception:
+            message = '<exception message unavailable>'
+        row = dict(type=bounded_text(type(current).__name__, 200),
+            module=bounded_text(type(current).__module__, 200),
+            relation=relation, message=bounded_text(message, 2000),
+            message_truncated=len(message) > 2000)
+        chain.append(row)
+        trace.append(f"\n{relation}: {row['module']}.{row['type']}\nTraceback (most recent call last):\n")
+        trace.extend(bounded_text(frame, 1000)
+            for frame in traceback.format_list(traceback.extract_tb(current.__traceback__, limit=20)))
+        trace.append(row['message']+'\n')
+        relation = 'cause' if current.__cause__ is not None else 'context'
+        current = current.__cause__ if current.__cause__ is not None else current.__context__
+    trace_text = ''.join(trace)
+    return dict(schema='sohee-public-cpu-compile-error/v1',
+        scope='Public fixtures and pinned public model only; source/media keys forbidden.',
+        production_eligible=False, exception_chain=chain,
+        chain_limit_reached=current is not None and len(chain) == 4,
+        chain_cycle_detected=current is not None and id(current) in seen,
+        maximum_chain_depth=4, maximum_message_characters=2000,
+        traceback=bounded_text(trace_text, 12000), traceback_truncated=len(trace_text) > 12000,
+        maximum_traceback_characters=12000,
+        diagnosis='Recorded compiler failure; does not establish a hardware or support limitation.')
 
 
 def tracked_backend(inductor, counts):
@@ -251,8 +296,17 @@ def worker(model_path, output):
                     dump(out/'summary.json', dict(summarize(rows, counts), **metadata))
                     print(json.dumps(row, sort_keys=True), flush=True)
     except Exception as error:
+        diagnostic = public_error_report(error)
+        diagnostic_path = out/'compile-error.json'
+        dump(diagnostic_path, diagnostic)
+        print(json.dumps(dict(status='public_compile_error_diagnostic_saved',
+            file=diagnostic_path.name,
+            exception_chain=[dict(type=item['type'], module=item['module'],
+                message=bounded_text(item['message'], 400)) for item in diagnostic['exception_chain']]),
+            ensure_ascii=False, sort_keys=True), flush=True)
         report = dict(summarize(rows, counts), **metadata, status='compile_trial_failed',
             failed_mode=mode, failed_fixture=fixture, error_type=type(error).__name__,
+            compile_error_file=diagnostic_path.name, compile_error_sha256=digest(diagnostic_path),
             observed_pair_wall_ratio_eager_over_compiled=None, observed_rtf_ratio_eager_over_compiled=None,
             dynamo_counters=dynamo_counts(counters), memory_at_failure=rss_snapshot())
         dump(out/'summary.json', report)

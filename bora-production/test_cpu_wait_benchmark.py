@@ -17,12 +17,13 @@ class WaitTests(unittest.TestCase):
             result[variant] = dict(variant=variant, cpu=cpu, model=b.MODEL,
                 model_revision=b.REVISION, device='cpu', parameter_dtypes=['float32'],
                 threads=4, interop_threads=1, fixtures=list(b.FIXTURES),
+                suite=b.SUITE, fixture_modes=list(b.FIXTURE_MODES), fixture_order=[0, 1],
                 wait_environment=b.PASSIVE if variant == 'passive' else {},
                 native_threads=dict(intraop_threads=4, interop_threads=1),
                 parallel_info='omp_get_max_threads() : 4\nmkl_get_max_threads() : 4\n',
-                rows=[dict(variant=variant, fixture=i, seed=5192+i, device='cpu', dtype='float32',
+                rows=[dict(variant=variant, fixture=i, voice_mode=b.FIXTURE_MODES[i], seed=5192+i, device='cpu', dtype='float32',
                     threads=4, interop_threads=1, natural_eos=True, signal_valid=True,
-                    generation_args=b.generation_args('production_style', text),
+                    generation_args=b.generation_args(i),
                     tts_seconds=20.0 if variant == 'default' else 10.0,
                     audio_seconds=5.0, process_cpu_seconds=12.0,
                     wav_sha256='a'*64, raw_pcm_f32le_sha256='b'*64, talker_sequence_sha256='c'*64)
@@ -38,7 +39,17 @@ class WaitTests(unittest.TestCase):
         self.assertEqual(inherited, before)
         self.assertEqual(b.policy_environment('passive', inherited)['OMP_NUM_THREADS'], '4')
         b.validate_request()
-        self.assertEqual(b.generation_args('production_style', b.FIXTURES[0])['temperature'], 0.8)
+        self.assertEqual(b.VARIANTS, ('passive', 'default'))
+        self.assertEqual(b.FIXTURE_MODES, ('explain', 'reading'))
+        for i, mode in enumerate(b.FIXTURE_MODES):
+            kwargs = b.generation_args(i)
+            self.assertEqual({key: kwargs[key] for key in b.SAMPLING}, b.SAMPLING)
+            self.assertEqual(kwargs['instruct'], b.STYLES[mode])
+            self.assertEqual(kwargs['text'], b.FIXTURES[i])
+            self.assertEqual(kwargs['speaker'], 'Sohee')
+            self.assertEqual(kwargs['language'], 'Korean')
+            self.assertEqual(kwargs['max_new_tokens'], 1100)
+        with self.assertRaises(ValueError): b.generation_args(True)
 
     def test_measured_duration_and_pcm_hash_not_container_hash_control_comparison(self):
         variants, cpu = self.variants()
@@ -57,6 +68,7 @@ class WaitTests(unittest.TestCase):
                 lambda v: v['passive']['rows'].pop(),
                 lambda v: v['default']['rows'][0].update(tts_seconds=float('nan')),
                 lambda v: v['passive']['rows'][1].update(generation_args={}),
+                lambda v: v['default']['rows'][1].update(voice_mode='explain'),
                 lambda v: v['passive'].update(parallel_info='omp_get_max_threads() : 2\n')):
             variants, cpu = self.variants()
             change(variants)
@@ -85,7 +97,7 @@ class WaitTests(unittest.TestCase):
             self.assertEqual(report['status'], 'wait_worker_timeout')
             self.assertIsNone(report['observed_rtf_ratio_default_over_passive'])
             self.assertEqual(child.call_args.kwargs['timeout'], 600)
-            self.assertEqual(b.wait_values(child.call_args.kwargs['env']), {})
+            self.assertEqual(b.wait_values(child.call_args.kwargs['env']), b.PASSIVE)
 
 
 if __name__ == '__main__':
