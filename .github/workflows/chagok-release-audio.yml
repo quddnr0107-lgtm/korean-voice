@@ -1,0 +1,45 @@
+name: Publish Chagok 365 fixed master audio for private player
+on:
+  push:
+    branches: ['feature/chagok-english-bake-20261113']
+    paths:
+      - '.github/workflows/chagok-release-audio.yml'
+  workflow_dispatch:
+permissions:
+  actions: read
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download validated audio master
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 43381112592
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: chagok-365-fixed-master-audio
+          path: audio
+      - name: Verify checksums, expected files and durations
+        shell: bash
+        run: |
+          set -euo pipefail
+          (cd audio && sha256sum -c SHA256SUMS)
+          test -s audio/chagok-365-learn.mp3
+          test -s audio/chagok-365-listen.mp3
+          test "$(grep -cE '^[0-9]+\. ' audio/chagok-365-transcript.txt)" -eq 389
+      - name: Publish versioned release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG=chagok-365-fixed-v1
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" audio/chagok-365-learn.mp3 audio/chagok-365-listen.mp3 audio/chagok-365-transcript.txt --clobber
+          else
+            gh release create "$TAG" audio/chagok-365-learn.mp3 audio/chagok-365-listen.mp3 audio/chagok-365-transcript.txt \
+              --title "Chagok 365 fixed English/Korean Supertonic 3 audio v1" \
+              --notes "Private-study app audio assets. All 389 fixed utterances across 17 scenes; 54-minute study audio and 20-minute English-only audio. Supertonic 3 output: consult model license."
+          fi
+          gh release view "$TAG" --json url,assets --jq '{url,assets:[.assets[].name]}'
