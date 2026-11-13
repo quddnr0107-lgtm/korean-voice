@@ -187,7 +187,7 @@ def main(argv=None):
         OMP_NUM_THREADS='4', OPENBLAS_NUM_THREADS='4', MKL_NUM_THREADS='4')
     rows = []; proof = dict(actual_compilation_verified=False); compile_seconds = 0.0
     def save_failure(error, phase):
-        result = summarize(rows, args.repeats, proof, compile_seconds)
+        result = summarize(rows, args.repeats, proof, compile_seconds, parameter_equal=None)
         result.update(status=phase + '_failed', error_type=type(error).__name__, error=str(error),
             benchmark_wall_seconds=time.perf_counter() - started)
         b.atomic_json(output / 'rows.json', rows); b.atomic_json(output / 'summary.json', result)
@@ -326,7 +326,7 @@ def main(argv=None):
             row.update(error_type=type(error).__name__,error=str(error),**observed)
         finally:signal.alarm(0)
         rows.append(row);b.atomic_json(output/'rows.json',rows)
-        b.atomic_json(output/'summary.json',summarize(rows,args.repeats,proof,compile_seconds))
+        b.atomic_json(output/'summary.json',summarize(rows,args.repeats,proof,compile_seconds,parameter_equal=None))
         print(json.dumps({k:row.get(k) for k in ('profile','fixture','repeat','status',
             'generate_custom_voice_seconds','audio_seconds','natural_eos','error')},ensure_ascii=False),flush=True)
         if row['status']!='ok':return 1
