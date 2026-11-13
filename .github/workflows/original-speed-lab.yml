@@ -1,0 +1,112 @@
+name: Original Kim Bora CPU optimization screening
+on:
+  push:
+    branches: [bora-original-speed-lab-20261113]
+    paths: ['benchmarks/original_speed/request.json']
+permissions:
+  contents: read
+concurrency:
+  group: original-bora-speed-${{ github.ref }}
+  cancel-in-progress: false
+env:
+  HF_HUB_DISABLE_TELEMETRY: '1'
+  HF_HUB_DISABLE_IMPLICIT_TOKEN: '1'
+  HF_HUB_DISABLE_PROGRESS_BARS: '1'
+  DO_NOT_TRACK: '1'
+  ORT_DISABLE_TELEMETRY: '1'
+
+jobs:
+  python-history:
+    if: github.repository == 'quddnr0107-lgtm/korean-voice'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      OMP_NUM_THREADS: '4'
+      OPENBLAS_NUM_THREADS: '4'
+      MKL_NUM_THREADS: '4'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false, fetch-depth: 2}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with: {python-version: '3.12'}
+      - name: Validate independent public-only benchmark and production invariants
+        run: |
+          git diff --exit-code HEAD^ HEAD -- bora-production/request.json bora-production/campaign.json bora-production/recipe.json bora-production/runtime.py bora-production/fp32_renderer.py bora-production/pilot_render.py .github/workflows/bora-fp32-production.yml
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          assert json.loads(Path('benchmarks/original_speed/request.json').read_text()) == {'schema':'original-bora-cpu-screening/v1','production':False,'private_sources':False,'gpu':False,'model_revision':'0c0e3051f131929182e2c023b9537f8b1c68adfe'}
+          PY
+          python -m unittest discover -s benchmarks/original_speed -p 'test_*.py' -v
+      - name: Install existing pinned CPU runtime without protected credentials
+        run: bash bora-production/setup_runtime.sh
+      - name: Download the unchanged model and verify asset digests
+        run: |
+          python benchmarks/original_speed/download_same_model.py --output "$RUNNER_TEMP/original-bora-model"
+      - name: Compare original FP32 generation with unused inner history disabled
+        env: {HF_HUB_OFFLINE: '1', TRANSFORMERS_OFFLINE: '1'}
+        run: |
+          python benchmarks/original_speed/python_history_bench.py --model "$RUNNER_TEMP/original-bora-model" --output "$RUNNER_TEMP/original-bora-python" --repeats 2 --call-timeout 180 --total-timeout 1200
+      - name: Retain public WAVs, hashes, parity and timing evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: original-bora-python-${{ github.run_id }}
+          path: ${{ runner.temp }}/original-bora-python
+          retention-days: 7
+          if-no-files-found: warn
+
+  native-prefill:
+    if: github.repository == 'quddnr0107-lgtm/korean-voice'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      OMP_NUM_THREADS: '4'
+      OPENBLAS_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false, fetch-depth: 2}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with: {python-version: '3.12'}
+      - name: Verify production unchanged and harness contracts
+        run: |
+          git diff --exit-code HEAD^ HEAD -- bora-production/request.json bora-production/campaign.json bora-production/recipe.json bora-production/runtime.py bora-production/fp32_renderer.py bora-production/pilot_render.py .github/workflows/bora-fp32-production.yml
+          python -m unittest discover -s benchmarks/original_speed -p 'test_*.py' -v
+      - name: Install CPU-only native build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install --yes --no-install-recommends gcc make libopenblas-dev
+          python -m pip install --disable-pip-version-check huggingface-hub==0.36.2 numpy==2.5.4 soundfile==0.14.0
+      - name: Build the existing fixed native engine without source changes
+        run: |
+          source_dir="$RUNNER_TEMP/original-bora-native-source"
+          git init "$source_dir"
+          git -C "$source_dir" remote add origin https://github.com/gabriele-mastrapasqua/qwen3-tts.git
+          git -C "$source_dir" sparse-checkout init --cone
+          git -C "$source_dir" sparse-checkout set vendor third_party/ingot tools docs
+          git -C "$source_dir" fetch --filter=blob:none --depth=1 origin ef339be58a778b062e1c14382347964552eae007
+          git -C "$source_dir" checkout --detach FETCH_HEAD
+          test "$(git -C "$source_dir" rev-parse HEAD)" = ef339be58a778b062e1c14382347964552eae007
+          git -C "$source_dir" diff --exit-code
+          if grep -qw -e avx512_bf16 -e avx512bf16 /proc/cpuinfo; then
+            make -C "$source_dir" blas SIMD=avx512bf16 -j4
+          else
+            make -C "$source_dir" blas -j4
+          fi
+          "$source_dir/qwen_tts" --self-test
+      - name: Download the same official model revision and verify hashes
+        run: |
+          python benchmarks/original_speed/download_same_model.py --output "$RUNNER_TEMP/original-bora-model"
+      - name: Screen native prefill copies with hardware and dispatch gates
+        env: {HF_HUB_OFFLINE: '1', TRANSFORMERS_OFFLINE: '1'}
+        run: |
+          python benchmarks/original_speed/native_prefill_bench.py --source "$RUNNER_TEMP/original-bora-native-source" --model "$RUNNER_TEMP/original-bora-model" --output "$RUNNER_TEMP/original-bora-native"
+      - name: Retain all native proof, public WAVs and parity evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: original-bora-native-${{ github.run_id }}
+          path: ${{ runner.temp }}/original-bora-native
+          retention-days: 7
+          if-no-files-found: warn
