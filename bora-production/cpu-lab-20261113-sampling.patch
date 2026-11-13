@@ -1,0 +1,144 @@
+diff --git a/qwen_tts_sampling.c b/qwen_tts_sampling.c
+--- a/qwen_tts_sampling.c
++++ b/qwen_tts_sampling.c
+@@ -9,12 +9,14 @@
+ static __thread float *g_topk_tmp = NULL;
+ static __thread int   *g_topp_idx = NULL;
+ static __thread int    g_work_cap = 0;
++static __thread unsigned char *g_seen_tmp = NULL;
+ 
+ static void ensure_work_buffers(int n) {
+     if (n <= g_work_cap) return;
+-    free(g_topk_tmp); free(g_topp_idx);
++    free(g_topk_tmp); free(g_topp_idx); free(g_seen_tmp);
+     g_topk_tmp = (float *)malloc(n * sizeof(float));
+     g_topp_idx = (int *)malloc(n * sizeof(int));
++    g_seen_tmp = (unsigned char *)malloc((size_t)n);
+     g_work_cap = n;
+ }
+ 
+@@ -83,7 +85,7 @@
+     return count;
+ }
+ 
+-static int topp_filter(float *logits, int n, float p) {
++static int topp_filter(float *logits, int n, float p, int hf_sampler) {
+     if (p >= 1.0f) return n;
+ 
+     int *idx = g_topp_idx;
+@@ -97,7 +99,7 @@
+             if (logits[idx[j]] > logits[idx[max_idx]]) max_idx = j;
+         int t = idx[i]; idx[i] = idx[max_idx]; idx[max_idx] = t;
+         cumsum += logits[idx[i]];
+-        if (cumsum > p) { cutoff = i + 1; break; }
++        if (hf_sampler ? cumsum >= p : cumsum > p) { cutoff = i + 1; break; }
+     }
+ 
+     for (int i = cutoff; i < n; i++)
+@@ -118,11 +120,24 @@
+ int qwen_tts_sample(float *logits, int vocab_size, float temp, int top_k, float top_p,
+                     float rep_penalty, int *prev_tokens, int n_prev) {
+     ensure_work_buffers(vocab_size);
++    /* Experimental option; unset preserves the upstream sampling rules. */
++    const char *lab = getenv("QWEN_CPU_LAB_HF_SAMPLER");
++    const int hf_sampler = lab && !strcmp(lab, "1");
++    if (hf_sampler) {
++        static __thread int announced = 0;
++        if (!announced) {
++            announced = 1;
++            fprintf(stderr, "[cpu-lab] hf_sampler=1 repetition=once topk_before_topp_renormalized=1\n");
++        }
++        memset(g_seen_tmp, 0, (size_t)vocab_size);
++    }
+ 
+     if (rep_penalty != 1.0f && n_prev > 0) {
+         for (int i = 0; i < n_prev; i++) {
+             int tok = prev_tokens[i];
+             if (tok >= 0 && tok < vocab_size) {
++                if (hf_sampler && g_seen_tmp[tok]) continue;
++                if (hf_sampler) g_seen_tmp[tok] = 1;
+                 if (logits[tok] > 0) logits[tok] /= rep_penalty;
+                 else logits[tok] *= rep_penalty;
+             }
+@@ -141,8 +156,16 @@
+     if (top_k > 0 && top_k < vocab_size)
+         topk_filter(logits, vocab_size, top_k);
+ 
++    /* HF applies top-p to a fresh softmax of the top-k-masked logits.
++     * Renormalizing this probability vector gives the same filtering rule. */
++    if (hf_sampler && top_p < 1.0f && top_p > 0.0f) {
++        float retained = 0;
++        for (int i = 0; i < vocab_size; i++) retained += logits[i];
++        if (retained > 0)
++            for (int i = 0; i < vocab_size; i++) logits[i] /= retained;
++    }
+     if (top_p < 1.0f && top_p > 0.0f)
+-        topp_filter(logits, vocab_size, top_p);
++        topp_filter(logits, vocab_size, top_p, hf_sampler);
+ 
+     float sum = 0;
+     for (int i = 0; i < vocab_size; i++) sum += logits[i];
+diff --git a/qwen_tts_code_predictor.c b/qwen_tts_code_predictor.c
+--- a/qwen_tts_code_predictor.c
++++ b/qwen_tts_code_predictor.c
+@@ -835,7 +835,38 @@
+     return ts.tv_sec * 1e3 + ts.tv_nsec / 1e6;
+ }
+ 
++/* Isolated CPU single-request experiment; no server/batch/GPU support claim.
++ * Full logits are required: the fused argmax head discards the distribution.
++ * These are the official CustomVoice subtalker sampling parameters. Native RNG
++ * and numerical kernels remain different from PyTorch; no identity claim. */
++extern int qwen_tts_sample(float *, int, float, int, float, float, int *, int);
++static int cpu_lab_cp_enabled(void) {
++    const char *e = getenv("QWEN_CPU_LAB_CP_SAMPLE");
++    return e && !strcmp(e, "1");
++}
++static int cpu_lab_cp_sample(const float *normed, const uint16_t *head, int ch, int vocab) {
++    float logits[QWEN_TTS_CODEBOOK_SIZE];
++    if (!head || vocab != QWEN_TTS_CODEBOOK_SIZE) abort();
++    qwen_matvec_bf16(logits, head, normed, vocab, ch);
++    return qwen_tts_sample(logits, vocab, 0.9f, 50, 1.0f, 1.0f, NULL, 0);
++}
++
+ int qwen_cp_predict(qwen_tts_ctx_t *ctx, float *talker_hidden, int code0, int *out_codes) {
++    const int lab_cp = cpu_lab_cp_enabled();
++    if (lab_cp) {
++#if defined(QWEN_HAVE_CUDA) || defined(QWEN_HAVE_METAL)
++        fprintf(stderr, "[cpu-lab] sampled CP requires a CPU-only build\n");
++        abort();
++#endif
++        if (ctx->use_int8 || ctx->use_int4 || ctx->cp_roughness > 0.0f) abort();
++        for (int g = 0; g < 15; g++)
++            if (ctx->cp_lm_head_q4[g] || ctx->cp_lm_head_int8[g]) abort();
++        static __thread int announced = 0;
++        if (!announced) {
++            announced = 1;
++            fprintf(stderr, "[cpu-lab] cp_sampling=1 temperature=0.9 top_k=50 top_p=1 single_cpu_bf16=1\n");
++        }
++    }
+     qwen_mm_component(QWEN_COMP_CP);
+     qwen_tts_config_t *c = &ctx->config;
+     int cp_h = c->cp_hidden_size;
+@@ -896,7 +927,9 @@
+ 
+     qwen_rms_norm(cp_normed, cp_x, ctx->cp_norm, 1, cp_h, c->rms_norm_eps);
+     qwen_region_begin(QWEN_RGN_CP_D_LMHEAD);
+-    if (ctx->cp_lm_head_q4[0])
++    if (lab_cp)
++        out_codes[0] = cpu_lab_cp_sample(cp_normed, ctx->cp_lm_head_bf16[0], cp_h, c->codebook_size);
++    else if (ctx->cp_lm_head_q4[0])
+         out_codes[0] = qwen_argmax_matvec_q4_0(cp_normed, ctx->cp_lm_head_q4[0], cp_h, c->codebook_size);
+     else if (ctx->cp_lm_head_int8[0])
+         out_codes[0] = qwen_argmax_matvec_int8(cp_normed, ctx->cp_lm_head_int8[0],
+@@ -933,7 +966,9 @@
+         qwen_rms_norm(cp_normed, cp_x, ctx->cp_norm, 1, cp_h, c->rms_norm_eps);
+         if (_cx) { double _t = cpx_now(); cpx_norm += _t - _cm; _cm = _t; }
+         qwen_region_begin(QWEN_RGN_CP_D_LMHEAD);
+-        if (ctx->cp_lm_head_q4[g])
++        if (lab_cp)
++            out_codes[g] = cpu_lab_cp_sample(cp_normed, ctx->cp_lm_head_bf16[g], cp_h, c->codebook_size);
++        else if (ctx->cp_lm_head_q4[g])
+             out_codes[g] = qwen_argmax_matvec_q4_0(cp_normed, ctx->cp_lm_head_q4[g], cp_h, c->codebook_size);
+         else if (ctx->cp_lm_head_int8[g])
+             out_codes[g] = qwen_argmax_matvec_int8(cp_normed, ctx->cp_lm_head_int8[g],

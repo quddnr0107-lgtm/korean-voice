@@ -1,0 +1,90 @@
+name: CPU lab official sampling rules comparison
+on:
+  push:
+    branches: [integrated-lectures-premium-20261028]
+    paths: ['bora-production/cpu-lab-sampling-request.json']
+permissions:
+  contents: read
+concurrency:
+  group: cpu-lab-sampling-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  compare:
+    if: github.repository == 'quddnr0107-lgtm/korean-voice'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      HF_HUB_DISABLE_TELEMETRY: '1'
+      HF_HUB_DISABLE_IMPLICIT_TOKEN: '1'
+      HF_HUB_DISABLE_PROGRESS_BARS: '1'
+      DO_NOT_TRACK: '1'
+      OMP_NUM_THREADS: '4'
+      OPENBLAS_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false, fetch-depth: 2}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with: {python-version: '3.12'}
+      - name: Confirm isolated public request and protected production unchanged
+        run: |
+          git diff --exit-code HEAD^ HEAD -- bora-production/request.json bora-production/campaign.json bora-production/recipe.json bora-production/runtime.py bora-production/fp32_renderer.py bora-production/pilot_render.py bora-production/quality.py .github/workflows/bora-fp32-production.yml
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('bora-production/cpu-lab-sampling-request.json').read_text())
+          assert r==dict(schema='cpu-lab-sampling-request/v1',request_id='official-sampling-rules-public-20261113-01',production=False,gpu=False,private_sources=False)
+          PY
+      - name: Install CPU-only build and public audio dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install --yes --no-install-recommends gcc make libopenblas-dev
+          python -m pip install --disable-pip-version-check huggingface-hub==0.36.2 numpy==2.5.4 soundfile==0.14.0
+      - name: Fetch exact original source and verify experimental sampler with native tests
+        run: |
+          source_dir="$RUNNER_TEMP/cpu-lab-original"
+          git init "$source_dir"
+          git -C "$source_dir" remote add origin https://github.com/gabriele-mastrapasqua/qwen3-tts.git
+          git -C "$source_dir" sparse-checkout init --cone
+          git -C "$source_dir" sparse-checkout set vendor third_party/ingot tools
+          git -C "$source_dir" fetch --filter=blob:none --depth=1 origin ef339be58a778b062e1c14382347964552eae007
+          git -C "$source_dir" checkout --detach FETCH_HEAD
+          test "$(git -C "$source_dir" rev-parse HEAD)" = ef339be58a778b062e1c14382347964552eae007
+          CPU_LAB_SOURCE="$source_dir" python -m unittest discover -s bora-production -p 'test_cpu_lab_20261113_sampling.py' -v
+          python -m py_compile bora-production/cpu_lab_20261113_sampling.py
+      - name: Build original and separately patched CPU binaries
+        run: |
+          source_dir="$RUNNER_TEMP/cpu-lab-original"
+          patched_dir="$RUNNER_TEMP/cpu-lab-patched"
+          cp -a "$source_dir" "$patched_dir"
+          git -C "$patched_dir" apply --check "$GITHUB_WORKSPACE/bora-production/cpu-lab-20261113-sampling.patch"
+          git -C "$patched_dir" apply "$GITHUB_WORKSPACE/bora-production/cpu-lab-20261113-sampling.patch"
+          make -C "$source_dir" blas -j4
+          make -C "$patched_dir" blas -j4
+          "$source_dir/qwen_tts" --self-test
+          "$patched_dir/qwen_tts" --self-test
+      - name: Download only the same official model revision
+        run: |
+          python - <<'PY'
+          import sys,os
+          from pathlib import Path
+          sys.path.insert(0,'bora-production')
+          from download_models import require_keyless,QWEN_REQUIRED,MODEL_REPOSITORY,MODEL_REVISION,verify_assets
+          from huggingface_hub import snapshot_download
+          require_keyless()
+          root=Path(os.environ['RUNNER_TEMP'])/'cpu-lab-sampling-model'
+          snapshot_download(MODEL_REPOSITORY,revision=MODEL_REVISION,local_dir=root,allow_patterns=list(QWEN_REQUIRED),max_workers=4)
+          verify_assets(root,QWEN_REQUIRED)
+          PY
+      - name: Measure original, aligned talker and aligned talker plus code predictor
+        env:
+          HF_HUB_OFFLINE: '1'
+          TRANSFORMERS_OFFLINE: '1'
+        run: python bora-production/cpu_lab_20261113_sampling.py --source "$RUNNER_TEMP/cpu-lab-original" --patched-source "$RUNNER_TEMP/cpu-lab-patched" --model "$RUNNER_TEMP/cpu-lab-sampling-model" --output "$RUNNER_TEMP/cpu-lab-sampling-results"
+      - name: Preserve public WAVs and append-only experiment evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: cpu-lab-sampling-${{ github.run_id }}
+          path: ${{ runner.temp }}/cpu-lab-sampling-results
+          retention-days: 3
+          if-no-files-found: warn
