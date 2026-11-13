@@ -23,21 +23,23 @@ import cpu_compile_benchmark as base
 
 SCHEMA = 'sohee-public-cpu-compile-resident/v1'
 COMPILED = base.COMPILED_MODE
-SCHEDULE = (
-    ('baseline', 'eager', 0), ('baseline', 'eager', 1),
-    ('cold', COMPILED, 0), ('cold', COMPILED, 1),
+MEASURED_CROSSOVER = (
     ('measured', 'eager', 0), ('measured', COMPILED, 0),
     ('measured', COMPILED, 1), ('measured', 'eager', 1),
     ('measured', COMPILED, 0), ('measured', 'eager', 0),
     ('measured', 'eager', 1), ('measured', COMPILED, 1),
 )
+SCHEDULE = (
+    ('baseline', 'eager', 0), ('baseline', 'eager', 1),
+    ('cold', COMPILED, 0), ('cold', COMPILED, 1),
+) + MEASURED_CROSSOVER * 2
 CALL_SECONDS = 360
-WORKER_SECONDS = 1240
+WORKER_SECONDS = 1760
 
 
 def request_value():
     return dict(schema=SCHEMA,
-        request_id='public-sohee-fp32-predictor-resident-20261113-01',
+        request_id='public-sohee-fp32-predictor-resident-20261113-02',
         model_revision=base.REVISION, fixture_count=2, threads=4, interop_threads=1,
         call_timeout_seconds=CALL_SECONDS, worker_timeout_seconds=WORKER_SECONDS,
         compile_scope=base.COMPILE_SCOPE, compile_target_path=base.COMPILE_TARGET_PATH,
@@ -119,7 +121,7 @@ def summarize(rows, counts, setup_seconds=0.0):
     warm_eager = sum(r['tts_seconds'] for r in measured if r['mode'] == 'eager')
     warm_compiled = sum(r['tts_seconds'] for r in measured if r['mode'] == COMPILED)
     checkpoints = []
-    for end in (4, 8, 12):
+    for end in range(4, len(SCHEDULE)+1, 4):
         if len(rows) < end:
             continue
         prefix = rows[:end]

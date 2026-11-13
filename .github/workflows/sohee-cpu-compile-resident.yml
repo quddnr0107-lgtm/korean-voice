@@ -12,7 +12,7 @@ jobs:
   compare:
     if: github.repository == 'quddnr0107-lgtm/korean-voice'
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 35
     env:
       HF_HUB_DISABLE_TELEMETRY: '1'
       HF_HUB_DISABLE_IMPLICIT_TOKEN: '1'
@@ -58,7 +58,7 @@ jobs:
           HF_HUB_OFFLINE: '1'
           TRANSFORMERS_OFFLINE: '1'
           TORCHINDUCTOR_CACHE_DIR: ${{ runner.temp }}/sohee-public-inductor-cache
-        run: timeout --signal=TERM --kill-after=30s 1300s python bora-production/cpu_compile_resident_benchmark.py --model "$RUNNER_TEMP/sohee-compile-model" --output "$RUNNER_TEMP/sohee-compile-results"
+        run: timeout --signal=TERM --kill-after=30s 1820s python bora-production/cpu_compile_resident_benchmark.py --model "$RUNNER_TEMP/sohee-compile-model" --output "$RUNNER_TEMP/sohee-compile-results"
       - name: Retain only public audio and actual compile evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

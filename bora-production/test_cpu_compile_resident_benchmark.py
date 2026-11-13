@@ -49,15 +49,15 @@ class ResidentTests(unittest.TestCase):
     def test_costs_include_cold_compilation_and_setup_without_forecast(self):
         rows = self.rows(); report = b.summarize(rows, {'backend_graphs_compiled': 3}, 2.0)
         self.assertTrue(report['speed_claim_valid'])
-        self.assertEqual(report['measured_eager_seconds'], 40)
-        self.assertEqual(report['measured_compiled_seconds'], 32)
+        self.assertEqual(report['measured_eager_seconds'], 80)
+        self.assertEqual(report['measured_compiled_seconds'], 64)
         self.assertEqual(report['measured_wall_ratio_eager_over_compiled'], 1.25)
         self.assertEqual(report['measured_pair_median_saved_seconds'], 2)
-        self.assertEqual(report['total_eager_synthesis_seconds'], 60)
-        self.assertEqual(report['total_compiled_synthesis_and_setup_seconds'], 72)
-        self.assertEqual(report['observed_total_net_saved_seconds'], -12)
+        self.assertEqual(report['total_eager_synthesis_seconds'], 100)
+        self.assertEqual(report['total_compiled_synthesis_and_setup_seconds'], 104)
+        self.assertEqual(report['observed_total_net_saved_seconds'], -4)
         self.assertIsNone(report['observed_break_even_completed_calls'])
-        self.assertEqual([p['completed_calls'] for p in report['cumulative_cost_checkpoints']], [4, 8, 12])
+        self.assertEqual([p['completed_calls'] for p in report['cumulative_cost_checkpoints']], [4, 8, 12, 16, 20])
         self.assertFalse(report['break_even_forecast_performed'])
         self.assertFalse(report['production_eligible'])
         rows[2]['tts_seconds'] = 8
@@ -76,6 +76,7 @@ class ResidentTests(unittest.TestCase):
             lambda rows: rows[5].update(new_graphs_compiled_during_call=1),
             lambda rows: rows[5].update(compiled_graph_invocations_during_call=0),
             lambda rows: rows.pop(),
+            lambda rows: rows.__delitem__(slice(12, None)),
         ):
             rows = self.rows(); mutation(rows)
             self.assertFalse(b.summarize(rows, {})['speed_claim_valid'])
@@ -102,7 +103,10 @@ class ResidentTests(unittest.TestCase):
         self.assertEqual(request['model_revision'], b.base.REVISION)
         self.assertEqual(request['compile_target_path'], b.base.COMPILE_TARGET_PATH)
         self.assertEqual(request['call_timeout_seconds'], 360)
-        self.assertEqual(request['worker_timeout_seconds'], 1240)
+        self.assertEqual(request['worker_timeout_seconds'], 1760)
+        self.assertEqual(request['request_id'], 'public-sohee-fp32-predictor-resident-20261113-02')
+        self.assertEqual(len(b.SCHEDULE), 20)
+        self.assertEqual(b.SCHEDULE[4:12], b.SCHEDULE[12:20])
         self.assertEqual(request['schedule'], [list(row) for row in b.SCHEDULE])
         self.assertFalse(request['production']); self.assertFalse(request['secrets'])
         self.assertFalse(request['gpu'])
