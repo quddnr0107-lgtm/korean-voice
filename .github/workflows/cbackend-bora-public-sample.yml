@@ -1,0 +1,76 @@
+name: C backend Kim Bora public voice sample
+on:
+  push:
+    branches: [integrated-lectures-premium-20261028]
+    paths: ['bora-production/cbackend-bora-fixtures.json']
+permissions:
+  contents: read
+concurrency:
+  group: cbackend-bora-public-sample-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  render:
+    if: github.repository == 'quddnr0107-lgtm/korean-voice'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      HF_HUB_DISABLE_TELEMETRY: '1'
+      HF_HUB_DISABLE_IMPLICIT_TOKEN: '1'
+      HF_HUB_DISABLE_PROGRESS_BARS: '1'
+      DO_NOT_TRACK: '1'
+      OMP_NUM_THREADS: '4'
+      OPENBLAS_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false, fetch-depth: 2}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with: {python-version: '3.12'}
+      - name: Check protected production assets and public sample invariants
+        run: |
+          git diff --exit-code HEAD^ HEAD -- bora-production/request.json bora-production/campaign.json bora-production/recipe.json bora-production/runtime.py bora-production/fp32_renderer.py bora-production/pilot_render.py bora-production/quality.py .github/workflows/bora-fp32-production.yml
+          python -m unittest discover -s bora-production -p 'test_cbackend_bora_sample.py' -v
+          python -m py_compile bora-production/cbackend_bora_sample.py
+      - name: Install CPU compiler, OpenBLAS and unchanged audio processing tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install --yes --no-install-recommends gcc make libopenblas-dev ffmpeg
+          python -m pip install --disable-pip-version-check huggingface-hub==0.36.2 numpy==2.5.4 soundfile==0.14.0
+      - name: Build the previously tested pinned C CPU engine
+        run: |
+          source_dir="$RUNNER_TEMP/cbackend-source"
+          git init "$source_dir"
+          git -C "$source_dir" remote add origin https://github.com/gabriele-mastrapasqua/qwen3-tts.git
+          git -C "$source_dir" sparse-checkout init --cone
+          git -C "$source_dir" sparse-checkout set vendor third_party/ingot tools
+          git -C "$source_dir" fetch --filter=blob:none --depth=1 origin ef339be58a778b062e1c14382347964552eae007
+          git -C "$source_dir" checkout --detach FETCH_HEAD
+          test "$(git -C "$source_dir" rev-parse HEAD)" = ef339be58a778b062e1c14382347964552eae007
+          make -C "$source_dir" blas -j4
+          "$source_dir/qwen_tts" --caps
+          "$source_dir/qwen_tts" --self-test
+      - name: Download the same official revision-pinned Sohee model
+        run: |
+          python - <<'PY'
+          import sys,os
+          from pathlib import Path
+          sys.path.insert(0,'bora-production')
+          from download_models import require_keyless,QWEN_REQUIRED,MODEL_REPOSITORY,MODEL_REVISION,verify_assets
+          from huggingface_hub import snapshot_download
+          require_keyless()
+          root=Path(os.environ['RUNNER_TEMP'])/'cbackend-bora-model'
+          snapshot_download(MODEL_REPOSITORY,revision=MODEL_REVISION,local_dir=root,allow_patterns=list(QWEN_REQUIRED),max_workers=4)
+          verify_assets(root,QWEN_REQUIRED)
+          PY
+      - name: Render both Kim Bora styles and preserve raw audio before processing
+        env:
+          HF_HUB_OFFLINE: '1'
+          TRANSFORMERS_OFFLINE: '1'
+        run: python bora-production/cbackend_bora_sample.py --source "$RUNNER_TEMP/cbackend-source" --model "$RUNNER_TEMP/cbackend-bora-model" --fixtures bora-production/cbackend-bora-fixtures.json --output "$RUNNER_TEMP/cbackend-bora-results"
+      - name: Keep public sample WAVs, source log and timing evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: cbackend-bora-public-${{ github.run_id }}
+          path: ${{ runner.temp }}/cbackend-bora-results
+          retention-days: 3
+          if-no-files-found: warn
