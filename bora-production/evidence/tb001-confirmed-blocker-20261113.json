@@ -1,0 +1,206 @@
+{
+  "schema": "tb001-confirmed-blocker-evidence/v1",
+  "source_run_id": 43366115456,
+  "source_job_id": 131690925149,
+  "source_url": "https://github.com/quddnr0107-lgtm/korean-voice/actions/runs/43366115456",
+  "artifact_id": 14011261990,
+  "artifact_zip_sha256": "971d5e0da8a1352e0cc31d5ea76d799b24a1e9350c476029ed8afac1e4bbc924",
+  "source_json_sha256": "1f42c738524fd6792acf47b7deb9669d7a540fc043ab1a88861ba1dc2d320694",
+  "new_diagnostic_run_started": false,
+  "summary": {
+    "asr_rerun": false,
+    "audio_synthesized": false,
+    "authenticated_units": 58,
+    "blocked": 31,
+    "candidate_error_codes": {
+      "candidate_audio_size_invalid": 0,
+      "generated_audio_shape_or_rate_mismatch": 0,
+      "natural_eos_not_observed": 0,
+      "other_error": 0,
+      "unit_candidate_failed": 0,
+      "unit_tts_failed": 0
+    },
+    "causal_attribution_confirmed": false,
+    "character_error_bins": {
+      "not_measured": 0,
+      "one": 19,
+      "over_five": 14,
+      "two_to_five": 35,
+      "zero": 27
+    },
+    "checkpoint_written": false,
+    "counts": {
+      "blocked_receipts": 31,
+      "candidates": 95,
+      "candidates_at_token_cap": 0,
+      "candidates_missing_critical_terms": 17,
+      "candidates_with_asr_review": 68,
+      "candidates_with_signal_failure": 0,
+      "candidates_without_natural_eos": 0,
+      "passed_receipts": 27,
+      "receipts_with_input_flags": 0,
+      "receipts_with_review_audio": 31
+    },
+    "disagreement_patterns": {
+      "blocked_units_with_different_candidate_transcripts": 25,
+      "blocked_units_with_identical_candidate_transcripts": 6,
+      "causal_attribution_confirmed": false,
+      "compared_blocked_candidates": 62,
+      "disagreement_shape_counts": {
+        "empty_recognition": 0,
+        "exact": 0,
+        "insertion": 3,
+        "internal_omission": 1,
+        "leading_omission": 0,
+        "omission": 1,
+        "recognized_contains_digits": 12,
+        "recognized_contains_latin": 0,
+        "substitution": 154,
+        "trailing_omission": 0
+      },
+      "production_eligible": false,
+      "unmeasured_blocked_candidates": 0
+    },
+    "human_listening_verified": false,
+    "input_review_units": 0,
+    "lesson_id": "TB-001",
+    "passed": 27,
+    "per_shard": [
+      {
+        "character_error_bins": {
+          "not_measured": 0,
+          "one": 12,
+          "over_five": 12,
+          "two_to_five": 29,
+          "zero": 16
+        },
+        "counts": {
+          "blocked_receipts": 26,
+          "candidates": 69,
+          "candidates_at_token_cap": 0,
+          "candidates_missing_critical_terms": 14,
+          "candidates_with_asr_review": 53,
+          "candidates_with_signal_failure": 0,
+          "candidates_without_natural_eos": 0,
+          "passed_receipts": 16,
+          "receipts_with_input_flags": 0,
+          "receipts_with_review_audio": 26
+        },
+        "error_codes": {
+          "candidate_audio_size_invalid": 0,
+          "generated_audio_shape_or_rate_mismatch": 0,
+          "natural_eos_not_observed": 0,
+          "other_error": 0,
+          "unit_candidate_failed": 0,
+          "unit_tts_failed": 0
+        },
+        "shard": 0
+      },
+      {
+        "character_error_bins": {
+          "not_measured": 0,
+          "one": 7,
+          "over_five": 2,
+          "two_to_five": 6,
+          "zero": 11
+        },
+        "counts": {
+          "blocked_receipts": 5,
+          "candidates": 26,
+          "candidates_at_token_cap": 0,
+          "candidates_missing_critical_terms": 3,
+          "candidates_with_asr_review": 15,
+          "candidates_with_signal_failure": 0,
+          "candidates_without_natural_eos": 0,
+          "passed_receipts": 11,
+          "receipts_with_input_flags": 0,
+          "receipts_with_review_audio": 5
+        },
+        "error_codes": {
+          "candidate_audio_size_invalid": 0,
+          "generated_audio_shape_or_rate_mismatch": 0,
+          "natural_eos_not_observed": 0,
+          "other_error": 0,
+          "unit_candidate_failed": 0,
+          "unit_tts_failed": 0
+        },
+        "shard": 1
+      }
+    ],
+    "production_eligible": false,
+    "saved_receipt_comparison": {
+      "checkpoint_written": false,
+      "human_listening_verified": false,
+      "modes": {
+        "explain": {
+          "audio_seconds": 1461.12,
+          "blocked_candidates": 56,
+          "blocked_newly_exact_candidates": 2,
+          "blocked_units": 28,
+          "blocked_units_with_all_normalized_exact": 1,
+          "blocked_units_with_any_normalized_exact": 1,
+          "blocked_units_with_no_normalized_exact": 27,
+          "candidates": 87,
+          "measured_audio_candidates": 87,
+          "measured_tts_candidates": 87,
+          "newly_exact_candidates": 2,
+          "normalization_flagged_candidates": 0,
+          "normalization_unavailable_candidates": 0,
+          "normalized_exact_candidates": 27,
+          "passed_units": 25,
+          "raw_exact_candidates": 25,
+          "tts_seconds": 14635.777,
+          "units": 53
+        },
+        "reading": {
+          "audio_seconds": 73.12,
+          "blocked_candidates": 6,
+          "blocked_newly_exact_candidates": 0,
+          "blocked_units": 3,
+          "blocked_units_with_all_normalized_exact": 0,
+          "blocked_units_with_any_normalized_exact": 0,
+          "blocked_units_with_no_normalized_exact": 3,
+          "candidates": 8,
+          "measured_audio_candidates": 8,
+          "measured_tts_candidates": 8,
+          "newly_exact_candidates": 0,
+          "normalization_flagged_candidates": 0,
+          "normalization_unavailable_candidates": 0,
+          "normalized_exact_candidates": 2,
+          "passed_units": 2,
+          "raw_exact_candidates": 2,
+          "tts_seconds": 714.768,
+          "units": 5
+        }
+      },
+      "production_eligible": false,
+      "production_status_changed": false,
+      "schema": "bora-saved-receipt-comparison/v1",
+      "scope": "Exact comparison after existing pronunciation normalization; not proof of speech correctness.",
+      "status": "diagnostic_only_no_promotion",
+      "synthesis_started": false,
+      "totals": {
+        "audio_seconds": 1534.24,
+        "blocked_candidates": 62,
+        "blocked_newly_exact_candidates": 2,
+        "blocked_units": 31,
+        "blocked_units_with_all_normalized_exact": 1,
+        "blocked_units_with_any_normalized_exact": 1,
+        "blocked_units_with_no_normalized_exact": 30,
+        "candidates": 95,
+        "measured_audio_candidates": 95,
+        "measured_tts_candidates": 95,
+        "newly_exact_candidates": 2,
+        "normalization_flagged_candidates": 0,
+        "normalization_unavailable_candidates": 0,
+        "normalized_exact_candidates": 29,
+        "passed_units": 27,
+        "raw_exact_candidates": 27,
+        "tts_seconds": 15350.545,
+        "units": 58
+      }
+    },
+    "schema": "bora-tb001-full-sealed-diagnostics/v1",
+    "status": "read_only_quality_diagnostics_not_a_release"
+  }
+}
