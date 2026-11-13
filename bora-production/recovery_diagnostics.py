@@ -18,13 +18,15 @@ HERE = Path(__file__).resolve().parent
 REPO = 'quddnr0107-lgtm/korean-voice'
 BRANCH = 'integrated-lectures-premium-20261028'
 WORKFLOW = REPO + '/.github/workflows/bora-recovery-check.yml@refs/heads/' + BRANCH
+# Latest persisted TB-001 recovery bundle, verified against release inventory.
+# Updating this pin does not change the active production request or its recipe.
 INCIDENT = {
-    'run_id': '43213606878',
-    'lesson_id': 'TB-018',
-    'asset_id': 739850091,
-    'asset_name': 'TB-018-s002-r43213606878-a1.zip',
-    'asset_bytes': 84917112,
-    'asset_sha256': 'acc96ece684673dfc29cc18d9ba81cd9d3a981430eac3801ace46b19795b0b24',
+    'run_id': '43275117254',
+    'lesson_id': 'TB-001',
+    'asset_id': 741720764,
+    'asset_name': 'TB-001-s001-r43275117254-a1.zip',
+    'asset_bytes': 23244525,
+    'asset_sha256': '6fb9ed5546420a7b273636061cc9d56326da9d1d1e5dc4bfe1284991281ca657',
     'recipe_sha256': 'd3d35666712d276c0fa60bb5c5b1f7ab7d11c7042d490c95bb6fb8846682502d',
     'render_settings_sha256': '930c8341302f36e0058eeb0deb3a0821cc6177dc6edc162d41547f93299a0822',
 }
@@ -150,6 +152,59 @@ def summarize(restored, expected_units, review_units):
                 synthesis_started=False, production_eligible=False, human_listening_verified=False)
 
 
+def disagreement_shape(expected, recognized, canonical):
+    """Describe a disagreement, never return its text or treat it as approval."""
+    import difflib
+    require(isinstance(expected, str) and isinstance(recognized, str)
+            and 0 < len(expected) <= 10000 and len(recognized) <= 10000)
+    a, b = canonical(expected), canonical(recognized)
+    require(bool(a))
+    counts = {key: 0 for key in ('exact', 'substitution', 'omission', 'insertion',
+        'leading_omission', 'trailing_omission', 'internal_omission',
+        'recognized_contains_digits', 'recognized_contains_latin', 'empty_recognition')}
+    counts['exact'] = int(a == b)
+    counts['recognized_contains_digits'] = int(any(c.isdecimal() for c in recognized))
+    counts['recognized_contains_latin'] = int(any(('a' <= c.lower() <= 'z') for c in recognized))
+    counts['empty_recognition'] = int(not b)
+    for kind, start, end, other_start, other_end in difflib.SequenceMatcher(None, a, b, autojunk=False).get_opcodes():
+        if kind == 'replace': counts['substitution'] += 1
+        elif kind == 'insert': counts['insertion'] += 1
+        elif kind == 'delete':
+            counts['omission'] += 1
+            if start == 0: counts['leading_omission'] += 1
+            if end == len(a): counts['trailing_omission'] += 1
+            if start > 0 and end < len(a): counts['internal_omission'] += 1
+    return counts
+
+
+def inspect_disagreements(restored, plan):
+    from pilot_render import canonical
+    names = ('exact', 'substitution', 'omission', 'insertion', 'leading_omission',
+        'trailing_omission', 'internal_omission', 'recognized_contains_digits',
+        'recognized_contains_latin', 'empty_recognition')
+    totals = {name: 0 for name in names}
+    same_transcript = different_transcript = compared = unmeasured = 0
+    for index, row in restored.items():
+        receipt = row['receipt']
+        if receipt['status'] != 'blocked_requires_review': continue
+        recognized = []
+        for candidate in receipt['candidates']:
+            value = candidate.get('asr', {}).get('recognized')
+            if not isinstance(value, str):
+                unmeasured += 1
+                continue
+            counts = disagreement_shape(plan['units'][index]['spoken'], value, canonical)
+            for name in names: totals[name] += counts[name]
+            recognized.append(canonical(value)); compared += 1
+        if len(recognized) == 2:
+            if recognized[0] == recognized[1]: same_transcript += 1
+            else: different_transcript += 1
+    return dict(compared_blocked_candidates=compared, unmeasured_blocked_candidates=unmeasured,
+        disagreement_shape_counts=totals, blocked_units_with_identical_candidate_transcripts=same_transcript,
+        blocked_units_with_different_candidate_transcripts=different_transcript,
+        causal_attribution_confirmed=False, production_eligible=False)
+
+
 def inspect(directory, output):
     validate_context(os.environ, os.getuid(), os.geteuid())
     from namespace_guard import validate_snapshot
@@ -183,6 +238,8 @@ def inspect(directory, output):
         summary = summarize(restored, len(plan['units']), review_units)
         require(summary['counts']['passed_receipts'] == report['passed']
                 and summary['counts']['blocked_receipts'] == report['blocked'])
+        with r.quiet():
+            summary['blocked_candidate_analysis'] = inspect_disagreements(restored, plan)
     del media_key
     dump(output, summary)
     print(json.dumps(summary, sort_keys=True))

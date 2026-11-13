@@ -62,7 +62,7 @@ class RecoveryTests(unittest.TestCase):
             purpose='read-only-authenticated-diagnostics', incident=copy.deepcopy(r.INCIDENT))
         r.validate_request(original)
         for mutate in (lambda x:x.update(purpose='render'), lambda x:x.update(upload=True),
-                       lambda x:x['incident'].update(lesson_id='TB-001'),
+                       lambda x:x['incident'].update(lesson_id='TB-999'),
                        lambda x:x['incident'].update(asset_sha256='0'*64)):
             bad=copy.deepcopy(original);mutate(bad)
             with self.assertRaises(ValueError):r.validate_request(bad)
@@ -76,6 +76,46 @@ class RecoveryTests(unittest.TestCase):
             with self.assertRaises(ValueError):r.validate_context(bad,1001,1001)
         for uid,euid in [(0,0),(1001,0),(1001,1002)]:
             with self.assertRaises(ValueError):r.validate_context(env,uid,euid)
+
+    def test_disagreement_shape_never_exports_text(self):
+        private='SYNTHETIC_PRIVATE_MARKER'
+        out=r.disagreement_shape(private, private+'extra', lambda s:s)
+        self.assertNotIn(private,json.dumps(out))
+        self.assertTrue(all(type(v) is int for v in out.values()))
+        self.assertEqual(out['insertion'],1)
+
+    def test_disagreement_shapes_distinguish_omission_positions(self):
+        for recognized,label in [('나 다','leading_omission'),('가 나','trailing_omission'),('가 다','internal_omission')]:
+            out=r.disagreement_shape('가 나 다',recognized,lambda s:s.replace(' ',''))
+            self.assertEqual(out[label],1)
+            self.assertEqual(out['exact'],0)
+        self.assertEqual(r.disagreement_shape('가 나 다','가 라 다',lambda s:s)['substitution'],1)
+
+    def test_shape_bounds_and_empty_recognition(self):
+        for expected,recognized in [('', 'x'),('x',None),('x','y'*10001),(None,'x')]:
+            with self.assertRaises(ValueError):r.disagreement_shape(expected,recognized,lambda s:s)
+        out=r.disagreement_shape('가나','',lambda s:s)
+        self.assertEqual(out['empty_recognition'],1)
+        self.assertEqual(out['exact'],0)
+
+    def test_exact_shape_is_diagnostic_not_an_approval(self):
+        out=r.disagreement_shape('같은 글','같은 글',lambda s:s.replace(' ',''))
+        self.assertEqual(out['exact'],1)
+        self.assertNotIn('passed',out)
+        self.assertNotIn('production_eligible',out)
+
+    def test_blocked_analysis_does_not_modify_authenticated_receipts(self):
+        private='SYNTHETIC_CANARY_DO_NOT_PRINT'
+        row=self.receipt(asr={'recognized':private,'character_errors':1,'review_required':True})
+        row['receipt']['candidates'].append(copy.deepcopy(row['receipt']['candidates'][0]))
+        before=copy.deepcopy(row)
+        result=r.inspect_disagreements({0:row},{'units':[{'spoken':private+'X'}]})
+        self.assertEqual(row,before)
+        self.assertNotIn(private,json.dumps(result))
+        self.assertEqual(result['blocked_units_with_identical_candidate_transcripts'],1)
+        self.assertEqual(result['compared_blocked_candidates'],2)
+        self.assertFalse(result['causal_attribution_confirmed'])
+        self.assertFalse(result['production_eligible'])
 
 
 if __name__ == '__main__':unittest.main()

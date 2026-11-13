@@ -21,16 +21,19 @@ jobs:
       checkpoint_artifact_id: ${{ steps.saved.outputs.artifact-id }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-        with: {persist-credentials: false}
+        with: {persist-credentials: false, fetch-depth: 2}
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with: {python-version: '3.12'}
+      - name: Verify active production request and quality gates are unchanged
+        run: |
+          git diff --exit-code HEAD^ HEAD -- bora-production/request.json bora-production/campaign.json bora-production/recipe.json bora-production/runtime.py bora-production/fp32_renderer.py bora-production/planning.py bora-production/quality.py bora-production/pilot_render.py bora-production/assemble.py .github/workflows/bora-fp32-production.yml
       - name: Install envelope validation only, no TTS models or source keys
         run: python -m pip install --disable-pip-version-check cryptography==50.0.0
       - name: Transport regression and no-plaintext diagnostics tests
         run: |
           python -m unittest discover -s bora-production -p 'test_transport.py'
           python -m unittest discover -s bora-production -p 'test_recovery_diagnostics.py'
-      - name: Verify the repaired draft URL path and download one pinned ciphertext checkpoint
+      - name: Verify pinned completed TB-001 checkpoint without resynthesizing it
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: python bora-production/recovery_diagnostics.py download --directory "$RUNNER_TEMP/bora-recovery-cipher"
@@ -39,7 +42,7 @@ jobs:
         with:
           name: bora-recovery-cipher-${{ github.run_id }}
           path: |
-            ${{ runner.temp }}/bora-recovery-cipher/TB-018-s002-r43213606878-a1.zip
+            ${{ runner.temp }}/bora-recovery-cipher/TB-001-s001-r43275117254-a1.zip
             ${{ runner.temp }}/bora-recovery-cipher/transport-report.json
           retention-days: 3
           if-no-files-found: error
