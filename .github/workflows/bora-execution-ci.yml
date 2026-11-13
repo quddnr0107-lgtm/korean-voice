@@ -1,0 +1,49 @@
+name: Bora execution scheduling CI
+on:
+  push:
+    branches: [integrated-lectures-premium-20261028]
+    paths:
+      - 'bora-production/runtime.py'
+      - 'bora-production/test_execution_scheduling.py'
+      - '.github/workflows/bora-fp32-production.yml'
+      - '.github/workflows/bora-execution-ci.yml'
+permissions:
+  contents: read
+concurrency:
+  group: bora-execution-ci-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  regression:
+    if: github.repository == 'quddnr0107-lgtm/korean-voice'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Verify unchanged source, recipe, quality gates and activation functions
+        run: |
+          git diff --exit-code HEAD^ HEAD -- bora-production/request.json bora-production/campaign.json bora-production/recipe.json bora-production/fp32_renderer.py bora-production/planning.py bora-production/middot_readings.py bora-production/tts_normalize.py bora-production/approved-tb-annotations.json bora-production/assemble.py bora-production/lecture_crypto.py bora-production/lecture_pack.py bora-production/pilot_render.py bora-production/quality.py bora-production/paragraph_plan.py bora-production/production_plan.py
+          python - <<'PY'
+          import ast, subprocess
+          from pathlib import Path
+          old = ast.parse(subprocess.check_output(['git', 'show', 'HEAD^:bora-production/runtime.py']).decode())
+          new = ast.parse(Path('bora-production/runtime.py').read_text())
+          def functions(tree):
+              return {node.name: ast.dump(node, include_attributes=False) for node in tree.body if isinstance(node, ast.FunctionDef)}
+          before, after = functions(old), functions(new)
+          for name in ('protected_keys', 'source_plan', 'seal_unit', 'open_unit', 'restore', 'assemble', 'make_index', 'preflight'):
+              assert before[name] == after[name], name
+          print('Critical gates and audio fingerprints unchanged')
+          PY
+      - name: Install pinned test runtime without secrets or model weights
+        run: |
+          bash bora-production/setup_runtime.sh > "$RUNNER_TEMP/bora-ci-install.log" 2>&1 || { tail -n 80 "$RUNNER_TEMP/bora-ci-install.log"; exit 1; }
+      - name: Run full synthetic producer, encryption, transport and scheduling regression
+        run: python -m unittest discover -s bora-production -p 'test_*.py'
+      - name: Compile changed runtime and scheduling tests
+        run: python -m py_compile bora-production/runtime.py bora-production/test_execution_scheduling.py

@@ -121,6 +121,7 @@ def config():
     selected = request.get('lesson_ids', course_ids)
     check(isinstance(selected,list) and selected and len(selected)==len(set(selected))
           and set(selected)<=set(course_ids), 'request_lessons')
+    execution_shard_chars(recipe, request)  # Validate scheduling before key access.
     return campaign, recipe, request, sorted(selected)
 
 
@@ -178,6 +179,21 @@ def source_plan(ident, campaign, source_key):
     return build_plan(ident, source), payload
 
 
+def execution_shard_chars(recipe, request):
+    """Execution-only fan-out; never change recipe/plan/audio fingerprints."""
+    default = recipe['shard_chars']
+    target = request.get('execution_shard_chars', default)
+    check(type(default) is int and type(target) is int and 200 <= target <= default,
+          'execution_shard_chars_bounds')
+    return target
+
+
+def pending_units(rows, begin, end, retry_blocked):
+    # rows must come from authenticated restore(), never a public shard report.
+    return [i for i in range(begin, end) if i not in rows or
+            (retry_blocked and rows[i]['receipt'].get('status') != 'passed')]
+
+
 def shards(plan, target=4000):
     rows=[]; start=0; chars=0
     for index,unit in enumerate(plan['units']):
@@ -194,11 +210,18 @@ def public_plan(args):
     campaign,recipe,request,ids=config()
     check(HASH.fullmatch(args.settings_sha or ''), 'preflight_settings_hash')
     source_key,_=protected_keys()
-    records=[]; matrix=[]; review_counts=Counter()
+    target_chars=execution_shard_chars(recipe,request)
+    records=[]; matrix=[]; review_counts=Counter(); costs={}
     for ident in ids:
         plan,_=source_plan(ident,campaign,source_key)
         review_counts.update(flag for unit in plan['units'] for flag in set(unit.get('review',[])+unit.get('review_flags',[])))
-        groups=shards(plan,recipe['shard_chars'])
+        groups=shards(plan,target_chars)
+        for group in groups:
+            # Private cost estimate: favor long spoken input plus per-unit work.
+            # Only IDs/ranges, never manuscript or per-unit text, leave this job.
+            costs[(ident,group['shard'])]=sum(
+                max(len(u['source']),len(u.get('spoken',u['source'])))+32
+                for u in plan['units'][group['start']:group['end']])
         records.append(dict(lesson_id=ident,source_sha256=plan['source_sha256'],
             plan_sha256=identity(plan),unit_count=len(plan['units']),paragraph_count=len(plan['paragraphs']),
             review_units=sum(bool(u.get('review') or u.get('review_flags')) for u in plan['units']),shards=groups))
@@ -210,7 +233,7 @@ def public_plan(args):
         check(len(wanted)==len(selected) and wanted<={(v['lesson_id'],v['shard']) for v in matrix}, 'selected_shards')
         matrix=[v for v in matrix if (v['lesson_id'],v['shard']) in wanted]
     check(0<len(matrix)<=256, 'matrix_requires_lesson_batch')
-    matrix.sort(key=lambda x:-(x['end']-x['start']))
+    matrix.sort(key=lambda x:(-costs[(x['lesson_id'],x['shard'])],x['lesson_id'],x['shard']))
     manifest=dict(schema='bora-fp32-public-plan/v1',course=request['course'],
         campaign_sha256=identity(campaign),recipe_sha256=identity(recipe),
         request_sha256=identity(request),render_settings_sha256=args.settings_sha,lessons=records)
@@ -237,7 +260,7 @@ def matched_plan(args, campaign, recipe, request, key):
     plan,payload=source_plan(args.lesson_id,campaign,key)
     row=next(r for r in public['lessons'] if r['lesson_id']==args.lesson_id)
     check(row['source_sha256']==plan['source_sha256'] and row['plan_sha256']==identity(plan)
-          and row['unit_count']==len(plan['units']) and row['shards']==shards(plan,recipe['shard_chars']), 'private_plan_reproduction')
+          and row['unit_count']==len(plan['units']) and row['shards']==shards(plan,execution_shard_chars(recipe,request)), 'private_plan_reproduction')
     return public,plan,payload,row
 
 
@@ -329,6 +352,34 @@ def terminate(signum,frame):
     raise InterruptedError('termination_requested')
 
 
+def resume_probe(args):
+    """Check encrypted reuse offline BEFORE heavy runtime/model preparation."""
+    campaign,recipe,request,_=config()
+    source_key,media_key=protected_keys(media=True)
+    public,plan,_,row=matched_plan(args,campaign,recipe,request,source_key)
+    del source_key
+    check(type(args.shard) is int and 0<=args.shard<len(row['shards']), 'shard_scope')
+    group=row['shards'][args.shard]; begin,end=group['start'],group['end']
+    with tempfile.TemporaryDirectory(prefix='bora-probe-',dir=os.environ.get('RUNNER_TEMP')) as td:
+        restored=restore(args.resume_dir,media_key,plan,identity(recipe),
+                         public['render_settings_sha256'],Path(td)/'restored')
+        rows={i:v for i,v in restored.items() if begin<=i<end}
+        pending=pending_units(rows,begin,end,request['retry_blocked'])
+        passed=sum(v['receipt'].get('status')=='passed' for v in rows.values())
+        result=dict(schema='bora-fp32-resume-probe/v1',lesson_id=plan['lesson_id'],
+                    shard=args.shard,start=begin,end=end,passed=passed,
+                    blocked=len(rows)-passed,pending=len(pending),
+                    needs_synthesis=bool(pending),request_sha256=identity(request),
+                    plan_sha256=identity(plan),recipe_sha256=identity(recipe),
+                    render_settings_sha256=public['render_settings_sha256'])
+    # Plaintext temporary files and key-bearing child process are not retained.
+    atomic(args.output,enc(result))
+    if args.github_output:
+        with open(args.github_output,'a') as f:
+            f.write('needs_synthesis='+str(bool(pending)).lower()+'\n')
+    print(json.dumps(result),flush=True)
+
+
 def render(args):
     campaign,recipe,request,_=config()
     source_key,media_key=protected_keys(media=True)
@@ -349,8 +400,7 @@ def render(args):
         work=Path(td)
         restored=restore(args.resume_dir,media_key,plan,recipe_hash,settings_hash,work/'restored')
         rows={i:v for i,v in restored.items() if begin<=i<end}
-        pending=[i for i in range(begin,end) if i not in rows or
-                 (request['retry_blocked'] and rows[i]['receipt'].get('status')!='passed')]
+        pending=pending_units(rows,begin,end,request['retry_blocked'])
         try:
             if pending:
                 from fp32_renderer import FP32Renderer
@@ -503,13 +553,14 @@ def main():
     sub=parser.add_subparsers(dest='command',required=True)
     p=sub.add_parser('preflight'); p.add_argument('--output',required=True)
     p=sub.add_parser('plan'); p.add_argument('--output',required=True); p.add_argument('--github-output'); p.add_argument('--settings-sha',required=True)
-    for name in ('render','assemble'):
+    for name in ('render','assemble','probe'):
         p=sub.add_parser(name); p.add_argument('--lesson-id',required=True); p.add_argument('--plan',required=True)
         p.add_argument('--resume-dir',required=True); p.add_argument('--output',required=True)
-        if name=='render': p.add_argument('--shard',required=True,type=int)
+        if name in ('render','probe'): p.add_argument('--shard',required=True,type=int)
+        if name=='probe': p.add_argument('--github-output')
     p=sub.add_parser('index'); p.add_argument('--directory',required=True); p.add_argument('--course',required=True)
     args=parser.parse_args()
-    {'preflight':preflight,'plan':public_plan,'render':render,'assemble':assemble,'index':make_index}[args.command](args)
+    {'preflight':preflight,'plan':public_plan,'probe':resume_probe,'render':render,'assemble':assemble,'index':make_index}[args.command](args)
 
 
 if __name__=='__main__':
