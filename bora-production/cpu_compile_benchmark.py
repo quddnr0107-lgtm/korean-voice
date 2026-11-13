@@ -1,4 +1,4 @@
-"""Bounded public CPU Inductor trial on only the original code predictor.
+"""Bounded public CPU Inductor trial on the inner code-predictor model.
 
 The official sampler, FP32 weights, voice and text are unchanged. Eager runs
 first; the first compiled call includes compilation. No silent eager fallback
@@ -26,13 +26,14 @@ from cpu_precision_benchmark import hardware
 from cpu_thread_benchmark import rss_snapshot, validate_native_threads
 
 SCHEMA = 'sohee-public-cpu-compile/v1'
-COMPILED_MODE = 'compiled_predictor_eager_masks'
+COMPILED_MODE = 'compiled_inner_predictor_eager_masks'
 MODES = ('eager', COMPILED_MODE)
 MASK_ALIASES = ('create_causal_mask', 'create_sliding_window_causal_mask')
-COMPILE_SCOPE = 'outer-predictor-forward-original-eager-causal-masks'
+COMPILE_SCOPE = 'inner-predictor-model-forward-original-eager-causal-masks'
+COMPILE_TARGET_PATH = 'model.model.talker.code_predictor.model.forward'
 CALL_SECONDS = 360
 WORKER_SECONDS = 1240
-MAX_GRAPHS = 32
+MAX_GRAPHS = 64
 MODELING_SHA256 = '25c42656bcf810f06ef6bc1839bd7083f3c8cfedac3a147c4060b4262b1c96a0'
 SOURCES = [
     'https://docs.pytorch.org/docs/2.8/generated/torch.compile.html',
@@ -59,10 +60,11 @@ def dump(path, value):
 def validate_request():
     request = json.loads(Path(__file__).with_name('cpu-compile-request.json').read_text())
     require(request == dict(schema=SCHEMA,
-        request_id='public-sohee-fp32-predictor-compile-20261113-03',
+        request_id='public-sohee-fp32-predictor-compile-20261113-04',
         model_revision=REVISION, fixture_count=2, threads=4, interop_threads=1,
         modes=list(MODES), call_timeout_seconds=CALL_SECONDS,
         compile_scope=COMPILE_SCOPE, eager_mask_aliases=list(MASK_ALIASES),
+        compile_target_path=COMPILE_TARGET_PATH,
         compile_threads=1, maximum_compiled_graphs=MAX_GRAPHS,
         production=False, secrets=False, gpu=False))
 
@@ -162,10 +164,14 @@ def tracked_backend(inductor, counts):
         compiled = inductor(graph, example_inputs)
         require(callable(compiled))
         counts['backend_graphs_compiled'] += 1
-        @functools.wraps(compiled)
         def execute(*args, **kwargs):
             counts['compiled_graph_invocations'] += 1
             return compiled(*args, **kwargs)
+        # Do not copy Dynamo's private unwrapping/disable attributes. In 2.8
+        # innermost_fn follows _torchdynamo_orig_callable and could bypass this
+        # counter if functools.wraps copied the backend callable's __dict__.
+        if hasattr(compiled, '_boxed_call'):
+            execute._boxed_call = compiled._boxed_call
         return execute
     return backend
 
@@ -260,14 +266,17 @@ def summarize(rows, counts):
         second_call_proven_steady_state=bool(len(compiled_rows) == 2
             and compiled_rows[1]['new_graphs_compiled_during_call'] == 0),
         compile_scope=COMPILE_SCOPE, mode_order=list(MODES), eager_mask_aliases=list(MASK_ALIASES),
-        compile_scope_details='The same outer model.model.talker.code_predictor.forward is compiled. Only the two Qwen modeling-module causal-mask aliases call their original functions with tracing disabled; sampler and generate stay eager.',
+        compile_target_path=COMPILE_TARGET_PATH,
+        compile_scope_details='Only code_predictor.model.forward is compiled. The outer code_predictor.forward, 15 output-head selections, generation_steps branches, sampler and generate remain original Python. The two Qwen modeling-module causal-mask aliases retain their original calculations with tracing disabled.',
+        execution_counter_wrapper_copies_compiler_private_attributes=False,
+        predictor_forward_calls_counter_scope=COMPILE_TARGET_PATH,
         backend='inductor', fullgraph=False, dynamic=True, compile_threads=1,
         maximum_compiled_graphs=MAX_GRAPHS,
         entire_predictor_compiled_coverage_claimed=False,
         model_load_included_in_tts=False, asr_performed=False, dsp_performed=False,
         production_eligible=False, human_listening_verified=False,
         full_course_forecast_validated=False, sources=SOURCES,
-        caveat='A separate eager-mask isolation experiment, not a successful rerun claim for earlier failed scopes. One eager-then-compiled trial, two public fixtures, one resident model. Original causal-mask calculations execute eagerly and restore afterward. Shared modeling aliases also serve the already-eager talker. Graph breaks can leave eager regions; counters prove some compiled code ran, not full coverage. First compiled TTS includes compilation; the second is steady only without new graphs. FP32 fusion may change results. No pronunciation or full-course equivalence claim.')
+        caveat='A separate inner-model compilation experiment with corrected execution-counter wrappers; no retroactive success claim for earlier scopes. Outer predictor/head selection stays eager. One eager-then-compiled trial, two public fixtures, one resident model. Original causal masks execute eagerly and restore afterward; shared aliases also serve the already-eager talker. Graph breaks can leave eager regions; counters prove some compiled code ran, not full coverage. First compiled TTS includes compilation; the second is steady only without new graphs. FP32 fusion may change results. No pronunciation or full-course equivalence claim.')
 
 
 def dynamo_counts(counters):
@@ -320,11 +329,15 @@ def worker(model_path, output):
     require(all(p.dtype == torch.float32 and p.device.type == 'cpu'
         for p in model.model.parameters() if p.is_floating_point()))
     predictor = model.model.talker.code_predictor
+    compile_target = predictor.model
+    original_outer_forward = predictor.forward
     modeling_module = inspect.getmodule(type(predictor))
     require(modeling_module is not None)
     require(type(predictor).__name__ == 'Qwen3TTSTalkerCodePredictorModelForConditionalGeneration')
+    require(type(compile_target).__name__ == 'Qwen3TTSTalkerCodePredictorModel')
     metadata.update(memory_after_load=rss_snapshot(),
-        original_predictor_source_sha256=digest(inspect.getsourcefile(type(predictor))))
+        original_predictor_source_sha256=digest(inspect.getsourcefile(type(predictor))),
+        compiled_module_type=type(compile_target).__name__, outer_predictor_forward_unchanged=True)
     require(metadata['original_predictor_source_sha256'] == MODELING_SHA256)
     def deadline(*unused):
         raise TimeoutError('public_cpu_compile_call_timeout')
@@ -335,13 +348,14 @@ def worker(model_path, output):
             if mode == COMPILED_MODE:
                 torch._dynamo.reset(); counters.clear()
             started = time.perf_counter()
-            context = execution_mode(mode, predictor, modeling_module, torch.compile,
+            context = execution_mode(mode, compile_target, modeling_module, torch.compile,
                 torch.compiler.disable, tracked_backend(lookup_backend('inductor'), counts), counts)
             with context as mask_state:
                 metadata['compiled_wrapper_setup_seconds' if mode == COMPILED_MODE else 'eager_wrapper_setup_seconds'] = time.perf_counter()-started
                 if mode == COMPILED_MODE:
                     metadata['eager_causal_mask_patch'] = mask_state
                 for fixture, text in enumerate(FIXTURES):
+                    require(predictor.forward == original_outer_forward)
                     before = dict(counts)
                     talker = model.model.talker; original = talker.generate; observed = []
                     eos = int(model.model.config.talker_config.codec_eos_token_id)
@@ -378,6 +392,7 @@ def worker(model_path, output):
                         predictor_forward_calls_during_call=counts['predictor_forward_calls']-before['predictor_forward_calls'],
                         dynamo_counters=dynamo_counts(counters), memory=rss_snapshot())
                     rows.append(row)
+                    require(predictor.forward == original_outer_forward)
                     dump(out/'summary.json', dict(summarize(rows, counts), **metadata))
                     print(json.dumps(row, sort_keys=True), flush=True)
     except Exception as error:

@@ -28,15 +28,31 @@ class CompileTests(unittest.TestCase):
         self.assertEqual({k: args[k] for k in SAMPLING}, SAMPLING)
         self.assertEqual(args['instruct'], STYLES['explain'])
         self.assertEqual(args['speaker'], 'Sohee')
-        self.assertEqual(b.MODES, ('eager', 'compiled_predictor_eager_masks'))
+        self.assertEqual(b.MODES, ('eager', 'compiled_inner_predictor_eager_masks'))
+        self.assertEqual(b.COMPILE_TARGET_PATH, 'model.model.talker.code_predictor.model.forward')
+        self.assertEqual(b.MAX_GRAPHS, 64)
 
     def test_backend_requires_actual_returned_code_invocation(self):
         counts = dict.fromkeys(self.counts(), 0)
-        backend = b.tracked_backend(lambda graph, inputs: lambda value: value+1, counts)
+        def inner(value): return value+1
+        def compiled(value): return inner(value)
+        compiled._torchdynamo_orig_callable = inner
+        compiled._torchdynamo_disable = True
+        compiled._boxed_call = True
+        backend = b.tracked_backend(lambda graph, inputs: compiled, counts)
         result = backend(object(), [])
         self.assertEqual(counts['backend_graphs_compiled'], 1)
         self.assertEqual(counts['compiled_graph_invocations'], 0)
-        self.assertEqual(result(4), 5)
+        self.assertFalse(hasattr(result, '_torchdynamo_orig_callable'))
+        self.assertFalse(hasattr(result, '_torchdynamo_disable'))
+        self.assertFalse(hasattr(result, '__wrapped__'))
+        self.assertIs(result._boxed_call, True)
+        # Mirror PyTorch 2.8 innermost_fn: it must retain the counter wrapper.
+        unwrapped = result
+        while hasattr(unwrapped, '_torchdynamo_orig_callable'):
+            unwrapped = unwrapped._torchdynamo_orig_callable
+        self.assertIs(unwrapped, result)
+        self.assertEqual(unwrapped(4), 5)
         self.assertEqual(counts['compiled_graph_invocations'], 1)
         with self.assertRaises(RuntimeError):
             b.tracked_backend(lambda graph, inputs: (_ for _ in ()).throw(RuntimeError()), counts)(None, [])
