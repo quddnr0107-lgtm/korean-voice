@@ -1,0 +1,1 @@
+{"schema":"sohee-public-cpu-arm/v1","request_id":"public-sohee-fp32-arm-20261113-01","model_revision":"0c0e3051f131929182e2c023b9537f8b1c68adfe","fixture_count":2,"thread_counts":[4,2],"interop_threads":1,"runner":"ubuntu-24.04-arm","sample_timeout_seconds":300,"production":false,"secrets":false,"gpu":false}
