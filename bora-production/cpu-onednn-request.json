@@ -1,0 +1,2 @@
+{"schema":"sohee-public-cpu-onednn/v1","request_id":"public-sohee-fp32-onednn-20261113-01","model_revision":"0c0e3051f131929182e2c023b9537f8b1c68adfe","fixture_count":2,"modes":["enabled","disabled"],"threads":4,"interop_threads":1,"seconds_per_call":300,"production":false,"secrets":false,"gpu":false}
+
