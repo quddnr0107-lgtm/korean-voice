@@ -1,0 +1,194 @@
+{
+  "schema": "bora-resident-independent-verification/v1",
+  "verified_rows": 20,
+  "summary_sha256": "8ea06a06d2933da2864e330c625746fd4cdd1d328caf27432b166e7239719b37",
+  "all_pcm_bytes_equal_to_fixture_baseline": true,
+  "all_recorded_file_and_pcm_hashes_verified": true,
+  "total_eager_synthesis_seconds": 464.188942126,
+  "total_compiled_including_setup_seconds": 451.60493543199993,
+  "observed_total_net_saved_seconds": 12.584006694000038,
+  "checks": [
+    {
+      "call_index": 0,
+      "fixture": 0,
+      "phase": "baseline",
+      "mode": "eager",
+      "exact_float_pcm_bytes": true,
+      "exact_returned_talker_sequence": true,
+      "hashes_verified": true
+    },
+    {
+      "call_index": 1,
+      "fixture": 1,
+      "phase": "baseline",
+      "mode": "eager",
+      "exact_float_pcm_bytes": true,
+      "exact_returned_talker_sequence": true,
+      "hashes_verified": true
+    },
+    {
+      "call_index": 2,
+      "fixture": 0,
+      "phase": "cold",
+      "mode": "compiled_inner_predictor_eager_masks",
+      "exact_float_pcm_bytes": true,
+      "exact_returned_talker_sequence": true,
+      "hashes_verified": true
+    },
+    {
+      "call_index": 3,
+      "fixture": 1,
+      "phase": "cold",
+      "mode": "compiled_inner_predictor_eager_masks",
+      "exact_float_pcm_bytes": true,
+      "exact_returned_talker_sequence": true,
+      "hashes_verified": true
+    },
+    {
+      "call_index": 4,
+      "fixture": 0,
+      "phase": "measured",
+      "mode": "eager",
+      "exact_float_pcm_bytes": true,
+      "exact_returned_talker_sequence": true,
+      "hashes_verified": true
+    },
+    {
+      "call_index": 5,
+      "fixture": 0,
+      "phase": "measured",
+      "mode": "compiled_inner_predictor_eager_masks",
+      "exact_float_pcm_bytes": true,
+      "exact_returned_talker_sequence": true,
+      "hashes_verified": true
+    },
+    {
+      "call_index": 6,
+      "fixture": 1,
+      "phase": "measured",
+      "mode": "compiled_inner_predictor_eager_masks",
+      "exact_float_pcm_bytes": true,
+      "exact_returned_talker_sequence": true,
+      "hashes_verified": true
+    },
+    {
+      "call_index": 7,
+      "fixture": 1,
+      "phase": "measured",
+      "mode": "eager",
+      "exact_float_pcm_bytes": true,
+      "exact_returned_talker_sequence": true,
+      "hashes_verified": true
+    },
+    {
+      "call_index": 8,
+      "fixture": 0,
+      "phase": "measured",
+      "mode": "compiled_inner_predictor_eager_masks",
+      "exact_float_pcm_bytes": true,
+      "exact_returned_talker_sequence": true,
+      "hashes_verified": true
+    },
+    {
+      "call_index": 9,
+      "fixture": 0,
+      "phase": "measured",
+      "mode": "eager",
+      "exact_float_pcm_bytes": true,
+      "exact_returned_talker_sequence": true,
+      "hashes_verified": true
+    },
+    {
+      "call_index": 10,
+      "fixture": 1,
+      "phase": "measured",
+      "mode": "eager",
+      "exact_float_pcm_bytes": true,
+      "exact_returned_talker_sequence": true,
+      "hashes_verified": true
+    },
+    {
+      "call_index": 11,
+      "fixture": 1,
+      "phase": "measured",
+      "mode": "compiled_inner_predictor_eager_masks",
+      "exact_float_pcm_bytes": true,
+      "exact_returned_talker_sequence": true,
+      "hashes_verified": true
+    },
+    {
+      "call_index": 12,
+      "fixture": 0,
+      "phase": "measured",
+      "mode": "eager",
+      "exact_float_pcm_bytes": true,
+      "exact_returned_talker_sequence": true,
+      "hashes_verified": true
+    },
+    {
+      "call_index": 13,
+      "fixture": 0,
+      "phase": "measured",
+      "mode": "compiled_inner_predictor_eager_masks",
+      "exact_float_pcm_bytes": true,
+      "exact_returned_talker_sequence": true,
+      "hashes_verified": true
+    },
+    {
+      "call_index": 14,
+      "fixture": 1,
+      "phase": "measured",
+      "mode": "compiled_inner_predictor_eager_masks",
+      "exact_float_pcm_bytes": true,
+      "exact_returned_talker_sequence": true,
+      "hashes_verified": true
+    },
+    {
+      "call_index": 15,
+      "fixture": 1,
+      "phase": "measured",
+      "mode": "eager",
+      "exact_float_pcm_bytes": true,
+      "exact_returned_talker_sequence": true,
+      "hashes_verified": true
+    },
+    {
+      "call_index": 16,
+      "fixture": 0,
+      "phase": "measured",
+      "mode": "compiled_inner_predictor_eager_masks",
+      "exact_float_pcm_bytes": true,
+      "exact_returned_talker_sequence": true,
+      "hashes_verified": true
+    },
+    {
+      "call_index": 17,
+      "fixture": 0,
+      "phase": "measured",
+      "mode": "eager",
+      "exact_float_pcm_bytes": true,
+      "exact_returned_talker_sequence": true,
+      "hashes_verified": true
+    },
+    {
+      "call_index": 18,
+      "fixture": 1,
+      "phase": "measured",
+      "mode": "eager",
+      "exact_float_pcm_bytes": true,
+      "exact_returned_talker_sequence": true,
+      "hashes_verified": true
+    },
+    {
+      "call_index": 19,
+      "fixture": 1,
+      "phase": "measured",
+      "mode": "compiled_inner_predictor_eager_masks",
+      "exact_float_pcm_bytes": true,
+      "exact_returned_talker_sequence": true,
+      "hashes_verified": true
+    }
+  ],
+  "human_listening_verified": false,
+  "full_course_performance_measured": false
+}
