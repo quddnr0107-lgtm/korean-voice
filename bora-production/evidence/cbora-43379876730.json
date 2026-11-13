@@ -1,0 +1,330 @@
+{
+  "schema": "cbackend-bora-public-sample/v1",
+  "source_repository": "https://github.com/gabriele-mastrapasqua/qwen3-tts.git",
+  "source_revision": "ef339be58a778b062e1c14382347964552eae007",
+  "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+  "model_revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+  "speaker": "Sohee",
+  "language": "Korean",
+  "device": "cpu",
+  "threads": 4,
+  "max_units": 4,
+  "execution_budget_seconds": 300,
+  "quantization_enabled": false,
+  "dtype_scope": "Native BF16 checkpoint storage and C kernels; codec F32; different from PyTorch FP32",
+  "recipe": {
+    "styles": {
+      "explain": "Speak Korean to one learner. Ask the questions with genuine curiosity, then explain with clear, conversational phrasing. Keep a consistent speaking voice throughout the paragraph. Allow occasional quiet, unforced inhalations and small thoughtful pauses at natural phrase boundaries when the meaning calls for them. Keep the vocal affect appropriate to the subject, and keep the spoken words clear and complete.",
+      "reading": "Formal recitation of a Korean legal provision. Crisp, distinct consonants and a confident, clearly projected voice. Maintain steady supported vocal energy through every final syllable. Measured phrasing with clear pauses at clause boundaries."
+    },
+    "filters": {
+      "explain": "highpass=f=65,loudnorm=I=-18:TP=-2:LRA=11,alimiter=limit=0.84:level=false",
+      "reading": "highpass=f=65,equalizer=f=2600:t=q:w=0.85:g=1.2,acompressor=threshold=0.08:ratio=2:attack=15:release=120:makeup=1,loudnorm=I=-16:TP=-2:LRA=7,alimiter=limit=0.89:level=false"
+    },
+    "sampling": {
+      "non_streaming_mode": true,
+      "do_sample": true,
+      "temperature": 0.8,
+      "top_p": 0.9,
+      "top_k": 50,
+      "repetition_penalty": 1.05,
+      "subtalker_dosample": true,
+      "subtalker_temperature": 0.9,
+      "subtalker_top_p": 1.0,
+      "subtalker_top_k": 50
+    },
+    "seed": 5192,
+    "token_cap": 1100,
+    "source_sha256": {
+      "pilot_render.py": "b90b5761b841c69088a1c0c01988c1c7f41fae714142a518b8f6f06d7ef95e21",
+      "fp32_renderer.py": "9806f419fe98b59f7689b42bf0a46f98d158d3ce0612ec4eba5d7186f7a18d18"
+    }
+  },
+  "sampling_comparison": {
+    "production_requested": {
+      "non_streaming_mode": true,
+      "do_sample": true,
+      "temperature": 0.8,
+      "top_p": 0.9,
+      "top_k": 50,
+      "repetition_penalty": 1.05,
+      "subtalker_dosample": true,
+      "subtalker_temperature": 0.9,
+      "subtalker_top_p": 1.0,
+      "subtalker_top_k": 50
+    },
+    "talker_applied": {
+      "temperature": 0.8,
+      "top_p": 0.9,
+      "top_k": 50,
+      "repetition_penalty": 1.05
+    },
+    "subtalker_actual": "greedy_argmax",
+    "unsupported_production_controls": [
+      "subtalker_dosample",
+      "subtalker_temperature",
+      "subtalker_top_p",
+      "subtalker_top_k",
+      "non_streaming_mode"
+    ],
+    "seed_implementation": "Native C RNG; seed value matches production, RNG does not",
+    "backend_decode": "C backend internally decodes chunks; no Python non_streaming_mode control",
+    "source_evidence": "qwen_tts_code_predictor.c at pinned revision: qwen_argmax_matvec_*",
+    "sampling_equivalence_claimed": false,
+    "fp32_equivalence_claimed": false
+  },
+  "units": [
+    {
+      "id": "explain-1",
+      "mode": "explain",
+      "text": "통합방위법을 공부할 때, 처음부터 모든 문장을 외우려고 하면 금방 지칩니다. 먼저, 큰 그림을 떠올려 보세요. 여러 기관이 함께 움직여야 하는 상황에서, 누가 판단하고, 누가 협조하고, 누가 실행하는지를 살펴보는 겁니다."
+    },
+    {
+      "id": "explain-2",
+      "mode": "explain",
+      "text": "이 세 가지 질문을 붙잡으면, 길게 느껴지던 조문에도 흐름이 보이기 시작합니다. 오늘 읽은 내용을 잠깐 덮고, 자기 말로 한 번 설명해 보세요. 막히는 부분이 있다면, 그 부분만 다시 확인하면 됩니다."
+    },
+    {
+      "id": "explain-3",
+      "mode": "explain",
+      "text": "한 번에 완벽하게 외우는 것보다, 이해하고 떠올리는 과정을 차분하게 반복해 보세요. 지금은 조금 느려도 괜찮습니다. 어제보다 한 문장 더 선명하게 설명할 수 있다면, 공부는 앞으로 나아가고 있는 겁니다."
+    },
+    {
+      "id": "definition",
+      "mode": "reading",
+      "text": "통합방위란 적의 침투와 도발이나 그 위협에 대응하기 위하여 각종 국가방위요소를 통합하고 지휘체계를 일원화하여 국가를 방위하는 것을 말한다."
+    }
+  ],
+  "rows": [
+    {
+      "id": "explain-1",
+      "mode": "explain",
+      "seed": 5192,
+      "postprocessing_complete": true,
+      "tts_process_wall_seconds": 78.568622,
+      "native_returncode": 0,
+      "native_log_file": "explain-1.log",
+      "native_log_sha256": "cc9d088ecf1e93704bcce8ad71b1b05bcd963028e240441c320ed79e20a08d12",
+      "raw_file": "explain-1-raw.wav",
+      "raw_sha256": "5b58744348581d0b68388e32716f57bab2ddaae14c1f89ea04664f8292cdb9bb",
+      "raw_audio_seconds": 25.12,
+      "raw_signal": {
+        "sample_rate": 24000,
+        "samples": 602880,
+        "seconds": 25.12,
+        "peak": 0.5421142578125,
+        "rms": 0.054994980046468044,
+        "clipped_samples": 0,
+        "reasons": [],
+        "blocked": false
+      },
+      "eos_frame": 314,
+      "generated_frames": 314,
+      "eos_strategy": "off",
+      "natural_eos_observed": true,
+      "eos_assistance_enabled": false,
+      "eos_parser_version": "pinned-cbackend-inline-progress/v2",
+      "decoded_pcm_frame_coverage_verified": true,
+      "processed_file": "explain-1-processed.wav",
+      "processed_sha256": "89bf3cddf540c68431e932036f9e0a7be1a554dd7b03da14dd88a85c5e08e1d8",
+      "filtered_file": "explain-1-filtered.wav",
+      "filtered_sha256": "2cfd90379ae1dafdbeb083cb198e9e9416109fe571ea20ca6297c19023593067",
+      "processed_audio_seconds": 25.12,
+      "processed_signal": {
+        "sample_rate": 24000,
+        "samples": 602880,
+        "seconds": 25.12,
+        "peak": 0.7932397127151489,
+        "rms": 0.10450383245068015,
+        "clipped_samples": 0,
+        "reasons": [],
+        "blocked": false
+      },
+      "trim": {
+        "removed_leading_samples": 0,
+        "removed_trailing_samples": 0,
+        "retained_edge_ms": 120,
+        "fade_ms": 5
+      },
+      "postprocess_wall_seconds": 0.704035
+    },
+    {
+      "id": "explain-2",
+      "mode": "explain",
+      "seed": 5192,
+      "postprocessing_complete": true,
+      "tts_process_wall_seconds": 55.822412,
+      "native_returncode": 0,
+      "native_log_file": "explain-2.log",
+      "native_log_sha256": "848102f79e901d5c0911c62be8065dc60eb88371578843a835cb37fec1084728",
+      "raw_file": "explain-2-raw.wav",
+      "raw_sha256": "9f208469040ff879ae53027a898402a442f290383b2f14c02cc6fdb83f78f5f2",
+      "raw_audio_seconds": 17.12,
+      "raw_signal": {
+        "sample_rate": 24000,
+        "samples": 410880,
+        "seconds": 17.12,
+        "peak": 0.525115966796875,
+        "rms": 0.05958838802161864,
+        "clipped_samples": 0,
+        "reasons": [],
+        "blocked": false
+      },
+      "eos_frame": 214,
+      "generated_frames": 214,
+      "eos_strategy": "off",
+      "natural_eos_observed": true,
+      "eos_assistance_enabled": false,
+      "eos_parser_version": "pinned-cbackend-inline-progress/v2",
+      "decoded_pcm_frame_coverage_verified": true,
+      "processed_file": "explain-2-processed.wav",
+      "processed_sha256": "30487116192a5bdce3ee64cf2b175fe803fa7969e39780f453c845bcdf6b9488",
+      "filtered_file": "explain-2-filtered.wav",
+      "filtered_sha256": "db17e2271e7617784b1dc7cb65fbd84484cd4047d02f4655dafe36640b18427a",
+      "processed_audio_seconds": 17.12,
+      "processed_signal": {
+        "sample_rate": 24000,
+        "samples": 410880,
+        "seconds": 17.12,
+        "peak": 0.7980532646179199,
+        "rms": 0.10823717760711313,
+        "clipped_samples": 0,
+        "reasons": [],
+        "blocked": false
+      },
+      "trim": {
+        "removed_leading_samples": 0,
+        "removed_trailing_samples": 0,
+        "retained_edge_ms": 120,
+        "fade_ms": 5
+      },
+      "postprocess_wall_seconds": 0.453161
+    },
+    {
+      "id": "explain-3",
+      "mode": "explain",
+      "seed": 5192,
+      "postprocessing_complete": true,
+      "tts_process_wall_seconds": 71.392272,
+      "native_returncode": 0,
+      "native_log_file": "explain-3.log",
+      "native_log_sha256": "b1294b280033cb068c4717eaf83294cce958323e9f34ab80af0381f9e08003bc",
+      "raw_file": "explain-3-raw.wav",
+      "raw_sha256": "4717232df938a80b8f809d247c96e37daf0036f035fea692e1e4f55477dc77eb",
+      "raw_audio_seconds": 22.72,
+      "raw_signal": {
+        "sample_rate": 24000,
+        "samples": 545280,
+        "seconds": 22.72,
+        "peak": 0.50885009765625,
+        "rms": 0.05723379097741273,
+        "clipped_samples": 0,
+        "reasons": [],
+        "blocked": false
+      },
+      "eos_frame": 284,
+      "generated_frames": 284,
+      "eos_strategy": "off",
+      "natural_eos_observed": true,
+      "eos_assistance_enabled": false,
+      "eos_parser_version": "pinned-cbackend-inline-progress/v2",
+      "decoded_pcm_frame_coverage_verified": true,
+      "processed_file": "explain-3-processed.wav",
+      "processed_sha256": "d7e695f2248dc8b5e116fafce00509e902df4a2c5c74def3674e1d9c7852e4a2",
+      "filtered_file": "explain-3-filtered.wav",
+      "filtered_sha256": "b307872f120f039a5866afdfbd3c0e702baf2476c88ab6b2e55fa0fb709d5ec3",
+      "processed_audio_seconds": 22.72,
+      "processed_signal": {
+        "sample_rate": 24000,
+        "samples": 545280,
+        "seconds": 22.72,
+        "peak": 0.7945775985717773,
+        "rms": 0.10428888208397524,
+        "clipped_samples": 0,
+        "reasons": [],
+        "blocked": false
+      },
+      "trim": {
+        "removed_leading_samples": 0,
+        "removed_trailing_samples": 0,
+        "retained_edge_ms": 120,
+        "fade_ms": 5
+      },
+      "postprocess_wall_seconds": 0.590192
+    },
+    {
+      "id": "definition",
+      "mode": "reading",
+      "seed": 5192,
+      "postprocessing_complete": true,
+      "tts_process_wall_seconds": 59.58361,
+      "native_returncode": 0,
+      "native_log_file": "definition.log",
+      "native_log_sha256": "83224feaa604ff150d0eabe2adc3fc9e1fba042069bed1ac8994b2c51c0c7579",
+      "raw_file": "definition-raw.wav",
+      "raw_sha256": "0755552593198c7fcc0cc70f26fb62b0468970ef1fdd2dcb395477341f730579",
+      "raw_audio_seconds": 19.2,
+      "raw_signal": {
+        "sample_rate": 24000,
+        "samples": 460800,
+        "seconds": 19.2,
+        "peak": 0.514434814453125,
+        "rms": 0.061715232040094194,
+        "clipped_samples": 0,
+        "reasons": [],
+        "blocked": false
+      },
+      "eos_frame": 240,
+      "generated_frames": 240,
+      "eos_strategy": "off",
+      "natural_eos_observed": true,
+      "eos_assistance_enabled": false,
+      "eos_parser_version": "pinned-cbackend-inline-progress/v2",
+      "decoded_pcm_frame_coverage_verified": true,
+      "processed_file": "definition-processed.wav",
+      "processed_sha256": "038e18e0b4547538c3a0c3649d5c56e03a5a6e2760eca4aaf9db29afddf882b5",
+      "filtered_file": "definition-filtered.wav",
+      "filtered_sha256": "c31b5ccecc4f87b15f6d9773c65635e4ab34bf5bc167925b6f4ed352cef86ff1",
+      "processed_audio_seconds": 19.2,
+      "processed_signal": {
+        "sample_rate": 24000,
+        "samples": 460800,
+        "seconds": 19.2,
+        "peak": 0.7962472438812256,
+        "rms": 0.1468327024737577,
+        "clipped_samples": 0,
+        "reasons": [],
+        "blocked": false
+      },
+      "trim": {
+        "removed_leading_samples": 0,
+        "removed_trailing_samples": 0,
+        "retained_edge_ms": 120,
+        "fade_ms": 5
+      },
+      "postprocess_wall_seconds": 0.581713
+    }
+  ],
+  "complete_natural_eos_signal_and_postprocessing": true,
+  "total_tts_process_wall_seconds": 265.366916,
+  "total_raw_audio_seconds": 84.16,
+  "total_processed_audio_seconds": 84.16,
+  "tts_seconds_per_raw_audio_second": 3.15312,
+  "process_time_includes_each_model_load": true,
+  "public_fixtures_only": true,
+  "asr_performed": false,
+  "retries_performed": false,
+  "human_listening_verified": false,
+  "production_eligible": false,
+  "full_course_forecast_validated": false,
+  "scope": "Public authored listening samples only. Same model, speaker, instruction strings and DSP recipe; different sampling and numerical implementation. No production writes or voice-quality equivalence claim.",
+  "binary_sha256": "04bc85e46f2b59b211afb014afdd739afe23b8878c114872d6abfa96af61ab4f",
+  "model_weights_sha256": "38b1d5971bdbd982b561cccec982669a53b0537c3cf5e9bd4778ed07bb2f5137",
+  "codec_weights_sha256": "836b7b357f5ea43e889936a3709af68dfe3751881acefe4ecf0dbd30ba571258",
+  "fixture_manifest_sha256": "a6f37f832a3775dc5e61b1cdacc09d190c98e3e019a8719f78e763b131fb5eda",
+  "script_sha256": "58d368a303bb35ac05f0f48c7e864a313b44f1f0c2f1e930324adae3229463b7",
+  "cpu_count": 4,
+  "platform": "Linux-7.0.0-1017-azure-x86_64-with-glibc2.39",
+  "cpu_model": "AMD EPYC 9V74 80-Core Processor",
+  "cpu_flags": "fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves user_shstk clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload umip vaes vpclmulqdq rdpid fsrm"
+}

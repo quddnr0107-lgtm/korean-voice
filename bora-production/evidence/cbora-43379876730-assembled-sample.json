@@ -1,0 +1,38 @@
+{
+  "duration_seconds": 85.21,
+  "timeline": [
+    {
+      "id": "explain-1",
+      "mode": "explain",
+      "start_seconds": 0.0,
+      "duration_seconds": 25.12
+    },
+    {
+      "id": "explain-2",
+      "mode": "explain",
+      "start_seconds": 25.47,
+      "duration_seconds": 17.12
+    },
+    {
+      "id": "explain-3",
+      "mode": "explain",
+      "start_seconds": 42.94,
+      "duration_seconds": 22.72
+    },
+    {
+      "id": "definition",
+      "mode": "reading",
+      "start_seconds": 66.01,
+      "duration_seconds": 19.2
+    }
+  ],
+  "paragraph_gap_seconds": 0.35,
+  "tempo_factor": 1,
+  "pitch_shift": 0,
+  "extra_loudness_processing": false,
+  "wav_sha256": "ddf630f7ef36036dfdf9c5f764e2d17acff9ed1ed9c44fc5ed65eb033f080840",
+  "mp3_sha256": "0e4db167a0fe041b9df5cb1dec000d7b15da01e1d15e6155ab7b895e9a79ecca",
+  "mp3_bytes": 1706056,
+  "total_tts_process_wall_seconds": 265.366916,
+  "production_eligible": false
+}

@@ -1,0 +1,45 @@
+{
+  "scope": "four-public-c-bora-listening-fixtures-only-not-production-approval",
+  "model": "Systran/faster-whisper-small",
+  "revision": "536b0662742c02347bc0e980a01041f333bce120",
+  "rows": [
+    {
+      "id": "explain-1",
+      "mode": "explain",
+      "wav_sha256": "89bf3cddf540c68431e932036f9e0a7be1a554dd7b03da14dd88a85c5e08e1d8",
+      "expected": "통합방위법을 공부할 때, 처음부터 모든 문장을 외우려고 하면 금방 지칩니다. 먼저, 큰 그림을 떠올려 보세요. 여러 기관이 함께 움직여야 하는 상황에서, 누가 판단하고, 누가 협조하고, 누가 실행하는지를 살펴보는 겁니다.",
+      "recognized": "통합방입법을 공부할 때 처음부터 모든 문장을 외우려고 하면 금방 지칩니다. 먼저 큰 그림을 떠올려보세요. 여러 기관이 함께 움직여야 하는 상황에서 누가 판단하고 누가 협조하고 누가 실행하는지를 살펴보는 겁니다.",
+      "character_errors": 1,
+      "asr_seconds": 6.2469913179993455
+    },
+    {
+      "id": "explain-2",
+      "mode": "explain",
+      "wav_sha256": "30487116192a5bdce3ee64cf2b175fe803fa7969e39780f453c845bcdf6b9488",
+      "expected": "이 세 가지 질문을 붙잡으면, 길게 느껴지던 조문에도 흐름이 보이기 시작합니다. 오늘 읽은 내용을 잠깐 덮고, 자기 말로 한 번 설명해 보세요. 막히는 부분이 있다면, 그 부분만 다시 확인하면 됩니다.",
+      "recognized": "이 세 가지 질문을 붙잡으면 길게 느껴지던 조문에도 흐름이 보이기 시작합니다. 오늘 읽은 내용을 잠깐 덮고 자기 말로 한번 설명해 보세요. 막히는 부분이 있다면 그 부분만 다시 확인하면 됩니다.",
+      "character_errors": 0,
+      "asr_seconds": 5.631365858000208
+    },
+    {
+      "id": "explain-3",
+      "mode": "explain",
+      "wav_sha256": "d7e695f2248dc8b5e116fafce00509e902df4a2c5c74def3674e1d9c7852e4a2",
+      "expected": "한 번에 완벽하게 외우는 것보다, 이해하고 떠올리는 과정을 차분하게 반복해 보세요. 지금은 조금 느려도 괜찮습니다. 어제보다 한 문장 더 선명하게 설명할 수 있다면, 공부는 앞으로 나아가고 있는 겁니다.",
+      "recognized": "한 번에 완벽하게 외우는 것보다 이해하고 떠올리는 과정을 차분하게 반복해 보세요. 지금은 조금 느려도 괜찮습니다. 어제보다 한 문장 더 선명하게 설명할 수 있다면 공부는 앞으로 나아가고 있는 겁니다.",
+      "character_errors": 0,
+      "asr_seconds": 5.696638053999777
+    },
+    {
+      "id": "definition",
+      "mode": "reading",
+      "wav_sha256": "038e18e0b4547538c3a0c3649d5c56e03a5a6e2760eca4aaf9db29afddf882b5",
+      "expected": "통합방위란 적의 침투와 도발이나 그 위협에 대응하기 위하여 각종 국가방위요소를 통합하고 지휘체계를 일원화하여 국가를 방위하는 것을 말한다.",
+      "recognized": "통합 방위란 적의 침투와 도발이나 그 위협에 대응하기 위하여 각종 국가 방위 요소를 통합하고 지휘 체계를 일어나와요 국가를 방위하는 것을 말한다",
+      "character_errors": 4,
+      "asr_seconds": 5.6401582899998175
+    }
+  ],
+  "production_eligible": false,
+  "human_listening_verified": false
+}
