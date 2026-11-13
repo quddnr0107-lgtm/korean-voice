@@ -40,6 +40,20 @@ class OneDNNTests(unittest.TestCase):
         self.assertEqual(b.backend_flags(torch), original)
         backend.allow_tf32 = True
         with self.assertRaises(ValueError): b.set_enabled_only(torch, False, original)
+        backend.allow_tf32 = None
+        unsupported = b.backend_flags(torch)
+        self.assertIsNone(unsupported['allow_tf32'])
+        for enabled in (False, True):
+            self.assertIsNone(b.set_enabled_only(torch, enabled, unsupported)['allow_tf32'])
+            self.assertIsNone(backend.allow_tf32)
+        diagnostic = b.backend_diagnostic(torch)
+        self.assertEqual(diagnostic['allow_tf32'],
+            dict(python_type='builtins.NoneType', observed_repr='None'))
+        rows = self.rows()
+        for row in rows:
+            row['backend_before']['allow_tf32'] = None
+            row['backend_after']['allow_tf32'] = None
+        self.assertTrue(b.summarize(rows)['complete_natural_eos_and_signal'])
 
     def test_measured_time_audio_pcm_and_inputs_preserved(self):
         rows = self.rows(); before = copy.deepcopy(rows)

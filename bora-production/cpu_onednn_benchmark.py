@@ -41,7 +41,7 @@ def digest(path):
 def validate_request():
     request = json.loads(Path(__file__).with_name('cpu-onednn-request.json').read_text())
     require(request == dict(schema=SCHEMA,
-        request_id='public-sohee-fp32-onednn-20261113-01', model_revision=REVISION,
+        request_id='public-sohee-fp32-onednn-20261113-02', model_revision=REVISION,
         fixture_count=2, modes=list(MODES), threads=4, interop_threads=1,
         seconds_per_call=SECONDS_PER_CALL, production=False, secrets=False, gpu=False))
 
@@ -51,9 +51,19 @@ def backend_flags(torch):
     flags = dict(enabled=backend.enabled, deterministic=backend.deterministic,
         allow_tf32=backend.allow_tf32,
         float32_matmul_precision=torch.get_float32_matmul_precision())
-    require(all(type(flags[name]) is bool for name in ('enabled', 'deterministic', 'allow_tf32'))
+    require(all(type(flags[name]) is bool for name in ('enabled', 'deterministic'))
+        and (type(flags['allow_tf32']) is bool or flags['allow_tf32'] is None)
         and isinstance(flags['float32_matmul_precision'], str))
     return flags
+
+
+def backend_diagnostic(torch):
+    backend = torch.backends.mkldnn
+    raw = {name: getattr(backend, name, None)
+        for name in ('enabled', 'deterministic', 'allow_tf32')}
+    raw['float32_matmul_precision'] = torch.get_float32_matmul_precision()
+    return {name: dict(python_type=type(value).__module__+'.'+type(value).__qualname__,
+        observed_repr=repr(value)[:256]) for name, value in raw.items()}
 
 
 def set_enabled_only(torch, enabled, original):
@@ -82,7 +92,8 @@ def summarize(rows):
             and row['backend_before']['enabled'] == row['mkldnn_enabled_observed'])
         fixed = {k: v for k, v in row['backend_before'].items() if k != 'enabled'}
         require(set(fixed) == {'deterministic', 'allow_tf32', 'float32_matmul_precision'}
-            and type(fixed['deterministic']) is bool and type(fixed['allow_tf32']) is bool
+            and type(fixed['deterministic']) is bool
+            and (type(fixed['allow_tf32']) is bool or fixed['allow_tf32'] is None)
             and isinstance(fixed['float32_matmul_precision'], str))
         if reference is None:
             reference = fixed
@@ -147,14 +158,18 @@ def main():
     import numpy as np
     import soundfile as sf
     import torch
-    from qwen_tts import Qwen3TTSModel
     require(torch.__version__ == '2.8.0+cpu')
     torch.set_num_threads(4)
     torch.set_num_interop_threads(1)
+    diagnostic = backend_diagnostic(torch)
+    (output/'backend-diagnostic.json').write_text(json.dumps(diagnostic, indent=2)+'\n')
+    print(json.dumps(dict(backend_diagnostic=diagnostic), sort_keys=True), flush=True)
     initial = backend_flags(torch)
+    from qwen_tts import Qwen3TTSModel
     metadata = dict(cpu=hardware(), torch_version=torch.__version__,
         mkldnn_available=bool(torch.backends.mkldnn.is_available()),
-        initial_backend_flags=initial, script_sha256=digest(Path(__file__)),
+        initial_backend_flags=initial, initial_backend_diagnostic=diagnostic,
+        script_sha256=digest(Path(__file__)),
         model_weights_sha256=digest(model_path/'model.safetensors'),
         codec_weights_sha256=digest(model_path/'speech_tokenizer/model.safetensors'),
         pinned_generation_config=json.loads((model_path/'generation_config.json').read_text()))
