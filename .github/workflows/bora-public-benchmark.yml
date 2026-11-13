@@ -1,0 +1,129 @@
+name: Bora public 1-vs-4 parallel benchmark
+on:
+  push:
+    branches: [integrated-lectures-premium-20261028]
+    paths:
+      - 'bora-production/benchmark-request.json'
+permissions:
+  contents: read
+concurrency:
+  group: bora-public-benchmark-${{ github.ref }}
+  cancel-in-progress: false
+env:
+  OMP_NUM_THREADS: '4'
+  OPENBLAS_NUM_THREADS: '4'
+  HF_HUB_DISABLE_PROGRESS_BARS: '1'
+  HF_HUB_DISABLE_TELEMETRY: '1'
+  HF_HUB_DISABLE_IMPLICIT_TOKEN: '1'
+  DO_NOT_TRACK: '1'
+  ORT_DISABLE_TELEMETRY: '1'
+jobs:
+  validate:
+    if: github.repository == 'quddnr0107-lgtm/korean-voice' && github.event_name == 'push'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Confirm production request, recipe, renderer and gates were not changed
+        run: |
+          git diff --exit-code HEAD^ HEAD -- .github/workflows/bora-fp32-production.yml bora-production/request.json bora-production/campaign.json bora-production/recipe.json bora-production/runtime.py bora-production/fp32_renderer.py bora-production/planning.py bora-production/assemble.py
+          python -m py_compile bora-production/benchmark_public.py
+          python -m unittest discover -s bora-production -p 'test_benchmark_public.py' -v
+      - name: Validate bounded public fixture and read-only workflow
+        run: |
+          python - <<'PY'
+          import json, sys
+          from pathlib import Path
+          sys.path.insert(0,'bora-production')
+          import benchmark_public as b
+          p=json.loads(Path('bora-production/benchmark-request.json').read_text())
+          assert p['schema']==b.SCHEMA and p['fixture_sha256']==b.digest(b.PARAGRAPHS)
+          assert p['arms']==list(b.ARMS) and p['max_workers']==5
+          assert p['production_source_used'] is False and p['publish_audio'] is False
+          w=Path('.github/workflows/bora-public-benchmark.yml').read_text()
+          assert ('secrets'+'.') not in w and ('environment'+':') not in w and ('contents'+': write') not in w
+          print('Public fixture and timing regression verified; production configuration unchanged')
+          PY
+  measure:
+    name: public-bench-${{ matrix.arm }}
+    needs: validate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix:
+        arm: [serial, p0, p1, p2, p3]
+    env:
+      BORA_BENCH_ARM: ${{ matrix.arm }}
+    steps:
+      - name: Timestamp first step before checkout and setup
+        run: echo "BORA_BENCH_JOB_START=$(date -u +%Y-%m-%dT%H:%M:%S.%NZ)" >> "$GITHUB_ENV"
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Install unchanged pinned option-3 runtime without production keys
+        timeout-minutes: 10
+        run: bash bora-production/setup_runtime.sh
+      - name: Download the same revision-pinned local models without keys
+        timeout-minutes: 8
+        run: python bora-production/download_models.py
+      - name: Measure identical public fixture using unchanged offline renderer
+        timeout-minutes: 20
+        run: |
+          umask 077
+          export BORA_HOST_NETNS="$(readlink /proc/self/ns/net)"
+          sudo --preserve-env=BORA_HOST_NETNS,BORA_MODEL,BORA_ASR,BORA_BENCH_JOB_START,OMP_NUM_THREADS,OPENBLAS_NUM_THREADS,ORT_DISABLE_TELEMETRY,HF_HUB_DISABLE_TELEMETRY,HF_HUB_DISABLE_IMPLICIT_TOKEN,DO_NOT_TRACK,RUNNER_TEMP,GITHUB_RUN_ID,GITHUB_SHA \
+            unshare --net --setgid "$(id -g)" --setuid "$(id -u)" -- "$(command -v python)" \
+            bora-production/benchmark_public.py run --arm "$BORA_BENCH_ARM" \
+            --output "$RUNNER_TEMP/bora-benchmark/benchmark-$BORA_BENCH_ARM.json"
+      - name: Save only public timing counters; never audio or private receipts
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: bora-public-benchmark-${{ matrix.arm }}-${{ github.run_id }}
+          path: ${{ runner.temp }}/bora-benchmark/benchmark-${{ matrix.arm }}.json
+          retention-days: 7
+          if-no-files-found: error
+  compare:
+    needs: [validate, measure]
+    if: ${{ always() && !cancelled() && needs.validate.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: bora-public-benchmark-*-${{ github.run_id }}
+          path: ${{ runner.temp }}/bora-benchmark-reports
+          merge-multiple: true
+      - name: Compare same inputs, settings, attempts, quality and real elapsed envelopes
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          python bora-production/benchmark_public.py collect \
+            --directory "$RUNNER_TEMP/bora-benchmark-reports" \
+            --output "$RUNNER_TEMP/bora-benchmark-summary.json"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: bora-public-benchmark-summary-${{ github.run_id }}
+          path: ${{ runner.temp }}/bora-benchmark-summary.json
+          retention-days: 7
+          if-no-files-found: error
