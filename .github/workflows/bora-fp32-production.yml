@@ -32,6 +32,8 @@ jobs:
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
           python-version: '3.12'
+      - name: Select CPU wait policy without source or media keys
+        run: python bora-production/cpu_wait_policy.py
       - name: Install the pinned runtime without source or media keys
         run: bash bora-production/setup_runtime.sh
       - name: Check producer, checkpoint, transport and assembly contracts
@@ -42,7 +44,7 @@ jobs:
         run: |
           umask 077
           export BORA_HOST_NETNS="$(readlink /proc/self/ns/net)"
-          sudo --preserve-env=BORA_HOST_NETNS,BORA_MODEL,BORA_ASR,OMP_NUM_THREADS,OPENBLAS_NUM_THREADS,ORT_DISABLE_TELEMETRY,HF_HUB_DISABLE_TELEMETRY,DO_NOT_TRACK,RUNNER_TEMP \
+          sudo --preserve-env=BORA_HOST_NETNS,BORA_MODEL,BORA_ASR,OMP_NUM_THREADS,OPENBLAS_NUM_THREADS,OMP_WAIT_POLICY,GOMP_SPINCOUNT,KMP_BLOCKTIME,ORT_DISABLE_TELEMETRY,HF_HUB_DISABLE_TELEMETRY,DO_NOT_TRACK,RUNNER_TEMP \
             unshare --net --setgid "$(id -g)" --setuid "$(id -u)" -- "$(command -v python)" \
             bora-production/runtime.py preflight --output "$RUNNER_TEMP/bora-runtime-smoke.json"
       - id: checked
@@ -158,6 +160,9 @@ jobs:
             bora-production/runtime.py probe --lesson-id "$BORA_LESSON" --shard "$BORA_SHARD" \
             --plan "$RUNNER_TEMP/bora-plan/public-plan.json" --resume-dir "$RUNNER_TEMP/bora-resume" \
             --output "$RUNNER_TEMP/bora-probe.json" --github-output "$GITHUB_OUTPUT"
+      - name: Select CPU wait policy only for missing units without keys
+        if: steps.probe.outputs.needs_synthesis == 'true'
+        run: python bora-production/cpu_wait_policy.py
       - name: Install the checked runtime only for missing units without keys
         if: steps.probe.outputs.needs_synthesis == 'true'
         timeout-minutes: 20
@@ -178,7 +183,7 @@ jobs:
         run: |
           umask 077
           export BORA_HOST_NETNS="$(readlink /proc/self/ns/net)"
-          sudo --preserve-env=ADMIN_LAW_PREMIUM_SOURCE_KEY_B64,ADMIN_LAW_PREMIUM_MEDIA_KEY_B64,BORA_HOST_NETNS,BORA_MODEL,BORA_ASR,OMP_NUM_THREADS,OPENBLAS_NUM_THREADS,ORT_DISABLE_TELEMETRY,HF_HUB_DISABLE_TELEMETRY,DO_NOT_TRACK,GITHUB_REPOSITORY,GITHUB_EVENT_NAME,GITHUB_REF,GITHUB_WORKFLOW_REF,GITHUB_RUN_ID,GITHUB_RUN_ATTEMPT,RUNNER_TEMP \
+          sudo --preserve-env=ADMIN_LAW_PREMIUM_SOURCE_KEY_B64,ADMIN_LAW_PREMIUM_MEDIA_KEY_B64,BORA_HOST_NETNS,BORA_MODEL,BORA_ASR,OMP_NUM_THREADS,OPENBLAS_NUM_THREADS,OMP_WAIT_POLICY,GOMP_SPINCOUNT,KMP_BLOCKTIME,ORT_DISABLE_TELEMETRY,HF_HUB_DISABLE_TELEMETRY,DO_NOT_TRACK,GITHUB_REPOSITORY,GITHUB_EVENT_NAME,GITHUB_REF,GITHUB_WORKFLOW_REF,GITHUB_RUN_ID,GITHUB_RUN_ATTEMPT,RUNNER_TEMP \
             unshare --net --setgid "$(id -g)" --setuid "$(id -u)" -- "$(command -v python)" \
             bora-production/runtime.py render --lesson-id "$BORA_LESSON" --shard "$BORA_SHARD" \
             --plan "$RUNNER_TEMP/bora-plan/public-plan.json" --resume-dir "$RUNNER_TEMP/bora-resume" \
