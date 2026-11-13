@@ -45,11 +45,29 @@ def command(binary, model, target, fixture, instruct=''):
 
 
 def eos_evidence(log):
-    frames = re.findall(r'(?m)^\s*EOS at frame ([0-9]+)\s*$', log)
-    observed = int(frames[0]) if len(frames) == 1 else None
-    return dict(eos_frame=observed,
-        natural_eos_observed=observed is not None and 0 < observed < TOKEN_CAP,
-        eos_assistance_enabled=False)
+    # Pinned source prints progress without a newline before the EOS message:
+    # "  Frame 50/1100 (4.0s audio)...  EOS at frame 56\n".
+    # Require the independent Generated count and explicit disabled EOS assist.
+    require(isinstance(log, str))
+    text = log.replace('\r', '\n')
+    pattern = (r'(?m)^[ \t]*(?:Frame [0-9]+/[0-9]+ '
+        r'\([0-9]+(?:\.[0-9]+)?s audio\)\.\.\.[ \t]*)?'
+        r'EOS at frame ([0-9]+)[ \t]*$')
+    frames = re.findall(pattern, text)
+    all_mentions = re.findall(r'\bEOS at frame ([0-9]+)', text)
+    generated = re.findall(r'(?m)^[ \t]*Generated ([0-9]+) frames '
+        r'\([0-9]+(?:\.[0-9]+)?s audio\)[ \t]*$', text)
+    strategies = re.findall(r'(?m)^[ \t]*EOS strategy: ([a-z0-9_]+) '
+        r'\(suppress=[0-9]+[^\n)]*\)[ \t]*$', text)
+    observed = int(frames[0]) if len(frames) == len(all_mentions) == 1 else None
+    count = int(generated[0]) if len(generated) == 1 else None
+    strategy = strategies[0] if len(strategies) == 1 else None
+    complete = (observed is not None and count == observed
+        and 0 < observed < TOKEN_CAP and strategy == 'off')
+    return dict(eos_frame=observed, generated_frames=count, eos_strategy=strategy,
+        natural_eos_observed=complete,
+        eos_assistance_enabled=(strategy != 'off') if strategy is not None else None,
+        eos_parser_version='pinned-cbackend-inline-progress/v2')
 
 
 def summarize(rows):

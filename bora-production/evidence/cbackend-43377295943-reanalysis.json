@@ -1,0 +1,100 @@
+{
+  "schema": "cbackend-sohee-public-cpu-benchmark/v1",
+  "source_repository": "https://github.com/gabriele-mastrapasqua/qwen3-tts.git",
+  "source_revision": "ef339be58a778b062e1c14382347964552eae007",
+  "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+  "model_revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+  "speaker": "sohee",
+  "language": "Korean",
+  "threads": 4,
+  "quantization_enabled": false,
+  "dtype_scope": "Native BF16 checkpoint storage with community C kernels; not PyTorch FP32 equivalence",
+  "public_fixtures": [
+    "오늘 배운 내용을 잠깐 덮고, 자기 말로 한 번 설명해 보세요.",
+    "지금은 조금 느려도 괜찮습니다. 한 문장씩 차분하게 읽어 보세요."
+  ],
+  "rows": [
+    {
+      "fixture": 0,
+      "process_wall_seconds": 13.582195,
+      "audio_seconds": 4.48,
+      "sample_rate": 24000,
+      "signal_valid": true,
+      "wav_sha256": "d40d61780ae50b8b1439b05bc4456f01d36c69acd1c4358faca4d330a044d963",
+      "eos_frame": 56,
+      "natural_eos_observed": true,
+      "eos_assistance_enabled": false,
+      "generated_frames": 56,
+      "eos_strategy": "off",
+      "eos_parser_version": "pinned-cbackend-inline-progress/v2",
+      "decoded_pcm_frame_coverage_verified": true
+    },
+    {
+      "fixture": 1,
+      "process_wall_seconds": 15.526518,
+      "audio_seconds": 5.2,
+      "sample_rate": 24000,
+      "signal_valid": true,
+      "wav_sha256": "1af84f30a596565ecfb9f63fab0113c9baef518ad134710132fdefce8d896966",
+      "eos_frame": 65,
+      "natural_eos_observed": true,
+      "eos_assistance_enabled": false,
+      "generated_frames": 65,
+      "eos_strategy": "off",
+      "eos_parser_version": "pinned-cbackend-inline-progress/v2",
+      "decoded_pcm_frame_coverage_verified": true
+    }
+  ],
+  "complete_natural_eos_and_signal": true,
+  "total_process_wall_seconds": 29.109,
+  "total_audio_seconds": 9.68,
+  "process_seconds_per_audio_second": 3.0071,
+  "process_time_includes_each_model_load": true,
+  "asr_performed": false,
+  "retries_performed": false,
+  "human_listening_verified": false,
+  "production_eligible": false,
+  "full_course_forecast_validated": false,
+  "scope": "Two short public fixtures on one CPU. EOS assistance disabled. No INT8/INT4, voice conversion or emotion steering. Different backend and numerical path; no bit identity or same quality claim. Historical PyTorch timings are cross-run references only.",
+  "binary_sha256": "eb36685966e2167e934256a052e4977eefdc72f9e4126b9517c522ed2938e4cb",
+  "model_weights_sha256": "38b1d5971bdbd982b561cccec982669a53b0537c3cf5e9bd4778ed07bb2f5137",
+  "codec_weights_sha256": "836b7b357f5ea43e889936a3709af68dfe3751881acefe4ecf0dbd30ba571258",
+  "cpu_count": 4,
+  "platform": "Linux-7.0.0-1014-aws-x86_64-with-glibc2.39",
+  "cpu_model": "Intel(R) Xeon(R) 6975P-C",
+  "cpu_flags": "fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq monitor vmx ssse3 fma cx16 pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch cpuid_fault ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves avx_vnni avx512_bf16 wbnoinvd ida arat vnmi avx512vbmi umip pku ospke waitpkg avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg tme avx512_vpopcntdq rdpid bus_lock_detect cldemote movdiri movdir64b md_clear serialize amx_bf16 avx512_fp16 amx_tile amx_int8 flush_l1d arch_capabilities",
+  "instruction": "",
+  "reanalysis": {
+    "schema": "public-cbackend-eos-reanalysis/v1",
+    "source_run_id": 43377295943,
+    "source_artifact_files_sha256": {
+      "summary.json": "4c9e68daf1a1f685d06695ca0d08c6e3d302ab0d875c5c2c1ea6543ebc70c022",
+      "cbackend-sohee-0.wav": "d40d61780ae50b8b1439b05bc4456f01d36c69acd1c4358faca4d330a044d963",
+      "cbackend-sohee-0.log": "a4b1a0d4d0cd2a0dcfd3453a917ca42a02a75112c427c867e21afab43801b54b",
+      "cbackend-sohee-1.wav": "1af84f30a596565ecfb9f63fab0113c9baef518ad134710132fdefce8d896966",
+      "cbackend-sohee-1.log": "d3d4dec0cb6f98607e35b6663e379e925ed4a82826a20d88fc6d056733a0164e"
+    },
+    "original_complete_natural_eos_and_signal": false,
+    "original_eos_projection": [
+      {
+        "fixture": 0,
+        "eos_frame": null,
+        "natural_eos_observed": false,
+        "eos_assistance_enabled": false
+      },
+      {
+        "fixture": 1,
+        "eos_frame": null,
+        "natural_eos_observed": false,
+        "eos_assistance_enabled": false
+      }
+    ],
+    "parser_source_sha256": "ad39e65132e0800295f27621c5b2f315cfd9925a416c5ca0ed08f5971b58403c",
+    "helper_source_sha256": "f5672afa96373ba37f1e9028022a069c2a2360b713b6ffd314c29bece1e7813d",
+    "audio_resynthesized": false,
+    "original_artifact_modified": false,
+    "original_process_times_preserved": true,
+    "original_wav_hashes_verified": true,
+    "source_binding_note": "Reanalysis of locally materialized GitHub public run 43377295943; file hashes preserve the exact downloaded inputs."
+  }
+}

@@ -24,10 +24,34 @@ class PublicCBackendTests(unittest.TestCase):
         self.assertEqual(args[-2:], ['--instruct', 'Public style'])
 
     def test_eos_missing_duplicate_and_cap_cannot_claim_complete(self):
-        for log in ('no evidence', 'EOS at frame 1100\n', 'EOS at frame 0\n',
-                    'EOS at frame 40\nEOS at frame 41\n'):
+        for log in ('no evidence', self.log(eos=1100, generated=1100),
+                    self.log(eos=0, generated=0),
+                    self.log() + 'EOS at frame 41\n',
+                    self.log().replace('EOS strategy: off (suppress=2)\n', ''),
+                    self.log(generated=55), self.log(strategy='v1'),
+                    self.log() + 'EOS strategy: v1 (suppress=2)\n',
+                    self.log() + 'Generated 54 frames (4.3s audio)\n',
+                    self.log().replace('  EOS at frame 54', 'Text: EOS at frame 54')):
             self.assertFalse(b.eos_evidence(log)['natural_eos_observed'])
-        self.assertTrue(b.eos_evidence('  EOS at frame 54\n')['natural_eos_observed'])
+        self.assertTrue(b.eos_evidence(self.log())['natural_eos_observed'])
+
+    def log(self, eos=54, generated=54, strategy='off', inline=False):
+        prefix = '  Frame 50/1100 (4.0s audio)...  ' if inline else '  '
+        return (f'EOS strategy: {strategy} (suppress=2)\n'
+            f'{prefix}EOS at frame {eos}\n\n'
+            f'  Generated {generated} frames (4.3s audio)\n')
+
+    def test_actual_pinned_inline_progress_is_consistent_eos_evidence(self):
+        out = b.eos_evidence(self.log(eos=56, generated=56, inline=True))
+        self.assertTrue(out['natural_eos_observed'])
+        self.assertEqual(out['eos_frame'], 56)
+        self.assertEqual(out['generated_frames'], 56)
+        self.assertFalse(out['eos_assistance_enabled'])
+
+    def test_carriage_return_progress_and_malformed_duplicate_fail_closed(self):
+        text = self.log(eos=65, generated=65, inline=True)
+        self.assertTrue(b.eos_evidence(text.replace('\n', '\r\n'))['natural_eos_observed'])
+        self.assertFalse(b.eos_evidence(text + 'Text: EOS at frame 65\n')['natural_eos_observed'])
 
     def test_timing_ratio_not_quality_or_publication(self):
         rows = self.rows(); before = copy.deepcopy(rows)

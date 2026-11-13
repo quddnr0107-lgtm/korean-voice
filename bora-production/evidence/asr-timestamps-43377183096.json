@@ -1,0 +1,160 @@
+{
+  "canonical_and_gate_parity": true,
+  "checkpoints_modified": false,
+  "compute_type": "int8",
+  "cpu_count": 4,
+  "cpu_threads": 1,
+  "decoding_options": {
+    "beam_size": 5,
+    "condition_on_previous_text": false,
+    "language": "ko",
+    "temperature": 0,
+    "vad_filter": false
+  },
+  "device": "cpu",
+  "elapsed_seconds": {
+    "false": 19.296878,
+    "true": 20.73289
+  },
+  "equivalent_transcript_timing_reduction_pct": 6.926,
+  "model": "Systran/faster-whisper-small",
+  "model_file_sha256": {
+    "config.json": "b55496ac7940a7ae47d2c01eab40edfd8701feec1229d9cce3b40014383fb828",
+    "model.bin": "3e305921506d8872816023e4c273e75d2419fb89b24da97b4fe7bce14170d671",
+    "tokenizer.json": "fb7b63191e9bb045082c79fd742a3106a12c99513ab30df4a0d47fa6cb6fd0ab",
+    "vocabulary.txt": "34ce3fe1c5041027b3f8d42912270993f986dbc4bb34cf27f951e34a1e453913"
+  },
+  "model_load_included": false,
+  "model_load_seconds": 0.899213,
+  "model_revision": "536b0662742c02347bc0e980a01041f333bce120",
+  "no_expected_text_prompt": true,
+  "num_workers": 1,
+  "observed_elapsed_reduction_pct": 6.926,
+  "packages": {
+    "ctranslate2": "4.9.0",
+    "faster-whisper": "1.2.1",
+    "numpy": "2.5.4",
+    "onnxruntime": "1.31.1",
+    "scipy": "1.18.1",
+    "soundfile": "0.14.0"
+  },
+  "pairs": [
+    {
+      "canonical_transcript_equal": true,
+      "character_error_count_equal": true,
+      "exact_gate_outcome_equal": true,
+      "fixture": 0,
+      "missing_critical_count_equal": true
+    },
+    {
+      "canonical_transcript_equal": true,
+      "character_error_count_equal": true,
+      "exact_gate_outcome_equal": true,
+      "fixture": 1,
+      "missing_critical_count_equal": true
+    },
+    {
+      "canonical_transcript_equal": true,
+      "character_error_count_equal": true,
+      "exact_gate_outcome_equal": true,
+      "fixture": 2,
+      "missing_critical_count_equal": true
+    },
+    {
+      "canonical_transcript_equal": true,
+      "character_error_count_equal": true,
+      "exact_gate_outcome_equal": true,
+      "fixture": 3,
+      "missing_critical_count_equal": true
+    }
+  ],
+  "platform": "Linux-7.0.0-1017-azure-x86_64-with-glibc2.39",
+  "production_eligible": false,
+  "resampling_included": false,
+  "rows": [
+    {
+      "audio_seconds": 4.32,
+      "canonical_sha256": "37ce3f00572252b6e9f5de37896cfc0ea88793f923217fc71fbe9bf5211a67d6",
+      "character_errors": 0,
+      "fixture": 0,
+      "missing_critical_count": 0,
+      "seconds": 5.461624,
+      "word_count": 9,
+      "word_timestamps": true
+    },
+    {
+      "audio_seconds": 4.32,
+      "canonical_sha256": "37ce3f00572252b6e9f5de37896cfc0ea88793f923217fc71fbe9bf5211a67d6",
+      "character_errors": 0,
+      "fixture": 0,
+      "missing_critical_count": 0,
+      "seconds": 4.929017,
+      "word_count": 0,
+      "word_timestamps": false
+    },
+    {
+      "audio_seconds": 4.8,
+      "canonical_sha256": "37ce3f00572252b6e9f5de37896cfc0ea88793f923217fc71fbe9bf5211a67d6",
+      "character_errors": 0,
+      "fixture": 1,
+      "missing_critical_count": 0,
+      "seconds": 4.835741,
+      "word_count": 0,
+      "word_timestamps": false
+    },
+    {
+      "audio_seconds": 4.8,
+      "canonical_sha256": "37ce3f00572252b6e9f5de37896cfc0ea88793f923217fc71fbe9bf5211a67d6",
+      "character_errors": 0,
+      "fixture": 1,
+      "missing_critical_count": 0,
+      "seconds": 5.105132,
+      "word_count": 9,
+      "word_timestamps": true
+    },
+    {
+      "audio_seconds": 6.32,
+      "canonical_sha256": "704a57895ec93c67b710406c8c577ec17215c416d12651ff57161a39178bdef1",
+      "character_errors": 0,
+      "fixture": 2,
+      "missing_critical_count": 0,
+      "seconds": 5.035416,
+      "word_count": 8,
+      "word_timestamps": true
+    },
+    {
+      "audio_seconds": 6.32,
+      "canonical_sha256": "704a57895ec93c67b710406c8c577ec17215c416d12651ff57161a39178bdef1",
+      "character_errors": 0,
+      "fixture": 2,
+      "missing_critical_count": 0,
+      "seconds": 4.685729,
+      "word_count": 0,
+      "word_timestamps": false
+    },
+    {
+      "audio_seconds": 5.28,
+      "canonical_sha256": "704a57895ec93c67b710406c8c577ec17215c416d12651ff57161a39178bdef1",
+      "character_errors": 0,
+      "fixture": 3,
+      "missing_critical_count": 0,
+      "seconds": 4.846391,
+      "word_count": 0,
+      "word_timestamps": false
+    },
+    {
+      "audio_seconds": 5.28,
+      "canonical_sha256": "704a57895ec93c67b710406c8c577ec17215c416d12651ff57161a39178bdef1",
+      "character_errors": 0,
+      "fixture": 3,
+      "missing_critical_count": 0,
+      "seconds": 5.130718,
+      "word_count": 8,
+      "word_timestamps": true
+    }
+  ],
+  "schema": "public-asr-timestamp-benchmark/v1",
+  "scope": "One alternating-order trial on four hash-pinned public WAVs. Transcript parity here does not prove parity or quality on operating manuscripts.",
+  "source_run_id": 43374157929,
+  "synthesis_started": false
+}

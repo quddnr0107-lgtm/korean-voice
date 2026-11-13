@@ -1,0 +1,25 @@
+{
+  "scope": "two-public-fixtures-only-not-production-approval",
+  "model": "Systran/faster-whisper-small",
+  "revision": "536b0662742c02347bc0e980a01041f333bce120",
+  "rows": [
+    {
+      "fixture": 0,
+      "wav_sha256": "d40d61780ae50b8b1439b05bc4456f01d36c69acd1c4358faca4d330a044d963",
+      "expected": "오늘 배운 내용을 잠깐 덮고, 자기 말로 한 번 설명해 보세요.",
+      "recognized": "오늘 배운 내용을 잠깐 덮고 자기말로 한번 설명해 보세요.",
+      "character_errors": 0,
+      "asr_seconds": 4.017241190998902
+    },
+    {
+      "fixture": 1,
+      "wav_sha256": "1af84f30a596565ecfb9f63fab0113c9baef518ad134710132fdefce8d896966",
+      "expected": "지금은 조금 느려도 괜찮습니다. 한 문장씩 차분하게 읽어 보세요.",
+      "recognized": "지금은 조금 느려도 괜찮습니다. 한 문장씩 차분하게 읽어보세요.",
+      "character_errors": 0,
+      "asr_seconds": 4.043367068999942
+    }
+  ],
+  "production_eligible": false,
+  "human_listening_verified": false
+}
