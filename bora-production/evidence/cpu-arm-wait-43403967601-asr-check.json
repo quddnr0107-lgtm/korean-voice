@@ -1,0 +1,105 @@
+{
+  "schema": "sohee-public-cpu-arm-wait-asr/v1",
+  "source_run_id": 43403967601,
+  "source_summary_sha256": "b110a934c1f93af360e281071ce730424a11d5588ecc9a24b65b7fe3bc37c560",
+  "artifact_provenance": {
+    "source_run_id": 43403967601,
+    "source_commit": "bea3e79df2d3b248f904950bc643e49f1dc6db94",
+    "artifact_id": 14025714989,
+    "artifact_name": "sohee-cpu-arm-wait-43403967601",
+    "zip_bytes": 2005530,
+    "zip_sha256": "4d82756e2789d6c418da4c8cec20f45d50e1d35b0488add532e9f4e8d7b8c6df",
+    "zip_digest_verified": true,
+    "zip_size_verified": true,
+    "zip_members": [
+      "default/default-0.wav",
+      "default/default-1.wav",
+      "default/partial-rows.json",
+      "default/result.json",
+      "passive/partial-rows.json",
+      "passive/passive-0.wav",
+      "passive/passive-1.wav",
+      "passive/result.json",
+      "summary.json"
+    ],
+    "uncompressed_bytes": 2195483,
+    "archive_traversal_symlink_duplicate_size_checks_passed": true
+  },
+  "scope": "Four short generic public ARM64 FP32 WAVs only; ASR disagreement is not proof of pronunciation error.",
+  "model": "Systran/faster-whisper-small",
+  "revision": "536b0662742c02347bc0e980a01041f333bce120",
+  "asr_model_sha256": {
+    "config.json": "b55496ac7940a7ae47d2c01eab40edfd8701feec1229d9cce3b40014383fb828",
+    "model.bin": "3e305921506d8872816023e4c273e75d2419fb89b24da97b4fe7bce14170d671",
+    "tokenizer.json": "fb7b63191e9bb045082c79fd742a3106a12c99513ab30df4a0d47fa6cb6fd0ab",
+    "vocabulary.txt": "34ce3fe1c5041027b3f8d42912270993f986dbc4bb34cf27f951e34a1e453913"
+  },
+  "settings": {
+    "device": "cpu",
+    "compute_type": "int8",
+    "cpu_threads": 1,
+    "num_workers": 1,
+    "language": "ko",
+    "beam_size": 5,
+    "temperature": 0,
+    "condition_on_previous_text": false,
+    "vad_filter": false,
+    "initial_prompt": null,
+    "word_timestamps": true,
+    "max_cer": 0.0
+  },
+  "rows": [
+    {
+      "variant": "default",
+      "fixture": 0,
+      "wav_file": "default/default-0.wav",
+      "wav_sha256": "b2b1958dd8da906be03019845eed2b4d6d366594b725c3f428a0c73dd5463d45",
+      "raw_pcm_f32le_sha256": "7e2ed7ffc2280272261f09f643e68e314664915b25ee88e4936ecca57a5a517e",
+      "expected": "오늘 배운 내용을 잠깐 덮고, 자기 말로 한 번 설명해 보세요.",
+      "recognized": "오늘 배운 내용을 잠깐 덮고 자기말로 한번 설명해 보세요.",
+      "character_errors": 0,
+      "expected_characters": 23,
+      "asr_seconds": 4.08757
+    },
+    {
+      "variant": "default",
+      "fixture": 1,
+      "wav_file": "default/default-1.wav",
+      "wav_sha256": "f052e0dadfb66d18b57112acbe0adbde5aaddb7eac991c0b283311d9fc23e0bd",
+      "raw_pcm_f32le_sha256": "470be678adc8b99e946bf43dd83589af0281b6ce33320e17f120dbf1d9c056d0",
+      "expected": "지금은 조금 느려도 괜찮습니다. 한 문장씩 차분하게 읽어 보세요.",
+      "recognized": "지금은 조금 느려도 괜찮습니다 한 문장씩 차분하게 읽어보세요",
+      "character_errors": 0,
+      "expected_characters": 26,
+      "asr_seconds": 3.935278
+    },
+    {
+      "variant": "passive",
+      "fixture": 0,
+      "wav_file": "passive/passive-0.wav",
+      "wav_sha256": "69d1d3cc3b27efb4a27dd897f94891d7755b6a76884d857cb14d73eba476c542",
+      "raw_pcm_f32le_sha256": "7e2ed7ffc2280272261f09f643e68e314664915b25ee88e4936ecca57a5a517e",
+      "expected": "오늘 배운 내용을 잠깐 덮고, 자기 말로 한 번 설명해 보세요.",
+      "recognized": "오늘 배운 내용을 잠깐 덮고 자기말로 한번 설명해 보세요.",
+      "character_errors": 0,
+      "expected_characters": 23,
+      "asr_seconds": 4.002366
+    },
+    {
+      "variant": "passive",
+      "fixture": 1,
+      "wav_file": "passive/passive-1.wav",
+      "wav_sha256": "d328cb56711c2adc493ac7ade755e62ca96c3a64739758e8e64a1daaafcb19b9",
+      "raw_pcm_f32le_sha256": "470be678adc8b99e946bf43dd83589af0281b6ce33320e17f120dbf1d9c056d0",
+      "expected": "지금은 조금 느려도 괜찮습니다. 한 문장씩 차분하게 읽어 보세요.",
+      "recognized": "지금은 조금 느려도 괜찮습니다 한 문장씩 차분하게 읽어보세요",
+      "character_errors": 0,
+      "expected_characters": 26,
+      "asr_seconds": 3.920322
+    }
+  ],
+  "exact_matches": 4,
+  "total_character_errors": 0,
+  "human_listening_verified": false,
+  "production_eligible": false
+}

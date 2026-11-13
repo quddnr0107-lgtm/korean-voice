@@ -1,0 +1,51 @@
+{
+  "schema": "bora-cpu-wait-adoption-evidence/v1",
+  "production_commit": "8324b0de0cb445498009ade733fe7299da7ff705",
+  "ci_trigger_commit": "16404ee31338f477ad01cff035ce228ab04327c1",
+  "protected_diff": {
+    "base": "46dcbafa5d3f2e7068b1e78b1dacd71a422d82cb",
+    "head": "68b6b362ddaa264ff09a5741a3f4531fbbb6368e",
+    "commits": 8,
+    "protected_files_touched": []
+  },
+  "policy": {
+    "exact_cpu_model": "AMD EPYC 7763 64-Core Processor",
+    "on_clean_environment": "PASSIVE + GOMP_SPINCOUNT=0 + KMP_BLOCKTIME=0",
+    "other_cpus": "unchanged default",
+    "inherited_wait_variables": "unchanged; metadata only",
+    "performance_guaranteed": false
+  },
+  "ci": [
+    {
+      "run_id": 43404209991,
+      "job_id": 131814379856,
+      "conclusion": "success",
+      "tests_run": 272,
+      "skipped": 1
+    },
+    {
+      "run_id": 43404775055,
+      "job_id": 131816328655,
+      "conclusion": "success",
+      "tests_run": 272,
+      "skipped": 1
+    }
+  ],
+  "actual_sudo_unshare_positive_negative_contract_executed": true,
+  "unchanged_local_file_sha256": {
+    "bora-production/request.json": "af47e3a7a4f855be5f479b88e7e93ce548aba8c405883f1a15766e0c61fbe683",
+    "bora-production/campaign.json": "18ef9c14d3f662541d19c800c733ce7787be0dd67f51020ba91de70ff615011c",
+    "bora-production/recipe.json": "afa1d14714066e8733dd980377a0093570f49e861153a879a2803c5a81664146",
+    "bora-production/runtime.py": "4f67a38e72322e9705b382fb072333722daeb6cebde286d726cd47cb2939838f",
+    "bora-production/fp32_renderer.py": "9806f419fe98b59f7689b42bf0a46f98d158d3ce0612ec4eba5d7186f7a18d18",
+    "bora-production/assemble.py": "1294e7f5aa5ac86dbf674c2cd57bc1363e770af4313da1cbba727fc3683aeb77",
+    "bora-production/pilot_render.py": "b90b5761b841c69088a1c0c01988c1c7f41fae714142a518b8f6f06d7ef95e21",
+    "bora-production/quality.py": "e471a65e9cd96f2ff7fa4ac0a1eb7b04dba18d99121c64c09e27ab1ecef98651"
+  },
+  "production_request_triggered": false,
+  "private_manuscripts_read": false,
+  "existing_27_passed_units_regenerated": false,
+  "strict_qa_changed": false,
+  "partial_course_published": false
+}
+

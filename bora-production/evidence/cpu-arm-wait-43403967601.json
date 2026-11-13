@@ -1,0 +1,868 @@
+{
+  "schema": "sohee-public-cpu-arm-wait/v1",
+  "status": "arm_wait_timing_trial_no_quality_approval",
+  "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+  "model_revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+  "device": "cpu",
+  "dtype": "float32",
+  "cpu": {
+    "cpu_models": [],
+    "logical_cpus": 4,
+    "bf16_instruction_flags": [],
+    "bf16_instruction_available": false,
+    "cpu_flags": [
+      "aes",
+      "asimd",
+      "asimddp",
+      "asimdfhm",
+      "asimdhp",
+      "asimdrdm",
+      "atomics",
+      "bf16",
+      "cpuid",
+      "crc32",
+      "dcpodp",
+      "dcpop",
+      "evtstrm",
+      "fcma",
+      "flagm",
+      "flagm2",
+      "fp",
+      "fphp",
+      "frint",
+      "i8mm",
+      "ilrcpc",
+      "jscvt",
+      "lrcpc",
+      "paca",
+      "pacg",
+      "pmull",
+      "sb",
+      "sha1",
+      "sha2",
+      "sha3",
+      "sha512",
+      "sm3",
+      "sm4",
+      "sve",
+      "sve2",
+      "sveaes",
+      "svebf16",
+      "svebitperm",
+      "svei8mm",
+      "svesha3",
+      "svesm4",
+      "uscat"
+    ]
+  },
+  "runner": "ubuntu-24.04-arm",
+  "threads": 4,
+  "interop_threads": 1,
+  "speaker": "Sohee",
+  "fixtures": [
+    "오늘 배운 내용을 잠깐 덮고, 자기 말로 한 번 설명해 보세요.",
+    "지금은 조금 느려도 괜찮습니다. 한 문장씩 차분하게 읽어 보세요."
+  ],
+  "fixture_order": [
+    0,
+    1
+  ],
+  "variant_order": [
+    "default",
+    "passive"
+  ],
+  "totals": {
+    "default": {
+      "tts_seconds": 51.017790777000016,
+      "audio_seconds": 11.120000000000001,
+      "process_cpu_seconds": 174.035203048,
+      "complete_natural_eos_and_signal": true,
+      "synthesis_seconds_per_audio_second": 4.587930825269785
+    },
+    "passive": {
+      "tts_seconds": 55.14945593699997,
+      "audio_seconds": 11.120000000000001,
+      "process_cpu_seconds": 145.61536544,
+      "complete_natural_eos_and_signal": true,
+      "synthesis_seconds_per_audio_second": 4.959483447571939
+    }
+  },
+  "complete_natural_eos_and_signal": true,
+  "observed_pair_wall_ratio_default_over_passive": 0.9250823949248064,
+  "observed_rtf_ratio_default_over_passive": 0.9250823949248064,
+  "identical_pcm_hashes_by_fixture": {
+    "0": true,
+    "1": true
+  },
+  "identical_talker_sequence_hashes_by_fixture": {
+    "0": true,
+    "1": true
+  },
+  "talker_sequence_hash_scope": "Returned talker.generate first row only, not full-codebook parity.",
+  "model_load_count_per_variant": 1,
+  "model_load_included_in_tts": false,
+  "wait_hints_guaranteed_applied": false,
+  "asr_performed": false,
+  "dsp_performed": false,
+  "retries_performed": false,
+  "production_eligible": false,
+  "human_listening_verified": false,
+  "quality_equivalence_verified": false,
+  "full_course_forecast_validated": false,
+  "caveat": "One default-then-passive trial on the same ARM64 runner using two generic explanation fixtures and sequential fresh processes. Model file cache, order and host noise remain. The three wait hints change together and may be ignored by the runtime. Do not add this improvement to an earlier x86 or ARM result, or infer full-course or listening equivalence.",
+  "variants": {
+    "default": {
+      "variant": "default",
+      "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+      "model_revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+      "machine": "aarch64",
+      "installed_packages": {
+        "torch": "2.8.0+cpu",
+        "torchaudio": "2.8.0",
+        "qwen-tts": "0.1.1",
+        "transformers": "4.57.3",
+        "soundfile": "0.14.0",
+        "numpy": "2.5.4",
+        "scipy": "1.18.1"
+      },
+      "device": "cpu",
+      "threads": 4,
+      "interop_threads": 1,
+      "parameter_dtypes": [
+        "float32"
+      ],
+      "wait_environment": {},
+      "fixture_order": [
+        0,
+        1
+      ],
+      "cpu": {
+        "cpu_models": [],
+        "logical_cpus": 4,
+        "bf16_instruction_flags": [],
+        "bf16_instruction_available": false,
+        "cpu_flags": [
+          "aes",
+          "asimd",
+          "asimddp",
+          "asimdfhm",
+          "asimdhp",
+          "asimdrdm",
+          "atomics",
+          "bf16",
+          "cpuid",
+          "crc32",
+          "dcpodp",
+          "dcpop",
+          "evtstrm",
+          "fcma",
+          "flagm",
+          "flagm2",
+          "fp",
+          "fphp",
+          "frint",
+          "i8mm",
+          "ilrcpc",
+          "jscvt",
+          "lrcpc",
+          "paca",
+          "pacg",
+          "pmull",
+          "sb",
+          "sha1",
+          "sha2",
+          "sha3",
+          "sha512",
+          "sm3",
+          "sm4",
+          "sve",
+          "sve2",
+          "sveaes",
+          "svebf16",
+          "svebitperm",
+          "svei8mm",
+          "svesha3",
+          "svesm4",
+          "uscat"
+        ]
+      },
+      "fixtures": [
+        "오늘 배운 내용을 잠깐 덮고, 자기 말로 한 번 설명해 보세요.",
+        "지금은 조금 느려도 괜찮습니다. 한 문장씩 차분하게 읽어 보세요."
+      ],
+      "native_threads": {
+        "intraop_threads": 4,
+        "interop_threads": 1,
+        "openmp_available": true,
+        "omp_get_max_threads": 4,
+        "mkl_get_max_threads": null
+      },
+      "parallel_info": "ATen/Parallel:\n\tat::get_num_threads() : 4\n\tat::get_num_interop_threads() : 1\nOpenMP 201511 (a.k.a. OpenMP 4.5)\n\tomp_get_max_threads() : 4\nIntel(R) MKL-DNN v3.7.1 (Git Hash 8d263e693366ef8db40acc569cc7d8edf644556d)\nstd::thread::hardware_concurrency() : 4\nEnvironment variables:\n\tOMP_NUM_THREADS : 4\nATen parallel backend: OpenMP\n",
+      "model_assets_sha256": {
+        "model.safetensors": "38b1d5971bdbd982b561cccec982669a53b0537c3cf5e9bd4778ed07bb2f5137",
+        "speech_tokenizer/model.safetensors": "836b7b357f5ea43e889936a3709af68dfe3751881acefe4ecf0dbd30ba571258",
+        "config.json": "17a07f527a1c25ea30b4e023a184482a23d3e279d697b1dc81b1bde498d29cf9",
+        "generation_config.json": "f1b90b4513f3b34c62851049e2492d7b4c5940daf1276f89c82b8ef04127f3aa",
+        "tokenizer_config.json": "dc3c31c3bdaedd5016382bb3cbe07323026775ad51f5a4fb564505992ae4a670",
+        "preprocessor_config.json": "efdde1022ea9d76928bf7a9cd53139138f5ba2e466e837f08f6105ab1af1c119",
+        "vocab.json": "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910",
+        "merges.txt": "599bab54075088774b1733fde865d5bd747cbcc7a547c5bc12610e874e26f5e3",
+        "speech_tokenizer/config.json": "ee65bb901c876664ab8707c487157aa1a6ee57c65969b28fb5ec9dc211e68167",
+        "speech_tokenizer/configuration.json": "6bc26d64eb5024b4d1dab5a52371958b429256d6c9d59787f1f5294a54e0cebd",
+        "speech_tokenizer/preprocessor_config.json": "fcb3805e597e786d4067706e602f6688524640f8d3396790e2e09b5942fcbdfb"
+      },
+      "model_load_seconds": 1.7472506839999937,
+      "memory_after_load": {
+        "current_rss_kib": 8583860,
+        "peak_rss_kib": 11801328
+      },
+      "memory_after_synthesis": {
+        "current_rss_kib": 8919376,
+        "peak_rss_kib": 11801328
+      },
+      "loaded_math_libraries": [
+        "/opt/hostedtoolcache/Python/3.12.16/arm64/lib/python3.12/site-packages/scikit_learn.libs/libgomp-a49a47f9.so.1.0.0",
+        "/opt/hostedtoolcache/Python/3.12.16/arm64/lib/python3.12/site-packages/torch.libs/libgomp-947d5fa1.so.1.0.0",
+        "/opt/hostedtoolcache/Python/3.12.16/arm64/lib/python3.12/site-packages/torch.libs/libopenblasp-r0-121ca252.3.30.so",
+        "/usr/lib/aarch64-linux-gnu/libgomp.so.1.0.0"
+      ],
+      "lscpu": {
+        "lscpu": [
+          {
+            "field": "Architecture:",
+            "data": "aarch64"
+          },
+          {
+            "field": "CPU op-mode(s):",
+            "data": "32-bit, 64-bit"
+          },
+          {
+            "field": "Byte Order:",
+            "data": "Little Endian"
+          },
+          {
+            "field": "CPU(s):",
+            "data": "4"
+          },
+          {
+            "field": "On-line CPU(s) list:",
+            "data": "0-3"
+          },
+          {
+            "field": "Vendor ID:",
+            "data": "ARM"
+          },
+          {
+            "field": "Model name:",
+            "data": "Neoverse-N2"
+          },
+          {
+            "field": "Model:",
+            "data": "0"
+          },
+          {
+            "field": "Thread(s) per core:",
+            "data": "1"
+          },
+          {
+            "field": "Core(s) per socket:",
+            "data": "4"
+          },
+          {
+            "field": "Socket(s):",
+            "data": "1"
+          },
+          {
+            "field": "Stepping:",
+            "data": "r0p0"
+          },
+          {
+            "field": "BogoMIPS:",
+            "data": "2000.00"
+          },
+          {
+            "field": "Flags:",
+            "data": "fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16"
+          },
+          {
+            "field": "L1d cache:",
+            "data": "256 KiB (4 instances)"
+          },
+          {
+            "field": "L1i cache:",
+            "data": "256 KiB (4 instances)"
+          },
+          {
+            "field": "L2 cache:",
+            "data": "4 MiB (4 instances)"
+          },
+          {
+            "field": "L3 cache:",
+            "data": "128 MiB (1 instance)"
+          },
+          {
+            "field": "NUMA node(s):",
+            "data": "1"
+          },
+          {
+            "field": "NUMA node0 CPU(s):",
+            "data": "0-3"
+          },
+          {
+            "field": "Vulnerability Gather data sampling:",
+            "data": "Not affected"
+          },
+          {
+            "field": "Vulnerability Ghostwrite:",
+            "data": "Not affected"
+          },
+          {
+            "field": "Vulnerability Indirect target selection:",
+            "data": "Not affected"
+          },
+          {
+            "field": "Vulnerability Itlb multihit:",
+            "data": "Not affected"
+          },
+          {
+            "field": "Vulnerability L1tf:",
+            "data": "Not affected"
+          },
+          {
+            "field": "Vulnerability Mds:",
+            "data": "Not affected"
+          },
+          {
+            "field": "Vulnerability Meltdown:",
+            "data": "Not affected"
+          },
+          {
+            "field": "Vulnerability Mmio stale data:",
+            "data": "Not affected"
+          },
+          {
+            "field": "Vulnerability Old microcode:",
+            "data": "Not affected"
+          },
+          {
+            "field": "Vulnerability Reg file data sampling:",
+            "data": "Not affected"
+          },
+          {
+            "field": "Vulnerability Retbleed:",
+            "data": "Not affected"
+          },
+          {
+            "field": "Vulnerability Spec rstack overflow:",
+            "data": "Not affected"
+          },
+          {
+            "field": "Vulnerability Spec store bypass:",
+            "data": "Mitigation; Speculative Store Bypass disabled via prctl"
+          },
+          {
+            "field": "Vulnerability Spectre v1:",
+            "data": "Mitigation; __user pointer sanitization"
+          },
+          {
+            "field": "Vulnerability Spectre v2:",
+            "data": "Mitigation; CSV2, BHB"
+          },
+          {
+            "field": "Vulnerability Srbds:",
+            "data": "Not affected"
+          },
+          {
+            "field": "Vulnerability Tsa:",
+            "data": "Not affected"
+          },
+          {
+            "field": "Vulnerability Tsx async abort:",
+            "data": "Not affected"
+          },
+          {
+            "field": "Vulnerability Vmscape:",
+            "data": "Not affected"
+          }
+        ]
+      },
+      "mkldnn_enabled": true,
+      "totals": {
+        "tts_seconds": 51.017790777000016,
+        "audio_seconds": 11.120000000000001,
+        "process_cpu_seconds": 174.035203048,
+        "complete_natural_eos_and_signal": true,
+        "synthesis_seconds_per_audio_second": 4.587930825269785
+      },
+      "worker_mode_wall_seconds": 61.671023012000035,
+      "rows": [
+        {
+          "variant": "default",
+          "fixture": 0,
+          "seed": 5192,
+          "dtype": "float32",
+          "device": "cpu",
+          "threads": 4,
+          "interop_threads": 1,
+          "tts_seconds": 22.358533388000012,
+          "process_cpu_seconds": 76.155232328,
+          "audio_seconds": 4.8,
+          "sample_rate": 24000,
+          "pcm_samples": 115200,
+          "signal_valid": true,
+          "wav_file": "default-0.wav",
+          "wav_sha256": "b2b1958dd8da906be03019845eed2b4d6d366594b725c3f428a0c73dd5463d45",
+          "raw_pcm_f32le_sha256": "7e2ed7ffc2280272261f09f643e68e314664915b25ee88e4936ecca57a5a517e",
+          "memory": {
+            "current_rss_kib": 8891212,
+            "peak_rss_kib": 11801328
+          },
+          "sequence_tokens": 61,
+          "eos_seen": true,
+          "cap_reached": false,
+          "natural_eos": true,
+          "talker_sequence_sha256": "111d5938951412865d3022ad7633bb963eeb78765427a7eb5b0792ba86d4cc63"
+        },
+        {
+          "variant": "default",
+          "fixture": 1,
+          "seed": 5193,
+          "dtype": "float32",
+          "device": "cpu",
+          "threads": 4,
+          "interop_threads": 1,
+          "tts_seconds": 28.659257389000004,
+          "process_cpu_seconds": 97.87997072,
+          "audio_seconds": 6.32,
+          "sample_rate": 24000,
+          "pcm_samples": 151680,
+          "signal_valid": true,
+          "wav_file": "default-1.wav",
+          "wav_sha256": "f052e0dadfb66d18b57112acbe0adbde5aaddb7eac991c0b283311d9fc23e0bd",
+          "raw_pcm_f32le_sha256": "470be678adc8b99e946bf43dd83589af0281b6ce33320e17f120dbf1d9c056d0",
+          "memory": {
+            "current_rss_kib": 8919376,
+            "peak_rss_kib": 11801328
+          },
+          "sequence_tokens": 80,
+          "eos_seen": true,
+          "cap_reached": false,
+          "natural_eos": true,
+          "talker_sequence_sha256": "4e446e68e7c722167eb666d7408a80a0e6997f830f40422b1c9573dc00c8157c"
+        }
+      ]
+    },
+    "passive": {
+      "variant": "passive",
+      "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+      "model_revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+      "machine": "aarch64",
+      "installed_packages": {
+        "torch": "2.8.0+cpu",
+        "torchaudio": "2.8.0",
+        "qwen-tts": "0.1.1",
+        "transformers": "4.57.3",
+        "soundfile": "0.14.0",
+        "numpy": "2.5.4",
+        "scipy": "1.18.1"
+      },
+      "device": "cpu",
+      "threads": 4,
+      "interop_threads": 1,
+      "parameter_dtypes": [
+        "float32"
+      ],
+      "wait_environment": {
+        "OMP_WAIT_POLICY": "PASSIVE",
+        "GOMP_SPINCOUNT": "0",
+        "KMP_BLOCKTIME": "0"
+      },
+      "fixture_order": [
+        0,
+        1
+      ],
+      "cpu": {
+        "cpu_models": [],
+        "logical_cpus": 4,
+        "bf16_instruction_flags": [],
+        "bf16_instruction_available": false,
+        "cpu_flags": [
+          "aes",
+          "asimd",
+          "asimddp",
+          "asimdfhm",
+          "asimdhp",
+          "asimdrdm",
+          "atomics",
+          "bf16",
+          "cpuid",
+          "crc32",
+          "dcpodp",
+          "dcpop",
+          "evtstrm",
+          "fcma",
+          "flagm",
+          "flagm2",
+          "fp",
+          "fphp",
+          "frint",
+          "i8mm",
+          "ilrcpc",
+          "jscvt",
+          "lrcpc",
+          "paca",
+          "pacg",
+          "pmull",
+          "sb",
+          "sha1",
+          "sha2",
+          "sha3",
+          "sha512",
+          "sm3",
+          "sm4",
+          "sve",
+          "sve2",
+          "sveaes",
+          "svebf16",
+          "svebitperm",
+          "svei8mm",
+          "svesha3",
+          "svesm4",
+          "uscat"
+        ]
+      },
+      "fixtures": [
+        "오늘 배운 내용을 잠깐 덮고, 자기 말로 한 번 설명해 보세요.",
+        "지금은 조금 느려도 괜찮습니다. 한 문장씩 차분하게 읽어 보세요."
+      ],
+      "native_threads": {
+        "intraop_threads": 4,
+        "interop_threads": 1,
+        "openmp_available": true,
+        "omp_get_max_threads": 4,
+        "mkl_get_max_threads": null
+      },
+      "parallel_info": "ATen/Parallel:\n\tat::get_num_threads() : 4\n\tat::get_num_interop_threads() : 1\nOpenMP 201511 (a.k.a. OpenMP 4.5)\n\tomp_get_max_threads() : 4\nIntel(R) MKL-DNN v3.7.1 (Git Hash 8d263e693366ef8db40acc569cc7d8edf644556d)\nstd::thread::hardware_concurrency() : 4\nEnvironment variables:\n\tOMP_NUM_THREADS : 4\nATen parallel backend: OpenMP\n",
+      "model_assets_sha256": {
+        "model.safetensors": "38b1d5971bdbd982b561cccec982669a53b0537c3cf5e9bd4778ed07bb2f5137",
+        "speech_tokenizer/model.safetensors": "836b7b357f5ea43e889936a3709af68dfe3751881acefe4ecf0dbd30ba571258",
+        "config.json": "17a07f527a1c25ea30b4e023a184482a23d3e279d697b1dc81b1bde498d29cf9",
+        "generation_config.json": "f1b90b4513f3b34c62851049e2492d7b4c5940daf1276f89c82b8ef04127f3aa",
+        "tokenizer_config.json": "dc3c31c3bdaedd5016382bb3cbe07323026775ad51f5a4fb564505992ae4a670",
+        "preprocessor_config.json": "efdde1022ea9d76928bf7a9cd53139138f5ba2e466e837f08f6105ab1af1c119",
+        "vocab.json": "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910",
+        "merges.txt": "599bab54075088774b1733fde865d5bd747cbcc7a547c5bc12610e874e26f5e3",
+        "speech_tokenizer/config.json": "ee65bb901c876664ab8707c487157aa1a6ee57c65969b28fb5ec9dc211e68167",
+        "speech_tokenizer/configuration.json": "6bc26d64eb5024b4d1dab5a52371958b429256d6c9d59787f1f5294a54e0cebd",
+        "speech_tokenizer/preprocessor_config.json": "fcb3805e597e786d4067706e602f6688524640f8d3396790e2e09b5942fcbdfb"
+      },
+      "model_load_seconds": 1.667181950999975,
+      "memory_after_load": {
+        "current_rss_kib": 8573128,
+        "peak_rss_kib": 11795992
+      },
+      "memory_after_synthesis": {
+        "current_rss_kib": 8882608,
+        "peak_rss_kib": 11795992
+      },
+      "loaded_math_libraries": [
+        "/opt/hostedtoolcache/Python/3.12.16/arm64/lib/python3.12/site-packages/scikit_learn.libs/libgomp-a49a47f9.so.1.0.0",
+        "/opt/hostedtoolcache/Python/3.12.16/arm64/lib/python3.12/site-packages/torch.libs/libgomp-947d5fa1.so.1.0.0",
+        "/opt/hostedtoolcache/Python/3.12.16/arm64/lib/python3.12/site-packages/torch.libs/libopenblasp-r0-121ca252.3.30.so",
+        "/usr/lib/aarch64-linux-gnu/libgomp.so.1.0.0"
+      ],
+      "lscpu": {
+        "lscpu": [
+          {
+            "field": "Architecture:",
+            "data": "aarch64"
+          },
+          {
+            "field": "CPU op-mode(s):",
+            "data": "32-bit, 64-bit"
+          },
+          {
+            "field": "Byte Order:",
+            "data": "Little Endian"
+          },
+          {
+            "field": "CPU(s):",
+            "data": "4"
+          },
+          {
+            "field": "On-line CPU(s) list:",
+            "data": "0-3"
+          },
+          {
+            "field": "Vendor ID:",
+            "data": "ARM"
+          },
+          {
+            "field": "Model name:",
+            "data": "Neoverse-N2"
+          },
+          {
+            "field": "Model:",
+            "data": "0"
+          },
+          {
+            "field": "Thread(s) per core:",
+            "data": "1"
+          },
+          {
+            "field": "Core(s) per socket:",
+            "data": "4"
+          },
+          {
+            "field": "Socket(s):",
+            "data": "1"
+          },
+          {
+            "field": "Stepping:",
+            "data": "r0p0"
+          },
+          {
+            "field": "BogoMIPS:",
+            "data": "2000.00"
+          },
+          {
+            "field": "Flags:",
+            "data": "fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16"
+          },
+          {
+            "field": "L1d cache:",
+            "data": "256 KiB (4 instances)"
+          },
+          {
+            "field": "L1i cache:",
+            "data": "256 KiB (4 instances)"
+          },
+          {
+            "field": "L2 cache:",
+            "data": "4 MiB (4 instances)"
+          },
+          {
+            "field": "L3 cache:",
+            "data": "128 MiB (1 instance)"
+          },
+          {
+            "field": "NUMA node(s):",
+            "data": "1"
+          },
+          {
+            "field": "NUMA node0 CPU(s):",
+            "data": "0-3"
+          },
+          {
+            "field": "Vulnerability Gather data sampling:",
+            "data": "Not affected"
+          },
+          {
+            "field": "Vulnerability Ghostwrite:",
+            "data": "Not affected"
+          },
+          {
+            "field": "Vulnerability Indirect target selection:",
+            "data": "Not affected"
+          },
+          {
+            "field": "Vulnerability Itlb multihit:",
+            "data": "Not affected"
+          },
+          {
+            "field": "Vulnerability L1tf:",
+            "data": "Not affected"
+          },
+          {
+            "field": "Vulnerability Mds:",
+            "data": "Not affected"
+          },
+          {
+            "field": "Vulnerability Meltdown:",
+            "data": "Not affected"
+          },
+          {
+            "field": "Vulnerability Mmio stale data:",
+            "data": "Not affected"
+          },
+          {
+            "field": "Vulnerability Old microcode:",
+            "data": "Not affected"
+          },
+          {
+            "field": "Vulnerability Reg file data sampling:",
+            "data": "Not affected"
+          },
+          {
+            "field": "Vulnerability Retbleed:",
+            "data": "Not affected"
+          },
+          {
+            "field": "Vulnerability Spec rstack overflow:",
+            "data": "Not affected"
+          },
+          {
+            "field": "Vulnerability Spec store bypass:",
+            "data": "Mitigation; Speculative Store Bypass disabled via prctl"
+          },
+          {
+            "field": "Vulnerability Spectre v1:",
+            "data": "Mitigation; __user pointer sanitization"
+          },
+          {
+            "field": "Vulnerability Spectre v2:",
+            "data": "Mitigation; CSV2, BHB"
+          },
+          {
+            "field": "Vulnerability Srbds:",
+            "data": "Not affected"
+          },
+          {
+            "field": "Vulnerability Tsa:",
+            "data": "Not affected"
+          },
+          {
+            "field": "Vulnerability Tsx async abort:",
+            "data": "Not affected"
+          },
+          {
+            "field": "Vulnerability Vmscape:",
+            "data": "Not affected"
+          }
+        ]
+      },
+      "mkldnn_enabled": true,
+      "totals": {
+        "tts_seconds": 55.14945593699997,
+        "audio_seconds": 11.120000000000001,
+        "process_cpu_seconds": 145.61536544,
+        "complete_natural_eos_and_signal": true,
+        "synthesis_seconds_per_audio_second": 4.959483447571939
+      },
+      "worker_mode_wall_seconds": 64.45858735899998,
+      "rows": [
+        {
+          "variant": "passive",
+          "fixture": 0,
+          "seed": 5192,
+          "dtype": "float32",
+          "device": "cpu",
+          "threads": 4,
+          "interop_threads": 1,
+          "tts_seconds": 24.149549825999998,
+          "process_cpu_seconds": 63.932391992,
+          "audio_seconds": 4.8,
+          "sample_rate": 24000,
+          "pcm_samples": 115200,
+          "signal_valid": true,
+          "wav_file": "passive-0.wav",
+          "wav_sha256": "69d1d3cc3b27efb4a27dd897f94891d7755b6a76884d857cb14d73eba476c542",
+          "raw_pcm_f32le_sha256": "7e2ed7ffc2280272261f09f643e68e314664915b25ee88e4936ecca57a5a517e",
+          "memory": {
+            "current_rss_kib": 8863564,
+            "peak_rss_kib": 11795992
+          },
+          "sequence_tokens": 61,
+          "eos_seen": true,
+          "cap_reached": false,
+          "natural_eos": true,
+          "talker_sequence_sha256": "111d5938951412865d3022ad7633bb963eeb78765427a7eb5b0792ba86d4cc63"
+        },
+        {
+          "variant": "passive",
+          "fixture": 1,
+          "seed": 5193,
+          "dtype": "float32",
+          "device": "cpu",
+          "threads": 4,
+          "interop_threads": 1,
+          "tts_seconds": 30.999906110999973,
+          "process_cpu_seconds": 81.682973448,
+          "audio_seconds": 6.32,
+          "sample_rate": 24000,
+          "pcm_samples": 151680,
+          "signal_valid": true,
+          "wav_file": "passive-1.wav",
+          "wav_sha256": "d328cb56711c2adc493ac7ade755e62ca96c3a64739758e8e64a1daaafcb19b9",
+          "raw_pcm_f32le_sha256": "470be678adc8b99e946bf43dd83589af0281b6ce33320e17f120dbf1d9c056d0",
+          "memory": {
+            "current_rss_kib": 8882604,
+            "peak_rss_kib": 11795992
+          },
+          "sequence_tokens": 80,
+          "eos_seen": true,
+          "cap_reached": false,
+          "natural_eos": true,
+          "talker_sequence_sha256": "4e446e68e7c722167eb666d7408a80a0e6997f830f40422b1c9573dc00c8157c"
+        }
+      ]
+    }
+  },
+  "source_run_id": 43403967601,
+  "source_run_url": "https://github.com/quddnr0107-lgtm/korean-voice/actions/runs/43403967601",
+  "artifact_provenance": {
+    "source_run_id": 43403967601,
+    "source_commit": "bea3e79df2d3b248f904950bc643e49f1dc6db94",
+    "artifact_id": 14025714989,
+    "artifact_name": "sohee-cpu-arm-wait-43403967601",
+    "zip_bytes": 2005530,
+    "zip_sha256": "4d82756e2789d6c418da4c8cec20f45d50e1d35b0488add532e9f4e8d7b8c6df",
+    "zip_digest_verified": true,
+    "zip_size_verified": true,
+    "zip_members": [
+      "default/default-0.wav",
+      "default/default-1.wav",
+      "default/partial-rows.json",
+      "default/result.json",
+      "passive/partial-rows.json",
+      "passive/passive-0.wav",
+      "passive/passive-1.wav",
+      "passive/result.json",
+      "summary.json"
+    ],
+    "uncompressed_bytes": 2195483,
+    "archive_traversal_symlink_duplicate_size_checks_passed": true
+  },
+  "source_summary_sha256": "b110a934c1f93af360e281071ce730424a11d5588ecc9a24b65b7fe3bc37c560",
+  "asr_exact_matches": 4,
+  "asr_character_errors": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "asr_evidence_sha256": "eabce0e36026f3002757c35f62cf911e1e1a82a74ec4a1deca78a62c3e2d5c25",
+  "waveform_differences_vs_default": {
+    "method": "Direct decoded PCM without alignment, trimming, resampling or stretching.",
+    "rows": [
+      {
+        "fixture": 0,
+        "baseline_variant": "default",
+        "comparison_variant": "passive",
+        "baseline_samples": 115200,
+        "comparison_samples": 115200,
+        "same_sample_count": true,
+        "max_absolute_difference": 0.0,
+        "rms_delta": 0.0,
+        "relative_rms_delta": 0.0,
+        "pearson_correlation": 1.0,
+        "exact_sample_values": true
+      },
+      {
+        "fixture": 1,
+        "baseline_variant": "default",
+        "comparison_variant": "passive",
+        "baseline_samples": 151680,
+        "comparison_samples": 151680,
+        "same_sample_count": true,
+        "max_absolute_difference": 0.0,
+        "rms_delta": 0.0,
+        "relative_rms_delta": 0.0,
+        "pearson_correlation": 1.0,
+        "exact_sample_values": true
+      }
+    ]
+  },
+  "observed_pair_wall_time_reduction_pct": -8.098479171823731,
+  "observed_process_cpu_time_reduction_pct": 16.32993619122082
+}

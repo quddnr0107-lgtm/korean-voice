@@ -1,0 +1,101 @@
+{
+  "schema": "sohee-public-cpu-arm-asr/v1",
+  "source_run_id": 43400425292,
+  "source_summary_sha256": "852b18be164d0ef0b407469ae2f4b0ca19908b607efe39deb8dace34bae112dd",
+  "artifact_provenance": {
+    "source_run_id": 43400425292,
+    "source_commit": "4f85009b630e10f9b1111978cf42a1d5d19fb921",
+    "artifact_id": 14025660098,
+    "artifact_name": "sohee-cpu-arm-43400425292",
+    "zip_bytes": 1995631,
+    "zip_sha256": "103a23866878846b8181a0a54f54883fcb51282ffe74b1bea73f19f6bbb4fbc8",
+    "zip_digest_verified": true,
+    "zip_size_verified": true,
+    "zip_members": [
+      "arm-fp32-threads-2-fixture-0.wav",
+      "arm-fp32-threads-4-fixture-0.wav",
+      "arm-fp32-threads-2-fixture-1.wav",
+      "arm-fp32-threads-4-fixture-1.wav",
+      "summary.json"
+    ],
+    "uncompressed_bytes": 2155914,
+    "archive_traversal_symlink_duplicate_size_checks_passed": true
+  },
+  "scope": "Four short public ARM64 FP32 WAVs only; ASR disagreement is not proof of pronunciation error.",
+  "model": "Systran/faster-whisper-small",
+  "revision": "536b0662742c02347bc0e980a01041f333bce120",
+  "asr_model_sha256": {
+    "config.json": "b55496ac7940a7ae47d2c01eab40edfd8701feec1229d9cce3b40014383fb828",
+    "model.bin": "3e305921506d8872816023e4c273e75d2419fb89b24da97b4fe7bce14170d671",
+    "tokenizer.json": "fb7b63191e9bb045082c79fd742a3106a12c99513ab30df4a0d47fa6cb6fd0ab",
+    "vocabulary.txt": "34ce3fe1c5041027b3f8d42912270993f986dbc4bb34cf27f951e34a1e453913"
+  },
+  "settings": {
+    "device": "cpu",
+    "compute_type": "int8",
+    "cpu_threads": 1,
+    "num_workers": 1,
+    "language": "ko",
+    "beam_size": 5,
+    "temperature": 0,
+    "condition_on_previous_text": false,
+    "vad_filter": false,
+    "initial_prompt": null,
+    "word_timestamps": true,
+    "max_cer": 0.0
+  },
+  "rows": [
+    {
+      "fixture": 0,
+      "threads_requested": 4,
+      "wav_file": "arm-fp32-threads-4-fixture-0.wav",
+      "wav_sha256": "34a0756299ba1f31ba283891ba240a014817c4a56ad0fa19869d5cebf1899ce7",
+      "pcm_f32le_sha256": "7e2ed7ffc2280272261f09f643e68e314664915b25ee88e4936ecca57a5a517e",
+      "expected": "오늘 배운 내용을 잠깐 덮고, 자기 말로 한 번 설명해 보세요.",
+      "recognized": "오늘 배운 내용을 잠깐 덮고 자기말로 한번 설명해 보세요.",
+      "character_errors": 0,
+      "expected_characters": 23,
+      "asr_seconds": 4.142365
+    },
+    {
+      "fixture": 0,
+      "threads_requested": 2,
+      "wav_file": "arm-fp32-threads-2-fixture-0.wav",
+      "wav_sha256": "a4cafed0bae20cd3b09340f02b4fc774fdf23cd259c48dbb0133f57c81ef3605",
+      "pcm_f32le_sha256": "7e2ed7ffc2280272261f09f643e68e314664915b25ee88e4936ecca57a5a517e",
+      "expected": "오늘 배운 내용을 잠깐 덮고, 자기 말로 한 번 설명해 보세요.",
+      "recognized": "오늘 배운 내용을 잠깐 덮고 자기말로 한번 설명해 보세요.",
+      "character_errors": 0,
+      "expected_characters": 23,
+      "asr_seconds": 3.81171
+    },
+    {
+      "fixture": 1,
+      "threads_requested": 2,
+      "wav_file": "arm-fp32-threads-2-fixture-1.wav",
+      "wav_sha256": "e6d8ba5e74aeea43e2c32565287ddeec5097741d096e31dcc8d82e16f666ada5",
+      "pcm_f32le_sha256": "2950dd410f2fc7f3ecd7215291288415b6c8cf5cf72e60e9bc1fdbd467a54fbc",
+      "expected": "지금은 조금 느려도 괜찮습니다. 한 문장씩 차분하게 읽어 보세요.",
+      "recognized": "지금은 조금 느려도 괜찮습니다 한 문장씩 차분하게 읽어보세요",
+      "character_errors": 0,
+      "expected_characters": 26,
+      "asr_seconds": 3.528781
+    },
+    {
+      "fixture": 1,
+      "threads_requested": 4,
+      "wav_file": "arm-fp32-threads-4-fixture-1.wav",
+      "wav_sha256": "ad44258d02215d4288d6e15eefe2e29dba9960782b625f5a47ad269eebbb3834",
+      "pcm_f32le_sha256": "470be678adc8b99e946bf43dd83589af0281b6ce33320e17f120dbf1d9c056d0",
+      "expected": "지금은 조금 느려도 괜찮습니다. 한 문장씩 차분하게 읽어 보세요.",
+      "recognized": "지금은 조금 느려도 괜찮습니다 한 문장씩 차분하게 읽어보세요",
+      "character_errors": 0,
+      "expected_characters": 26,
+      "asr_seconds": 3.834978
+    }
+  ],
+  "exact_matches": 4,
+  "total_character_errors": 0,
+  "human_listening_verified": false,
+  "production_eligible": false
+}

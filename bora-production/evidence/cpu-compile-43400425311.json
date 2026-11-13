@@ -1,0 +1,251 @@
+{
+  "schema": "sohee-public-cpu-compile/v1",
+  "status": "compile_trial_failed",
+  "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+  "model_revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+  "device": "cpu",
+  "dtype": "float32",
+  "threads": 4,
+  "interop_threads": 1,
+  "speaker": "Sohee",
+  "fixtures": [
+    "오늘 배운 내용을 잠깐 덮고, 자기 말로 한 번 설명해 보세요.",
+    "지금은 조금 느려도 괜찮습니다. 한 문장씩 차분하게 읽어 보세요."
+  ],
+  "totals": {
+    "eager": {
+      "tts_seconds": 76.635425,
+      "audio_seconds": 11.12,
+      "synthesis_seconds_per_audio_second": null
+    },
+    "compiled_predictor": {
+      "tts_seconds": 0,
+      "audio_seconds": 0,
+      "synthesis_seconds_per_audio_second": null
+    }
+  },
+  "complete_natural_eos_and_signal": false,
+  "compiled_execution_observed": false,
+  "compile_counters": {
+    "backend_compile_attempts": 4,
+    "backend_graphs_compiled": 1,
+    "compiled_graph_invocations": 0,
+    "predictor_forward_calls": 2
+  },
+  "observed_pair_wall_ratio_eager_over_compiled": null,
+  "observed_rtf_ratio_eager_over_compiled": null,
+  "first_compiled_call_includes_compilation": true,
+  "first_compiled_call_seconds": null,
+  "second_compiled_call_seconds": null,
+  "second_compiled_call_new_graphs": null,
+  "second_call_proven_steady_state": false,
+  "compile_scope": "model.model.talker.code_predictor.forward only; sampler and generate stay eager",
+  "backend": "inductor",
+  "fullgraph": false,
+  "dynamic": true,
+  "compile_threads": 1,
+  "maximum_compiled_graphs": 32,
+  "entire_predictor_compiled_coverage_claimed": false,
+  "model_load_included_in_tts": false,
+  "asr_performed": false,
+  "dsp_performed": false,
+  "production_eligible": false,
+  "human_listening_verified": false,
+  "full_course_forecast_validated": false,
+  "sources": [
+    "https://docs.pytorch.org/docs/2.8/generated/torch.compile.html",
+    "https://github.com/pytorch/pytorch/blob/v2.8.0/torch/_inductor/config.py",
+    "https://github.com/QwenLM/Qwen3-TTS/blob/022e286b98fbec7e1e916cb940cdf532cd9f488e/qwen_tts/core/models/modeling_qwen3_tts.py"
+  ],
+  "caveat": "One eager-then-compiled trial, two short public fixtures, one resident model. Graph breaks can leave eager regions; backend counters prove some compiled code ran, not full compiled coverage. First compiled TTS includes compilation; the second is steady only if it compiled no new graph. FP32 fusion may change floating-point results and sampled audio. No pronunciation or full-course equivalence claim.",
+  "native_threads": {
+    "intraop_threads": 4,
+    "interop_threads": 1,
+    "omp_get_max_threads": 4,
+    "mkl_get_max_threads": 4
+  },
+  "torch_version": "2.8.0+cpu",
+  "compiler_version": "g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+  "model_assets_sha256": {
+    "model.safetensors": "38b1d5971bdbd982b561cccec982669a53b0537c3cf5e9bd4778ed07bb2f5137",
+    "speech_tokenizer/model.safetensors": "836b7b357f5ea43e889936a3709af68dfe3751881acefe4ecf0dbd30ba571258",
+    "config.json": "17a07f527a1c25ea30b4e023a184482a23d3e279d697b1dc81b1bde498d29cf9",
+    "generation_config.json": "f1b90b4513f3b34c62851049e2492d7b4c5940daf1276f89c82b8ef04127f3aa",
+    "tokenizer_config.json": "dc3c31c3bdaedd5016382bb3cbe07323026775ad51f5a4fb564505992ae4a670",
+    "preprocessor_config.json": "efdde1022ea9d76928bf7a9cd53139138f5ba2e466e837f08f6105ab1af1c119",
+    "vocab.json": "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910",
+    "merges.txt": "599bab54075088774b1733fde865d5bd747cbcc7a547c5bc12610e874e26f5e3",
+    "speech_tokenizer/config.json": "ee65bb901c876664ab8707c487157aa1a6ee57c65969b28fb5ec9dc211e68167",
+    "speech_tokenizer/configuration.json": "6bc26d64eb5024b4d1dab5a52371958b429256d6c9d59787f1f5294a54e0cebd",
+    "speech_tokenizer/preprocessor_config.json": "fcb3805e597e786d4067706e602f6688524640f8d3396790e2e09b5942fcbdfb"
+  },
+  "model_load_seconds": 2.2823468299999945,
+  "memory_after_load": {
+    "current_rss_kib": 8670968,
+    "peak_rss_kib": 11884824
+  },
+  "original_predictor_source_sha256": "25c42656bcf810f06ef6bc1839bd7083f3c8cfedac3a147c4060b4262b1c96a0",
+  "eager_wrapper_setup_seconds": 5.850000007967537e-06,
+  "compiled_wrapper_setup_seconds": 0.2612202830000001,
+  "failed_mode": "compiled_predictor",
+  "failed_fixture": 0,
+  "error_type": "InductorError",
+  "dynamo_counters": {
+    "frames": {
+      "total": 3,
+      "ok": 2
+    },
+    "stats": {
+      "calls_captured": 2064,
+      "unique_graphs": 1
+    },
+    "inductor": {
+      "pattern_matcher_count": 264,
+      "pattern_matcher_nodes": 304,
+      "fxgraph_cache_miss": 2,
+      "extern_calls": 95
+    },
+    "graph_break": {},
+    "unimplemented": {}
+  },
+  "memory_at_failure": {
+    "current_rss_kib": 9170816,
+    "peak_rss_kib": 11884824
+  },
+  "cpu": {
+    "cpu_models": [
+      "INTEL(R) XEON(R) PLATINUM 8573C"
+    ],
+    "logical_cpus": 4,
+    "bf16_instruction_flags": [
+      "amx_bf16",
+      "avx512_bf16"
+    ],
+    "bf16_instruction_available": true
+  },
+  "rows": [
+    {
+      "mode": "eager",
+      "fixture": 0,
+      "seed": 5192,
+      "tts_seconds": 33.159945350000015,
+      "audio_seconds": 4.8,
+      "sample_rate": 24000,
+      "pcm_samples": 115200,
+      "signal_valid": true,
+      "sequence_tokens": 61,
+      "eos_seen": true,
+      "cap_reached": false,
+      "natural_eos": true,
+      "talker_sequence_sha256": "111d5938951412865d3022ad7633bb963eeb78765427a7eb5b0792ba86d4cc63",
+      "wav_file": "eager-0.wav",
+      "wav_sha256": "9311f9cd0d4d44cd1f94676a1bf7c413048edbe701675b665e7ed2813987387a",
+      "pcm_sha256": "a550c7d5f58b17fff6979363975cdf8cd333c804061865a9a64aa8449ee06f11",
+      "compiled_graph_invocations_during_call": 0,
+      "new_graphs_compiled_during_call": 0,
+      "predictor_forward_calls_during_call": 0,
+      "dynamo_counters": {
+        "frames": {},
+        "stats": {},
+        "inductor": {},
+        "graph_break": {},
+        "unimplemented": {}
+      },
+      "memory": {
+        "current_rss_kib": 9044264,
+        "peak_rss_kib": 11884824
+      }
+    },
+    {
+      "mode": "eager",
+      "fixture": 1,
+      "seed": 5193,
+      "tts_seconds": 43.475479323,
+      "audio_seconds": 6.32,
+      "sample_rate": 24000,
+      "pcm_samples": 151680,
+      "signal_valid": true,
+      "sequence_tokens": 80,
+      "eos_seen": true,
+      "cap_reached": false,
+      "natural_eos": true,
+      "talker_sequence_sha256": "4e446e68e7c722167eb666d7408a80a0e6997f830f40422b1c9573dc00c8157c",
+      "wav_file": "eager-1.wav",
+      "wav_sha256": "058fc63e24edab360e33c69c4af582e3bf8d8d4e99b4a36d57f9fe8fb593acde",
+      "pcm_sha256": "1fcda3c7262c2ebf16ae9bb11cbb81d94907b08c921419f92862be76f5ad2857",
+      "compiled_graph_invocations_during_call": 0,
+      "new_graphs_compiled_during_call": 0,
+      "predictor_forward_calls_during_call": 0,
+      "dynamo_counters": {
+        "frames": {},
+        "stats": {},
+        "inductor": {},
+        "graph_break": {},
+        "unimplemented": {}
+      },
+      "memory": {
+        "current_rss_kib": 9095696,
+        "peak_rss_kib": 11884824
+      }
+    }
+  ],
+  "source_run_id": 43400425311,
+  "source_run_url": "https://github.com/quddnr0107-lgtm/korean-voice/actions/runs/43400425311",
+  "artifact_provenance": {
+    "artifact_id": 14024679376,
+    "run_id": 43400425311,
+    "source_commit": "4f85009b630e10f9b1111978cf42a1d5d19fb921",
+    "zip_bytes": 998550,
+    "zip_sha256": "e2e725cb1193aba13cac22ba7e5c86a9e72b6da29610df69f595ab154ffc4cb3",
+    "github_digest_matches": true,
+    "archive_size_matches": true,
+    "traversal_symlink_duplicate_extracted_size_checks_passed": true,
+    "extracted_bytes": 1078708,
+    "members": [
+      "eager-0.wav",
+      "eager-1.wav",
+      "summary.json"
+    ]
+  },
+  "source_summary_sha256": "0998bb31829b2f75943c380d5e9d35a13403c9c28e423c033797db67924fc9a8",
+  "asr_evidence": "cpu-compile-43400425311-asr-check.json",
+  "asr_evidence_sha256": "9d348a1885fe12560b4487f737a3f297e2b1d59545b62cd9784223125041ccb0",
+  "asr_exact_matches": 2,
+  "asr_character_errors": [
+    0,
+    0
+  ],
+  "direct_pcm_comparisons_no_alignment_or_resampling": [],
+  "failure_diagnosis": {
+    "observed_error_type": "InductorError",
+    "actual_compiled_graph_invocations": 0,
+    "graph_attempts": 4,
+    "graph_limit": 32,
+    "configured_graph_limit_reached": false,
+    "per_call_timeout_reached": false,
+    "baseline_wavs_retained": 2,
+    "inner_exception_available_in_logs": false,
+    "support_limitation_proven": false,
+    "instrumentation_assertion_proven": false,
+    "interpretation": "The error type is from Inductor and was observed before any returned compiled graph ran. The 32-graph bound was not reached. This does not establish missing CPU support; the public trial kept only error_type, so the underlying exception was not captured. A bounded public exception-chain/traceback diagnostic is needed before deciding the repair.",
+    "possible_followup": "Compile only code_predictor.model.forward to avoid per-head generation_steps/ModuleList selection, after collecting the underlying exception. This is a hypothesis, not an established fix."
+  },
+  "execution_counter_interpretation_correction": {
+    "recorded_counter_zero_does_not_prove_nonexecution": true,
+    "raw_counter_values_preserved": true,
+    "affected_helper": "tracked_backend execute callback decorated with functools.wraps(compiled)",
+    "explanation": "functools.wraps copies the returned backend callable __dict__, including any _torchdynamo_orig_callable. PyTorch 2.8 innermost_fn follows that attribute and can unwrap past the callback. The saved zero is an observed counter value, not proof that no compiled graph ran.",
+    "minimal_reproducer_confirmed_with_real_benchmark_helper_and_fake_backend": true,
+    "minimal_reproducer_uses_native_torch": false,
+    "reproducer_result": {
+      "counter_after_unwrapped_successful_call": 0,
+      "returned_value": 5
+    },
+    "source_references": [
+      "https://github.com/pytorch/pytorch/blob/v2.8.0/torch/_dynamo/eval_frame.py",
+      "https://github.com/pytorch/pytorch/blob/v2.8.0/torch/_dynamo/backends/common.py"
+    ],
+    "correction_in_followup": "Request -04 returns a plain execution callback and preserves only the explicitly needed _boxed_call protocol attribute when present; compiler private unwrapping and disable tags are not copied.",
+    "prior_trial_speed_improvement_claimed": false
+  }
+}

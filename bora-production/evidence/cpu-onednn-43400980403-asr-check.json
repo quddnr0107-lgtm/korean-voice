@@ -1,0 +1,99 @@
+{
+  "schema": "sohee-public-cpu-onednn-asr/v1",
+  "run_id": 43400980403,
+  "scope": "four-short-public-fixtures-only-no-production-approval",
+  "source_summary_sha256": "45fefb668b498a585a96feca9c9badbd6f806be191f717910ebbd8707dbadaa1",
+  "source_archive": {
+    "run_id": 43400980403,
+    "source_commit": "b886e006e47190b5333c69b8b9695c2a5cc5fa0b",
+    "job_id": 131803463257,
+    "conclusion": "success",
+    "run_url": "https://github.com/quddnr0107-lgtm/korean-voice/actions/runs/43400980403",
+    "artifact_id": 14024723338,
+    "artifact_name": "sohee-cpu-onednn-43400980403",
+    "zip_bytes": 1993921,
+    "zip_sha256": "77acd8616de2e0e7a843af0dee6e8fdbdbab2d6f513cd429e709c527a1d49bda",
+    "zip_digest_verified": true,
+    "zip_size_verified": true,
+    "archive_traversal_symlink_duplicate_size_checks_passed": true,
+    "members": [
+      "backend-diagnostic.json",
+      "onednn-disabled-fixture-0.wav",
+      "onednn-disabled-fixture-1.wav",
+      "onednn-enabled-fixture-0.wav",
+      "onednn-enabled-fixture-1.wav",
+      "summary.json"
+    ],
+    "uncompressed_bytes": 2154456,
+    "source_script_hash_matches_checkout": true
+  },
+  "model": "Systran/faster-whisper-small",
+  "revision": "536b0662742c02347bc0e980a01041f333bce120",
+  "pinned_asr_files_sha256": {
+    "config.json": "b55496ac7940a7ae47d2c01eab40edfd8701feec1229d9cce3b40014383fb828",
+    "model.bin": "3e305921506d8872816023e4c273e75d2419fb89b24da97b4fe7bce14170d671",
+    "tokenizer.json": "fb7b63191e9bb045082c79fd742a3106a12c99513ab30df4a0d47fa6cb6fd0ab",
+    "vocabulary.txt": "34ce3fe1c5041027b3f8d42912270993f986dbc4bb34cf27f951e34a1e453913"
+  },
+  "settings": {
+    "device": "cpu",
+    "compute_type": "int8",
+    "cpu_threads": 1,
+    "num_workers": 1,
+    "language": "ko",
+    "beam_size": 5,
+    "temperature": 0,
+    "condition_on_previous_text": false,
+    "vad_filter": false,
+    "word_timestamps": true,
+    "initial_prompt": null,
+    "max_cer": 0.0
+  },
+  "rows": [
+    {
+      "mode": "enabled",
+      "fixture": 0,
+      "wav_sha256": "9989c724aced2a27522fc6635ad4389a3ba4f421245830985d173f9282e96a0b",
+      "pcm_float32_sha256": "5e2cfe302666117484096a1db9de8735f2ef3a6af7d439a3a8af9e8012fde906",
+      "expected": "오늘 배운 내용을 잠깐 덮고, 자기 말로 한 번 설명해 보세요.",
+      "recognized": "오늘 배운 내용을 잠깐 덮고 자기말로 한번 설명해 보세요",
+      "character_errors": 0,
+      "asr_seconds": 3.914706074996502
+    },
+    {
+      "mode": "disabled",
+      "fixture": 0,
+      "wav_sha256": "2e7c353b206f0fc831ab57b8e1adf62f0ef9cdae4da26a2ed9e4153995f1f308",
+      "pcm_float32_sha256": "d153e0e00237aa0bb2739f5372b05163628ff2e8d9e717bd4bf9724d13a40684",
+      "expected": "오늘 배운 내용을 잠깐 덮고, 자기 말로 한 번 설명해 보세요.",
+      "recognized": "오늘 배운 내용을 잠깐 덮고 자기말로 한번 설명해 보세요.",
+      "character_errors": 0,
+      "asr_seconds": 4.050142865002272
+    },
+    {
+      "mode": "disabled",
+      "fixture": 1,
+      "wav_sha256": "4ddd5f044db449942c76584dc4e936393a4c57a13917552bad4eddfcc1ef7d2f",
+      "pcm_float32_sha256": "3f1bf762e1cba559a9687bd435362a2d054903ac977e68135dea3c224e8aab4c",
+      "expected": "지금은 조금 느려도 괜찮습니다. 한 문장씩 차분하게 읽어 보세요.",
+      "recognized": "지금은 조금 느려도 괜찮습니다 한 문장씩 차분하게 읽어보세요",
+      "character_errors": 0,
+      "asr_seconds": 3.7958170589990914
+    },
+    {
+      "mode": "enabled",
+      "fixture": 1,
+      "wav_sha256": "c1d60cd26570520caaa84890c2be36655a13a65c144dd44b3de1fc280c267f5f",
+      "pcm_float32_sha256": "3943bb405e3f0a8519caca4bcdd008559e57d0fb203807ca4aaee8afa5c581ce",
+      "expected": "지금은 조금 느려도 괜찮습니다. 한 문장씩 차분하게 읽어 보세요.",
+      "recognized": "지금은 조금 느려도 괜찮습니다 한 문장씩 차분하게 읽어보세요",
+      "character_errors": 0,
+      "asr_seconds": 3.7367995800013887
+    }
+  ],
+  "total_character_errors": 0,
+  "all_four_exact": true,
+  "production_eligible": false,
+  "human_listening_verified": false,
+  "caution": "ASR disagreement does not distinguish speech errors from recognition errors."
+}

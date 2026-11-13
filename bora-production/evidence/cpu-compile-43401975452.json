@@ -1,0 +1,296 @@
+{
+  "schema": "sohee-public-cpu-compile/v1",
+  "status": "compile_trial_failed",
+  "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+  "model_revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+  "device": "cpu",
+  "dtype": "float32",
+  "threads": 4,
+  "interop_threads": 1,
+  "speaker": "Sohee",
+  "fixtures": [
+    "오늘 배운 내용을 잠깐 덮고, 자기 말로 한 번 설명해 보세요.",
+    "지금은 조금 느려도 괜찮습니다. 한 문장씩 차분하게 읽어 보세요."
+  ],
+  "totals": {
+    "eager": {
+      "tts_seconds": 72.576182,
+      "audio_seconds": 11.12,
+      "synthesis_seconds_per_audio_second": null
+    },
+    "compiled_predictor": {
+      "tts_seconds": 0,
+      "audio_seconds": 0,
+      "synthesis_seconds_per_audio_second": null
+    }
+  },
+  "complete_natural_eos_and_signal": false,
+  "compiled_execution_observed": false,
+  "compile_counters": {
+    "backend_compile_attempts": 4,
+    "backend_graphs_compiled": 1,
+    "compiled_graph_invocations": 0,
+    "predictor_forward_calls": 2
+  },
+  "observed_pair_wall_ratio_eager_over_compiled": null,
+  "observed_rtf_ratio_eager_over_compiled": null,
+  "first_compiled_call_includes_compilation": true,
+  "first_compiled_call_seconds": null,
+  "second_compiled_call_seconds": null,
+  "second_compiled_call_new_graphs": null,
+  "second_call_proven_steady_state": false,
+  "compile_scope": "model.model.talker.code_predictor.forward only; sampler and generate stay eager",
+  "backend": "inductor",
+  "fullgraph": false,
+  "dynamic": true,
+  "compile_threads": 1,
+  "maximum_compiled_graphs": 32,
+  "entire_predictor_compiled_coverage_claimed": false,
+  "model_load_included_in_tts": false,
+  "asr_performed": false,
+  "dsp_performed": false,
+  "production_eligible": false,
+  "human_listening_verified": false,
+  "full_course_forecast_validated": false,
+  "sources": [
+    "https://docs.pytorch.org/docs/2.8/generated/torch.compile.html",
+    "https://github.com/pytorch/pytorch/blob/v2.8.0/torch/_inductor/config.py",
+    "https://github.com/QwenLM/Qwen3-TTS/blob/022e286b98fbec7e1e916cb940cdf532cd9f488e/qwen_tts/core/models/modeling_qwen3_tts.py"
+  ],
+  "caveat": "One eager-then-compiled trial, two short public fixtures, one resident model. Graph breaks can leave eager regions; backend counters prove some compiled code ran, not full compiled coverage. First compiled TTS includes compilation; the second is steady only if it compiled no new graph. FP32 fusion may change floating-point results and sampled audio. No pronunciation or full-course equivalence claim.",
+  "native_threads": {
+    "intraop_threads": 4,
+    "interop_threads": 1,
+    "omp_get_max_threads": 4,
+    "mkl_get_max_threads": 4
+  },
+  "torch_version": "2.8.0+cpu",
+  "compiler_version": "g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+  "model_assets_sha256": {
+    "model.safetensors": "38b1d5971bdbd982b561cccec982669a53b0537c3cf5e9bd4778ed07bb2f5137",
+    "speech_tokenizer/model.safetensors": "836b7b357f5ea43e889936a3709af68dfe3751881acefe4ecf0dbd30ba571258",
+    "config.json": "17a07f527a1c25ea30b4e023a184482a23d3e279d697b1dc81b1bde498d29cf9",
+    "generation_config.json": "f1b90b4513f3b34c62851049e2492d7b4c5940daf1276f89c82b8ef04127f3aa",
+    "tokenizer_config.json": "dc3c31c3bdaedd5016382bb3cbe07323026775ad51f5a4fb564505992ae4a670",
+    "preprocessor_config.json": "efdde1022ea9d76928bf7a9cd53139138f5ba2e466e837f08f6105ab1af1c119",
+    "vocab.json": "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910",
+    "merges.txt": "599bab54075088774b1733fde865d5bd747cbcc7a547c5bc12610e874e26f5e3",
+    "speech_tokenizer/config.json": "ee65bb901c876664ab8707c487157aa1a6ee57c65969b28fb5ec9dc211e68167",
+    "speech_tokenizer/configuration.json": "6bc26d64eb5024b4d1dab5a52371958b429256d6c9d59787f1f5294a54e0cebd",
+    "speech_tokenizer/preprocessor_config.json": "fcb3805e597e786d4067706e602f6688524640f8d3396790e2e09b5942fcbdfb"
+  },
+  "model_load_seconds": 2.1312484509999905,
+  "memory_after_load": {
+    "current_rss_kib": 8671352,
+    "peak_rss_kib": 11885136
+  },
+  "original_predictor_source_sha256": "25c42656bcf810f06ef6bc1839bd7083f3c8cfedac3a147c4060b4262b1c96a0",
+  "eager_wrapper_setup_seconds": 5.747000002997993e-06,
+  "compiled_wrapper_setup_seconds": 0.29733906600000637,
+  "failed_mode": "compiled_predictor",
+  "failed_fixture": 0,
+  "error_type": "InductorError",
+  "compile_error_file": "compile-error.json",
+  "compile_error_sha256": "3134c4975a19133d3ed36c53bee75d374a0ed9a00ebd080b0774d7e652471df1",
+  "dynamo_counters": {
+    "frames": {
+      "total": 3,
+      "ok": 2
+    },
+    "stats": {
+      "calls_captured": 2064,
+      "unique_graphs": 1
+    },
+    "inductor": {
+      "pattern_matcher_count": 264,
+      "pattern_matcher_nodes": 304,
+      "fxgraph_cache_miss": 2,
+      "extern_calls": 95
+    },
+    "graph_break": {},
+    "unimplemented": {}
+  },
+  "memory_at_failure": {
+    "current_rss_kib": 9184812,
+    "peak_rss_kib": 11885136
+  },
+  "cpu": {
+    "cpu_models": [
+      "INTEL(R) XEON(R) PLATINUM 8573C"
+    ],
+    "logical_cpus": 4,
+    "bf16_instruction_flags": [],
+    "bf16_instruction_available": false
+  },
+  "rows": [
+    {
+      "mode": "eager",
+      "fixture": 0,
+      "seed": 5192,
+      "tts_seconds": 31.51305180499999,
+      "audio_seconds": 4.8,
+      "sample_rate": 24000,
+      "pcm_samples": 115200,
+      "signal_valid": true,
+      "sequence_tokens": 61,
+      "eos_seen": true,
+      "cap_reached": false,
+      "natural_eos": true,
+      "talker_sequence_sha256": "111d5938951412865d3022ad7633bb963eeb78765427a7eb5b0792ba86d4cc63",
+      "wav_file": "eager-0.wav",
+      "wav_sha256": "0471959359f1dc7b0d80f9016133fb10f2b7043e5e188d5c0e3b008c8b0ff8db",
+      "pcm_sha256": "a550c7d5f58b17fff6979363975cdf8cd333c804061865a9a64aa8449ee06f11",
+      "compiled_graph_invocations_during_call": 0,
+      "new_graphs_compiled_during_call": 0,
+      "predictor_forward_calls_during_call": 0,
+      "dynamo_counters": {
+        "frames": {},
+        "stats": {},
+        "inductor": {},
+        "graph_break": {},
+        "unimplemented": {}
+      },
+      "memory": {
+        "current_rss_kib": 9051012,
+        "peak_rss_kib": 11885136
+      }
+    },
+    {
+      "mode": "eager",
+      "fixture": 1,
+      "seed": 5193,
+      "tts_seconds": 41.063130373999996,
+      "audio_seconds": 6.32,
+      "sample_rate": 24000,
+      "pcm_samples": 151680,
+      "signal_valid": true,
+      "sequence_tokens": 80,
+      "eos_seen": true,
+      "cap_reached": false,
+      "natural_eos": true,
+      "talker_sequence_sha256": "4e446e68e7c722167eb666d7408a80a0e6997f830f40422b1c9573dc00c8157c",
+      "wav_file": "eager-1.wav",
+      "wav_sha256": "8497c2d4ecc0e66bc8cd80972789aaab293ba39a2e90296f9340b848e461081d",
+      "pcm_sha256": "1fcda3c7262c2ebf16ae9bb11cbb81d94907b08c921419f92862be76f5ad2857",
+      "compiled_graph_invocations_during_call": 0,
+      "new_graphs_compiled_during_call": 0,
+      "predictor_forward_calls_during_call": 0,
+      "dynamo_counters": {
+        "frames": {},
+        "stats": {},
+        "inductor": {},
+        "graph_break": {},
+        "unimplemented": {}
+      },
+      "memory": {
+        "current_rss_kib": 9102332,
+        "peak_rss_kib": 11885136
+      }
+    }
+  ],
+  "source_run_id": 43401975452,
+  "source_run_url": "https://github.com/quddnr0107-lgtm/korean-voice/actions/runs/43401975452",
+  "artifact_provenance": {
+    "artifact_id": 14024509656,
+    "run_id": 43401975452,
+    "source_commit": "b87cf6f763b82ef4188150fb81789bead5dec330",
+    "zip_bytes": 1001371,
+    "zip_sha256": "52def735f7a9aa49d32e00bf8644d286c12ee7b213a7715b190e481b39ee9f17",
+    "github_digest_matches": true,
+    "archive_size_matches": true,
+    "traversal_symlink_duplicate_extracted_size_checks_passed": true,
+    "extracted_bytes": 1097314,
+    "members": [
+      "compile-error.json",
+      "eager-1.wav",
+      "eager-0.wav",
+      "summary.json"
+    ]
+  },
+  "source_summary_sha256": "e7ccae0ec9cf9bd69d0c78736f7e7ba65038f1a039222feeeec7b97f42176dbc",
+  "asr_evidence": "cpu-compile-43401975452-asr-check.json",
+  "asr_evidence_sha256": "316c2ae854fc0aaed6450dfb07dbf8de020274560e60d7dc65c50eba71be32bb",
+  "asr_exact_matches": 2,
+  "asr_character_errors": [
+    0,
+    0
+  ],
+  "direct_pcm_comparisons_no_alignment_or_resampling": [],
+  "validated_public_error_diagnostic": {
+    "schema": "sohee-public-cpu-compile-error/v1",
+    "scope": "Public fixtures and pinned public model only; source/media keys forbidden.",
+    "production_eligible": false,
+    "exception_chain": [
+      {
+        "type": "InductorError",
+        "module": "torch._inductor.exc",
+        "relation": "raised",
+        "message": "CppCompileError: C++ compile error\n\nCommand:\ng++ /home/runner/work/_temp/sohee-public-inductor-cache/h3/ch3ekcdhyar2f2adjq5yt2hf3olab6q4gzbi7hyprrq7qr2k44bj.main.cpp -D TORCH_INDUCTOR_CPP_WRAPPER -D STANDALONE_TORCH_HEADER -D C10_USING_CUSTOM_GENERATED_MACROS -D CPU_CAPABILITY_AVX512 -shared -fPIC -O3 -DNDEBUG -fno-trapping-math -funsafe-math-optimizations -ffinite-math-only -fno-signed-zeros -fno-math-errno -fexcess-precision=fast -fno-finite-math-only -fno-unsafe-math-optimizations -ffp-contract=off -fno-tree-loop-vectorize -march=native -Wall -std=c++17 -Wno-unused-variable -Wno-unknown-pragmas -fopenmp -include /tmp/torchinductor_runner/precompiled_headers/cokuh5zobl4znulnsy2h2sje7jta4weqskutvciuuijrh2jxjiqv.h -I/opt/hostedtoolcache/Python/3.12.16/x64/include/python3.12 -I/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/include -I/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/include/torch/csrc/api/include -mavx512f -m\n...[truncated]...\nackages/torch/include/c10/macros/Macros.h:193:64: note: in definition of macro ‘C10_UNLIKELY’\n  193 | #define C10_UNLIKELY(expr) (__builtin_expect(static_cast<bool>(expr), 0))\n      |                                                                ^~~~\n/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/include/c10/util/Exception.h:573:7: note: in expansion of macro ‘C10_UNLIKELY_OR_CONST’\n  573 |   if (C10_UNLIKELY_OR_CONST(!(cond))) {       \\\n      |       ^~~~~~~~~~~~~~~~~~~~~\n/home/runner/work/_temp/sohee-public-inductor-cache/h3/ch3ekcdhyar2f2adjq5yt2hf3olab6q4gzbi7hyprrq7qr2k44bj.main.cpp:173:25: note: in expansion of macro ‘TORCH_CHECK’\n  173 |                         TORCH_CHECK(tmp2 < ks1, \"index out of bounds: tmp2 < ks1\");\n      |                         ^~~~~~~~~~~\n\n\nSet TORCHDYNAMO_VERBOSE=1 for the internal stack trace (please do this especially if you're reporting a bug to PyTorch). For even more developer context, set TORCH_LOGS=\"+dynamo\"\n",
+        "message_truncated": true
+      },
+      {
+        "type": "CppCompileError",
+        "module": "torch._inductor.exc",
+        "relation": "context",
+        "message": "C++ compile error\n\nCommand:\ng++ /home/runner/work/_temp/sohee-public-inductor-cache/h3/ch3ekcdhyar2f2adjq5yt2hf3olab6q4gzbi7hyprrq7qr2k44bj.main.cpp -D TORCH_INDUCTOR_CPP_WRAPPER -D STANDALONE_TORCH_HEADER -D C10_USING_CUSTOM_GENERATED_MACROS -D CPU_CAPABILITY_AVX512 -shared -fPIC -O3 -DNDEBUG -fno-trapping-math -funsafe-math-optimizations -ffinite-math-only -fno-signed-zeros -fno-math-errno -fexcess-precision=fast -fno-finite-math-only -fno-unsafe-math-optimizations -ffp-contract=off -fno-tree-loop-vectorize -march=native -Wall -std=c++17 -Wno-unused-variable -Wno-unknown-pragmas -fopenmp -include /tmp/torchinductor_runner/precompiled_headers/cokuh5zobl4znulnsy2h2sje7jta4weqskutvciuuijrh2jxjiqv.h -I/opt/hostedtoolcache/Python/3.12.16/x64/include/python3.12 -I/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/include -I/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/include/torch/csrc/api/include -mavx512f -mavx512dq -mavx512\n...[truncated]...\n           TORCH_CHECK(tmp2 < ks1, \"index out of bounds: tmp2 < ks1\");\n      |                                     ^~~~\n/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/include/c10/macros/Macros.h:193:64: note: in definition of macro ‘C10_UNLIKELY’\n  193 | #define C10_UNLIKELY(expr) (__builtin_expect(static_cast<bool>(expr), 0))\n      |                                                                ^~~~\n/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/include/c10/util/Exception.h:573:7: note: in expansion of macro ‘C10_UNLIKELY_OR_CONST’\n  573 |   if (C10_UNLIKELY_OR_CONST(!(cond))) {       \\\n      |       ^~~~~~~~~~~~~~~~~~~~~\n/home/runner/work/_temp/sohee-public-inductor-cache/h3/ch3ekcdhyar2f2adjq5yt2hf3olab6q4gzbi7hyprrq7qr2k44bj.main.cpp:173:25: note: in expansion of macro ‘TORCH_CHECK’\n  173 |                         TORCH_CHECK(tmp2 < ks1, \"index out of bounds: tmp2 < ks1\");\n      |                         ^~~~~~~~~~~\n",
+        "message_truncated": true
+      },
+      {
+        "type": "CalledProcessError",
+        "module": "subprocess",
+        "relation": "cause",
+        "message": "Command '['g++', '/home/runner/work/_temp/sohee-public-inductor-cache/h3/ch3ekcdhyar2f2adjq5yt2hf3olab6q4gzbi7hyprrq7qr2k44bj.main.cpp', '-D', 'TORCH_INDUCTOR_CPP_WRAPPER', '-D', 'STANDALONE_TORCH_HEADER', '-D', 'C10_USING_CUSTOM_GENERATED_MACROS', '-D', 'CPU_CAPABILITY_AVX512', '-shared', '-fPIC', '-O3', '-DNDEBUG', '-fno-trapping-math', '-funsafe-math-optimizations', '-ffinite-math-only', '-fno-signed-zeros', '-fno-math-errno', '-fexcess-precision=fast', '-fno-finite-math-only', '-fno-unsafe-math-optimizations', '-ffp-contract=off', '-fno-tree-loop-vectorize', '-march=native', '-Wall', '-std=c++17', '-Wno-unused-variable', '-Wno-unknown-pragmas', '-fopenmp', '-include', '/tmp/torchinductor_runner/precompiled_headers/cokuh5zobl4znulnsy2h2sje7jta4weqskutvciuuijrh2jxjiqv.h', '-I/opt/hostedtoolcache/Python/3.12.16/x64/include/python3.12', '-I/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/include', '-I/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/include/torch/csrc/api/include', '-mavx512f', '-mavx512dq', '-mavx512vl', '-mavx512bw', '-mfma', '-D_GLIBCXX_USE_CXX11_ABI=1', '-o', '/home/runner/work/_temp/sohee-public-inductor-cache/h3/ch3ekcdhyar2f2adjq5yt2hf3olab6q4gzbi7hyprrq7qr2k44bj.main.so', '-ltorch', '-ltorch_cpu', '-ltorch_python', '-lgomp', '-L/opt/hostedtoolcache/Python/3.12.16/x64/lib', '-L/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/lib']' returned non-zero exit status 1.",
+        "message_truncated": false
+      }
+    ],
+    "chain_limit_reached": false,
+    "chain_cycle_detected": false,
+    "maximum_chain_depth": 4,
+    "maximum_message_characters": 2000,
+    "traceback": "\nraised: torch._inductor.exc.InductorError\nTraceback (most recent call last):\n  File \"/home/runner/work/korean-voice/korean-voice/bora-production/cpu_compile_benchmark.py\", line 274, in worker\n    waves, rate = model.generate_custom_voice(**generation_args('production_style', text))\n                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/utils/_contextlib.py\", line 120, in decorate_context\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/qwen_tts/inference/qwen3_tts_model.py\", line 829, in generate_custom_voice\n    talker_codes_list, _ = self.model.generate(\n                           ^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/utils/_contextlib.py\", line 120, in decorate_context\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/qwen_tts/core/models/modeling_qwen3_tts.py\", line 2272, in generate\n    talker_result = self.talker.generate(\n                    ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/korean-voice/korean-voice/bora-production/cpu_compile_benchmark.py\", line 264, in observe\n    result = original(*args, **kwargs)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/utils/_contextlib.py\", line 120, in decorate_context\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/transformers/generation/utils.py\", line 2564, in generate\n    result = decoding_method(\n             ^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/transformers/generation/utils.py\", line 2787, in _sample\n    outputs = model_forward(**model_inputs, return_dict=True)\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1773, in _wrapped_call_impl\n    return self._call_impl(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1784, in _call_impl\n    return forward_call(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/transformers/utils/generic.py\", line 918, in wrapper\n    output = func(self, *args, **kwargs)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/qwen_tts/core/models/modeling_qwen3_tts.py\", line 1671, in forward\n    predictor_result = self.code_predictor.generate(\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/utils/_contextlib.py\", line 120, in decorate_context\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/transformers/generation/utils.py\", line 2564, in generate\n    result = decoding_method(\n             ^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/transformers/generation/utils.py\", line 2787, in _sample\n    outputs = model_forward(**model_inputs, return_dict=True)\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1773, in _wrapped_call_impl\n    return self._call_impl(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1784, in _call_impl\n    return forward_call(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/korean-voice/korean-voice/bora-production/cpu_compile_benchmark.py\", line 131, in forward\n    return replacement(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/_dynamo/eval_frame.py\", line 749, in compile_wrapper\n    raise e.remove_dynamo_frames() from None  # see TORCHDYNAMO_VERBOSE=1\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nCppCompileError: C++ compile error\n\nCommand:\ng++ /home/runner/work/_temp/sohee-public-inductor-cache/h3/ch3ekcdhyar2f2adjq5yt2hf3olab6q4gzbi7hyprrq7qr2k44bj.main.cpp -D TORCH_INDUCTOR_CPP_WRAPPER -D STANDALONE_TORCH_HEADER -D C10_USING_CUSTOM_GENERATED_MACROS -D CPU_CAPABILITY_AVX512 -shared -fPIC -O3 -DNDEBUG -fno-trapping-math -funsafe-math-optimizations -ffinite-math-only -fno-signed-zeros -fno-math-errno -fexcess-precision=fast -fno-finite-math-only -fno-unsafe-math-optimizations -ffp-contract=off -fno-tree-loop-vectorize -march=native -Wall -std=c++17 -Wno-unused-variable -Wno-unknown-pragmas -fopenmp -include /tmp/torchinductor_runner/precompiled_headers/cokuh5zobl4znulnsy2h2sje7jta4weqskutvciuuijrh2jxjiqv.h -I/opt/hostedtoolcache/Python/3.12.16/x64/include/python3.12 -I/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/include -I/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/include/torch/csrc/api/include -mavx512f -m\n...[truncated]...\nackages/torch/include/c10/macros/Macros.h:193:64: note: in definition of macro ‘C10_UNLIKELY’\n  193 | #define C10_UNLIKELY(expr) (__builtin_expect(static_cast<bool>(expr), 0))\n      |                                                                ^~~~\n/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/include/c10/util/Exception.h:573:7: note: in expansion of macro ‘C10_UNLIKELY_OR_CONST’\n  573 |   if \n...[truncated]...\n_t*'\n...[truncated]...\n*', 'const int64_t', 'const int64_t'], '''\n                                                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/_inductor/async_compile.py\", line 434, in cpp_pybinding\n    return CppPythonBindingsCodeCache.load_pybinding(argtypes, source_code)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/_inductor/codecache.py\", line 2783, in load_pybinding\n    return cls.load_pybinding_async(*args, **kwargs)()\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/_inductor/codecache.py\", line 2775, in future\n    result = get_result()\n             ^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/_inductor/codecache.py\", line 2572, in load_fn\n    result = worker_fn()\n             ^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/_inductor/codecache.py\", line 2601, in _worker_compile_cpp\n    builder.build()\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/_inductor/cpp_builder.py\", line 1718, in build\n    run_compile_cmd(build_cmd, cwd=_build_tmp_dir)\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/_inductor/cpp_builder.py\", line 401, in run_compile_cmd\n    _run_compile_cmd(cmd_line, cwd)\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/_inductor/cpp_builder.py\", line 396, in _run_compile_cmd\n    raise exc.CppCompileError(cmd, output) from e\nC++ compile error\n\nCommand:\ng++ /home/runner/work/_temp/sohee-public-inductor-cache/h3/ch3ekcdhyar2f2adjq5yt2hf3olab6q4gzbi7hyprrq7qr2k44bj.main.cpp -D TORCH_INDUCTOR_CPP_WRAPPER -D STANDALONE_TORCH_HEADER -D C10_USING_CUSTOM_GENERATED_MACROS -D CPU_CAPABILITY_AVX512 -shared -fPIC -O3 -DNDEBUG -fno-trapping-math -funsafe-math-optimizations -ffinite-math-only -fno-signed-zeros -fno-math-errno -fexcess-precision=fast -fno-finite-math-only -fno-unsafe-math-optimizations -ffp-contract=off -fno-tree-loop-vectorize -march=native -Wall -std=c++17 -Wno-unused-variable -Wno-unknown-pragmas -fopenmp -include /tmp/torchinductor_runner/precompiled_headers/cokuh5zobl4znulnsy2h2sje7jta4weqskutvciuuijrh2jxjiqv.h -I/opt/hostedtoolcache/Python/3.12.16/x64/include/python3.12 -I/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/include -I/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/include/torch/csrc/api/include -mavx512f -mavx512dq -mavx512\n...[truncated]...\n           TORCH_CHECK(tmp2 < ks1, \"index out of bounds: tmp2 < ks1\");\n      |                                     ^~~~\n/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/include/c10/macros/Macros.h:193:64: note: in definition of macro ‘C10_UNLIKELY’\n  193 | #define C10_UNLIKELY(expr) (__builtin_expect(static_cast<bool>(expr), 0))\n      |                                                                ^~~~\n/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/include/c10/util/Exception.h:573:7: note: in expansion of macro ‘C10_UNLIKELY_OR_CONST’\n  573 |   if (C10_UNLIKELY_OR_CONST(!(cond))) {       \\\n      |       ^~~~~~~~~~~~~~~~~~~~~\n/home/runner/work/_temp/sohee-public-inductor-cache/h3/ch3ekcdhyar2f2adjq5yt2hf3olab6q4gzbi7hyprrq7qr2k44bj.main.cpp:173:25: note: in expansion of macro ‘TORCH_CHECK’\n  173 |                         TORCH_CHECK(tmp2 < ks1, \"index out of bounds: tmp2 < ks1\");\n      |                         ^~~~~~~~~~~\n\n\ncause: subprocess.CalledProcessError\nTraceback (most recent call last):\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/_inductor/cpp_builder.py\", line 379, in _run_compile_cmd\n    subprocess.run(\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/subprocess.py\", line 571, in run\n    raise CalledProcessError(retcode, process.args,\nCommand '['g++', '/home/runner/work/_temp/sohee-public-inductor-cache/h3/ch3ekcdhyar2f2adjq5yt2hf3olab6q4gzbi7hyprrq7qr2k44bj.main.cpp', '-D', 'TORCH_INDUCTOR_CPP_WRAPPER', '-D', 'STANDALONE_TORCH_HEADER', '-D', 'C10_USING_CUSTOM_GENERATED_MACROS', '-D', 'CPU_CAPABILITY_AVX512', '-shared', '-fPIC', '-O3', '-DNDEBUG', '-fno-trapping-math', '-funsafe-math-optimizations', '-ffinite-math-only', '-fno-signed-zeros', '-fno-math-errno', '-fexcess-precision=fast', '-fno-finite-math-only', '-fno-unsafe-math-optimizations', '-ffp-contract=off', '-fno-tree-loop-vectorize', '-march=native', '-Wall', '-std=c++17', '-Wno-unused-variable', '-Wno-unknown-pragmas', '-fopenmp', '-include', '/tmp/torchinductor_runner/precompiled_headers/cokuh5zobl4znulnsy2h2sje7jta4weqskutvciuuijrh2jxjiqv.h', '-I/opt/hostedtoolcache/Python/3.12.16/x64/include/python3.12', '-I/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/include', '-I/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/include/torch/csrc/api/include', '-mavx512f', '-mavx512dq', '-mavx512vl', '-mavx512bw', '-mfma', '-D_GLIBCXX_USE_CXX11_ABI=1', '-o', '/home/runner/work/_temp/sohee-public-inductor-cache/h3/ch3ekcdhyar2f2adjq5yt2hf3olab6q4gzbi7hyprrq7qr2k44bj.main.so', '-ltorch', '-ltorch_cpu', '-ltorch_python', '-lgomp', '-L/opt/hostedtoolcache/Python/3.12.16/x64/lib', '-L/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/lib']' returned non-zero exit status 1.\n",
+    "traceback_truncated": true,
+    "maximum_traceback_characters": 12000,
+    "diagnosis": "Recorded compiler failure; does not establish a hardware or support limitation."
+  },
+  "failure_diagnosis": {
+    "confirmed_exception_chain": [
+      "torch._inductor.exc.InductorError",
+      "torch._inductor.exc.CppCompileError",
+      "subprocess.CalledProcessError"
+    ],
+    "confirmed_subprocess": "g++ returned exit status 1 compiling generated CPU kernel",
+    "observed_generated_code_context": "TORCH_CHECK(tmp2 < ks1, \"index out of bounds: tmp2 < ks1\")",
+    "actual_compiled_graph_invocations": 0,
+    "graph_attempts": 4,
+    "graph_limit": 32,
+    "configured_graph_limit_reached": false,
+    "per_call_timeout_reached": false,
+    "exact_first_compiler_error_line_preserved": false,
+    "diagnostic_limitation": "The bounded head/tail exception messages omitted the middle Output section containing the first compiler error. Compiler stdout/output attributes and error-line excerpts should be prioritized in a follow-up diagnostic.",
+    "support_limitation_proven": false,
+    "instrumentation_assertion_proven": false,
+    "related_upstream_report": {
+      "url": "https://github.com/huggingface/transformers/issues/42320",
+      "scope": "PyTorch 2.8, Transformers 4.57.1, CPU dynamic=True compilation of sdpa_mask_recent_torch produced undeclared tmp1/tmp2 C++ TORCH_CHECK code. This resembles the preserved context but is not proof of the same first compiler diagnostic in this trial."
+    },
+    "candidate_next_experiment": "Keep the original causal-mask functions executing eagerly via torch.compiler.disable on the Qwen modeling-module aliases create_causal_mask/create_sliding_window_causal_mask, while leaving outer code_predictor.forward compiled and measuring actual compiled graph execution. Preserve official mask semantics; do not silently count a fully eager fallback as a compiled success."
+  },
+  "execution_counter_interpretation_correction": {
+    "recorded_counter_zero_does_not_prove_nonexecution": true,
+    "raw_counter_values_preserved": true,
+    "affected_helper": "tracked_backend execute callback decorated with functools.wraps(compiled)",
+    "explanation": "functools.wraps copies the returned backend callable __dict__, including any _torchdynamo_orig_callable. PyTorch 2.8 innermost_fn follows that attribute and can unwrap past the callback. The saved zero is an observed counter value, not proof that no compiled graph ran.",
+    "minimal_reproducer_confirmed_with_real_benchmark_helper_and_fake_backend": true,
+    "minimal_reproducer_uses_native_torch": false,
+    "reproducer_result": {
+      "counter_after_unwrapped_successful_call": 0,
+      "returned_value": 5
+    },
+    "source_references": [
+      "https://github.com/pytorch/pytorch/blob/v2.8.0/torch/_dynamo/eval_frame.py",
+      "https://github.com/pytorch/pytorch/blob/v2.8.0/torch/_dynamo/backends/common.py"
+    ],
+    "correction_in_followup": "Request -04 returns a plain execution callback and preserves only the explicitly needed _boxed_call protocol attribute when present; compiler private unwrapping and disable tags are not copied.",
+    "prior_trial_speed_improvement_claimed": false
+  }
+}

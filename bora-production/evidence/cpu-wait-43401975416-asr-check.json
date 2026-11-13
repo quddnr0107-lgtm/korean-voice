@@ -1,0 +1,120 @@
+{
+  "schema": "sohee-public-cpu-wait-asr/v2",
+  "run_id": 43401975416,
+  "source_summary_sha256": "11c5cb3a148f17f6c075865641a0fee8ef2f0fe11a186163a4506e405198d3b2",
+  "artifact_provenance": {
+    "run_id": 43401975416,
+    "source_commit": "b87cf6f763b82ef4188150fb81789bead5dec330",
+    "source_run_url": "https://github.com/quddnr0107-lgtm/korean-voice/actions/runs/43401975416",
+    "artifact_id": 14025697406,
+    "name": "sohee-cpu-wait-43401975416",
+    "bytes": 2638830,
+    "sha256": "2aef9e5ce3100548e3aebd62200252e5a0b957d3e805329388d4bcf618f38eac",
+    "expected_file": "wait-confirm-public.zip",
+    "zip_digest_verified": true,
+    "zip_size_verified": true,
+    "archive_traversal_symlink_duplicate_size_checks_passed": true,
+    "members": [
+      "default/partial-rows.json",
+      "default/result.json",
+      "default/default-0.wav",
+      "default/default-1.wav",
+      "passive/partial-rows.json",
+      "passive/passive-0.wav",
+      "passive/passive-1.wav",
+      "passive/result.json",
+      "summary.json"
+    ],
+    "uncompressed_bytes": 2859979
+  },
+  "model": "Systran/faster-whisper-small",
+  "revision": "536b0662742c02347bc0e980a01041f333bce120",
+  "asr_asset_sha256": {
+    "model.bin": "3e305921506d8872816023e4c273e75d2419fb89b24da97b4fe7bce14170d671",
+    "config.json": "b55496ac7940a7ae47d2c01eab40edfd8701feec1229d9cce3b40014383fb828",
+    "tokenizer.json": "fb7b63191e9bb045082c79fd742a3106a12c99513ab30df4a0d47fa6cb6fd0ab",
+    "vocabulary.txt": "34ce3fe1c5041027b3f8d42912270993f986dbc4bb34cf27f951e34a1e453913"
+  },
+  "settings": {
+    "device": "cpu",
+    "compute_type": "int8",
+    "cpu_threads": 1,
+    "num_workers": 1,
+    "language": "ko",
+    "beam_size": 5,
+    "temperature": 0,
+    "condition_on_previous_text": false,
+    "vad_filter": false,
+    "initial_prompt": null,
+    "word_timestamps": true,
+    "max_cer": 0.0
+  },
+  "rows": [
+    {
+      "variant": "passive",
+      "fixture": 0,
+      "voice_mode": "explain",
+      "wav_file": "passive/passive-0.wav",
+      "wav_sha256": "b887716ac7f295d4121a9a205d4cf07e9506c901fac5b28f2b373e2f5b4bf442",
+      "raw_pcm_f32le_sha256": "c71d51db9d5214f186f0313e9eece17abc5dd55207e52dd7c3d63d60a4227164",
+      "expected": "다음 표현을 또박또박 읽겠습니다. 통합방위법, 예비군법, 병역법.",
+      "recognized": "다음 표현을 또박또박 읽겠습니다. 통합방위법, 예비군법, 병역법",
+      "character_errors": 0,
+      "expected_characters": 26,
+      "asr_seconds": 4.282494
+    },
+    {
+      "variant": "passive",
+      "fixture": 1,
+      "voice_mode": "reading",
+      "wav_file": "passive/passive-1.wav",
+      "wav_sha256": "5dedee6dbb3193f135556972855b92d250c786d761eaa23443cee2541730b95c",
+      "raw_pcm_f32le_sha256": "c3acc68715d61e16cf4cc25190f4135265e4537cc535cb394c86172c32961044",
+      "expected": "제삼조 제일항. 이 문장은 음성 합성 속도를 비교하기 위한 시험 문장입니다.",
+      "recognized": "제3조 제1랑 이 문장은 음성 합성 속도를 비교하기 위한 시험 문장입니다.",
+      "character_errors": 1,
+      "expected_characters": 30,
+      "asr_seconds": 4.138331
+    },
+    {
+      "variant": "default",
+      "fixture": 0,
+      "voice_mode": "explain",
+      "wav_file": "default/default-0.wav",
+      "wav_sha256": "88c88b75cfb652f2e278abc14be291275a0a3a1e5a2da5944a01a262cb9d7ad6",
+      "raw_pcm_f32le_sha256": "c71d51db9d5214f186f0313e9eece17abc5dd55207e52dd7c3d63d60a4227164",
+      "expected": "다음 표현을 또박또박 읽겠습니다. 통합방위법, 예비군법, 병역법.",
+      "recognized": "다음 표현을 또박또박 읽겠습니다. 통합방위법, 예비군법, 병역법",
+      "character_errors": 0,
+      "expected_characters": 26,
+      "asr_seconds": 4.222483
+    },
+    {
+      "variant": "default",
+      "fixture": 1,
+      "voice_mode": "reading",
+      "wav_file": "default/default-1.wav",
+      "wav_sha256": "49dec5432dad1866c84bb41782bfba0ef34a50d45e899a535e7d732d21058200",
+      "raw_pcm_f32le_sha256": "c3acc68715d61e16cf4cc25190f4135265e4537cc535cb394c86172c32961044",
+      "expected": "제삼조 제일항. 이 문장은 음성 합성 속도를 비교하기 위한 시험 문장입니다.",
+      "recognized": "제3조 제1랑 이 문장은 음성 합성 속도를 비교하기 위한 시험 문장입니다.",
+      "character_errors": 1,
+      "expected_characters": 30,
+      "asr_seconds": 4.275629
+    }
+  ],
+  "exact_matches": 2,
+  "total_character_errors": 2,
+  "scope": "Four short public wait-policy clips; ASR disagreement does not prove a pronunciation error.",
+  "human_listening_verified": false,
+  "production_eligible": false,
+  "packages": {
+    "faster-whisper": "1.2.1",
+    "ctranslate2": "4.9.0",
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "soundfile": "0.14.0",
+    "onnxruntime": "1.31.1"
+  },
+  "quality_interpretation": "If decoded PCM is byte-identical within a fixture, shared ASR disagreement is not a waiting-policy change; strict production QA still applies unchanged."
+}

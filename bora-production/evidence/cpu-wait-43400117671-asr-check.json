@@ -1,0 +1,107 @@
+{
+  "schema": "sohee-public-cpu-wait-asr/v1",
+  "run_id": 43400117671,
+  "source_summary_sha256": "edc3cf6355328407f62b87c41d0493f32e3e64440a12388636a041abe2740c9e",
+  "artifact_provenance": {
+    "run_id": 43400117671,
+    "source_commit": "e2c1f7cb78cafd42e58a24d7c5d655c0b09f4c23",
+    "source_run_url": "https://github.com/quddnr0107-lgtm/korean-voice/actions/runs/43400117671",
+    "artifact_id": 14024373837,
+    "name": "sohee-cpu-wait-43400117671",
+    "bytes": 2004073,
+    "sha256": "b341ac641df6b1fe3e4ba98e8654eac08d58c79bf779c663397c13280d4faf2b",
+    "expected_file": "wait-public.zip",
+    "zip_digest_verified": true,
+    "zip_size_verified": true,
+    "archive_traversal_symlink_duplicate_size_checks_passed": true,
+    "members": [
+      "default/default-0.wav",
+      "default/default-1.wav",
+      "default/partial-rows.json",
+      "default/result.json",
+      "passive/partial-rows.json",
+      "passive/passive-0.wav",
+      "passive/passive-1.wav",
+      "passive/result.json",
+      "summary.json"
+    ],
+    "uncompressed_bytes": 2183402
+  },
+  "model": "Systran/faster-whisper-small",
+  "revision": "536b0662742c02347bc0e980a01041f333bce120",
+  "asr_asset_sha256": {
+    "model.bin": "3e305921506d8872816023e4c273e75d2419fb89b24da97b4fe7bce14170d671",
+    "config.json": "b55496ac7940a7ae47d2c01eab40edfd8701feec1229d9cce3b40014383fb828",
+    "tokenizer.json": "fb7b63191e9bb045082c79fd742a3106a12c99513ab30df4a0d47fa6cb6fd0ab",
+    "vocabulary.txt": "34ce3fe1c5041027b3f8d42912270993f986dbc4bb34cf27f951e34a1e453913"
+  },
+  "settings": {
+    "device": "cpu",
+    "compute_type": "int8",
+    "cpu_threads": 1,
+    "num_workers": 1,
+    "language": "ko",
+    "beam_size": 5,
+    "temperature": 0,
+    "condition_on_previous_text": false,
+    "vad_filter": false,
+    "initial_prompt": null,
+    "word_timestamps": true,
+    "max_cer": 0.0
+  },
+  "rows": [
+    {
+      "variant": "default",
+      "fixture": 0,
+      "wav_file": "default/default-0.wav",
+      "wav_sha256": "e3d09ff5c7ea08a4ba06c8f7546089f4acf3cb08785c6eeec824e52f81827f94",
+      "raw_pcm_f32le_sha256": "5e2cfe302666117484096a1db9de8735f2ef3a6af7d439a3a8af9e8012fde906",
+      "expected": "오늘 배운 내용을 잠깐 덮고, 자기 말로 한 번 설명해 보세요.",
+      "recognized": "오늘 배운 내용을 잠깐 덮고 자기말로 한번 설명해 보세요",
+      "character_errors": 0,
+      "expected_characters": 23,
+      "asr_seconds": 4.528525
+    },
+    {
+      "variant": "default",
+      "fixture": 1,
+      "wav_file": "default/default-1.wav",
+      "wav_sha256": "6b855e0480374035fb357289e844e3d747f5c9ba28a5962cc582d80f4cc4d0a4",
+      "raw_pcm_f32le_sha256": "3943bb405e3f0a8519caca4bcdd008559e57d0fb203807ca4aaee8afa5c581ce",
+      "expected": "지금은 조금 느려도 괜찮습니다. 한 문장씩 차분하게 읽어 보세요.",
+      "recognized": "지금은 조금 느려도 괜찮습니다 한 문장씩 차분하게 읽어보세요",
+      "character_errors": 0,
+      "expected_characters": 26,
+      "asr_seconds": 4.003565
+    },
+    {
+      "variant": "passive",
+      "fixture": 0,
+      "wav_file": "passive/passive-0.wav",
+      "wav_sha256": "7c4380716500415f99946e97d47e9ef5227ae3bfe3804911bdb5fd53ca7f345a",
+      "raw_pcm_f32le_sha256": "5e2cfe302666117484096a1db9de8735f2ef3a6af7d439a3a8af9e8012fde906",
+      "expected": "오늘 배운 내용을 잠깐 덮고, 자기 말로 한 번 설명해 보세요.",
+      "recognized": "오늘 배운 내용을 잠깐 덮고 자기말로 한번 설명해 보세요",
+      "character_errors": 0,
+      "expected_characters": 23,
+      "asr_seconds": 4.042504
+    },
+    {
+      "variant": "passive",
+      "fixture": 1,
+      "wav_file": "passive/passive-1.wav",
+      "wav_sha256": "3e002a54ad1d61621a03ed12909193b925fef64dd9852e53e37492b544c09c65",
+      "raw_pcm_f32le_sha256": "3943bb405e3f0a8519caca4bcdd008559e57d0fb203807ca4aaee8afa5c581ce",
+      "expected": "지금은 조금 느려도 괜찮습니다. 한 문장씩 차분하게 읽어 보세요.",
+      "recognized": "지금은 조금 느려도 괜찮습니다 한 문장씩 차분하게 읽어보세요",
+      "character_errors": 0,
+      "expected_characters": 26,
+      "asr_seconds": 4.000941
+    }
+  ],
+  "exact_matches": 4,
+  "total_character_errors": 0,
+  "scope": "Four short public wait-policy clips; ASR disagreement does not prove a pronunciation error.",
+  "human_listening_verified": false,
+  "production_eligible": false
+}

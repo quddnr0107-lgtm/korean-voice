@@ -1,0 +1,42 @@
+{
+  "schema": "sohee-public-cpu-onednn-evidence/v1",
+  "run_id": 43400117962,
+  "source_commit": "e2c1f7cb78cafd42e58a24d7c5d655c0b09f4c23",
+  "conclusion": "failure",
+  "run_url": "https://github.com/quddnr0107-lgtm/korean-voice/actions/runs/43400117962",
+  "job_id": 131800594751,
+  "public_only": true,
+  "status": "backend_flag_observation_type_assumption_failed_before_model_load",
+  "installation_succeeded": true,
+  "pinned_model_download_succeeded": true,
+  "model_loaded": false,
+  "inference_started": false,
+  "completed_tts_calls": 0,
+  "artifacts": [],
+  "asr_performed": false,
+  "production_eligible": false,
+  "human_listening_verified": false,
+  "speed_claim": null,
+  "failure": {
+    "code": "public_cpu_onednn_benchmark_invalid",
+    "function": "backend_flags",
+    "basis": "Traceback at main initial=backend_flags(torch), then require(type enabled/deterministic/allow_tf32 is bool). This occurs before model construction. No raw flag values were logged, so which exact value failed is not yet established.",
+    "stack_lines": [
+      "cpu_onednn_benchmark.py main line 154: initial = backend_flags(torch)",
+      "cpu_onednn_benchmark.py backend_flags line 54: require(all(type(flags[name]) is bool ...))"
+    ],
+    "sox_warning_is_not_traceback_cause": true
+  },
+  "minimal_fix_prepared": {
+    "request_id": "public-sohee-fp32-onednn-20261113-02",
+    "enabled_and_deterministic_still_require_boolean": true,
+    "allow_tf32_none_observed_without_coercion": true,
+    "other_precision_flags_unchanged": true,
+    "raw_backend_type_and_repr_written_before_validation": true,
+    "rerun_started_by_this_agent": false
+  },
+  "limitations": [
+    "No performance, PCM or ASR result exists from this failed run.",
+    "The proposed allowance for an unsupported None flag is a compatibility hypothesis pending actual diagnostic values from the rerun."
+  ]
+}

@@ -1,0 +1,323 @@
+{
+  "schema": "sohee-public-cpu-compile/v1",
+  "status": "compile_trial_failed",
+  "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+  "model_revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+  "device": "cpu",
+  "dtype": "float32",
+  "threads": 4,
+  "interop_threads": 1,
+  "speaker": "Sohee",
+  "fixtures": [
+    "오늘 배운 내용을 잠깐 덮고, 자기 말로 한 번 설명해 보세요.",
+    "지금은 조금 느려도 괜찮습니다. 한 문장씩 차분하게 읽어 보세요."
+  ],
+  "totals": {
+    "eager": {
+      "tts_seconds": 120.084654,
+      "audio_seconds": 11.12,
+      "synthesis_seconds_per_audio_second": null
+    },
+    "compiled_predictor_eager_masks": {
+      "tts_seconds": 0,
+      "audio_seconds": 0,
+      "synthesis_seconds_per_audio_second": null
+    }
+  },
+  "complete_natural_eos_and_signal": false,
+  "compiled_execution_observed": false,
+  "compile_counters": {
+    "backend_compile_attempts": 33,
+    "backend_graphs_compiled": 21,
+    "compiled_graph_invocations": 0,
+    "predictor_forward_calls": 10
+  },
+  "observed_pair_wall_ratio_eager_over_compiled": null,
+  "observed_rtf_ratio_eager_over_compiled": null,
+  "first_compiled_call_includes_compilation": true,
+  "first_compiled_call_seconds": null,
+  "second_compiled_call_seconds": null,
+  "second_compiled_call_new_graphs": null,
+  "second_call_proven_steady_state": false,
+  "compile_scope": "outer-predictor-forward-original-eager-causal-masks",
+  "mode_order": [
+    "eager",
+    "compiled_predictor_eager_masks"
+  ],
+  "eager_mask_aliases": [
+    "create_causal_mask",
+    "create_sliding_window_causal_mask"
+  ],
+  "compile_scope_details": "The same outer model.model.talker.code_predictor.forward is compiled. Only the two Qwen modeling-module causal-mask aliases call their original functions with tracing disabled; sampler and generate stay eager.",
+  "backend": "inductor",
+  "fullgraph": false,
+  "dynamic": true,
+  "compile_threads": 1,
+  "maximum_compiled_graphs": 32,
+  "entire_predictor_compiled_coverage_claimed": false,
+  "model_load_included_in_tts": false,
+  "asr_performed": false,
+  "dsp_performed": false,
+  "production_eligible": false,
+  "human_listening_verified": false,
+  "full_course_forecast_validated": false,
+  "sources": [
+    "https://docs.pytorch.org/docs/2.8/generated/torch.compile.html",
+    "https://docs.pytorch.org/docs/2.8/generated/torch.compiler.disable.html",
+    "https://github.com/huggingface/transformers/issues/42320",
+    "https://github.com/pytorch/pytorch/blob/v2.8.0/torch/_inductor/config.py",
+    "https://github.com/QwenLM/Qwen3-TTS/blob/022e286b98fbec7e1e916cb940cdf532cd9f488e/qwen_tts/core/models/modeling_qwen3_tts.py"
+  ],
+  "caveat": "A separate eager-mask isolation experiment, not a successful rerun claim for earlier failed scopes. One eager-then-compiled trial, two public fixtures, one resident model. Original causal-mask calculations execute eagerly and restore afterward. Shared modeling aliases also serve the already-eager talker. Graph breaks can leave eager regions; counters prove some compiled code ran, not full coverage. First compiled TTS includes compilation; the second is steady only without new graphs. FP32 fusion may change results. No pronunciation or full-course equivalence claim.",
+  "native_threads": {
+    "intraop_threads": 4,
+    "interop_threads": 1,
+    "omp_get_max_threads": 4,
+    "mkl_get_max_threads": 4
+  },
+  "torch_version": "2.8.0+cpu",
+  "compiler_version": "g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+  "model_assets_sha256": {
+    "model.safetensors": "38b1d5971bdbd982b561cccec982669a53b0537c3cf5e9bd4778ed07bb2f5137",
+    "speech_tokenizer/model.safetensors": "836b7b357f5ea43e889936a3709af68dfe3751881acefe4ecf0dbd30ba571258",
+    "config.json": "17a07f527a1c25ea30b4e023a184482a23d3e279d697b1dc81b1bde498d29cf9",
+    "generation_config.json": "f1b90b4513f3b34c62851049e2492d7b4c5940daf1276f89c82b8ef04127f3aa",
+    "tokenizer_config.json": "dc3c31c3bdaedd5016382bb3cbe07323026775ad51f5a4fb564505992ae4a670",
+    "preprocessor_config.json": "efdde1022ea9d76928bf7a9cd53139138f5ba2e466e837f08f6105ab1af1c119",
+    "vocab.json": "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910",
+    "merges.txt": "599bab54075088774b1733fde865d5bd747cbcc7a547c5bc12610e874e26f5e3",
+    "speech_tokenizer/config.json": "ee65bb901c876664ab8707c487157aa1a6ee57c65969b28fb5ec9dc211e68167",
+    "speech_tokenizer/configuration.json": "6bc26d64eb5024b4d1dab5a52371958b429256d6c9d59787f1f5294a54e0cebd",
+    "speech_tokenizer/preprocessor_config.json": "fcb3805e597e786d4067706e602f6688524640f8d3396790e2e09b5942fcbdfb"
+  },
+  "model_load_seconds": 1.947128407000008,
+  "memory_after_load": {
+    "current_rss_kib": 8663956,
+    "peak_rss_kib": 11884308
+  },
+  "original_predictor_source_sha256": "25c42656bcf810f06ef6bc1839bd7083f3c8cfedac3a147c4060b4262b1c96a0",
+  "eager_wrapper_setup_seconds": 0.3130736239999976,
+  "compiled_wrapper_setup_seconds": 0.005222744000036528,
+  "eager_causal_mask_patch": {
+    "aliases": [
+      "create_causal_mask",
+      "create_sliding_window_causal_mask"
+    ],
+    "original_calculation_retained": true,
+    "restored_on_exit": true,
+    "originals": {
+      "create_causal_mask": "transformers.masking_utils.create_causal_mask",
+      "create_sliding_window_causal_mask": "transformers.masking_utils.create_sliding_window_causal_mask"
+    }
+  },
+  "failed_mode": "compiled_predictor_eager_masks",
+  "failed_fixture": 0,
+  "error_type": "BackendCompilerFailed",
+  "compile_error_file": "compile-error.json",
+  "compile_error_sha256": "191a281d29f9804bc418965392f81c003517ce9d744605a2c97fb25a6deefb8d",
+  "dynamo_counters": {
+    "frames": {
+      "total": 32,
+      "ok": 31
+    },
+    "stats": {
+      "calls_captured": 2581,
+      "unique_graphs": 21
+    },
+    "inductor": {
+      "pattern_matcher_count": 532,
+      "pattern_matcher_nodes": 592,
+      "fxgraph_cache_miss": 14,
+      "extern_calls": 134,
+      "fxgraph_cache_hit": 7
+    },
+    "graph_break": {
+      "Skip calling `torch.compiler.disable()`d function\n  Explanation: Skip calling function `<function create_causal_mask at 0x7f35f1edd620>` since it was wrapped wi": 16
+    },
+    "unimplemented": {}
+  },
+  "memory_at_failure": {
+    "current_rss_kib": 9246108,
+    "peak_rss_kib": 11884308
+  },
+  "cpu": {
+    "cpu_models": [
+      "AMD EPYC 9V74 80-Core Processor"
+    ],
+    "logical_cpus": 4,
+    "bf16_instruction_flags": [
+      "avx512_bf16"
+    ],
+    "bf16_instruction_available": true
+  },
+  "rows": [
+    {
+      "mode": "eager",
+      "fixture": 0,
+      "seed": 5192,
+      "tts_seconds": 51.552474071000006,
+      "audio_seconds": 4.8,
+      "sample_rate": 24000,
+      "pcm_samples": 115200,
+      "signal_valid": true,
+      "sequence_tokens": 61,
+      "eos_seen": true,
+      "cap_reached": false,
+      "natural_eos": true,
+      "talker_sequence_sha256": "111d5938951412865d3022ad7633bb963eeb78765427a7eb5b0792ba86d4cc63",
+      "wav_file": "eager-0.wav",
+      "wav_sha256": "85e0e807648e5ed3c8b70945ec173408ac4367a4bec2167ef4e16d51d2d10131",
+      "pcm_sha256": "811c90b35b8198a71e618ecc81ab08a3adb864c88e9595b410b9052343fdacd4",
+      "compiled_graph_invocations_during_call": 0,
+      "new_graphs_compiled_during_call": 0,
+      "predictor_forward_calls_during_call": 0,
+      "dynamo_counters": {
+        "frames": {},
+        "stats": {},
+        "inductor": {},
+        "graph_break": {},
+        "unimplemented": {}
+      },
+      "memory": {
+        "current_rss_kib": 9076252,
+        "peak_rss_kib": 11884308
+      }
+    },
+    {
+      "mode": "eager",
+      "fixture": 1,
+      "seed": 5193,
+      "tts_seconds": 68.53217978999999,
+      "audio_seconds": 6.32,
+      "sample_rate": 24000,
+      "pcm_samples": 151680,
+      "signal_valid": true,
+      "sequence_tokens": 80,
+      "eos_seen": true,
+      "cap_reached": false,
+      "natural_eos": true,
+      "talker_sequence_sha256": "4e446e68e7c722167eb666d7408a80a0e6997f830f40422b1c9573dc00c8157c",
+      "wav_file": "eager-1.wav",
+      "wav_sha256": "268004e2cc41bd51f72cec2f40f76cd029514e7db257d67bd260cf550c0eb4eb",
+      "pcm_sha256": "f2a2bbc45884e450bef284aaae789a09e3745f98f5ce989b469fa53b7ab474be",
+      "compiled_graph_invocations_during_call": 0,
+      "new_graphs_compiled_during_call": 0,
+      "predictor_forward_calls_during_call": 0,
+      "dynamo_counters": {
+        "frames": {},
+        "stats": {},
+        "inductor": {},
+        "graph_break": {},
+        "unimplemented": {}
+      },
+      "memory": {
+        "current_rss_kib": 9149432,
+        "peak_rss_kib": 11884308
+      }
+    }
+  ],
+  "source_run_id": 43403967385,
+  "source_run_url": "https://github.com/quddnr0107-lgtm/korean-voice/actions/runs/43403967385",
+  "artifact_provenance": {
+    "artifact_id": 14026651636,
+    "run_id": 43403967385,
+    "source_commit": "bea3e79df2d3b248f904950bc643e49f1dc6db94",
+    "zip_bytes": 1000672,
+    "zip_sha256": "037af8acb866ddca783ecc1363167085549aa2e71264207f00d962332bce3061",
+    "github_digest_matches": true,
+    "archive_size_matches": true,
+    "traversal_symlink_duplicate_extracted_size_checks_passed": true,
+    "extracted_bytes": 1087540,
+    "members": [
+      "compile-error.json",
+      "eager-1.wav",
+      "eager-0.wav",
+      "summary.json"
+    ]
+  },
+  "source_summary_sha256": "85a2df314c7a2ed6b1ee0ed1caf867a20dd4d31c10da879b33fc529b15cd2398",
+  "asr_evidence": "cpu-compile-43403967385-asr-check.json",
+  "asr_evidence_sha256": "64fede93ad3294b7270aff10913d7c4b158a24ebb2ace0716d7712fa12720eb5",
+  "asr_exact_matches": 2,
+  "asr_character_errors": [
+    0,
+    0
+  ],
+  "direct_pcm_comparisons_no_alignment_or_resampling": [],
+  "validated_public_error_diagnostic": {
+    "schema": "sohee-public-cpu-compile-error/v1",
+    "scope": "Public fixtures and pinned public model only; source/media keys forbidden.",
+    "production_eligible": false,
+    "exception_chain": [
+      {
+        "type": "BackendCompilerFailed",
+        "module": "torch._dynamo.exc",
+        "relation": "raised",
+        "message": "backend='backend' raised:\nValueError: public_cpu_compile_benchmark_invalid\n\nSet TORCHDYNAMO_VERBOSE=1 for the internal stack trace (please do this especially if you're reporting a bug to PyTorch). For even more developer context, set TORCH_LOGS=\"+dynamo\"\n",
+        "message_truncated": false
+      },
+      {
+        "type": "ValueError",
+        "module": "builtins",
+        "relation": "context",
+        "message": "public_cpu_compile_benchmark_invalid",
+        "message_truncated": false
+      }
+    ],
+    "chain_limit_reached": false,
+    "chain_cycle_detected": false,
+    "maximum_chain_depth": 4,
+    "maximum_message_characters": 2000,
+    "maximum_subprocess_stream_characters": 4000,
+    "compiler_error_line_prioritized": true,
+    "traceback": "\nraised: torch._dynamo.exc.BackendCompilerFailed\nTraceback (most recent call last):\n  File \"/home/runner/work/korean-voice/korean-voice/bora-production/cpu_compile_benchmark.py\", line 359, in worker\n    waves, rate = model.generate_custom_voice(**generation_args('production_style', text))\n                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/utils/_contextlib.py\", line 120, in decorate_context\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/qwen_tts/inference/qwen3_tts_model.py\", line 829, in generate_custom_voice\n    talker_codes_list, _ = self.model.generate(\n                           ^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/utils/_contextlib.py\", line 120, in decorate_context\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/qwen_tts/core/models/modeling_qwen3_tts.py\", line 2272, in generate\n    talker_result = self.talker.generate(\n                    ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/korean-voice/korean-voice/bora-production/cpu_compile_benchmark.py\", line 349, in observe\n    result = original(*args, **kwargs)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/utils/_contextlib.py\", line 120, in decorate_context\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/transformers/generation/utils.py\", line 2564, in generate\n    result = decoding_method(\n             ^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/transformers/generation/utils.py\", line 2787, in _sample\n    outputs = model_forward(**model_inputs, return_dict=True)\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1773, in _wrapped_call_impl\n    return self._call_impl(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1784, in _call_impl\n    return forward_call(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/transformers/utils/generic.py\", line 918, in wrapper\n    output = func(self, *args, **kwargs)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/qwen_tts/core/models/modeling_qwen3_tts.py\", line 1671, in forward\n    predictor_result = self.code_predictor.generate(\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/utils/_contextlib.py\", line 120, in decorate_context\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/transformers/generation/utils.py\", line 2564, in generate\n    result = decoding_method(\n             ^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/transformers/generation/utils.py\", line 2787, in _sample\n    outputs = model_forward(**model_inputs, return_dict=True)\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1773, in _wrapped_call_impl\n    return self._call_impl(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1784, in _call_impl\n    return forward_call(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/korean-voice/korean-voice/bora-production/cpu_compile_benchmark.py\", line 180, in forward\n    return replacement(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/_dynamo/eval_frame.py\", line 749, in compile_wrapper\n    raise e.remove_dynamo_frames() from None  # see TORCHDYNAMO_VERBOSE=1\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nbackend='backend' raised:\nValueError: public_cpu_compile_benchmark_invalid\n\nSet TORCHDYNAMO_VERBOSE=1 for the internal stack trace (please do this especially if you're reporting a bug to PyTorch). For even more developer context, set TORCH_LOGS=\"+dynamo\"\n\n\ncontext: builtins.ValueError\nTraceback (most recent call last):\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/_dynamo/output_graph.py\", line 1846, in _call_user_compiler\n    compiled_fn = compiler_fn(gm, example_inputs)\n                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/_dynamo/repro/after_dynamo.py\", line 150, in __call__\n    compiled_gm = compiler_fn(gm, example_inputs)\n                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/torch/__init__.py\", line 2425, in __call__\n    return self.compiler_fn(model_, inputs_, **self.kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/korean-voice/korean-voice/bora-production/cpu_compile_benchmark.py\", line 161, in backend\n    require(counts['backend_compile_attempts'] <= MAX_GRAPHS)\n  File \"/home/runner/work/korean-voice/korean-voice/bora-production/cpu_compile_benchmark.py\", line 47, in require\n    raise ValueError('public_cpu_compile_benchmark_invalid')\npublic_cpu_compile_benchmark_invalid\n",
+    "traceback_truncated": false,
+    "maximum_traceback_characters": 12000,
+    "diagnosis": "Recorded compiler failure; does not establish a hardware or support limitation."
+  },
+  "failure_diagnosis": {
+    "confirmed_final_cause": "The benchmark backend compile-attempt guard fired at 33 attempts with maximum 32. The final error chain was BackendCompilerFailed -> ValueError(public_cpu_compile_benchmark_invalid), not CppCompileError.",
+    "backend_compile_attempts": 33,
+    "backend_graphs_compiled": 21,
+    "configured_graph_limit_reached": true,
+    "original_masks_restored": true,
+    "per_call_timeout_reached": false,
+    "compiled_wavs_completed": 0,
+    "baseline_wavs_retained": 2,
+    "recorded_execution_counter_reliability": "The execute callback uses functools.wraps(compiled), which copies any _torchdynamo_orig_callable attribute from the returned backend callable. PyTorch 2.8 DisableContext calls innermost_fn, which follows this attribute. This can unwrap past the execution counter. Therefore the recorded zero counter is not proof that no compiled graph actually executed.",
+    "instrumentation_reproducer": {
+      "backend_return_exposed_orig_callable": true,
+      "source_innermost_unwrap_algorithm_result": 5,
+      "counter_after_unwrapped_call": 0,
+      "uses_real_benchmark_tracked_backend": true,
+      "uses_native_torch": false
+    },
+    "sources": [
+      "https://github.com/pytorch/pytorch/blob/v2.8.0/torch/_dynamo/eval_frame.py",
+      "https://github.com/pytorch/pytorch/blob/v2.8.0/torch/_dynamo/backends/common.py"
+    ],
+    "next_experiment_candidates": [
+      "Return a plain execution-counter closure without functools.wraps(compiled) or copying compiler private attributes; add an unwrap-regression test.",
+      "Bound the next experiment explicitly at 64 or 96 backend compile attempts, retaining the 360-second per-call deadline and compile_threads=1. Do not change model, precision, sampler or mask calculations."
+    ],
+    "interpretation": "Mask isolation advanced past the earlier four-attempt C++ compile failure, but this trial did not complete a compiled WAV and does not establish a speed improvement."
+  },
+  "execution_counter_interpretation_correction": {
+    "recorded_counter_zero_does_not_prove_nonexecution": true,
+    "raw_counter_values_preserved": true,
+    "affected_helper": "tracked_backend execute callback decorated with functools.wraps(compiled)",
+    "explanation": "functools.wraps copies the returned backend callable __dict__, including any _torchdynamo_orig_callable. PyTorch 2.8 innermost_fn follows that attribute and can unwrap past the callback. The saved zero is an observed counter value, not proof that no compiled graph ran.",
+    "minimal_reproducer_confirmed_with_real_benchmark_helper_and_fake_backend": true,
+    "minimal_reproducer_uses_native_torch": false,
+    "reproducer_result": {
+      "counter_after_unwrapped_successful_call": 0,
+      "returned_value": 5
+    },
+    "source_references": [
+      "https://github.com/pytorch/pytorch/blob/v2.8.0/torch/_dynamo/eval_frame.py",
+      "https://github.com/pytorch/pytorch/blob/v2.8.0/torch/_dynamo/backends/common.py"
+    ],
+    "correction_in_followup": "Request -04 returns a plain execution callback and preserves only the explicitly needed _boxed_call protocol attribute when present; compiler private unwrapping and disable tags are not copied.",
+    "prior_trial_speed_improvement_claimed": false
+  }
+}
