@@ -26,7 +26,8 @@ jobs:
         with: {python-version: '3.12'}
       - name: Verify production, protected diagnostics and quality gate have not changed
         run: |
-          git diff --exit-code HEAD^ HEAD -- bora-production/request.json bora-production/campaign.json bora-production/recipe.json bora-production/runtime.py bora-production/fp32_renderer.py bora-production/quality.py bora-production/recovery_diagnostics.py bora-production/transport.py bora-production/assemble.py .github/workflows/bora-fp32-production.yml
+          git diff --exit-code HEAD^ HEAD -- bora-production/request.json bora-production/campaign.json bora-production/recipe.json bora-production/runtime.py bora-production/fp32_renderer.py bora-production/quality.py bora-production/tts_normalize.py bora-production/pilot_render.py bora-production/recovery_diagnostics.py bora-production/transport.py bora-production/assemble.py .github/workflows/bora-fp32-production.yml
+          python -m unittest discover -s bora-production -p 'test_saved_receipt_comparison.py' -v
           python -m unittest discover -s bora-production -p 'test_tb001_full_diagnostic.py' -v
           python -m py_compile bora-production/tb001_full_diagnostic.py
       - name: Install keyless ciphertext integrity validator

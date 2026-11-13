@@ -6,6 +6,7 @@ unprivileged offline environment. Nothing is synthesized, approved or published.
 import argparse, base64, hashlib, json, os, socket, tempfile
 from pathlib import Path
 import recovery_diagnostics as d
+from saved_receipt_comparison import diagnostic_projection
 
 SCHEMA="bora-tb001-full-sealed-diagnostics/v1"
 WORKFLOW=d.REPO+"/.github/workflows/bora-tb001-full-diagnostic.yml@refs/heads/"+d.BRANCH
@@ -28,7 +29,8 @@ def require(ok):
 def check_request():
  obj=json.loads(Path(__file__).with_name("tb001-full-diagnostic-request.json").read_text())
  require(obj=={"schema":SCHEMA,"purpose":"read-only-authenticated-diagnostics",
-               "pin":PIN,"synthesis":False,"promotion":False})
+               "pin":PIN,"synthesis":False,"promotion":False,
+               "diagnostic_revision":"saved-normalization-and-timing-v1"})
 
 def check_context(env,uid,euid):
  require(env.get("GITHUB_REPOSITORY")==d.REPO and env.get("GITHUB_REF")=="refs/heads/"+d.BRANCH
@@ -94,6 +96,7 @@ def project(rows,plan):
   "character_error_bins":full["candidate_character_error_bins"],
   "candidate_error_codes":full["candidate_error_codes"],
   "disagreement_patterns":patterns,"per_shard":sub,
+  "saved_receipt_comparison":diagnostic_projection(rows,plan),
   "production_eligible":False,"checkpoint_written":False,"audio_synthesized":False,
   "asr_rerun":False,"human_listening_verified":False,"causal_attribution_confirmed":False}
 

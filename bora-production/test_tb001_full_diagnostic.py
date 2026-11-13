@@ -16,7 +16,7 @@ class QualityTests(unittest.TestCase):
         "review_required":status!="passed","missing_critical":[]}}]}}
   return out
  def plan(self):
-  return {"units":[{"spoken":"시험 문장"} for _ in range(58)]}
+  return {"units":[{"spoken":"시험 문장","mode":"explain"} for _ in range(58)]}
  def test_projection_and_no_text_export(self):
   rows=self.rows();before=copy.deepcopy(rows)
   out=f.project(rows,self.plan())
