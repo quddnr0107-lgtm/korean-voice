@@ -5,6 +5,7 @@ on:
     paths:
       - 'bora-production/runtime.py'
       - 'bora-production/test_execution_scheduling.py'
+      - 'bora-production/test_restore_ranges.py'
       - '.github/workflows/bora-fp32-production.yml'
       - '.github/workflows/bora-execution-ci.yml'
 permissions:
@@ -36,8 +37,11 @@ jobs:
           def functions(tree):
               return {node.name: ast.dump(node, include_attributes=False) for node in tree.body if isinstance(node, ast.FunctionDef)}
           before, after = functions(old), functions(new)
-          for name in ('protected_keys', 'source_plan', 'seal_unit', 'open_unit', 'restore', 'assemble', 'make_index', 'preflight'):
+          for name in ('protected_keys', 'source_plan', 'seal_unit', 'open_unit', 'assemble', 'make_index', 'preflight'):
               assert before[name] == after[name], name
+          # restore intentionally adds public-envelope-validated range selection.
+          # Its AES authentication and full-assembly behavior have dedicated
+          # tamper/parity tests in test_restore_ranges.py.
           print('Critical gates and audio fingerprints unchanged')
           PY
       - name: Install pinned test runtime without secrets or model weights
@@ -46,4 +50,4 @@ jobs:
       - name: Run full synthetic producer, encryption, transport and scheduling regression
         run: python -m unittest discover -s bora-production -p 'test_*.py'
       - name: Compile changed runtime and scheduling tests
-        run: python -m py_compile bora-production/runtime.py bora-production/test_execution_scheduling.py
+        run: python -m py_compile bora-production/runtime.py bora-production/test_execution_scheduling.py bora-production/test_restore_ranges.py

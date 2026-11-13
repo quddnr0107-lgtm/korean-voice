@@ -323,10 +323,31 @@ def open_unit(envelope,media_key,plan,recipe_hash,settings_hash,destination):
     return dict(unit_index=index,receipt=receipt,path=out/receipt.get('file','review.wav'))
 
 
-def restore(directory,media_key,plan,recipe_hash,settings_hash,work):
+def restore(directory,media_key,plan,recipe_hash,settings_hash,work,*,unit_range=None):
+    """Restore requested private units after checking the entire public bundle.
+
+    Probe/render may request a validated shard range to avoid decrypting and
+    writing unrelated PCM. The default remains full restoration for assembly.
+    Public inventory is never a QA approval or a substitute for authenticating
+    each requested unit through open_unit().
+    """
+    if unit_range is not None:
+        check(isinstance(unit_range,tuple) and len(unit_range)==2
+              and all(type(v) is int for v in unit_range)
+              and 0<=unit_range[0]<unit_range[1]<=len(plan['units']), 'resume_unit_range')
     restored={}
     for bundle in sorted(Path(directory).glob(plan['lesson_id']+'-s*-r*-a*.zip')):
         check(not bundle.is_symlink() and bundle.stat().st_size<=MAX_BUNDLE, 'resume_bundle_bounds')
+        if unit_range is not None:
+            # Validate every member, public pin, ciphertext hash and report
+            # count before using any untrusted index to skip private work.
+            from transport import validate_bundle
+            report=validate_bundle(bundle,plan['lesson_id'].split('-',1)[0])
+            if (report['plan_sha256']!=identity(plan) or report['recipe_sha256']!=recipe_hash
+                    or report['render_settings_sha256']!=settings_hash):
+                continue
+            check(report['lesson_id']==plan['lesson_id']
+                  and 0<=report['start']<report['end']<=len(plan['units']), 'resume_report_scope')
         with zipfile.ZipFile(bundle) as z:
             names=z.namelist()
             check(len(names)==len(set(names)) and sum(i.file_size for i in z.infolist())<=MAX_BUNDLE
@@ -337,6 +358,8 @@ def restore(directory,media_key,plan,recipe_hash,settings_hash,work):
                 check(z.getinfo(name).file_size<=MAX_UNIT*2, 'envelope_size')
                 envelope=json.loads(z.read(name))
                 index=envelope.get('unit_index')
+                if unit_range is not None and not unit_range[0]<=index<unit_range[1]:
+                    continue
                 if index in restored and restored[index]['receipt'].get('status')=='passed':
                     continue
                 row=open_unit(envelope,media_key,plan,recipe_hash,settings_hash,work)
@@ -362,7 +385,7 @@ def resume_probe(args):
     group=row['shards'][args.shard]; begin,end=group['start'],group['end']
     with tempfile.TemporaryDirectory(prefix='bora-probe-',dir=os.environ.get('RUNNER_TEMP')) as td:
         restored=restore(args.resume_dir,media_key,plan,identity(recipe),
-                         public['render_settings_sha256'],Path(td)/'restored')
+                         public['render_settings_sha256'],Path(td)/'restored',unit_range=(begin,end))
         rows={i:v for i,v in restored.items() if begin<=i<end}
         pending=pending_units(rows,begin,end,request['retry_blocked'])
         passed=sum(v['receipt'].get('status')=='passed' for v in rows.values())
@@ -398,7 +421,8 @@ def render(args):
     envelopes={}
     with tempfile.TemporaryDirectory(prefix='bora-private-',dir=os.environ.get('RUNNER_TEMP')) as td:
         work=Path(td)
-        restored=restore(args.resume_dir,media_key,plan,recipe_hash,settings_hash,work/'restored')
+        restored=restore(args.resume_dir,media_key,plan,recipe_hash,settings_hash,work/'restored',
+                         unit_range=(begin,end))
         rows={i:v for i,v in restored.items() if begin<=i<end}
         pending=pending_units(rows,begin,end,request['retry_blocked'])
         try:
