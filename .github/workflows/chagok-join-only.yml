@@ -1,0 +1,54 @@
+name: Chagok 365 MP3 combine from completed scenes
+on:
+  push:
+    branches: ['feature/chagok-english-bake-20261113']
+    paths:
+      - '.github/workflows/chagok-join-only.yml'
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  combine:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download verified 17 scene pairs from first bake
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 43380420595
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          pattern: chagok-scene-*
+          path: scenes
+          merge-multiple: true
+      - name: Install FFmpeg for MP3 joining and verification
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - name: Combine in exact scene order and verify output
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p output
+          test "$(grep -cE '^[0-9]+\. ' chagok/365-fixed-transcript.txt)" -eq 389
+          test "$(find scenes -maxdepth 1 -name '*-learn.mp3' | wc -l)" -eq 17
+          test "$(find scenes -maxdepth 1 -name '*-listen.mp3' | wc -l)" -eq 17
+          for mode in learn listen; do
+            : > "list-$mode.txt"
+            for i in $(seq -w 0 16); do
+              test -s "scenes/$i-$mode.mp3"
+              echo "file 'scenes/$i-$mode.mp3'" >> "list-$mode.txt"
+            done
+            ffmpeg -hide_banner -loglevel error -y -f concat -safe 0 -i "list-$mode.txt" -ar 24000 -ac 1 -codec:a libmp3lame -b:a 96k "output/chagok-365-$mode.mp3"
+            ffprobe -v error -show_entries format=duration,size -of default=noprint_wrappers=1 "output/chagok-365-$mode.mp3"
+          done
+          cp chagok/365-fixed-transcript.txt output/chagok-365-transcript.txt
+          (cd output && sha256sum *.mp3 > SHA256SUMS)
+      - name: Downloadable full-length fixed MP3 pair
+        uses: actions/upload-artifact@v4
+        with:
+          name: chagok-365-fixed-master-audio
+          path: output/*
+          if-no-files-found: error
+          retention-days: 30
