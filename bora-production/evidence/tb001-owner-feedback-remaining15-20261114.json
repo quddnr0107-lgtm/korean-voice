@@ -1,0 +1,181 @@
+{
+  "automatic_quality_pass_claimed": false,
+  "checkpoint_written": false,
+  "clips": [
+    {
+      "listen_end_seconds": 34.38,
+      "listen_start_seconds": 0.3,
+      "listening_number": 1,
+      "raw_seconds": 34.08,
+      "source_pcm_sha256": "3afdc429f20ef8c7ed95fe90cee8e4590d1e8320f8c8334f429211f3cfae1f59",
+      "source_samples": 817920,
+      "source_wav_sha256": "571f9f9359bd702592a8619f25f7c55a8f89e237679fdf348bf5b2f03d0add0e",
+      "unit_index": 6
+    },
+    {
+      "listen_end_seconds": 65.82,
+      "listen_start_seconds": 35.18,
+      "listening_number": 2,
+      "raw_seconds": 30.64,
+      "source_pcm_sha256": "e27e8c39e25bc3f3e36e3419173c3f25c872020de08d5e69297c1c300eec4e46",
+      "source_samples": 735360,
+      "source_wav_sha256": "037af25791fb0aedecb1661acc2b4bf0596be6beb50daf2f52389018ee94ae40",
+      "unit_index": 7
+    },
+    {
+      "listen_end_seconds": 95.1,
+      "listen_start_seconds": 66.62,
+      "listening_number": 3,
+      "raw_seconds": 28.48,
+      "source_pcm_sha256": "7c909e419d1e7852d40d774656b71e3eb8a6025785095b672c51a4138ee5af75",
+      "source_samples": 683520,
+      "source_wav_sha256": "0c61129eaca7daa9d3c65060214e7bd96a3fc8d67dd1772f501dfa509efcbed9",
+      "unit_index": 8
+    },
+    {
+      "listen_end_seconds": 127.5,
+      "listen_start_seconds": 95.9,
+      "listening_number": 4,
+      "raw_seconds": 31.6,
+      "source_pcm_sha256": "85d929cace07b3bd313b339e5a37f4279a53a5ca84430d4a2cffaaec85b7395b",
+      "source_samples": 758400,
+      "source_wav_sha256": "a6120604884dcf8932d866ab7a74a5fb116b2e1e064c6f164bbb0823f12e1e4c",
+      "unit_index": 20
+    },
+    {
+      "listen_end_seconds": 138.3,
+      "listen_start_seconds": 128.3,
+      "listening_number": 5,
+      "raw_seconds": 10.0,
+      "source_pcm_sha256": "4b6b165117e3acada9f530008410da514ae1b08c2fde2a754387f6c7cbdb5d3f",
+      "source_samples": 240000,
+      "source_wav_sha256": "2d544da73895b2c42b58e2f398c2db0b805190c5d12dbabc820f767e1c0560ce",
+      "unit_index": 25
+    },
+    {
+      "listen_end_seconds": 156.3,
+      "listen_start_seconds": 139.1,
+      "listening_number": 6,
+      "raw_seconds": 17.2,
+      "source_pcm_sha256": "d752b3e69a7b12ebeb8eefc7cc963e1db68bc4ab61b23de58c2530276a6f7383",
+      "source_samples": 412800,
+      "source_wav_sha256": "2787e5801c5b13a5de390b83528740a09c197bee274314d7523025a6c2d8041d",
+      "unit_index": 27
+    },
+    {
+      "listen_end_seconds": 169.82,
+      "listen_start_seconds": 157.1,
+      "listening_number": 7,
+      "raw_seconds": 12.72,
+      "source_pcm_sha256": "10a5a7c1f40efe4ba4bd8ee9b55c905eb01d41295c64208b21ac80abae76a9de",
+      "source_samples": 305280,
+      "source_wav_sha256": "4fe41dca702e82ea338025f83a83ebd1ec5554f8891f7b62085043423655e633",
+      "unit_index": 28
+    },
+    {
+      "listen_end_seconds": 190.94,
+      "listen_start_seconds": 170.62,
+      "listening_number": 8,
+      "raw_seconds": 20.32,
+      "source_pcm_sha256": "820a8a91f16092569d5e4e1ddaea18da7c8e13c9ffb9b3c119cf066fa35efcf9",
+      "source_samples": 487680,
+      "source_wav_sha256": "6d0cf012a6b0285d1aa7ce3a7a1c8b95aa752b1e97c3f52821a319f5c1f7ffdf",
+      "unit_index": 34
+    },
+    {
+      "listen_end_seconds": 208.94,
+      "listen_start_seconds": 191.74,
+      "listening_number": 9,
+      "raw_seconds": 17.2,
+      "source_pcm_sha256": "1d7fc2b7227f77c74563cde5f45da26e64b040a0d624ed2f85c746498ef89488",
+      "source_samples": 412800,
+      "source_wav_sha256": "97d38b01241ee29a7fde89cf64b075aab0cf0714f7dc9b8c49eb1c3ea6cebb59",
+      "unit_index": 36
+    },
+    {
+      "listen_end_seconds": 240.86,
+      "listen_start_seconds": 209.74,
+      "listening_number": 10,
+      "raw_seconds": 31.12,
+      "source_pcm_sha256": "710f52e22d8f7c238aa858b9c24a4145ac748a98ca3a27c6711c01f0352d4d91",
+      "source_samples": 746880,
+      "source_wav_sha256": "3f6a2b309eaf057011e588f00b71fa6b12ca6f437770c4fce6769d4b19c577e6",
+      "unit_index": 37
+    },
+    {
+      "listen_end_seconds": 261.34,
+      "listen_start_seconds": 241.66,
+      "listening_number": 11,
+      "raw_seconds": 19.68,
+      "source_pcm_sha256": "c0d9996be3277c868b8a29225de979fab5c448df90425a03b3414df8a9101908",
+      "source_samples": 472320,
+      "source_wav_sha256": "1b77c1efd732828d9d195b51a55bda08a832bca8818073d351e18cf9ed9f2415",
+      "unit_index": 40
+    },
+    {
+      "listen_end_seconds": 278.3,
+      "listen_start_seconds": 262.14,
+      "listening_number": 12,
+      "raw_seconds": 16.16,
+      "source_pcm_sha256": "5c5b71f3a409cbcf6dd5f936c407b7d1c19dc3cc7275afbe9b4233ae61ed0bfb",
+      "source_samples": 387840,
+      "source_wav_sha256": "80da2c802d9e3ef118b9b474bab403c437e2a15467d8b8ff99c7bb7d2df3621d",
+      "unit_index": 41
+    },
+    {
+      "listen_end_seconds": 308.38,
+      "listen_start_seconds": 279.1,
+      "listening_number": 13,
+      "raw_seconds": 29.28,
+      "source_pcm_sha256": "8623bd8b03898521190e49617e0f313813cb39e3ea8d0e56b1a5c332bb7481c0",
+      "source_samples": 702720,
+      "source_wav_sha256": "d3876f53b8e4a0718924876a989cd1c09014e7042b96904a6999fedcdd0cfa47",
+      "unit_index": 43
+    },
+    {
+      "listen_end_seconds": 323.66,
+      "listen_start_seconds": 309.18,
+      "listening_number": 14,
+      "raw_seconds": 14.48,
+      "source_pcm_sha256": "5428f46b5571afcac6f45746cd1e34b71150b5922870e8e0549bd3e619688d5e",
+      "source_samples": 347520,
+      "source_wav_sha256": "4078ed3b3a6577775488139e24b4ff7027b17197a0f867bc50e50a4bb4c76c29",
+      "unit_index": 47
+    },
+    {
+      "listen_end_seconds": 333.82,
+      "listen_start_seconds": 324.46,
+      "listening_number": 15,
+      "raw_seconds": 9.36,
+      "source_pcm_sha256": "bbbd788f96fcd2d13f7f6d3f1e7326ecdbed2d6b1b92f3b021dc04d2537d8a7d",
+      "source_samples": 224640,
+      "source_wav_sha256": "e7c6574cdf8cbcd898996db512e124149653704f7ec7f2104dadd74d551a321d",
+      "unit_index": 53
+    }
+  ],
+  "combined_mp3_sha256": "82d4167f2b4042683b90243331af2d155659dbf37a1c9b8b7595b6d4780a1b87",
+  "heard_unit_count": 15,
+  "interpretation": "owner_positive_listening_feedback_no_reported_problem",
+  "lesson_id": "TB-001",
+  "original_blocked": 31,
+  "original_passed": 27,
+  "production_eligible": false,
+  "production_receipt_changed": false,
+  "quality_criteria_changed": false,
+  "schema": "bora-scoped-owner-listening-feedback/v1",
+  "scope": "remaining15_owner_listening_clips_only",
+  "source_export": {
+    "artifact_bytes": 31112245,
+    "artifact_id": 14093485829,
+    "artifact_sha256": "5bf263c1d5cc029a02b3a79583f82b7dc99a4ae10db7bc2dd51e6304bb7dc961",
+    "conclusion": "success",
+    "head_sha": "f09dc81c2a29f2f2dfed0155a9c73ea584a65e7d",
+    "run_attempt": 1,
+    "run_id": 43543733300,
+    "source_run_id": 43538224355,
+    "source_summary_sha256": "9ef90124cbe9500d3cb05c89dd948d070613e5a14e1f9b0f0c3a47670fca18a4",
+    "workflow": ".github/workflows/bora-tb001-remaining-listen.yml"
+  },
+  "statement": "다좋은데?",
+  "word_by_word_accuracy_explicitly_confirmed": false
+}

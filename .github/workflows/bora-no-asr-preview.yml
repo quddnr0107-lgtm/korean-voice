@@ -1,0 +1,64 @@
+name: Original Bora raw sample without ASR
+on:
+  push:
+    branches: [integrated-lectures-premium-20261028]
+    paths: ['bora-production/no-asr-preview-request.json']
+permissions:
+  contents: read
+concurrency:
+  group: bora-public-no-asr-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  compare:
+    if: github.repository == 'quddnr0107-lgtm/korean-voice'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      HF_HUB_DISABLE_TELEMETRY: '1'
+      HF_HUB_DISABLE_IMPLICIT_TOKEN: '1'
+      HF_HUB_DISABLE_PROGRESS_BARS: '1'
+      DO_NOT_TRACK: '1'
+      OMP_NUM_THREADS: '4'
+      MKL_NUM_THREADS: '4'
+      OPENBLAS_NUM_THREADS: '4'
+      TORCHINDUCTOR_COMPILE_THREADS: '1'
+      MAX_JOBS: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false, fetch-depth: 2}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with: {python-version: '3.12'}
+      - name: Verify isolated public trial and unchanged production files
+        run: |
+          git diff --exit-code HEAD^ HEAD -- bora-production/request.json bora-production/campaign.json bora-production/recipe.json bora-production/runtime.py bora-production/fp32_renderer.py bora-production/pilot_render.py bora-production/quality.py bora-production/assemble.py .github/workflows/bora-fp32-production.yml
+          python -m unittest discover -s bora-production -p 'test_no_asr_preview.py' -v
+          python -m py_compile bora-production/no_asr_preview.py
+          python bora-production/no_asr_preview.py validate
+      - name: Install the original pinned CPU runtime
+        run: |
+          python -m pip install --disable-pip-version-check torch==2.8.0+cpu torchaudio==2.8.0+cpu --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install --disable-pip-version-check qwen-tts==0.1.1 transformers==4.57.3 soundfile==0.14.0 numpy==2.5.4 scipy==1.18.1 huggingface-hub==0.36.2
+          python -m pip check
+      - name: Download only the fixed TTS model; no speech-recognition model
+        run: python bora-production/no_asr_preview.py download --model-dir "$RUNNER_TEMP/bora-no-asr-model"
+      - name: Synthesize the original voice once offline without ASR or retries
+        env:
+          HF_HUB_OFFLINE: '1'
+          TRANSFORMERS_OFFLINE: '1'
+        run: |
+          export BORA_HOST_NETNS="$(readlink /proc/self/ns/net)"
+          timeout --signal=TERM --kill-after=15s 900s \
+            sudo --preserve-env=BORA_HOST_NETNS,GITHUB_REPOSITORY,GITHUB_EVENT_NAME,GITHUB_REF,GITHUB_WORKFLOW_REF,RUNNER_TEMP,HF_HUB_OFFLINE,TRANSFORMERS_OFFLINE,OMP_NUM_THREADS,MKL_NUM_THREADS,OPENBLAS_NUM_THREADS \
+            unshare --net --setgid "$(id -g)" --setuid "$(id -u)" -- "$(command -v python)" \
+            bora-production/no_asr_preview.py render --model-dir "$RUNNER_TEMP/bora-no-asr-model" --output-dir "$RUNNER_TEMP/bora-no-asr-results"
+      - name: Retain public raw audio and generation timing only
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: bora-no-asr-preview-${{ github.run_id }}
+          path: ${{ runner.temp }}/bora-no-asr-results
+          retention-days: 1
+          if-no-files-found: warn
+
+
+
