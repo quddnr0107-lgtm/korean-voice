@@ -1,0 +1,67 @@
+{
+  "asr": false,
+  "groups": [
+    [
+      8,
+      36,
+      47
+    ],
+    [
+      6,
+      27,
+      28
+    ],
+    [
+      34,
+      41,
+      43
+    ],
+    [
+      37,
+      40,
+      53
+    ],
+    [
+      7,
+      20,
+      25
+    ]
+  ],
+  "pin": {
+    "assets": [
+      {
+        "blocked": 26,
+        "bytes": 81028727,
+        "end": 42,
+        "id": 742113914,
+        "name": "TB-001-s000-r43275117254-a1.zip",
+        "passed": 16,
+        "sha256": "fa7dc1bb048009000fa07cf8ffa5a7ac30ec5b88d1395294ded2cddf80ce93eb",
+        "shard": 0,
+        "start": 0
+      },
+      {
+        "blocked": 5,
+        "bytes": 23244525,
+        "end": 58,
+        "id": 741720764,
+        "name": "TB-001-s001-r43275117254-a1.zip",
+        "passed": 11,
+        "sha256": "6fb9ed5546420a7b273636061cc9d56326da9d1d1e5dc4bfe1284991281ca657",
+        "shard": 1,
+        "start": 42
+      }
+    ],
+    "lesson_id": "TB-001",
+    "plan_sha256": "63266c9ae5f234ab5852415952ca889b540b05a0348d6bc954d8613da5ec5f87",
+    "recipe_sha256": "d3d35666712d276c0fa60bb5c5b1f7ab7d11c7042d490c95bb6fb8846682502d",
+    "render_settings_sha256": "930c8341302f36e0058eeb0deb3a0821cc6177dc6edc162d41547f93299a0822",
+    "run_id": "43275117254",
+    "units": 58
+  },
+  "production_eligible": false,
+  "recipient_spki_der_b64": "MIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAyGLOJXlQKfH2KwYmZYTUMWqOUWMfz4oRFcaCOcS6lYiVIAPM/pnJP1DbAvaPLbyd0353rGqfS7/UhherBiPmrjoM39RqwHAJIam7wgLmDnGXeXqplBdT2df9GGrZp+lxgNZEGRZb3Pb9wV9dnr6Yh8YzFUwHaTM87bqd/hCRrf/jdSWRdwJ2lNVbygsJDkKAQlDwkwS2z/DPVRKs0DzvyY0XcLYwxOHeD1S7gcLvkXmcvmLBK8pwv+Cp+MG6CMWBy8yzmMdPNEp1GoEzlzRPRITcrh9OIfD9h7z1nvxeATI7DEExxsGVuyyQG4W9vJ6uGHd7JT2PEG5JU/0xp6fesIn/EKk3ie7OAiObT+0DTmKbFZN56Eo8VKQpmiflgKcGGiSeXGewKCeOighDvNP/jMAMl69qVvwJuCelBQQIFbIPUSdRtmr/eEwoQL9LoPqt3KV8xeusmQ/jeEIdA33uoY78JqJxcoyJEOL1S8OIHgHwSxPVpYxepQSeW3Ts2CRlAgMBAAE=",
+  "recipient_spki_sha256": "dbf8aab53b25600125c5bb537615919cac4ef72ea03e8fdac152b13d3d8e17b5",
+  "request_id": "tb001-five-minute-no-asr-20261114-01",
+  "schema": "bora-tb001-no-asr-comparison/v1"
+}

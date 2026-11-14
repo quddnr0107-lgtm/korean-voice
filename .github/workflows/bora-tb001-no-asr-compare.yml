@@ -1,0 +1,89 @@
+name: TB001 five minute Bora synthesis comparison
+on:
+  push:
+    branches: [integrated-lectures-premium-20261028]
+    paths: ['bora-production/tb001-no-asr-compare-request.json']
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: bora-tb001-no-asr-compare-${{ github.ref }}
+  cancel-in-progress: false
+env:
+  HF_HUB_DISABLE_TELEMETRY: '1'
+  HF_HUB_DISABLE_IMPLICIT_TOKEN: '1'
+  HF_HUB_DISABLE_PROGRESS_BARS: '1'
+  DO_NOT_TRACK: '1'
+jobs:
+  prepare:
+    if: github.repository == 'quddnr0107-lgtm/korean-voice' && github.ref == 'refs/heads/integrated-lectures-premium-20261028' && github.event_name == 'push'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false, fetch-depth: 2}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with: {python-version: '3.12'}
+      - name: Validate timing comparison and production file integrity
+        run: |
+          git diff --exit-code HEAD^ HEAD -- bora-production/request.json bora-production/campaign.json bora-production/recipe.json bora-production/fp32_renderer.py bora-production/runtime.py bora-production/assemble.py .github/workflows/bora-fp32-production.yml
+          python -m pip install --disable-pip-version-check cryptography==50.0.0
+          python -m unittest discover -s bora-production -p 'test_tb001_no_asr_compare.py'
+          python -m py_compile bora-production/tb001_no_asr_compare.py bora-production/tb001_no_asr_compare_job.py
+          python bora-production/tb001_no_asr_compare_job.py validate
+  compare:
+    name: Compare group ${{ matrix.group }}
+    needs: prepare
+    runs-on: ubuntu-24.04
+    environment: admin-law-premium-production
+    timeout-minutes: 65
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [1, 2, 3, 4, 5]
+    env:
+      OMP_NUM_THREADS: '4'
+      OPENBLAS_NUM_THREADS: '4'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with: {python-version: '3.12'}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: 14087588658
+          run-id: 43532399553
+          repository: quddnr0107-lgtm/korean-voice
+          github-token: ${{ github.token }}
+          merge-multiple: true
+          path: ${{ runner.temp }}/bora-compare-cipher
+      - name: Install pinned CPU voice runtime
+        run: |
+          python -m pip install --disable-pip-version-check torch==2.8.0+cpu torchaudio==2.8.0+cpu --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install --disable-pip-version-check qwen-tts==0.1.1 transformers==4.57.3 soundfile==0.14.0 numpy==2.5.4 scipy==1.18.1 cryptography==50.0.0 huggingface-hub==0.36.2
+          python -m pip check
+      - name: Download only the pinned voice model
+        run: python bora-production/tb001_no_asr_compare_job.py download --model-dir "$RUNNER_TEMP/bora-compare-model"
+      - name: Measure each pinned unit with one synthesis and record original timing
+        env:
+          ADMIN_LAW_PREMIUM_SOURCE_KEY_B64: ${{ secrets.ADMIN_LAW_PREMIUM_SOURCE_KEY_B64 }}
+          ADMIN_LAW_PREMIUM_MEDIA_KEY_B64: ${{ secrets.ADMIN_LAW_PREMIUM_MEDIA_KEY_B64 }}
+          COMPARE_GROUP: ${{ matrix.group }}
+        run: |
+          umask 077
+          export BORA_HOST_NETNS="$(readlink /proc/self/ns/net)"
+          sudo --preserve-env=ADMIN_LAW_PREMIUM_SOURCE_KEY_B64,ADMIN_LAW_PREMIUM_MEDIA_KEY_B64,BORA_HOST_NETNS,GITHUB_REPOSITORY,GITHUB_EVENT_NAME,GITHUB_REF,GITHUB_WORKFLOW_REF,RUNNER_TEMP,OMP_NUM_THREADS,OPENBLAS_NUM_THREADS \
+            unshare --net --setgid "$(id -g)" --setuid "$(id -u)" -- "$(command -v python)" \
+            bora-production/tb001_no_asr_compare_job.py render --group "$COMPARE_GROUP" \
+            --directory "$RUNNER_TEMP/bora-compare-cipher" --model-dir "$RUNNER_TEMP/bora-compare-model" \
+            --output "$RUNNER_TEMP/bora-compare-results"
+      - name: Preserve encrypted listening audio and measured timings
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: bora-five-minute-compare-g${{ matrix.group }}-${{ github.run_id }}-a${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/bora-compare-results/owner-envelope.json
+            ${{ runner.temp }}/bora-compare-results/timing.json
+          retention-days: 1
+          if-no-files-found: warn
