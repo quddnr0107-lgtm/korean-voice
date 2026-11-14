@@ -1,0 +1,44 @@
+name: Chagok sentence sync timecodes
+on:
+  push:
+    branches: ['feature/chagok-english-bake-20261113']
+    paths:
+      - '.github/workflows/chagok-cues.yml'
+      - 'chagok/build-timecodes.py'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install FFmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - name: Download original master audio from GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p audio
+          gh release download chagok-365-fixed-v1 --repo "${{ github.repository }}" -p 'chagok-365-*.mp3' -D audio
+          test -s audio/chagok-365-learn.mp3
+          test -s audio/chagok-365-listen.mp3
+      - name: Detect 1167 + 389 exact speech gaps
+        run: |
+          python3 chagok/build-timecodes.py --learn audio/chagok-365-learn.mp3 --listen audio/chagok-365-listen.mp3 --out audio/chagok-365-cues.json
+          python3 - <<'PY'
+          import json
+          d=json.load(open('audio/chagok-365-cues.json'))
+          assert d['count']==389 and len(d['cues'])==389
+          assert d['cues'][0][0]==1 and d['cues'][-1][0]==389
+          print('Cues verified.')
+          PY
+      - name: Publish sync timings without changing either MP3
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload chagok-365-fixed-v1 audio/chagok-365-cues.json --clobber --repo "${{ github.repository }}"
+          gh release view chagok-365-fixed-v1 --repo "${{ github.repository }}" --json assets --jq '[.assets[].name]'
