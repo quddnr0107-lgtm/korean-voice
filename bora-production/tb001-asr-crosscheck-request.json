@@ -1,5 +1,9 @@
 {
   "schema": "bora-tb001-asr-crosscheck/v1",
+  "request_id": "tb001-asr-crosscheck-av18-normalization-20261114-01",
+  "decoder_av_version": "18.1.0",
+  "pronunciation_diagnostics": true,
+  "normalization_ruleset": "lecture-tts-normalize/v1",
   "purpose": "read-only-cross-model-diagnostics",
   "pin": {
     "assets": [
@@ -44,6 +48,5 @@
     38
   ],
   "synthesis": false,
-  "promotion": false,
-  "diagnostic_revision": 3
+  "promotion": false
 }

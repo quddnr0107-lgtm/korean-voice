@@ -33,7 +33,11 @@ class CrosscheckTests(unittest.TestCase):
         request = cross.expected_request()
         cross.validate_request(request)
         for field, value in [('promotion', True), ('synthesis', True),
-                             ('excluded_owner_heard_unit_indices', [])]:
+                             ('excluded_owner_heard_unit_indices', []),
+                             ('request_id', 'tb001-asr-crosscheck-old'),
+                             ('decoder_av_version', '19.0.2'),
+                             ('pronunciation_diagnostics', False),
+                             ('normalization_ruleset', 'unapproved-ruleset')]:
             changed = copy.deepcopy(request)
             changed[field] = value
             with self.subTest(field=field), self.assertRaises(ValueError):
@@ -42,6 +46,47 @@ class CrosscheckTests(unittest.TestCase):
         changed['model']['revision'] = 'main'
         with self.assertRaises(ValueError):
             cross.validate_request(changed)
+        for field in ('request_id', 'decoder_av_version', 'pronunciation_diagnostics', 'normalization_ruleset'):
+            changed = copy.deepcopy(request)
+            changed.pop(field)
+            with self.subTest(missing=field), self.assertRaises(ValueError):
+                cross.validate_request(changed)
+
+    def test_decoder_version_requires_exact_installed_distribution(self):
+        with patch.object(cross.importlib.metadata, 'version', return_value='18.1.0') as version:
+            self.assertEqual(cross.verify_decoder_version(), '18.1.0')
+            version.assert_called_once_with('av')
+        for observed in ('19.0.2', '18.0.0', '18.1.0.post1'):
+            with patch.object(cross.importlib.metadata, 'version', return_value=observed):
+                with self.subTest(observed=observed), self.assertRaises(ValueError):
+                    cross.verify_decoder_version()
+        with patch.object(cross.importlib.metadata, 'version',
+                          side_effect=cross.importlib.metadata.PackageNotFoundError('av')):
+            with self.assertRaisesRegex(ValueError, '^tb001_crosscheck_validation_failed$'):
+                cross.verify_decoder_version()
+
+    def test_wrong_decoder_blocks_both_modes_before_model_or_private_inspection(self):
+        for mode in ('download-model', 'inspect'):
+            argv = ['crosscheck', mode, '--model-path', '/unused-model']
+            if mode == 'inspect': argv += ['--directory', '/unused-cipher', '--output', '/unused-output']
+            with patch('sys.argv', argv), \
+                 patch.object(cross.importlib.metadata, 'version', return_value='19.0.2'), \
+                 patch.object(cross, 'download_model') as download, \
+                 patch.object(cross, 'inspect') as inspect, \
+                 patch.dict(os.environ, {cross.preview.PRIVATE_KEYS[0]: 'untouched-private-key'}):
+                with self.assertRaises(ValueError): cross.main()
+                download.assert_not_called(); inspect.assert_not_called()
+                self.assertEqual(os.environ[cross.preview.PRIVATE_KEYS[0]], 'untouched-private-key')
+
+    def test_verified_decoder_version_is_forwarded_to_private_summary_path(self):
+        argv = ['crosscheck', 'inspect', '--model-path', '/unused-model',
+                '--directory', '/unused-cipher', '--output', '/unused-output']
+        with patch('sys.argv', argv), \
+             patch.object(cross.importlib.metadata, 'version', return_value='18.1.0'), \
+             patch.object(cross, 'inspect') as inspect:
+            cross.main()
+            inspect.assert_called_once_with('/unused-cipher', '/unused-model', '/unused-output',
+                                            decoder_av_version='18.1.0')
 
     def test_exact_context_nonroot_and_workflow(self):
         env = dict(GITHUB_REPOSITORY=cross.full.d.REPO,
@@ -67,6 +112,7 @@ class CrosscheckTests(unittest.TestCase):
             results = cross.run_reviews(reviews, Model())
             self.assertEqual(len(results), 28)
             self.assertTrue(all(x['larger_exact'] for x in results))
+            self.assertTrue(all(x['normalized_exact'] for x in results))
             self.assertEqual({i for i, _ in calls}, set(range(29))-{1})
             self.assertEqual(reviews, original)
             for _, kwargs in calls:
@@ -76,6 +122,55 @@ class CrosscheckTests(unittest.TestCase):
             self.assertNotIn('통합', encoded)
             self.assertNotIn('recognized', encoded)
             self.assertNotIn('expected_spoken', encoded)
+            self.assertNotIn('normalization_edits', encoded)
+            self.assertNotIn('normalization_flags', encoded)
+            self.assertNotIn('missing_critical"', encoded)
+
+    def test_pronunciation_diagnostics_do_not_replace_raw_mismatch_counts(self):
+        with tempfile.TemporaryDirectory() as directory:
+            reviews = self.reviews(directory)
+            for row in reviews:
+                row['expected_spoken'] = '교육 시간은 세 시간이며 인원은 스물다섯 명이다'
+                row['critical_terms'] = ['세 시간', '스물다섯 명']
+            original = copy.deepcopy(reviews)
+            class Model:
+                def transcribe(self, path, **kwargs):
+                    return iter([SimpleNamespace(text='교육 시간은 3시간이며 인원은 25명이다')]), None
+            results = cross.run_reviews(reviews, Model())
+            self.assertEqual(reviews, original)
+            for result in results:
+                self.assertFalse(result['larger_exact'])
+                self.assertGreater(result['larger_character_errors'], 0)
+                self.assertGreater(result['larger_missing_critical_count'], 0)
+                self.assertTrue(result['normalized_exact'])
+                self.assertEqual(result['normalized_character_errors'], 0)
+                self.assertEqual(result['normalized_missing_critical_count'], 0)
+                self.assertEqual(result['normalization_review_flag_count'], 0)
+            encoded = json.dumps(results, ensure_ascii=False)
+            for private in ('교육 시간', '3시간', '25명', '스물다섯', 'recognized', 'expected_spoken', 'edits'):
+                self.assertNotIn(private, encoded)
+
+    def test_normalization_review_flags_and_missing_critical_remain_blocking(self):
+        with tempfile.TemporaryDirectory() as directory:
+            reviews = self.reviews(directory)
+            class Model:
+                def transcribe(self, path, **kwargs):
+                    return iter([SimpleNamespace(text='통합 방위법 제일조')]), None
+            with patch.object(cross, 'normalize', return_value=(
+                    '통합 방위법 제일조', [], [{'reason': 'private-review-reason'}])):
+                flagged = cross.run_reviews(reviews, Model())
+            self.assertTrue(all(row['larger_exact'] for row in flagged))
+            self.assertTrue(all(row['normalized_character_errors'] == 0
+                and row['normalization_review_flag_count'] == 1
+                and not row['normalized_exact'] for row in flagged))
+            self.assertNotIn('private-review-reason', json.dumps(flagged))
+            for row in reviews:
+                row['critical_terms'] = ['추가 핵심어']
+            missing = cross.run_reviews(reviews, Model())
+            self.assertTrue(all(row['normalized_character_errors'] == 0
+                and row['normalized_missing_critical_count'] == 1
+                and not row['normalized_exact'] for row in missing))
+            self.assertNotIn('추가 핵심어', json.dumps(missing, ensure_ascii=False))
 
     def test_lexical_mismatch_remains_mismatch(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -85,6 +180,7 @@ class CrosscheckTests(unittest.TestCase):
             results = cross.run_reviews(self.reviews(directory), Model())
             self.assertTrue(all(not x['larger_exact'] for x in results))
             self.assertTrue(all(x['larger_missing_critical_count'] == 1 for x in results))
+            self.assertTrue(all(not x['normalized_exact'] for x in results))
 
     def test_shortlist_cannot_expand_or_drop_owner_scope(self):
         with tempfile.TemporaryDirectory() as directory:
