@@ -10,6 +10,8 @@ on:
       - 'bora-production/test_execution_scheduling.py'
       - 'bora-production/test_restore_ranges.py'
       - 'bora-production/execution_profiles.py'
+      - 'bora-production/render_batches.py'
+      - 'bora-production/test_render_batches.py'
       - 'bora-production/test_execution_profiles.py'
       - 'bora-production/test_compiled_runtime.py'
       - 'bora-production/test_single_pass_runtime.py'
@@ -20,6 +22,7 @@ on:
       - '.github/workflows/bora-fp32-production.yml'
       - '.github/workflows/bora-fp32-single-pass.yml'
       - '.github/workflows/bora-execution-ci.yml'
+      - '.github/actions/bora-render-slot/action.yml'
 permissions:
   contents: read
 concurrency:

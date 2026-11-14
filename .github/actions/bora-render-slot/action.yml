@@ -1,0 +1,125 @@
+name: Run one protected Bora render shard
+description: Authenticate a shard, render missing units offline, and retain the encrypted checkpoint.
+
+inputs:
+  slot:
+    description: Position in the authenticated worker assignment.
+    required: true
+  source-key:
+    description: Existing protected source key.
+    required: true
+  media-key:
+    description: Existing protected media key.
+    required: true
+  github-token:
+    description: Runner token used only for encrypted release transport.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - id: pick
+      name: Validate this shard and remaining job time
+      shell: bash
+      env:
+        BORA_BATCH_SLOT: ${{ inputs.slot }}
+      run: python bora-production/render_batches.py slot --slot "$BORA_BATCH_SLOT"
+
+    - name: Defer an unstarted shard when the worker runs out of time
+      if: steps.pick.outputs.deferred == 'true'
+      shell: bash
+      env:
+        BORA_LESSON: ${{ steps.pick.outputs.lesson }}
+        BORA_SHARD: ${{ steps.pick.outputs.shard }}
+      run: |
+        printf 'Deferred %s shard %s at the worker time limit\n' "$BORA_LESSON" "$BORA_SHARD"
+        touch "$RUNNER_TEMP/bora-batch-incomplete"
+
+    - name: Download only encrypted checkpoints without keys
+      if: steps.pick.outputs.deferred == 'false'
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        BORA_LESSON: ${{ steps.pick.outputs.lesson }}
+        BORA_BATCH_SLOT: ${{ steps.pick.outputs.slot }}
+      run: |
+        timeout --kill-after=15s 10m python bora-production/transport.py download --profile single_pass \
+          --course "$BORA_COURSE" --lesson "$BORA_LESSON" \
+          --out "$RUNNER_TEMP/bora-work/$BORA_BATCH_SLOT/resume"
+
+    - id: probe
+      name: Authenticate reusable units offline before model preparation
+      if: steps.pick.outputs.deferred == 'false'
+      shell: bash
+      env:
+        ADMIN_LAW_PREMIUM_SOURCE_KEY_B64: ${{ inputs.source-key }}
+        ADMIN_LAW_PREMIUM_MEDIA_KEY_B64: ${{ inputs.media-key }}
+        BORA_LESSON: ${{ steps.pick.outputs.lesson }}
+        BORA_SHARD: ${{ steps.pick.outputs.shard }}
+        BORA_BATCH_SLOT: ${{ steps.pick.outputs.slot }}
+      run: |
+        umask 077
+        export BORA_HOST_NETNS="$(readlink /proc/self/ns/net)"
+        timeout --kill-after=15s 15m sudo --preserve-env=ADMIN_LAW_PREMIUM_SOURCE_KEY_B64,ADMIN_LAW_PREMIUM_MEDIA_KEY_B64,BORA_HOST_NETNS,GITHUB_REPOSITORY,GITHUB_EVENT_NAME,GITHUB_REF,GITHUB_WORKFLOW_REF,GITHUB_RUN_ID,GITHUB_RUN_ATTEMPT,RUNNER_TEMP \
+          unshare --net --setgid "$(id -g)" --setuid "$(id -u)" -- "$(command -v python)" \
+          bora-production/single_pass_runtime.py probe --lesson-id "$BORA_LESSON" --shard "$BORA_SHARD" \
+          --plan "$RUNNER_TEMP/bora-plan/public-plan.json" --resume-dir "$RUNNER_TEMP/bora-work/$BORA_BATCH_SLOT/resume" \
+          --output "$RUNNER_TEMP/bora-work/$BORA_BATCH_SLOT/probe.json" --github-output "$GITHUB_OUTPUT"
+        if ! jq -e '.blocked == 0' "$RUNNER_TEMP/bora-work/$BORA_BATCH_SLOT/probe.json" > /dev/null; then
+          touch "$RUNNER_TEMP/bora-batch-incomplete"
+        fi
+
+    - name: Prepare the model and dependencies once without keys
+      if: steps.probe.outputs.needs_synthesis == 'true' && env.BORA_BATCH_RUNTIME_READY != 'true'
+      shell: bash
+      run: |
+        python bora-production/cpu_wait_policy.py
+        timeout --kill-after=15s 20m bash bora-production/setup_single_pass_runtime.sh
+        timeout --kill-after=15s 20m bash bora-production/download_single_pass_model.sh
+        printf '%s\n' 'BORA_BATCH_RUNTIME_READY=true' >> "$GITHUB_ENV"
+
+    - id: render
+      name: Render missing units offline and preserve a sealed checkpoint on failure
+      if: steps.probe.outputs.needs_synthesis == 'true'
+      shell: bash
+      env:
+        ADMIN_LAW_PREMIUM_SOURCE_KEY_B64: ${{ inputs.source-key }}
+        ADMIN_LAW_PREMIUM_MEDIA_KEY_B64: ${{ inputs.media-key }}
+        BORA_LESSON: ${{ steps.pick.outputs.lesson }}
+        BORA_SHARD: ${{ steps.pick.outputs.shard }}
+        BORA_BATCH_SLOT: ${{ steps.pick.outputs.slot }}
+      run: |
+        umask 077
+        export BORA_HOST_NETNS="$(readlink /proc/self/ns/net)"
+        remaining=$(python -c 'import os,time; print(max(1, int(os.environ["BORA_BATCH_DEADLINE"])-int(time.monotonic())+120))')
+        if ! timeout --kill-after=1m "${remaining}s" sudo --preserve-env=ADMIN_LAW_PREMIUM_SOURCE_KEY_B64,ADMIN_LAW_PREMIUM_MEDIA_KEY_B64,BORA_HOST_NETNS,BORA_MODEL,MKL_NUM_THREADS,OMP_NUM_THREADS,OPENBLAS_NUM_THREADS,OMP_WAIT_POLICY,GOMP_SPINCOUNT,KMP_BLOCKTIME,ORT_DISABLE_TELEMETRY,HF_HUB_DISABLE_TELEMETRY,DO_NOT_TRACK,GITHUB_REPOSITORY,GITHUB_EVENT_NAME,GITHUB_REF,GITHUB_WORKFLOW_REF,GITHUB_RUN_ID,GITHUB_RUN_ATTEMPT,RUNNER_TEMP \
+          unshare --net --setgid "$(id -g)" --setuid "$(id -u)" -- "$(command -v python)" \
+          bora-production/single_pass_runtime.py render --lesson-id "$BORA_LESSON" --shard "$BORA_SHARD" \
+          --plan "$RUNNER_TEMP/bora-plan/public-plan.json" --resume-dir "$RUNNER_TEMP/bora-work/$BORA_BATCH_SLOT/resume" \
+          --output "$RUNNER_TEMP/bora-work/$BORA_BATCH_SLOT/cipher" --worker-deadline "$BORA_BATCH_DEADLINE"; then
+          touch "$RUNNER_TEMP/bora-batch-incomplete"
+        fi
+
+    - name: Upload this shard's immutable ciphertext without keys
+      if: ${{ always() && !cancelled() && steps.render.outcome == 'success' }}
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        BORA_BATCH_SLOT: ${{ steps.pick.outputs.slot }}
+      run: |
+        cipher="$RUNNER_TEMP/bora-work/$BORA_BATCH_SLOT/cipher"
+        if compgen -G "$cipher/*.zip" > /dev/null; then
+          timeout --kill-after=15s 15m python bora-production/transport.py upload --profile single_pass \
+            --course "$BORA_COURSE" --directory "$cipher"
+        else
+          touch "$RUNNER_TEMP/bora-batch-incomplete"
+        fi
+
+    - name: Remove this shard's local ciphertext copies after upload or reuse
+      if: ${{ !cancelled() && steps.probe.outcome == 'success' }}
+      shell: bash
+      env:
+        BORA_BATCH_SLOT: ${{ steps.pick.outputs.slot }}
+      run: |
+        [[ "$BORA_BATCH_SLOT" =~ ^[1-6]$ ]]
+        rm -rf -- "$RUNNER_TEMP/bora-work/$BORA_BATCH_SLOT"

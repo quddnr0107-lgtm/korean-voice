@@ -240,6 +240,7 @@ def public_plan(args, profile='eager'):
     campaign,recipe,request,ids=config(profile)
     check(HASH.fullmatch(args.settings_sha or ''), 'preflight_settings_hash')
     assembly_only = profile == 'single_pass' and request.get('assembly_only') is True
+    workers = request.get('render_workers') if profile == 'single_pass' else None
     if assembly_only:
         check(args.settings_sha == request['checkpoint_settings_sha256'], 'assembly_checkpoint_settings_pin')
     source_key,_=protected_keys(profile=profile)
@@ -267,6 +268,10 @@ def public_plan(args, profile='eager'):
         matrix=[v for v in matrix if (v['lesson_id'],v['shard']) in wanted]
     check(assembly_only or 0<len(matrix)<=256, 'matrix_requires_lesson_batch')
     matrix.sort(key=lambda x:(-costs[(x['lesson_id'],x['shard'])],x['lesson_id'],x['shard']))
+    github_matrix = [] if assembly_only else matrix
+    if workers is not None:
+        from render_batches import group_render_work
+        github_matrix = group_render_work(matrix,costs,workers)
     manifest=dict(schema='bora-fp32-public-plan/v1',course=request['course'],
         campaign_sha256=identity(campaign),recipe_sha256=identity(recipe),
         request_sha256=identity(request),render_settings_sha256=args.settings_sha,lessons=records)
@@ -281,15 +286,16 @@ def public_plan(args, profile='eager'):
     check(unresolved==0, 'source_review_required_before_render')
     if args.github_output:
         with open(args.github_output,'a') as f:
-            f.write('matrix='+enc(dict(include=[] if assembly_only else matrix)).decode()+'\n')
+            f.write('matrix='+enc(dict(include=github_matrix)).decode()+'\n')
             f.write('lessons='+enc(dict(include=[dict(lesson_id=i) for i in ids])).decode()+'\n')
             f.write('course='+request['course']+'\n')
             if profile == 'single_pass':
                 f.write('complete_course='+str(manifest['complete_course']).lower()+'\n')
                 overlap = request.get('overlap_tb') is True
                 f.write('overlap_tb='+str(overlap).lower()+'\n')
-                f.write(f'parallelism={15 if overlap else 40}\n')
+                f.write(f'parallelism={workers or (15 if overlap else 40)}\n')
                 f.write('assembly_only='+str(assembly_only).lower()+'\n')
+                f.write('grouped_render='+str(workers is not None).lower()+'\n')
 
 
 def matched_plan(args, campaign, recipe, request, key, profile='eager'):
@@ -495,6 +501,10 @@ def close_renderer(renderer):
 def render(args, profile='eager'):
     campaign,recipe,request,ids=config(profile)
     check_lesson_scope(args, request, ids, profile)
+    worker_deadline = getattr(args, 'worker_deadline', None)
+    if profile == 'single_pass':
+        check((worker_deadline is not None) == ('render_workers' in request),
+              'render_worker_deadline')
     source_key,media_key=protected_keys(media=True,profile=profile)
     public,plan,_,row=matched_plan(args,campaign,recipe,request,source_key,profile)
     del source_key
@@ -507,7 +517,11 @@ def render(args, profile='eager'):
     run=os.environ.get('GITHUB_RUN_ID',''); attempt=os.environ.get('GITHUB_RUN_ATTEMPT','')
     check(run.isdigit() and attempt.isdigit(), 'run_identity')
     name=f'{plan["lesson_id"]}-s{args.shard:03d}-r{run}-a{attempt}.zip'
-    started=time.monotonic(); timed_out=0; failed=False
+    deadline = time.monotonic() + recipe['soft_minutes']*60
+    if worker_deadline is not None:
+        check(profile == 'single_pass' and worker_deadline <= deadline, 'render_worker_deadline')
+        deadline = worker_deadline
+    timed_out=0; failed=False
     signal.signal(signal.SIGTERM,terminate)
     envelopes={}
     with tempfile.TemporaryDirectory(prefix='bora-private-',dir=os.environ.get('RUNNER_TEMP')) as td:
@@ -518,13 +532,13 @@ def render(args, profile='eager'):
         pending=pending_units(rows,begin,end,request['retry_blocked'])
         renderer=None
         try:
-            if pending:
+            if pending and (worker_deadline is None or time.monotonic() <= deadline-recipe['unit_timeout_seconds']):
                 with quiet():
                     renderer=make_renderer(recipe,profile,**render_options)
                 check(renderer.settings_sha256==settings_hash, 'preflight_renderer_fingerprint')
                 signal.signal(signal.SIGALRM,alarm)
                 for index in pending:
-                    if time.monotonic()-started > recipe['soft_minutes']*60-recipe['unit_timeout_seconds']:
+                    if time.monotonic() > deadline-recipe['unit_timeout_seconds']:
                         break
                     target=work/f'new-{index:05d}'
                     try:
@@ -563,6 +577,8 @@ def render(args, profile='eager'):
                 temp.replace(output/name)
                 print(json.dumps(report),flush=True)
     check(not failed, 'render_failed')
+    if worker_deadline is not None:
+        check(passed == end-begin, 'render_worker_shard_incomplete')
 
 
 def assemble(args, profile='eager'):
@@ -702,6 +718,7 @@ def main(profile='eager'):
         p=sub.add_parser(name); p.add_argument('--lesson-id',required=True); p.add_argument('--plan',required=True)
         p.add_argument('--resume-dir',required=True); p.add_argument('--output',required=True)
         if name in ('render','probe'): p.add_argument('--shard',required=True,type=int)
+        if name=='render' and profile=='single_pass': p.add_argument('--worker-deadline', type=int)
         if name=='probe': p.add_argument('--github-output')
     p=sub.add_parser('index'); p.add_argument('--directory',required=True); p.add_argument('--course',required=True)
     args=parser.parse_args()

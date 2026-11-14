@@ -38,7 +38,8 @@ def validate_single_pass_request(request):
     fields = set(required) | {'request_id', 'course'}
     if (not isinstance(request, dict) or not fields <= request.keys()
             or set(request) - fields - {'lesson_ids', 'execution_shard_chars', 'selected_shards',
-                                       'overlap_tb', 'assembly_only', 'checkpoint_settings_sha256'}
+                                       'overlap_tb', 'assembly_only', 'checkpoint_settings_sha256',
+                                       'render_workers'}
             or any(request[name] != value for name, value in required.items())
             or ('overlap_tb' in request and
                 (request['overlap_tb'] is not True or request['course'] != 'RL'
@@ -50,6 +51,10 @@ def validate_single_pass_request(request):
             or not re.fullmatch('[a-z0-9][a-z0-9-]{0,127}', request['request_id'])
             or request['course'] not in ('TB', 'RL', 'DR', 'MS')):
         raise ValueError('single_pass_request_scope')
+    if 'render_workers' in request:
+        workers = request['render_workers']
+        if type(workers) is not int or not 1 <= workers <= 40 or {'assembly_only', 'overlap_tb'} & request.keys():
+            raise ValueError('single_pass_render_workers_scope')
     recovery_fields = {'assembly_only', 'checkpoint_settings_sha256'}
     if not recovery_fields.isdisjoint(request):
         fingerprint = request.get('checkpoint_settings_sha256')
