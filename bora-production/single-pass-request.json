@@ -5,7 +5,7 @@
   "execution_profile": "bora-python-fp32-single-pass/v1",
   "execution_shard_chars": 4000,
   "retry_blocked": false,
-  "request_id": "tb-single-pass-silence-aggregate-20261115-01",
+  "request_id": "tb-single-pass-silence-recovery-20261115-03",
   "assembly_only": true,
   "checkpoint_settings_sha256": "1016c38c7c4176c95f875a406161413b75ef9ffe27ca8baf0bc5f278e4f4e72b",
   "lesson_ids": [

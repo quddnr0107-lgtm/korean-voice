@@ -286,6 +286,34 @@ def _silent_frames(squares, *, threshold_db=-50):
             < 10**(threshold_db / 10))
 
 
+def _frame_runs(mask):
+    return np.flatnonzero(np.diff(np.r_[False, mask, False])).reshape(-1, 2)
+
+
+def _quiet_without_transients(pcm, squares):
+    frame = SAMPLE_RATE // 50
+    quiet = _silent_frames(squares, threshold_db=-55)
+    peaks = np.abs(pcm[:len(quiet) * frame].reshape(-1, frame)).max(axis=1)
+    return quiet & (peaks < 10**(-40 / 20))
+
+
+def _splice_quiet_cuts(pcm, cuts):
+    if not cuts:
+        return pcm
+    pieces = []
+    cursor = 0
+    fade_length = round(SAMPLE_RATE * .005)
+    fade_out = np.linspace(1, 0, fade_length, dtype=np.float32)
+    for start, end in cuts:
+        left = pcm[cursor:start].copy()
+        left[-fade_length:] *= fade_out
+        right = pcm[end:end + fade_length] * fade_out[::-1]
+        pieces.extend((left, right))
+        cursor = end + fade_length
+    pieces.append(pcm[cursor:])
+    return np.concatenate(pieces)
+
+
 def _compact_long_pauses(pcm):
     """Shorten only contiguous quiet frames that reach the silence gate."""
     frame = SAMPLE_RATE // 50
@@ -295,47 +323,62 @@ def _compact_long_pauses(pcm):
     # byte-for-byte intact even next to a longer pause. Also preserve
     # frames with a transient peak >= -40 dBFS. Re-measure under the
     # unchanged signal gate after any compaction; unresolved cases fail.
-    quiet = _silent_frames(pcm.astype(np.float64) ** 2, threshold_db=-55)
-    peaks = np.abs(pcm[:len(quiet) * frame].reshape(-1, frame)).max(axis=1)
-    silent = quiet & (peaks < 10**(-40 / 20))
-    boundaries = np.flatnonzero(np.diff(np.r_[False, silent, False]))
-    cuts = [(start * frame, end * frame) for start, end in boundaries.reshape(-1, 2)
-            if end - start >= 150]
-    if not cuts or silent.all():
+    silent = _quiet_without_transients(pcm, pcm.astype(np.float64) ** 2)
+    if silent.all():
         return pcm
-
-    pieces = []
-    cursor = 0
-    fade_length = round(SAMPLE_RATE * .005)
-    fade_out = np.linspace(1, 0, fade_length, dtype=np.float32)
-    for start, end in cuts:
+    cuts = []
+    for start, end in _frame_runs(silent):
+        if end - start < 150:
+            continue
         # Keep the quiet frames adjacent to speech and join inside the pause.
-        keep = round(SAMPLE_RATE * (.12 if start == 0 or end == len(silent) * frame else .175))
-        cut_start = start + keep
-        cut_end = end - keep
-        left = pcm[cursor:cut_start].copy()
-        left[-fade_length:] *= fade_out
-        right = pcm[cut_end:cut_end + fade_length] * fade_out[::-1]
-        pieces.extend((left, right))
-        cursor = cut_end + fade_length
-    pieces.append(pcm[cursor:])
-    return np.concatenate(pieces)
+        keep = round(SAMPLE_RATE * (.12 if start == 0 or end == len(silent) else .175))
+        cuts.append((start * frame + keep, end * frame - keep))
+    return _splice_quiet_cuts(pcm, cuts)
 
 
+def _compact_fragmented_pauses(pcm):
+    """Trim strict quiet islands only inside a gate-failing pause."""
+    frame = SAMPLE_RATE // 50
+    squares = pcm.astype(np.float64) ** 2
+    gate_quiet = _silent_frames(squares)
+    if gate_quiet.all():
+        return pcm
+    strict = _quiet_without_transients(pcm, squares)
+    cuts = []
+    for start, end in _frame_runs(gate_quiet):
+        if end - start < 150:
+            continue
+        # Leave 2.8 seconds or less and keep every cut on the analysis grid.
+        excess = end - start - 140
+        islands = sorted(_frame_runs(strict[start:end]),
+                         key=lambda pair: (-(pair[1] - pair[0]), pair[0]))
+        for lo, hi in islands:
+            if hi - lo < 35:
+                continue
+            # Leave 180 ms of strictly quiet PCM at each end, including fades.
+            available = hi - lo - 18
+            removed = min(excess, available)
+            cut_start = start + lo + 9 + (available - removed) // 2
+            cuts.append((cut_start * frame, (cut_start + removed) * frame))
+            excess -= removed
+            if not excess:
+                break
+        if excess:
+            return pcm
+    return _splice_quiet_cuts(pcm, sorted(cuts))
 
 def _quiet_frame_aggregate(pcm, *, pre_max_silence_s, removed_samples):
     """Only bounded numeric frame counts; never audio, text, timestamps or keys."""
     frame = SAMPLE_RATE // 50
     squares = pcm.astype(np.float64) ** 2
     quiet50 = _silent_frames(squares, threshold_db=-50)
-    quiet55 = _silent_frames(squares, threshold_db=-55)
+    strict = _quiet_without_transients(pcm, squares)
     peaks = np.abs(pcm[:len(quiet50) * frame].reshape(-1, frame)).max(axis=1)
-    strict = quiet55 & (peaks < 10 ** (-40 / 20))
     gate_quiet_with_low_peak = quiet50 & (peaks < 10 ** (-40 / 20))
 
     def longest(mask):
-        boundaries = np.flatnonzero(np.diff(np.r_[False, mask, False]))
-        return int(np.max(boundaries[1::2] - boundaries[::2])) if len(boundaries) else 0
+        runs = _frame_runs(mask)
+        return int(np.max(runs[:, 1] - runs[:, 0])) if len(runs) else 0
 
     return dict(
         pre_gate_max_run_frames_20ms=int(round(pre_max_silence_s * 50)),
@@ -390,6 +433,9 @@ def _input_pcm(path, receipt, ffmpeg, ffprobe, *, compact_pauses=False):
         _require(metrics['rms'] >= 1e-5, 'silent_pcm')
         final = _compact_long_pauses(final)
         metrics = _metrics(final)
+        if metrics['max_silence_s'] >= 3:
+            final = _compact_fragmented_pauses(final)
+            metrics = _metrics(final)
     if compact_pauses and metrics['max_silence_s'] >= 3 and metrics['clipped_samples'] == 0 and metrics['rms'] >= 1e-5:
         # A diagnosis is not a waiver: the existing signal gate remains unchanged.
         failure = AssemblyError('long_silence_pcm')

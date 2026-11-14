@@ -21,7 +21,7 @@ sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent / 'research' / 'reading-quality'))
 from paragraph_plan import build_plan
 from assemble import (AssemblyError, INPUT_RATE, SAMPLE_RATE, assemble_lesson, identity,
-                      _compact_long_pauses, _metrics, _quiet_frame_aggregate,
+                      _compact_fragmented_pauses, _compact_long_pauses, _metrics, _quiet_frame_aggregate,
                       validate_entries, validate_plan)
 from lecture_pack import make_pack_manifest, open_part, seal_part, validate_pack
 
@@ -196,6 +196,32 @@ class AssemblyTests(unittest.TestCase):
         self.assertEqual(summary['removed_samples'], 0)
         self.assertEqual(summary['post_pcm_frames_20ms'], 300)
         self.assertTrue(all(type(value) is int for value in summary.values()))
+
+    def test_fragmented_pause_repair_keeps_borderline_and_transient_frames(self):
+        frame = SAMPLE_RATE // 50
+        active = np.full(50 * frame, .1, dtype=np.float32)
+        # Match the observed failing spans: under 3 s of strict quiet
+        # surrounded by borderline PCM that is counted by the signal gate.
+        strict = np.zeros(103 * frame, dtype=np.float32)
+        borderline = np.full(60 * frame, .0025, dtype=np.float32)
+        borderline[6 * frame] = .011
+        pcm = np.concatenate((active, strict, borderline, active))
+        self.assertIs(_compact_long_pauses(pcm), pcm)
+        self.assertEqual(round(_metrics(pcm)['max_silence_s'] * 50), 163)
+        shortened = _compact_fragmented_pauses(pcm)
+        self.assertEqual(len(pcm) - len(shortened), 23 * frame)
+        self.assertEqual(round(_metrics(shortened)['max_silence_s'] * 50), 140)
+        np.testing.assert_array_equal(shortened[:len(active)], active)
+        np.testing.assert_array_equal(shortened[-len(borderline) - len(active):-len(active)], borderline)
+        np.testing.assert_array_equal(shortened[-len(active):], active)
+
+    def test_fragmented_pause_repair_keeps_unit_if_quiet_budget_is_insufficient(self):
+        frame = SAMPLE_RATE // 50
+        active = np.full(50 * frame, .1, dtype=np.float32)
+        strict = np.zeros(35 * frame, dtype=np.float32)
+        borderline = np.full(140 * frame, .0025, dtype=np.float32)
+        pcm = np.concatenate((active, strict, borderline, active))
+        self.assertIs(_compact_fragmented_pauses(pcm), pcm)
 
     def test_pause_compaction_preserves_active_and_borderline_frames(self):
         active = np.full(SAMPLE_RATE, .1, dtype=np.float32)
