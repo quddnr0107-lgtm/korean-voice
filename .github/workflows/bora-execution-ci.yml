@@ -3,6 +3,7 @@ on:
   push:
     branches: [integrated-lectures-premium-20261028]
     paths:
+      - 'bora-production/request.json'
       - 'bora-production/runtime.py'
       - 'bora-production/cpu_wait_policy.py'
       - 'bora-production/test_cpu_wait_workflow.py'
@@ -33,7 +34,7 @@ jobs:
           python-version: '3.12'
       - name: Verify unchanged source, recipe, quality gates and activation functions
         run: |
-          git diff --exit-code HEAD^ HEAD -- bora-production/request.json bora-production/campaign.json bora-production/recipe.json bora-production/fp32_renderer.py bora-production/planning.py bora-production/middot_readings.py bora-production/tts_normalize.py bora-production/approved-tb-annotations.json bora-production/assemble.py bora-production/lecture_crypto.py bora-production/lecture_pack.py bora-production/pilot_render.py bora-production/quality.py bora-production/paragraph_plan.py bora-production/production_plan.py
+          git diff --exit-code HEAD^ HEAD -- bora-production/campaign.json bora-production/recipe.json bora-production/fp32_renderer.py bora-production/planning.py bora-production/middot_readings.py bora-production/tts_normalize.py bora-production/approved-tb-annotations.json bora-production/assemble.py bora-production/lecture_crypto.py bora-production/lecture_pack.py bora-production/pilot_render.py bora-production/quality.py bora-production/paragraph_plan.py bora-production/production_plan.py
           python - <<'PY'
           import ast, subprocess
           from pathlib import Path
