@@ -9,6 +9,7 @@ import argparse
 import base64
 import copy
 import hashlib
+import importlib.metadata
 import json
 import math
 import os
@@ -42,7 +43,7 @@ def stage(name):
     require(name in ('request', 'context', 'namespace', 'keys', 'config',
         'inventory', 'model_assets', 'model_import', 'model_load', 'source_plan',
         'plan_pin', 'restore', 'reviews', 'selection', 'audio', 'transcribe',
-        'score', 'receipt_integrity', 'summary', 'download'))
+        'score', 'receipt_integrity', 'summary', 'download', 'decoder'))
     STAGE = name
 
 
@@ -56,7 +57,7 @@ def expected_request():
         pin=copy.deepcopy(full.PIN), model=dict(repo=MODEL_REPO,
         revision=MODEL_REVISION, model_sha256=MODEL_SHA256),
         excluded_owner_heard_unit_indices=sorted(OWNER_HEARD),
-        synthesis=False, promotion=False, diagnostic_revision=2)
+        synthesis=False, promotion=False, diagnostic_revision=3)
 
 
 def validate_request(request):
@@ -83,6 +84,23 @@ def download_model(path):
     require(all(not os.environ.get(name) for name in preview.PRIVATE_KEYS))
     path = Path(path)
     require(not path.exists())
+    # Public zero-valued fixture only, before any protected-key step. PyAV19
+    # removed metadata_errors used by faster-whisper1.2.1's file decoder.
+    stage('decoder')
+    require(importlib.metadata.version('av') == '18.1.0')
+    from faster_whisper.audio import decode_audio
+    import wave
+    with tempfile.TemporaryDirectory(prefix='bora-public-decoder-') as temporary:
+        fixture = Path(temporary)/'public-silence.wav'
+        with wave.open(str(fixture), 'wb') as handle:
+            handle.setnchannels(1)
+            handle.setsampwidth(2)
+            handle.setframerate(16000)
+            handle.writeframes(b'\0' * 32000)
+        decoded = decode_audio(str(fixture), sampling_rate=16000)
+        require(decoded.shape == (16000,) and not decoded.any())
+    print('{"status":"public_decoder_preflight_passed","private_audio_read":false}', flush=True)
+    stage('download')
     from huggingface_hub import snapshot_download
     snapshot_download(repo_id=MODEL_REPO, revision=MODEL_REVISION,
                       local_dir=str(path), allow_patterns=list(MODEL_FILES))
@@ -171,6 +189,7 @@ def inspect(directory, model_path, output):
     stage('inventory')
     full.inventory(directory)
     with runtime.quiet():
+        require(importlib.metadata.version('av') == '18.1.0')
         stage('model_assets')
         verify_model(model_path)
         stage('model_import')
@@ -203,7 +222,8 @@ def inspect(directory, model_path, output):
     stage('summary')
     summary = dict(schema=SCHEMA, status='read_only_diagnostics_not_a_release',
         source_pin=full.PIN, model=dict(repo=MODEL_REPO, revision=MODEL_REVISION,
-        model_sha256=MODEL_SHA256, compute_type='int8', cpu_threads=4),
+        model_sha256=MODEL_SHA256, compute_type='int8', cpu_threads=4,
+        faster_whisper_version='1.2.1', av_version='18.1.0'),
         authenticated_units=58, original_passed=27, original_blocked=31,
         owner_heard_skipped=sorted(heard, key=lambda x: x['unit_index']),
         checked_units=len(results), larger_exact_units=sum(x['larger_exact'] for x in results),

@@ -5,6 +5,7 @@ on:
     paths: ['bora-production/tb001-asr-crosscheck-request.json']
 permissions:
   contents: read
+  actions: read
 concurrency:
   group: bora-tb001-stronger-asr-${{ github.ref }}
   cancel-in-progress: false
@@ -19,10 +20,6 @@ jobs:
     if: github.repository == 'quddnr0107-lgtm/korean-voice' && github.ref == 'refs/heads/integrated-lectures-premium-20261028' && github.event_name == 'push'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
-    permissions:
-      contents: write
-    outputs:
-      checkpoint_artifact_id: ${{ steps.cipher.outputs.artifact-id }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false, fetch-depth: 2}
@@ -34,19 +31,6 @@ jobs:
           python -m pip install --disable-pip-version-check cryptography==50.0.0
           python -m unittest discover -s bora-production -p 'test_tb001_asr_crosscheck.py' -v
           python -m py_compile bora-production/tb001_asr_crosscheck.py
-      - name: Download the already persisted ciphertext without any new synthesis
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: python bora-production/tb001_full_diagnostic.py download --directory "$RUNNER_TEMP/bora-recheck-cipher"
-      - id: cipher
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: bora-asr-recheck-cipher-${{ github.run_id }}
-          path: |
-            ${{ runner.temp }}/bora-recheck-cipher/TB-001-s000-r43275117254-a1.zip
-            ${{ runner.temp }}/bora-recheck-cipher/TB-001-s001-r43275117254-a1.zip
-          retention-days: 3
-          if-no-files-found: error
   recheck:
     needs: prepare
     runs-on: ubuntu-24.04
@@ -59,12 +43,15 @@ jobs:
         with: {python-version: '3.12'}
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
-          artifact-ids: ${{ needs.prepare.outputs.checkpoint_artifact_id }}
+          artifact-ids: 14087588658
+          run-id: 43532399553
+          repository: quddnr0107-lgtm/korean-voice
+          github-token: ${{ github.token }}
           merge-multiple: true
           path: ${{ runner.temp }}/bora-recheck-cipher
       - name: Install only pinned recognition and cryptography dependencies without keys
-        run: python -m pip install --disable-pip-version-check faster-whisper==1.2.1 soundfile==0.14.0 cryptography==50.0.0 numpy==2.5.4 scipy==1.18.1 onnxruntime==1.31.1 huggingface-hub==0.36.2 ctranslate2==4.9.0
-      - name: Download only the pinned turbo ASR model without protected keys
+        run: python -m pip install --disable-pip-version-check faster-whisper==1.2.1 av==18.1.0 soundfile==0.14.0 cryptography==50.0.0 numpy==2.5.4 scipy==1.18.1 onnxruntime==1.31.1 huggingface-hub==0.36.2 ctranslate2==4.9.0
+      - name: Verify public decoder compatibility and download pinned ASR without protected keys
         run: python bora-production/tb001_asr_crosscheck.py download-model --model-path "$RUNNER_TEMP/bora-stronger-asr"
       - name: Check 28 remaining original reviews offline without expected-text prompts
         env:
