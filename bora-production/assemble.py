@@ -289,10 +289,15 @@ def _silent_frames(squares, *, threshold_db=-50):
 def _compact_long_pauses(pcm):
     """Shorten only contiguous quiet frames that reach the silence gate."""
     frame = SAMPLE_RATE // 50
-    # Do not cut borderline frames counted as silent by the validation gate.
-    quiet = _silent_frames(pcm.astype(np.float64) ** 2, threshold_db=-65)
+    # Use the SAME RMS threshold as the independent silence gate. The old
+    # -65 dBFS compactor missed quiet, low-level renderer tails between -65
+    # and -50 dBFS, so complete single-pass WAV checkpoints could not
+    # assemble even though sustained near-silence was removable.
+    # Preserve frames with a transient peak >= -40 dBFS, which are not
+    # reliably pauses. The unchanged gate remeasures repaired PCM.
+    quiet = _silent_frames(pcm.astype(np.float64) ** 2, threshold_db=-50)
     peaks = np.abs(pcm[:len(quiet) * frame].reshape(-1, frame)).max(axis=1)
-    silent = quiet & (peaks < 10**(-45 / 20))
+    silent = quiet & (peaks < 10**(-40 / 20))
     boundaries = np.flatnonzero(np.diff(np.r_[False, silent, False]))
     cuts = [(start * frame, end * frame) for start, end in boundaries.reshape(-1, 2)
             if end - start >= 150]

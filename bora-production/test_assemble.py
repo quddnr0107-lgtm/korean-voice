@@ -192,6 +192,25 @@ class AssemblyTests(unittest.TestCase):
         self.assertLess(_metrics(shortened)['max_silence_s'], 3)
         self.assertIs(_compact_long_pauses(pause), pause)
 
+    def test_single_pass_compacts_low_level_tails_between_old_and_gate_thresholds(self):
+        # Regression: the independent gate uses -50 dBFS; old trimming
+        # missed otherwise quiet PCM tails between -65 and -50 dBFS.
+        active = np.full(SAMPLE_RATE, .1, dtype=np.float32)
+        low_level_tail = np.full(4 * SAMPLE_RATE, .0015, dtype=np.float32)
+        pcm = np.concatenate((active, low_level_tail, active))
+        self.assertGreaterEqual(_metrics(pcm)['max_silence_s'], 3)
+        shortened = _compact_long_pauses(pcm)
+        np.testing.assert_array_equal(shortened[:SAMPLE_RATE], active)
+        np.testing.assert_array_equal(shortened[-SAMPLE_RATE:], active)
+        self.assertLess(_metrics(shortened)['max_silence_s'], 3)
+        self.assertLess(len(shortened), len(pcm))
+
+        # Detect transient-bearing frames and leave their audio untouched.
+        transient = np.full(4 * SAMPLE_RATE, .0015, dtype=np.float32)
+        transient[::(SAMPLE_RATE // 50)] = .02
+        with_transients = np.concatenate((active, transient, active))
+        self.assertIs(_compact_long_pauses(with_transients), with_transients)
+
     def test_single_pass_rejects_second_attempt_forged_asr_or_invalid_eos(self):
         for field, value, code in (
                 ('candidates', None, 'receipt_single_pass_attempt'),
