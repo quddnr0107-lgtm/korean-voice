@@ -1,7 +1,7 @@
 // Chagok personal 365-day fixed-audio player.
 // New isolated Worker: does not modify Korean Voice production or the old three-year Sites app.
 // Public, no-login personal-learning page; all audio files are fixed pretrained release assets.
-const SOURCE = 'https://raw.githubusercontent.com/quddnr0107-lgtm/korean-voice/1ae8a868284b64263696b0ca24a038d0cbad51bc/chagok/';
+const SOURCE = 'https://raw.githubusercontent.com/quddnr0107-lgtm/korean-voice/dadeeba19a3142581073182f49846d05b863d62a/chagok/';
 const AUDIO = 'https://github.com/quddnr0107-lgtm/korean-voice/releases/download/chagok-365-fixed-v1/';
 const HEADERS = { 'Cache-Control':'public, max-age=60', 'Referrer-Policy':'no-referrer', 'X-Content-Type-Options':'nosniff', 'X-Frame-Options':'DENY' };
 
@@ -18,6 +18,11 @@ export default {
       const upstream=await fetch(SOURCE+'365-fixed-transcript.txt',{cf:{cacheTtl:3600}});
       if(!upstream.ok)return new Response('Transcript not available',{status:502,headers:HEADERS});
       return new Response(request.method==='HEAD'?null:upstream.body,{status:200,headers:{...HEADERS,'Content-Type':'text/plain; charset=utf-8'}});
+    }
+    if(path==='/cues') {
+      const upstream=await fetch(AUDIO+'chagok-365-cues.json',{cf:{cacheTtl:86400}});
+      if(!upstream.ok)return new Response('Timing metadata unavailable',{status:502,headers:HEADERS});
+      return new Response(request.method==='HEAD'?null:upstream.body,{status:200,headers:{...HEADERS,'Content-Type':'application/json; charset=utf-8','Cache-Control':'public, max-age=3600'}});
     }
     if(path==='/media/learn'||path==='/media/listen'){
       const file=path.endsWith('learn')?'chagok-365-learn.mp3':'chagok-365-listen.mp3';
