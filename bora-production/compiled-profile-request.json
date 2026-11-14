@@ -1,0 +1,1 @@
+{"campaign_sha256":"60e9763ab344e8a59264ec634a47ee60321667bc426108100f2973a04cfdca76","course":"TB","execution_profile":"bora-python-fp32-compiled-predictor/v1","execution_shard_chars":2000,"lesson_ids":["TB-002"],"request_id":"tb002-compiled-predictor-pilot-owner-20261114-01","retry_blocked":false,"schema":"bora-fp32-request/v1"}

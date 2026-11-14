@@ -30,6 +30,7 @@ sys.path.append(str(ROOT / 'research/reading-quality'))
 import lecture_crypto as crypto
 from lecture_pack import seal_part, open_part, make_pack_manifest, validate_pack
 from namespace_guard import validate_snapshot
+from execution_profiles import request_filename, workflow_filename, validate_profile, validate_request
 
 REPO = 'quddnr0107-lgtm/korean-voice'
 BRANCH = 'integrated-lectures-premium-20261028'
@@ -93,10 +94,11 @@ def quiet():
             os.close(fd)
 
 
-def config():
+def config(profile='eager'):
     campaign = read_json(HERE/'campaign.json')
     recipe = read_json(HERE/'recipe.json')
-    request = read_json(HERE/'request.json')
+    request = read_json(HERE/request_filename(profile))
+    validate_request(request, profile)
     check(campaign.get('schema') == 'bora-fp32-campaign/v1' and campaign.get('authorized') is True,
           'campaign_authorization')
     check(campaign.get('repository') == REPO and campaign.get('branch') == BRANCH
@@ -125,11 +127,11 @@ def config():
     return campaign, recipe, request, sorted(selected)
 
 
-def protected_keys(media=False):
+def protected_keys(media=False, profile='eager'):
     check(os.environ.get('GITHUB_REPOSITORY')==REPO
           and os.environ.get('GITHUB_REF')=='refs/heads/'+BRANCH
           and os.environ.get('GITHUB_EVENT_NAME')=='push'
-          and os.environ.get('GITHUB_WORKFLOW_REF')==REPO+'/.github/workflows/bora-fp32-production.yml@refs/heads/'+BRANCH,
+          and os.environ.get('GITHUB_WORKFLOW_REF')==REPO+'/.github/workflows/'+workflow_filename(profile)+'@refs/heads/'+BRANCH,
           'protected_workflow_context')
     validate_snapshot(os.getuid(), os.getuid(), socket.if_nameindex(),
         Path('/proc/net/route').read_text(), os.readlink('/proc/self/ns/net'),
@@ -206,10 +208,10 @@ def shards(plan, target=4000):
     return rows
 
 
-def public_plan(args):
-    campaign,recipe,request,ids=config()
+def public_plan(args, profile='eager'):
+    campaign,recipe,request,ids=config(profile)
     check(HASH.fullmatch(args.settings_sha or ''), 'preflight_settings_hash')
-    source_key,_=protected_keys()
+    source_key,_=protected_keys(profile=profile)
     target_chars=execution_shard_chars(recipe,request)
     records=[]; matrix=[]; review_counts=Counter(); costs={}
     for ident in ids:
@@ -375,10 +377,11 @@ def terminate(signum,frame):
     raise InterruptedError('termination_requested')
 
 
-def resume_probe(args):
+def resume_probe(args, profile='eager'):
     """Check encrypted reuse offline BEFORE heavy runtime/model preparation."""
-    campaign,recipe,request,_=config()
-    source_key,media_key=protected_keys(media=True)
+    campaign,recipe,request,ids=config(profile)
+    check(profile=='eager' or args.lesson_id in ids, 'compiled_lesson_scope')
+    source_key,media_key=protected_keys(media=True,profile=profile)
     public,plan,_,row=matched_plan(args,campaign,recipe,request,source_key)
     del source_key
     check(type(args.shard) is int and 0<=args.shard<len(row['shards']), 'shard_scope')
@@ -403,9 +406,25 @@ def resume_probe(args):
     print(json.dumps(result),flush=True)
 
 
-def render(args):
-    campaign,recipe,request,_=config()
-    source_key,media_key=protected_keys(media=True)
+def make_renderer(recipe, profile='eager'):
+    """Import and load heavy dependencies only when synthesis is required."""
+    if validate_profile(profile)=='compiled':
+        from compiled_fp32_renderer import CompiledFP32Renderer as Renderer
+    else:
+        from fp32_renderer import FP32Renderer as Renderer
+    return Renderer(os.environ['BORA_MODEL'],os.environ['BORA_ASR'],max_attempts=recipe['max_attempts'])
+
+
+def close_renderer(renderer):
+    close=getattr(renderer,'close',None)
+    if callable(close):
+        close()
+
+
+def render(args, profile='eager'):
+    campaign,recipe,request,ids=config(profile)
+    check(profile=='eager' or args.lesson_id in ids, 'compiled_lesson_scope')
+    source_key,media_key=protected_keys(media=True,profile=profile)
     public,plan,_,row=matched_plan(args,campaign,recipe,request,source_key)
     del source_key
     check(type(args.shard) is int and 0<=args.shard<len(row['shards']), 'shard_scope')
@@ -425,11 +444,11 @@ def render(args):
                          unit_range=(begin,end))
         rows={i:v for i,v in restored.items() if begin<=i<end}
         pending=pending_units(rows,begin,end,request['retry_blocked'])
+        renderer=None
         try:
             if pending:
-                from fp32_renderer import FP32Renderer
                 with quiet():
-                    renderer=FP32Renderer(os.environ['BORA_MODEL'],os.environ['BORA_ASR'],max_attempts=recipe['max_attempts'])
+                    renderer=make_renderer(recipe,profile)
                 check(renderer.settings_sha256==settings_hash, 'preflight_renderer_fingerprint')
                 signal.signal(signal.SIGALRM,alarm)
                 for index in pending:
@@ -455,24 +474,29 @@ def render(args):
             failed=True
             raise
         finally:
-            passed=sum(v['receipt'].get('status')=='passed' for v in rows.values())
-            blocked=len(rows)-passed
-            report=dict(schema='bora-fp32-shard-report/v1',lesson_id=plan['lesson_id'],shard=args.shard,
-                start=begin,end=end,passed=passed,blocked=blocked,pending=end-begin-len(rows),
-                timed_out=timed_out,recipe_sha256=recipe_hash,plan_sha256=identity(plan),
-                render_settings_sha256=settings_hash,run_id=run,run_attempt=attempt)
-            temp=output/(name+'.pending')
-            with zipfile.ZipFile(temp,'w',zipfile.ZIP_STORED) as z:
-                z.writestr('report.json',enc(report))
-                for index,path in sorted(envelopes.items()): z.write(path,path.name)
-            temp.replace(output/name)
-            print(json.dumps(report),flush=True)
+            try:
+                if renderer is not None:
+                    with quiet(): close_renderer(renderer)
+            finally:
+                passed=sum(v['receipt'].get('status')=='passed' for v in rows.values())
+                blocked=len(rows)-passed
+                report=dict(schema='bora-fp32-shard-report/v1',lesson_id=plan['lesson_id'],shard=args.shard,
+                    start=begin,end=end,passed=passed,blocked=blocked,pending=end-begin-len(rows),
+                    timed_out=timed_out,recipe_sha256=recipe_hash,plan_sha256=identity(plan),
+                    render_settings_sha256=settings_hash,run_id=run,run_attempt=attempt)
+                temp=output/(name+'.pending')
+                with zipfile.ZipFile(temp,'w',zipfile.ZIP_STORED) as z:
+                    z.writestr('report.json',enc(report))
+                    for index,path in sorted(envelopes.items()): z.write(path,path.name)
+                temp.replace(output/name)
+                print(json.dumps(report),flush=True)
     check(not failed, 'render_failed')
 
 
-def assemble(args):
-    campaign,recipe,request,_=config()
-    source_key,media_key=protected_keys(media=True)
+def assemble(args, profile='eager'):
+    campaign,recipe,request,ids=config(profile)
+    check(profile=='eager' or args.lesson_id in ids, 'compiled_lesson_scope')
+    source_key,media_key=protected_keys(media=True,profile=profile)
     public,plan,payload,_=matched_plan(args,campaign,recipe,request,source_key)
     del source_key
     settings_hash=public['render_settings_sha256']; recipe_hash=identity(recipe)
@@ -545,33 +569,37 @@ def make_index(args):
     print(json.dumps(dict(status='complete_course_index',course=args.course,count=len(rows),index_sha256=sha(raw))))
 
 
-def preflight(args):
-    _,recipe,request,_=config()
+def preflight(args, profile='eager'):
+    _,recipe,request,_=config(profile)
     check(not any(os.environ.get(v) for v in ('ADMIN_LAW_PREMIUM_SOURCE_KEY_B64','ADMIN_LAW_PREMIUM_MEDIA_KEY_B64')),
           'keyless_preflight')
     from planning import build_plan
-    from fp32_renderer import FP32Renderer
     from assemble import assemble_lesson
     source='안녕하세요. 오늘은 차근차근 설명하겠습니다.'
-    plan=build_plan('TB-001',source)
+    plan=build_plan('TB-002' if profile=='compiled' else 'TB-001',source)
     with tempfile.TemporaryDirectory(prefix='bora-public-',dir=os.environ.get('RUNNER_TEMP')) as td:
         work=Path(td)
         with quiet():
-            renderer=FP32Renderer(os.environ['BORA_MODEL'],os.environ['BORA_ASR'],max_attempts=recipe['max_attempts'])
-            entries=[]
-            for index,unit in enumerate(plan['units']):
-                receipt=renderer.render_unit(unit,work/f'unit-{index}')
-                check(receipt['status']=='passed','public_smoke_not_passed')
-                receipt.update(lesson_id=plan['lesson_id'],unit_index=index,plan_sha256=identity(plan),recipe_sha256=identity(recipe))
-                entries.append(dict(unit_index=index,receipt=receipt,path=work/f'unit-{index}'/'final.wav'))
-            assemble_lesson(plan,entries,work/'assembled',expected_recipe_sha256=identity(recipe),
-                expected_render_settings_sha256=renderer.settings_sha256,unit_gap_ms=180,paragraph_gap_ms=350)
+            renderer=None
+            try:
+                renderer=make_renderer(recipe,profile)
+                entries=[]
+                for index,unit in enumerate(plan['units']):
+                    receipt=renderer.render_unit(unit,work/f'unit-{index}')
+                    check(receipt['status']=='passed','public_smoke_not_passed')
+                    receipt.update(lesson_id=plan['lesson_id'],unit_index=index,plan_sha256=identity(plan),recipe_sha256=identity(recipe))
+                    entries.append(dict(unit_index=index,receipt=receipt,path=work/f'unit-{index}'/'final.wav'))
+                assemble_lesson(plan,entries,work/'assembled',expected_recipe_sha256=identity(recipe),
+                    expected_render_settings_sha256=renderer.settings_sha256,unit_gap_ms=180,paragraph_gap_ms=350)
+            finally:
+                close_renderer(renderer)
     result=dict(status='public_runtime_smoke_passed',course=request['course'],
         source_key_used=False,private_manuscript_read=False,render_settings_sha256=renderer.settings_sha256)
     atomic(args.output,enc(result)); print(json.dumps(result))
 
 
-def main():
+def main(profile='eager'):
+    validate_profile(profile)
     os.umask(0o077)
     parser=argparse.ArgumentParser()
     sub=parser.add_subparsers(dest='command',required=True)
@@ -584,7 +612,11 @@ def main():
         if name=='probe': p.add_argument('--github-output')
     p=sub.add_parser('index'); p.add_argument('--directory',required=True); p.add_argument('--course',required=True)
     args=parser.parse_args()
-    {'preflight':preflight,'plan':public_plan,'probe':resume_probe,'render':render,'assemble':assemble,'index':make_index}[args.command](args)
+    if args.command=='index':
+        check(profile=='eager','compiled_course_index_forbidden')
+        make_index(args)
+    else:
+        {'preflight':preflight,'plan':public_plan,'probe':resume_probe,'render':render,'assemble':assemble}[args.command](args,profile=profile)
 
 
 if __name__=='__main__':
@@ -596,3 +628,4 @@ if __name__=='__main__':
                    if Path(f.filename).parent==HERE]
         print(json.dumps(dict(status='failed',error_type=type(exc).__name__,locations=locations[-6:])),flush=True)
         sys.exit(1)
+

@@ -1,4 +1,4 @@
-"""Keyless, immutable GitHub Release transport for the 2026-11-12 FP32 campaign.
+"""Keyless, immutable release transport for FP32 production and the TB-002 pilot.
 
 Only schema-checked ciphertext leaves the runner. No source/media keys, deletion,
 clobber, arbitrary repositories, URLs, tags or command execution are supported.
@@ -30,6 +30,9 @@ from lecture_pack import validate_pack
 REPOSITORY = 'quddnr0107-lgtm/korean-voice'
 COURSES = {'TB': 25, 'RL': 34, 'DR': 78, 'MS': 166}
 KEY_ID = 'integrated-lectures-media-v1'
+PROFILES = ('eager', 'compiled')
+COMPILED_LESSON = 'TB-002'
+COMPILED_STAGING_TAG = 'bora-fp32-tb-compiled-pilot-staging-20261114'
 MAX_BUNDLE = 1024 * 1024 * 1024
 MAX_MEMBER = 256 * 1024 * 1024
 REPORT_FIELDS = {'schema', 'lesson_id', 'shard', 'start', 'end', 'passed', 'blocked', 'pending',
@@ -61,8 +64,18 @@ def course_ids(course):
     return [f'{course}-{i:03d}' for i in range(1, COURSES[course] + 1)]
 
 
-def tag_for(course, final=False):
+def _profile(course, profile, final=False):
     course_ids(course)
+    require(profile in PROFILES, 'execution_profile_scope')
+    if profile == 'compiled':
+        require(course == 'TB', 'compiled_course_scope')
+        require(not final, 'compiled_final_forbidden')
+
+
+def tag_for(course, final=False, *, profile='eager'):
+    _profile(course, profile, final)
+    if profile == 'compiled':
+        return COMPILED_STAGING_TAG
     return f'bora-fp32-{course.lower()}-{"v1" if final else "staging"}-20261112'
 
 
@@ -73,6 +86,13 @@ def _lesson(ident, course=None):
         raise TransportError('lesson_scope') from None
     require(course is None or ident in course_ids(course), 'lesson_course_mismatch')
     return ident.split('-')[0]
+
+
+def _profile_lesson(ident, course=None, profile='eager'):
+    chosen = _lesson(ident, course)
+    _profile(chosen, profile)
+    require(profile != 'compiled' or ident == COMPILED_LESSON, 'compiled_lesson_scope')
+    return chosen
 
 
 def _sha(path):
@@ -124,12 +144,12 @@ def _cipher(manifest, blob, lesson_id, kind):
                 'cipher_hash_mismatch')
 
 
-def validate_bundle(path, course):
+def validate_bundle(path, course, *, profile='eager'):
     path = _safe(path)
     match = BUNDLE_RE.fullmatch(path.name)
     require(match is not None and path.is_file() and 0 < path.stat().st_size <= MAX_BUNDLE, 'bundle_name_or_size')
     ident = match['lesson']
-    _lesson(ident, course)
+    _profile_lesson(ident, course, profile)
     try:
         with zipfile.ZipFile(path) as archive:
             infos = archive.infolist()
@@ -359,6 +379,25 @@ def _assets(backend, release):
     return result
 
 
+def _staging_release(backend, course, profile, create=False):
+    release = _release(backend, tag_for(course, profile=profile), create=create)
+    # The compiled pilot has no publication path, including an already-published
+    # release at its isolated tag. Never fall back to an eager or final release.
+    if profile == 'compiled' and release is not None:
+        require(release.get('draft') is True, 'compiled_release_must_be_draft')
+    return release
+
+
+def _staging_assets(backend, release, profile):
+    assets = _assets(backend, release)
+    if profile == 'compiled':
+        for name in assets:
+            match = BUNDLE_RE.fullmatch(name)
+            require(match is not None and match['lesson'] == COMPILED_LESSON,
+                    'compiled_staging_asset_scope')
+    return assets
+
+
 def _same_remote(backend, asset, local):
     require(asset['size'] == Path(local).stat().st_size, 'immutable_asset_collision')
     with tempfile.TemporaryDirectory(prefix='bora-remote-verify-') as temp:
@@ -368,7 +407,7 @@ def _same_remote(backend, asset, local):
                 'immutable_asset_collision')
 
 
-def _put(backend, release, path, assets):
+def _put(backend, release, path, assets, *, profile='eager'):
     asset = assets.get(path.name)
     if asset is not None:
         _same_remote(backend, asset, path)
@@ -377,53 +416,54 @@ def _put(backend, release, path, assets):
         backend.upload(release, path)
     except TransportError:
         # Resolve a simultaneous immutable upload; never remove or overwrite it.
-        current = _assets(backend, release)
+        current = _staging_assets(backend, release, profile)
         require(path.name in current, 'asset_upload_failed')
         _same_remote(backend, current[path.name], path)
         assets.update(current)
         return False
-    assets.update(_assets(backend, release))
+    assets.update(_staging_assets(backend, release, profile))
     require(path.name in assets, 'asset_upload_missing')
     _same_remote(backend, assets[path.name], path)
     return True
 
 
-def prepare(course, backend=None):
+def prepare(course, backend=None, *, profile='eager'):
     assert_keyless()
+    _profile(course, profile)
     backend = backend or GitHubBackend()
-    release = _release(backend, tag_for(course), create=True)
+    release = _staging_release(backend, course, profile, create=True)
     return dict(status='ready', course=course, tag=release['tag_name'])
 
 
-def upload_directory(directory, course, backend=None):
+def upload_directory(directory, course, backend=None, *, profile='eager'):
     assert_keyless()
-    course_ids(course)
+    _profile(course, profile)
     directory = _safe(directory)
     require(directory.is_dir(), 'upload_directory')
     files = sorted(directory.iterdir())
     require(all(p.is_file() and not p.is_symlink() for p in files), 'upload_files')
     for path in files:
-        validate_bundle(path, course)
+        validate_bundle(path, course, profile=profile)
     if not files:
         return dict(status='nothing_to_upload', uploaded=0, skipped=0)
     backend = backend or GitHubBackend()
-    release = _release(backend, tag_for(course), create=True)
-    assets = _assets(backend, release)
-    added = sum(_put(backend, release, p, assets) for p in files)
+    release = _staging_release(backend, course, profile, create=True)
+    assets = _staging_assets(backend, release, profile)
+    added = sum(_put(backend, release, p, assets, profile=profile) for p in files)
     return dict(status='uploaded', course=course, uploaded=added, skipped=len(files)-added)
 
 
-def download_lesson(lesson_id, out, course=None, backend=None):
+def download_lesson(lesson_id, out, course=None, backend=None, *, profile='eager'):
     assert_keyless()
-    chosen = _lesson(lesson_id, course)
+    chosen = _profile_lesson(lesson_id, course, profile)
     backend = backend or GitHubBackend()
     destination = _safe(out)
     require(not destination.exists() or destination.is_dir(), 'download_directory')
     destination.mkdir(parents=True, exist_ok=True, mode=0o700)
-    release = _release(backend, tag_for(chosen))
+    release = _staging_release(backend, chosen, profile)
     if release is None:
         return dict(status='no_checkpoints', lesson_id=lesson_id, downloaded=0, skipped=0)
-    assets = _assets(backend, release)
+    assets = _staging_assets(backend, release, profile)
     selected = []
     for name, asset in sorted(assets.items()):
         match = BUNDLE_RE.fullmatch(name)
@@ -433,7 +473,7 @@ def download_lesson(lesson_id, out, course=None, backend=None):
     for asset in selected:
         target = _safe(destination / asset['name'])
         if target.exists():
-            validate_bundle(target, chosen)
+            validate_bundle(target, chosen, profile=profile)
             _same_remote(backend, asset, target)
             skipped += 1
             continue
@@ -441,7 +481,7 @@ def download_lesson(lesson_id, out, course=None, backend=None):
             local = Path(temp) / asset['name']
             backend.download(asset, local)
             require(local.stat().st_size == asset['size'], 'download_size')
-            validate_bundle(local, chosen)
+            validate_bundle(local, chosen, profile=profile)
             # Exclusive hardlink commits validated bytes without clobber races.
             try:
                 os.link(local, target)
@@ -454,8 +494,9 @@ def download_lesson(lesson_id, out, course=None, backend=None):
     return dict(status='downloaded', lesson_id=lesson_id, downloaded=downloaded, skipped=skipped)
 
 
-def publish_directory(directory, course, partial=False, backend=None):
+def publish_directory(directory, course, partial=False, backend=None, *, profile='eager'):
     assert_keyless()
+    _profile(course, profile, final=True)
     files = validate_final_directory(directory, course, partial)
     backend = backend or GitHubBackend()
     release = _release(backend, tag_for(course, True), create=True)
@@ -478,6 +519,7 @@ def main(argv=None):
     for name in ('prepare', 'upload', 'download', 'publish'):
         sub = commands.add_parser(name)
         sub.add_argument('--course', choices=COURSES, required=name != 'download')
+        sub.add_argument('--profile', choices=PROFILES, default='eager')
         if name in ('upload', 'publish'):
             sub.add_argument('--directory', required=True, type=Path)
         if name == 'download':
@@ -487,10 +529,10 @@ def main(argv=None):
             sub.add_argument('--partial', action='store_true')
     args = parser.parse_args(argv)
     try:
-        if args.command == 'prepare': result = prepare(args.course)
-        elif args.command == 'upload': result = upload_directory(args.directory, args.course)
-        elif args.command == 'download': result = download_lesson(args.lesson, args.out, args.course)
-        else: result = publish_directory(args.directory, args.course, args.partial)
+        if args.command == 'prepare': result = prepare(args.course, profile=args.profile)
+        elif args.command == 'upload': result = upload_directory(args.directory, args.course, profile=args.profile)
+        elif args.command == 'download': result = download_lesson(args.lesson, args.out, args.course, profile=args.profile)
+        else: result = publish_directory(args.directory, args.course, args.partial, profile=args.profile)
     except (TransportError, OSError, KeyError, TypeError) as error:
         code = str(error) if isinstance(error, TransportError) else 'transport_failed'
         print(json.dumps(dict(status='failed', reason=code)), file=sys.stderr)
@@ -501,3 +543,4 @@ def main(argv=None):
 
 if __name__ == '__main__':
     sys.exit(main())
+
