@@ -1,0 +1,26 @@
+name: Bora public MP3 assembly probe
+on:
+  push:
+    branches: [codex/bora-ffmpeg611-gapless-recovery]
+    paths:
+      - '.github/workflows/bora-public-gapless-probe.yml'
+      - 'bora-production/mp3_gapless.py'
+      - 'bora-production/probe_gapless_ffmpeg611.py'
+permissions:
+  contents: read
+jobs:
+  public-gapless:
+    if: github.repository == 'quddnr0107-lgtm/korean-voice'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Install the same Ubuntu FFmpeg package as assembly
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install --yes --no-install-recommends ffmpeg
+          ffmpeg -version | head -n 1
+      - name: Verify exact sample lengths and unchanged audio frames using public sine
+        run: python3 bora-production/probe_gapless_ffmpeg611.py "$(command -v ffmpeg)"
