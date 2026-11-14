@@ -188,12 +188,25 @@ def source_plan(ident, campaign, source_key):
 
 
 
+def course_pronunciation(profile, course):
+    if profile != 'single_pass':
+        return None
+    if course == 'RL':
+        import rl_pronunciation
+        return rl_pronunciation
+    if course == 'DR':
+        import dr_pronunciation
+        return dr_pronunciation
+    if course == 'MS':
+        import ms_pronunciation
+        return ms_pronunciation
+    return None
+
+
 def course_plan(ident, campaign, source_key, profile):
     plan, payload = source_plan(ident, campaign, source_key)
-    if profile == 'single_pass' and ident.startswith('RL-'):
-        from rl_pronunciation import apply_to_plan
-        plan = apply_to_plan(plan)
-    return plan, payload
+    overlay = course_pronunciation(profile, ident.split('-', 1)[0])
+    return (overlay.apply_to_plan(plan) if overlay else plan), payload
 
 
 def execution_shard_chars(recipe, request):
@@ -459,8 +472,8 @@ def make_renderer(recipe, profile='eager', *, course=None):
         from single_pass_renderer import SinglePassRenderer
         renderer = SinglePassRenderer(os.environ['BORA_MODEL'],
                                       max_new_tokens=recipe['max_new_tokens'], max_attempts=1)
-        if course == 'RL':
-            import rl_pronunciation as overlay
+        overlay = course_pronunciation(profile, course)
+        if overlay:
             renderer.settings['course_pronunciation'] = dict(
                 ruleset=overlay.RULESET, rules_sha256=overlay.rules_sha256(),
                 implementation_sha256=sha(Path(overlay.__file__).read_bytes()))
@@ -646,10 +659,9 @@ def preflight(args, profile='eager'):
     from planning import build_plan
     from assemble import assemble_lesson
     source='안녕하세요. 오늘은 차근차근 설명하겠습니다.'
-    if profile == 'single_pass' and request['course'] == 'RL':
-        from rl_pronunciation import apply_to_plan
-        plan=build_plan('RL-001',source)
-        plan = apply_to_plan(plan)
+    overlay = course_pronunciation(profile, request['course'])
+    if overlay:
+        plan = overlay.apply_to_plan(build_plan(f"{request['course']}-001", source))
     else:
         plan=build_plan('TB-002' if profile=='compiled' else 'TB-001',source)
     assembly_policy = {'profile': profile} if profile == 'single_pass' else {}

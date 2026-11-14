@@ -24,7 +24,8 @@ import zipfile
 HERE = Path(__file__).resolve().parent
 if str(HERE) not in sys.path:
     sys.path.insert(0, str(HERE))
-from lecture_crypto import CHUNK, namespace_for, validate as validate_media
+from lecture_crypto import (CHUNK, _validate_media_header, namespace_for,
+                            validate as validate_media)
 from lecture_pack import validate_pack
 
 REPOSITORY = 'quddnr0107-lgtm/korean-voice'
@@ -37,6 +38,7 @@ MAX_BUNDLE = 1024 * 1024 * 1024
 MAX_MEMBER = 256 * 1024 * 1024
 FINAL_OBJECT_CAPS = {'audio': 128 * 1024 * 1024, 'content': 9 * 1024 * 1024}
 DESCRIPTOR_CAP = 512 * 1024
+INDEX_CAP = 128 * 1024
 REPORT_FIELDS = {'schema', 'lesson_id', 'shard', 'start', 'end', 'passed', 'blocked', 'pending',
                  'timed_out', 'recipe_sha256', 'plan_sha256', 'render_settings_sha256', 'run_id', 'run_attempt'}
 ENVELOPE_FIELDS = {'version', 'lesson_id', 'unit_index', 'plan_sha256', 'recipe_sha256',
@@ -232,6 +234,25 @@ def _read_descriptor(path, ident):
     return descriptor, objects
 
 
+def _validate_activation_index(index_path, descriptors, course, tag):
+    require(0 < index_path.stat().st_size <= INDEX_CAP, 'index_size')
+    index = _json(index_path.read_bytes())
+    _keys(index, {'version', 'release_tag', 'count', 'lessons'})
+    require(index['version'] == 'integrated-lecture-index/v2' and index['release_tag'] == tag
+            and type(index['count']) is int and index['count'] == COURSES[course]
+            and isinstance(index['lessons'], list) and len(index['lessons']) == COURSES[course], 'index_scope')
+    seen = set()
+    for row in index['lessons']:
+        _keys(row, {'id', 'descriptor_url', 'sha256'})
+        ident = row['id']
+        require(ident in descriptors and ident not in seen and row['sha256'] == _sha(descriptors[ident]),
+                'index_descriptor_pin')
+        _asset_url(row['descriptor_url'], host='github.com',
+                   path=f'/{REPOSITORY}/releases/download/{tag}/{ident}.descriptor.json')
+        seen.add(ident)
+    require(seen == set(course_ids(course)), 'index_coverage')
+
+
 def validate_final_directory(directory, course, partial=False, *, profile='eager'):
     tag = tag_for(course, True, profile=profile)
     directory = _safe(directory)
@@ -264,22 +285,7 @@ def validate_final_directory(directory, course, partial=False, *, profile='eager
     else:
         require(set(descriptors) == set(course_ids(course)) and set(files) == allowed | {'index.json'},
                 'incomplete_course')
-        require(files['index.json'].stat().st_size <= 128 * 1024, 'index_size')
-        index = _json(files['index.json'].read_bytes())
-        _keys(index, {'version', 'release_tag', 'count', 'lessons'})
-        require(index['version'] == 'integrated-lecture-index/v2' and index['release_tag'] == tag
-                and type(index['count']) is int and index['count'] == COURSES[course]
-                and isinstance(index['lessons'], list) and len(index['lessons']) == COURSES[course], 'index_scope')
-        seen = set()
-        for row in index['lessons']:
-            _keys(row, {'id', 'descriptor_url', 'sha256'})
-            ident = row['id']
-            require(ident in descriptors and ident not in seen and row['sha256'] == _sha(descriptors[ident]),
-                    'index_descriptor_pin')
-            _asset_url(row['descriptor_url'], host='github.com',
-                       path=f'/{REPOSITORY}/releases/download/{tag}/{ident}.descriptor.json')
-            seen.add(ident)
-        require(seen == set(course_ids(course)), 'index_coverage')
+        _validate_activation_index(files['index.json'], descriptors, course, tag)
     # Immutable cipher objects first, descriptors next, the activation index last.
     return sorted(files.values(), key=lambda p: (2 if p.name == 'index.json' else 1 if p.suffix == '.json' else 0, p.name))
 
@@ -540,6 +546,70 @@ def _fetch_final_object(backend, asset, destination, cap):
         require(digest == 'sha256:' + _sha(destination), 'final_asset_digest')
 
 
+def export_activation_metadata(request, out, backend=None):
+    """Collect only the index and descriptors of one explicitly pinned public release."""
+    assert_keyless()
+    _keys(request, {'schema', 'course', 'release_tag', 'release_id', 'index_sha256'})
+    course = request['course']
+    require(request['schema'] == 'bora-activation-export-request/v1'
+            and isinstance(course, str) and _int(request['release_id'], 1, 2**53-1)
+            and _hash(request['index_sha256']), 'activation_request')
+    tag = tag_for(course, True, profile='single_pass')
+    require(request['release_tag'] == tag, 'activation_requested_tag')
+    backend = backend or GitHubBackend()
+    release = _release(backend, tag)
+    require(isinstance(release, dict) and release.get('id') == request['release_id']
+            and release.get('draft') is False and release.get('prerelease') is False
+            and isinstance(release.get('published_at'), str) and release['published_at'], 'activation_release_pin')
+    _asset_url(release['html_url'], host='github.com', path=f'/{REPOSITORY}/releases/tag/{tag}')
+    assets = _final_assets(backend, release, course)
+    ids = course_ids(course)
+    expected = {'index.json', *(f'{ident}.descriptor.json' for ident in ids)}
+    require(len(assets) == 1 + 3 * len(ids) and expected <= assets.keys(), 'activation_inventory')
+    require(all(asset.get('state') == 'uploaded' and isinstance(asset.get('digest'), str)
+                and re.fullmatch(r'sha256:[a-f0-9]{64}', asset['digest'])
+                and 'url' in asset and 'browser_download_url' in asset for asset in assets.values()),
+            'activation_asset_metadata')
+    require(assets['index.json']['digest'] == 'sha256:' + request['index_sha256'], 'activation_index_pin')
+    destination = _safe(out)
+    require(not destination.exists(), 'activation_output_exists')
+    with tempfile.TemporaryDirectory(prefix='.activation-', dir=destination.parent) as directory:
+        stage = Path(directory) / 'metadata'
+        stage.mkdir(mode=0o700)
+        index_path = stage / 'index.json'
+        _fetch_final_object(backend, assets['index.json'], index_path, INDEX_CAP)
+        descriptors = {}
+        for ident in ids:
+            path = stage / f'{ident}.descriptor.json'
+            _fetch_final_object(backend, assets[path.name], path, DESCRIPTOR_CAP)
+            descriptor, objects = _read_descriptor(path, ident)
+            try:
+                validate_pack(descriptor['audio'])
+                _validate_media_header(descriptor['content'])
+            except (ValueError, TypeError, KeyError):
+                raise TransportError('activation_descriptor_manifest') from None
+            require(descriptor['audio']['lesson_id'] == ident, 'audio_lesson_scope')
+            content = descriptor['content']
+            chunks = (content['plain_bytes'] + CHUNK - 1) // CHUNK
+            require(content['lesson_id'] == ident and content['kind'] == 'private-metadata'
+                    and content['key_id'] == KEY_ID and isinstance(content['cipher_sha256'], list)
+                    and len(content['cipher_sha256']) == chunks
+                    and all(_hash(value) for value in content['cipher_sha256']), 'activation_content_manifest')
+            require(set(objects.values()) <= assets.keys(), 'activation_lesson_objects')
+            audio = assets[objects['audio']]
+            require(audio['size'] == descriptor['audio']['pack_bytes']
+                    and audio['digest'] == 'sha256:' + descriptor['audio']['pack_sha256'], 'activation_audio_pack_pin')
+            require(assets[objects['content']]['size'] == content['plain_bytes'] + 16 * chunks,
+                    'activation_content_size')
+            expected.update(objects.values())
+            descriptors[ident] = path
+        require(expected == assets.keys(), 'activation_inventory')
+        _validate_activation_index(index_path, descriptors, course, tag)
+        stage.rename(destination)
+    return dict(status='activation_metadata_exported', course=course, tag=tag, release_id=release['id'],
+                index_sha256=request['index_sha256'], lessons=len(ids))
+
+
 def collect_final(course, out, lesson_id=None, backend=None, *, profile='eager'):
     """Recover complete immutable encrypted triples from the single-pass final tag.
 
@@ -633,12 +703,17 @@ def main(argv=None):
             sub.add_argument('--out', required=True, type=Path)
         if name == 'publish':
             sub.add_argument('--partial', action='store_true')
+    export = commands.add_parser('export-activation-metadata')
+    export.add_argument('--request', required=True, type=Path)
+    export.add_argument('--out', required=True, type=Path)
     args = parser.parse_args(argv)
     try:
         if args.command == 'prepare': result = prepare(args.course, profile=args.profile)
         elif args.command == 'upload': result = upload_directory(args.directory, args.course, profile=args.profile)
         elif args.command == 'download': result = download_lesson(args.lesson, args.out, args.course, profile=args.profile)
         elif args.command == 'collect-final': result = collect_final(args.course, args.out, args.lesson, profile=args.profile)
+        elif args.command == 'export-activation-metadata':
+            result = export_activation_metadata(_json(_safe(args.request).read_bytes()), args.out)
         else: result = publish_directory(args.directory, args.course, args.partial, profile=args.profile)
     except (TransportError, OSError, KeyError, TypeError) as error:
         code = str(error) if isinstance(error, TransportError) else 'transport_failed'

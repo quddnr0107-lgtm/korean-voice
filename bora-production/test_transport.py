@@ -324,6 +324,55 @@ class TransportTests(unittest.TestCase):
             t.collect_final('MS', recovered, 'MS-166', self.backend, profile='single_pass')
         self.assertEqual(list(recovered.iterdir()), [])
 
+    def activation_release(self, course):
+        source = self.course(course, 'single_pass', self.root / course)
+        tag = t.tag_for(course, True, profile='single_pass')
+        release = self.backend.create(tag)
+        release.update(draft=False, prerelease=False, published_at='2026-11-15T00:00:00Z',
+                       html_url=f'https://github.com/{t.REPOSITORY}/releases/tag/{tag}')
+        for file in source.iterdir():
+            self.backend.upload(release, file)
+        for (asset_tag, _), (asset, data) in self.backend.data.items():
+            if asset_tag == tag:
+                asset.update(state='uploaded', digest='sha256:' + hashlib.sha256(data).hexdigest())
+        request = dict(schema='bora-activation-export-request/v1', course=course, release_tag=tag,
+                       release_id=release['id'], index_sha256=t._sha(source / 'index.json'))
+        return source, release, request
+
+    def test_export_fetches_only_exact_public_metadata_for_every_course(self):
+        for course, count in t.COURSES.items():
+            with self.subTest(course=course):
+                source, _, request = self.activation_release(course)
+                out = self.root / ('export-' + course)
+                with patch.object(self.backend, 'download', wraps=self.backend.download) as download:
+                    result = t.export_activation_metadata(request, out, self.backend)
+                names = {'index.json', *(f'{ident}.descriptor.json' for ident in t.course_ids(course))}
+                self.assertEqual({call.args[0]['name'] for call in download.call_args_list}, names)
+                self.assertEqual(download.call_count, count + 1)
+                self.assertEqual(result['index_sha256'], request['index_sha256'])
+                self.assertEqual({p.name for p in out.iterdir()}, names)
+                for name in names:
+                    self.assertEqual((out / name).read_bytes(), (source / name).read_bytes())
+
+    def test_export_requires_published_exact_identity_and_unchanged_files(self):
+        _, release, request = self.activation_release('RL')
+        out = self.root / 'invalid-export'
+        for changes, reason in ((dict(release_id=999), 'activation_release_pin'),
+                                (dict(index_sha256='0' * 64), 'activation_index_pin'),
+                                (dict(release_tag=t.tag_for('RL', profile='single_pass')), 'activation_requested_tag')):
+            with self.assertRaisesRegex(t.TransportError, reason):
+                t.export_activation_metadata(dict(request, **changes), out, self.backend)
+        release['draft'] = True
+        with self.assertRaisesRegex(t.TransportError, 'activation_release_pin'):
+            t.export_activation_metadata(request, out, self.backend)
+        release['draft'] = False
+        key = (release['tag_name'], 'RL-001.descriptor.json')
+        asset, data = self.backend.data[key]
+        self.backend.data[key] = (asset, b'x' * len(data))
+        with self.assertRaisesRegex(t.TransportError, 'final_asset_digest'):
+            t.export_activation_metadata(request, out, self.backend)
+        self.assertFalse(out.exists())
+
     def test_single_pass_mismatched_staged_descriptor_cannot_upload_new_objects(self):
         source = self.root / 'source'
         self.triple(source, 'TB-001')
