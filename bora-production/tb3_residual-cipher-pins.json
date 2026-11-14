@@ -1,0 +1,90 @@
+{
+  "release_id": 445068693,
+  "run_id": 43565543458,
+  "asset_count": 13,
+  "assets": [
+    {
+      "id": 746730806,
+      "name": "TB-005-s000-r43565543458-a1.zip",
+      "digest": "sha256:3d8eac42cbcf92d6b6dc5fb6482c62a55143468d4f4acdc2bffd6ffdc00840d1",
+      "size": 96444042
+    },
+    {
+      "id": 746731649,
+      "name": "TB-005-s001-r43565543458-a1.zip",
+      "digest": "sha256:c7075883f0cf60f1e612543d13ce6e47b25292f662b365d5060d8c08f11028ab",
+      "size": 86817250
+    },
+    {
+      "id": 746814808,
+      "name": "TB-005-s002-r43565543458-a1.zip",
+      "digest": "sha256:954ff4c9b02ba3ab89c72c7975819e68a73ba95573a7747b05fa06e90b62ef18",
+      "size": 87741332
+    },
+    {
+      "id": 747047095,
+      "name": "TB-005-s003-r43565543458-a1.zip",
+      "digest": "sha256:cbdbf9f7efb42fc3461f3e85db5c5431b5d436ab31672ee6eda1c4858a794b9e",
+      "size": 78751857
+    },
+    {
+      "id": 746988269,
+      "name": "TB-013-s000-r43565543458-a1.zip",
+      "digest": "sha256:8841f8ca1728ea62013216c9eb7817a1298a177124b181057f5cd8fae45b33b0",
+      "size": 84418511
+    },
+    {
+      "id": 746958953,
+      "name": "TB-013-s001-r43565543458-a1.zip",
+      "digest": "sha256:cfc44d36cbb86e4c8fa873f7c2e99bc81bc2105c6aac778ade21fc62b684c817",
+      "size": 87784979
+    },
+    {
+      "id": 746839959,
+      "name": "TB-013-s002-r43565543458-a1.zip",
+      "digest": "sha256:955fcf9ef3f2fa3e70dc1df2a2a6e9e6b7f8baddf1c19c7c38fb3ff58d2524e6",
+      "size": 89941161
+    },
+    {
+      "id": 746862747,
+      "name": "TB-013-s003-r43565543458-a1.zip",
+      "digest": "sha256:a4f2c04b1dfa59103282374ef535e009bfff6eb7d77ac6d7300ca14d60e632ba",
+      "size": 91339923
+    },
+    {
+      "id": 747040086,
+      "name": "TB-013-s004-r43565543458-a1.zip",
+      "digest": "sha256:bc15ab0e6b2957f5f059bf8990c9aee36a93eab505a5bed925935f255ad0a4aa",
+      "size": 3816576
+    },
+    {
+      "id": 747060544,
+      "name": "TB-018-s000-r43565543458-a1.zip",
+      "digest": "sha256:bb43e448025e5da6841ac299c592b9150aeac3a676026103971b638454f2b4a4",
+      "size": 88193714
+    },
+    {
+      "id": 746838738,
+      "name": "TB-018-s001-r43565543458-a1.zip",
+      "digest": "sha256:a4ab27697469330b5d1a3da3a5bc8186cecc79c731df154a315a3feb24757223",
+      "size": 82850244
+    },
+    {
+      "id": 746709918,
+      "name": "TB-018-s002-r43565543458-a1.zip",
+      "digest": "sha256:554c5f2719e61acec1580746742fc9985d9eb8c0192b5fc81f564dbcbb1ac919",
+      "size": 85851751
+    },
+    {
+      "id": 747101226,
+      "name": "TB-018-s003-r43565543458-a1.zip",
+      "digest": "sha256:33127235b67ee9d2698a79bb01fb86d31aabf710cfa502cdf582f5d3e249f81d",
+      "size": 18001365
+    }
+  ],
+  "lesson_ids": [
+    "TB-005",
+    "TB-013",
+    "TB-018"
+  ]
+}
