@@ -205,6 +205,60 @@ class PublicAsrTests(unittest.TestCase):
         invalid = bytearray(wave); struct.pack_into('<f', invalid, len(invalid)-4, 1.0)
         with self.assertRaises(ValueError): check.float_pcm(bytes(invalid))
 
+    def test_public_exception_details_are_keyless_bounded_and_have_no_locals(self):
+        def nested(depth):
+            private_local = 'this local must never be exported'
+            if depth: return nested(depth-1)
+            raise RuntimeError('public model error '+('x'*5000))
+        try:
+            nested(15)
+        except RuntimeError as error:
+            report = check.public_failure(error)
+            self.assertEqual(report['exception_type'], 'RuntimeError')
+            self.assertEqual(report['exception_module'], 'builtins')
+            self.assertEqual(len(report['message']), 1200)
+            self.assertTrue(report['message_truncated'])
+            self.assertEqual(len(report['frames']), 10)
+            self.assertTrue(all(set(frame) == {'file', 'line'}
+                and '/' not in frame['file'] and frame['line'] > 0 for frame in report['frames']))
+            encoded = json.dumps(report)
+            self.assertNotIn('private_local', encoded)
+            self.assertNotIn('this local must never be exported', encoded)
+            self.assertFalse(report['includes_locals']); self.assertFalse(report['includes_environment'])
+            for secret in check.SECRETS:
+                with patch.dict(os.environ, {secret: 'not-public'}):
+                    with self.assertRaises(ValueError): check.public_failure(error)
+
+    def test_failure_keeps_completed_public_rows_and_exact_loading_stage(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory); request = self.fixture(root)
+            selected = check.validate_inputs(root, request); output = root/'diagnostic.json'
+            def model(path, **kwargs):
+                recorded = json.loads(output.read_text())
+                self.assertEqual(recorded['stage'], 'loading_model')
+                if Path(path).name == 'turbo':
+                    raise RuntimeError('actual public model-load failure')
+                return object()
+            def recognize(rows, unused_model, name):
+                recorded = json.loads(output.read_text())
+                self.assertEqual(recorded['stage'], 'recognizing_fixture')
+                self.assertEqual(recorded['current_fixture'], rows[0]['fixture'])
+                return [dict(fixture=rows[0]['fixture'], model=name, public=True)]
+            with patch.object(check.importlib.metadata, 'version', side_effect=check.RUNTIME_PINS.__getitem__), \
+                 patch.object(check, 'verify_model', return_value={'model.bin': 'a'*64}), \
+                 patch.object(check, 'recognize', side_effect=recognize), \
+                 patch.dict(sys.modules, {'faster_whisper': SimpleNamespace(WhisperModel=model)}):
+                with self.assertRaises(RuntimeError):
+                    check.inspect(root, root/'models', output, request)
+            report = json.loads(output.read_text())
+            self.assertEqual(len(report['rows']), 2)
+            self.assertEqual(report['current_model'], 'turbo')
+            self.assertIsNone(report['current_fixture'])
+            self.assertEqual(report['stage'], 'loading_model')
+            self.assertEqual(report['failure']['message'], 'actual public model-load failure')
+            self.assertEqual(report['failure']['exception_type'], 'RuntimeError')
+            self.assertFalse(report['production_eligible'])
+
 
 if __name__ == '__main__':
     unittest.main()

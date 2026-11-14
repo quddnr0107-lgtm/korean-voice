@@ -21,6 +21,7 @@ import socket
 import struct
 import sys
 import time
+import traceback
 
 import cpu_compile_long_benchmark as long
 from pilot_render import transcript_score
@@ -83,7 +84,7 @@ def digest(path):
 
 def request_value(artifact_id=None, files=None):
     ready = artifact_id is not None and files is not None
-    return dict(schema=SCHEMA, request_id='public-long-asr-20261114-01',
+    return dict(schema=SCHEMA, request_id='public-long-asr-20261114-02',
         ready=ready, source_run_id=SOURCE_RUN, source_commit=SOURCE_SHA,
         artifact_id=artifact_id, fixtures=long.fixtures(),
         critical_terms=[list(value) for value in CRITICAL],
@@ -290,6 +291,21 @@ def dump(path, value):
     Path(path).write_text(json.dumps(value, ensure_ascii=False, indent=2, allow_nan=False)+'\n')
 
 
+def public_failure(error):
+    """Bounded diagnostics only for this fixed public/keyless input path."""
+    keyless()
+    try:
+        message = str(error)
+    except Exception:
+        message = '<exception message unavailable>'
+    return dict(exception_type=type(error).__name__[:200],
+        exception_module=type(error).__module__[:200], message=message[:1200],
+        message_truncated=len(message) > 1200,
+        frames=[dict(file=Path(frame.filename).name[:200], line=frame.lineno)
+            for frame in traceback.extract_tb(error.__traceback__, limit=-10)],
+        includes_locals=False, includes_environment=False, public_inputs_only=True)
+
+
 def inspect(directory, models, output, request):
     selected = validate_inputs(directory, request)
     runtime = {name: importlib.metadata.version(name) for name in RUNTIME_PINS}
@@ -303,33 +319,42 @@ def inspect(directory, models, output, request):
         raw_gate='Existing canonical zero character errors and zero missing critical terms before pronunciation normalization.',
         normalization_gate='Separate diagnostic only; flags or any lexical/critical mismatch remain non-exact.',
         rows=[], model_assets_sha256={}, exact_public_pcm_verified=True,
+        stage='loading_asr_runtime', current_model=None, current_fixture=None,
         synthesized=0, private_audio_used=False, secrets_used=False,
         promotion_performed=False, production_eligible=False, human_listening_verified=False)
     def deadline(*args):
         raise TimeoutError('public_asr_call_timeout')
     previous = signal.signal(signal.SIGALRM, deadline)
     try:
+        dump(output, result)
         with offline():
             from faster_whisper import WhisperModel
             for name in MODELS:
+                result.update(stage='authenticating_model', current_model=name, current_fixture=None)
+                dump(output, result)
                 result['model_assets_sha256'][name] = verify_model(Path(models)/name, name)
+                result['stage'] = 'loading_model'; dump(output, result)
                 model = WhisperModel(str(Path(models)/name), cpu_threads=ASR_SETTINGS[name]['cpu_threads'],
                     **result['model_load_options'])
                 for row in selected:
+                    result.update(stage='recognizing_fixture', current_fixture=row['fixture'])
+                    dump(output, result)
                     signal.alarm(CALL_SECONDS)
                     try:
                         result['rows'].extend(recognize([row], model, name)); dump(output, result)
                     finally:
                         signal.alarm(0)
                 del model
-        result['status'] = 'complete_public_diagnostics_no_promotion'
+        result.update(status='complete_public_diagnostics_no_promotion', stage='complete',
+            current_model=None, current_fixture=None)
         dump(output, result)
         print(json.dumps(dict(status=result['status'], checks=len(result['rows']),
             raw_exact=sum(row['raw_canonical_strict']['exact'] for row in result['rows']),
             normalized_exact=sum(row['pronunciation_normalized']['exact'] for row in result['rows']),
             synthesized=0, promoted=0)), flush=True)
-    except Exception:
+    except Exception as error:
         result['status'] = 'public_diagnostic_failed_partial_results_not_approval'
+        result['failure'] = public_failure(error)
         dump(output, result)
         raise
     finally:
