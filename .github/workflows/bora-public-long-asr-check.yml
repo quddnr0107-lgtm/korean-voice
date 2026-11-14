@@ -58,7 +58,19 @@ jobs:
           print('Four public WAVs and exact PCM parity verified')
           PY
       - name: Install only pinned CPU recognition dependencies
-        run: python -m pip install --disable-pip-version-check faster-whisper==1.2.1 ctranslate2==4.9.0 soundfile==0.14.0 numpy==2.5.4 scipy==1.18.1 onnxruntime==1.31.1 huggingface-hub==0.36.2
+        run: python -m pip install --disable-pip-version-check faster-whisper==1.2.1 ctranslate2==4.9.0 av==18.1.0 soundfile==0.14.0 numpy==2.5.4 scipy==1.18.1 onnxruntime==1.31.1 huggingface-hub==0.36.2
+      - name: Check the actual WAV decoder API before model downloads
+        run: |
+          python - <<'PY'
+          import os,av
+          from pathlib import Path
+          assert av.__version__ == '18.1.0'
+          source=Path(os.environ['RUNNER_TEMP'])/'public-long-input'/'00-eager-explain.wav'
+          with av.open(str(source),mode='r',metadata_errors='ignore') as container:
+              frame=next(container.decode(audio=0))
+              assert frame.sample_rate == 24000 and frame.samples > 0
+          print('Pinned PyAV accepted the faster-whisper decoder API and decoded a verified public WAV frame')
+          PY
       - name: Download and authenticate two public recognition models
         run: python bora-production/cpu_public_asr_check.py download-models --models "$RUNNER_TEMP/public-asr-models"
       - name: Diagnose the two public fixtures without expected-text prompts

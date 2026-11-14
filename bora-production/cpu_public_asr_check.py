@@ -62,6 +62,7 @@ ASR_SETTINGS = {
         input_representation='original_FLOAT_WAV_path_to_faster_whisper_PyAV_decode_and_resample'),
 }
 RUNTIME_PINS = {'faster-whisper': '1.2.1', 'ctranslate2': '4.9.0',
+    'av': '18.1.0',
     'soundfile': '0.14.0', 'numpy': '2.5.4', 'scipy': '1.18.1',
     'onnxruntime': '1.31.1', 'huggingface-hub': '0.36.2'}
 CALL_SECONDS = 240
@@ -84,7 +85,7 @@ def digest(path):
 
 def request_value(artifact_id=None, files=None):
     ready = artifact_id is not None and files is not None
-    return dict(schema=SCHEMA, request_id='public-long-asr-20261114-02',
+    return dict(schema=SCHEMA, request_id='public-long-asr-20261114-03',
         ready=ready, source_run_id=SOURCE_RUN, source_commit=SOURCE_SHA,
         artifact_id=artifact_id, fixtures=long.fixtures(),
         critical_terms=[list(value) for value in CRITICAL],

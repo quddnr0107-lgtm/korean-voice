@@ -176,6 +176,7 @@ class PublicAsrTests(unittest.TestCase):
         self.assertTrue(check.ASR_SETTINGS['small']['word_timestamps'])
         self.assertEqual(check.ASR_SETTINGS['turbo']['cpu_threads'], 4)
         self.assertFalse(check.ASR_SETTINGS['turbo']['word_timestamps'])
+        self.assertEqual(check.RUNTIME_PINS['av'], '18.1.0')
 
     def test_keys_network_and_wav_mutation_are_blocked(self):
         for secret in check.SECRETS:
@@ -251,6 +252,7 @@ class PublicAsrTests(unittest.TestCase):
                 with self.assertRaises(RuntimeError):
                     check.inspect(root, root/'models', output, request)
             report = json.loads(output.read_text())
+            self.assertEqual(report['runtime_packages']['av'], '18.1.0')
             self.assertEqual(len(report['rows']), 2)
             self.assertEqual(report['current_model'], 'turbo')
             self.assertIsNone(report['current_fixture'])
