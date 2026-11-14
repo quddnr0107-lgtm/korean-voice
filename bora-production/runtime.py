@@ -123,6 +123,12 @@ def config(profile='eager'):
     selected = request.get('lesson_ids', course_ids)
     check(isinstance(selected,list) and selected and len(selected)==len(set(selected))
           and set(selected)<=set(course_ids), 'request_lessons')
+    if profile == 'single_pass' and 'selected_shards' in request:
+        subset = request['selected_shards']
+        check(isinstance(subset,list) and 0<len(subset)<=256 and
+              all(isinstance(item,dict) and set(item)=={'lesson_id','shard'} and
+                  item['lesson_id'] in selected and type(item['shard']) is int and
+                  0<=item['shard']<=999 for item in subset), 'single_pass_shard_scope')
     execution_shard_chars(recipe, request)  # Validate scheduling before key access.
     return campaign, recipe, request, sorted(selected)
 
@@ -239,6 +245,8 @@ def public_plan(args, profile='eager'):
     manifest=dict(schema='bora-fp32-public-plan/v1',course=request['course'],
         campaign_sha256=identity(campaign),recipe_sha256=identity(recipe),
         request_sha256=identity(request),render_settings_sha256=args.settings_sha,lessons=records)
+    if profile == 'single_pass':
+        manifest['complete_course'] = len(ids) == LIMITS[request['course']]
     atomic(args.output,enc(manifest))
     unresolved=sum(v['review_units'] for v in records)
     print(json.dumps(dict(status='sources_authenticated',course=request['course'],lessons=len(ids),
@@ -251,6 +259,8 @@ def public_plan(args, profile='eager'):
             f.write('matrix='+enc(dict(include=matrix)).decode()+'\n')
             f.write('lessons='+enc(dict(include=[dict(lesson_id=i) for i in ids])).decode()+'\n')
             f.write('course='+request['course']+'\n')
+            if profile == 'single_pass':
+                f.write('complete_course='+str(manifest['complete_course']).lower()+'\n')
 
 
 def matched_plan(args, campaign, recipe, request, key):
@@ -325,7 +335,7 @@ def open_unit(envelope,media_key,plan,recipe_hash,settings_hash,destination):
     return dict(unit_index=index,receipt=receipt,path=out/receipt.get('file','review.wav'))
 
 
-def restore(directory,media_key,plan,recipe_hash,settings_hash,work,*,unit_range=None):
+def restore(directory,media_key,plan,recipe_hash,settings_hash,work,*,unit_range=None,profile='eager'):
     """Restore requested private units after checking the entire public bundle.
 
     Probe/render may request a validated shard range to avoid decrypting and
@@ -344,7 +354,10 @@ def restore(directory,media_key,plan,recipe_hash,settings_hash,work,*,unit_range
             # Validate every member, public pin, ciphertext hash and report
             # count before using any untrusted index to skip private work.
             from transport import validate_bundle
-            report=validate_bundle(bundle,plan['lesson_id'].split('-',1)[0])
+            if profile == 'single_pass':
+                report=validate_bundle(bundle,plan['lesson_id'].split('-',1)[0],profile=profile)
+            else:
+                report=validate_bundle(bundle,plan['lesson_id'].split('-',1)[0])
             if (report['plan_sha256']!=identity(plan) or report['recipe_sha256']!=recipe_hash
                     or report['render_settings_sha256']!=settings_hash):
                 continue
@@ -380,7 +393,7 @@ def terminate(signum,frame):
 def resume_probe(args, profile='eager'):
     """Check encrypted reuse offline BEFORE heavy runtime/model preparation."""
     campaign,recipe,request,ids=config(profile)
-    check(profile=='eager' or args.lesson_id in ids, 'compiled_lesson_scope')
+    check_lesson_scope(args, request, ids, profile)
     source_key,media_key=protected_keys(media=True,profile=profile)
     public,plan,_,row=matched_plan(args,campaign,recipe,request,source_key)
     del source_key
@@ -388,7 +401,8 @@ def resume_probe(args, profile='eager'):
     group=row['shards'][args.shard]; begin,end=group['start'],group['end']
     with tempfile.TemporaryDirectory(prefix='bora-probe-',dir=os.environ.get('RUNNER_TEMP')) as td:
         restored=restore(args.resume_dir,media_key,plan,identity(recipe),
-                         public['render_settings_sha256'],Path(td)/'restored',unit_range=(begin,end))
+                         public['render_settings_sha256'],Path(td)/'restored',unit_range=(begin,end),
+                         profile=profile)
         rows={i:v for i,v in restored.items() if begin<=i<end}
         pending=pending_units(rows,begin,end,request['retry_blocked'])
         passed=sum(v['receipt'].get('status')=='passed' for v in rows.values())
@@ -406,9 +420,25 @@ def resume_probe(args, profile='eager'):
     print(json.dumps(result),flush=True)
 
 
+def check_lesson_scope(args, request, ids, profile):
+    if profile == 'compiled':
+        check(args.lesson_id in ids, 'compiled_lesson_scope')
+    if profile == 'single_pass':
+        check(args.lesson_id in ids, 'single_pass_lesson_scope')
+        selected = request.get('selected_shards')
+        if selected is not None and hasattr(args, 'shard'):
+            check({'lesson_id': args.lesson_id, 'shard': args.shard} in selected,
+                  'single_pass_selected_shard')
+
+
 def make_renderer(recipe, profile='eager'):
     """Import and load heavy dependencies only when synthesis is required."""
-    if validate_profile(profile)=='compiled':
+    validate_profile(profile)
+    if profile == 'single_pass':
+        from single_pass_renderer import SinglePassRenderer
+        return SinglePassRenderer(os.environ['BORA_MODEL'],
+                                  max_new_tokens=recipe['max_new_tokens'], max_attempts=1)
+    if profile == 'compiled':
         from compiled_fp32_renderer import CompiledFP32Renderer as Renderer
     else:
         from fp32_renderer import FP32Renderer as Renderer
@@ -423,7 +453,7 @@ def close_renderer(renderer):
 
 def render(args, profile='eager'):
     campaign,recipe,request,ids=config(profile)
-    check(profile=='eager' or args.lesson_id in ids, 'compiled_lesson_scope')
+    check_lesson_scope(args, request, ids, profile)
     source_key,media_key=protected_keys(media=True,profile=profile)
     public,plan,_,row=matched_plan(args,campaign,recipe,request,source_key)
     del source_key
@@ -441,7 +471,7 @@ def render(args, profile='eager'):
     with tempfile.TemporaryDirectory(prefix='bora-private-',dir=os.environ.get('RUNNER_TEMP')) as td:
         work=Path(td)
         restored=restore(args.resume_dir,media_key,plan,recipe_hash,settings_hash,work/'restored',
-                         unit_range=(begin,end))
+                         unit_range=(begin,end),profile=profile)
         rows={i:v for i,v in restored.items() if begin<=i<end}
         pending=pending_units(rows,begin,end,request['retry_blocked'])
         renderer=None
@@ -495,23 +525,25 @@ def render(args, profile='eager'):
 
 def assemble(args, profile='eager'):
     campaign,recipe,request,ids=config(profile)
-    check(profile=='eager' or args.lesson_id in ids, 'compiled_lesson_scope')
+    check_lesson_scope(args, request, ids, profile)
     source_key,media_key=protected_keys(media=True,profile=profile)
     public,plan,payload,_=matched_plan(args,campaign,recipe,request,source_key)
     del source_key
     settings_hash=public['render_settings_sha256']; recipe_hash=identity(recipe)
     with tempfile.TemporaryDirectory(prefix='bora-assemble-',dir=os.environ.get('RUNNER_TEMP')) as td:
         work=Path(td)
-        restored=restore(args.resume_dir,media_key,plan,recipe_hash,settings_hash,work/'restored')
+        restored=restore(args.resume_dir,media_key,plan,recipe_hash,settings_hash,work/'restored',
+                         profile=profile)
         check(set(restored)==set(range(len(plan['units']))) and
               all(v['receipt'].get('status')=='passed' for v in restored.values()), 'lesson_not_complete')
         from assemble import assemble_lesson
+        assembly_policy = {'profile': profile} if profile == 'single_pass' else {}
         with quiet():
             metadata=assemble_lesson(plan,list(restored.values()),work/'assembled',
                 expected_recipe_sha256=recipe_hash,expected_render_settings_sha256=settings_hash,
                 title=payload['lesson'].get('title'),
                 unit_gap_ms=recipe['unit_gap_ms'],paragraph_gap_ms=recipe['paragraph_gap_ms'],
-                max_part_seconds=recipe['max_part_seconds'])
+                max_part_seconds=recipe['max_part_seconds'], **assembly_policy)
         pack_id=os.urandom(16).hex(); offset=0; parts=[]; ciphertext=[]
         for part in metadata['audio_parts']:
             raw=(work/'assembled'/part['file_name']).read_bytes()
@@ -541,9 +573,16 @@ def assemble(args, profile='eager'):
             duration_s=metadata['validation']['duration_s'],units=len(plan['units']),parts=len(parts))))
 
 
-def make_index(args):
+def make_index(args, profile='eager'):
     check(args.course in LIMITS,'index_course')
-    directory=Path(args.directory); tag='bora-fp32-'+args.course.lower()+'-v1-20261112'
+    validate_profile(profile)
+    check(profile!='compiled','compiled_course_index_forbidden')
+    directory=Path(args.directory)
+    if profile == 'single_pass':
+        from transport import tag_for
+        tag=tag_for(args.course, True, profile=profile)
+    else:
+        tag='bora-fp32-'+args.course.lower()+'-v1-20261112'
     expected={f'{args.course}-{i:03d}' for i in range(1,LIMITS[args.course]+1)}
     check({p.name.removesuffix('.descriptor.json') for p in directory.glob('*.descriptor.json')}==expected,
           'course_not_complete')
@@ -577,6 +616,7 @@ def preflight(args, profile='eager'):
     from assemble import assemble_lesson
     source='안녕하세요. 오늘은 차근차근 설명하겠습니다.'
     plan=build_plan('TB-002' if profile=='compiled' else 'TB-001',source)
+    assembly_policy = {'profile': profile} if profile == 'single_pass' else {}
     with tempfile.TemporaryDirectory(prefix='bora-public-',dir=os.environ.get('RUNNER_TEMP')) as td:
         work=Path(td)
         with quiet():
@@ -590,11 +630,15 @@ def preflight(args, profile='eager'):
                     receipt.update(lesson_id=plan['lesson_id'],unit_index=index,plan_sha256=identity(plan),recipe_sha256=identity(recipe))
                     entries.append(dict(unit_index=index,receipt=receipt,path=work/f'unit-{index}'/'final.wav'))
                 assemble_lesson(plan,entries,work/'assembled',expected_recipe_sha256=identity(recipe),
-                    expected_render_settings_sha256=renderer.settings_sha256,unit_gap_ms=180,paragraph_gap_ms=350)
+                    expected_render_settings_sha256=renderer.settings_sha256,unit_gap_ms=180,
+                    paragraph_gap_ms=350, **assembly_policy)
             finally:
                 close_renderer(renderer)
     result=dict(status='public_runtime_smoke_passed',course=request['course'],
         source_key_used=False,private_manuscript_read=False,render_settings_sha256=renderer.settings_sha256)
+    if profile == 'single_pass':
+        result.update(execution_profile=request['execution_profile'], asr_performed=False,
+                      max_attempts=1)
     atomic(args.output,enc(result)); print(json.dumps(result))
 
 
@@ -613,8 +657,13 @@ def main(profile='eager'):
     p=sub.add_parser('index'); p.add_argument('--directory',required=True); p.add_argument('--course',required=True)
     args=parser.parse_args()
     if args.command=='index':
-        check(profile=='eager','compiled_course_index_forbidden')
-        make_index(args)
+        check(profile!='compiled','compiled_course_index_forbidden')
+        if profile=='eager':
+            make_index(args)
+        else:
+            _,_,request,_=config(profile)
+            check(args.course==request['course'],'single_pass_index_course_scope')
+            make_index(args, profile=profile)
     else:
         {'preflight':preflight,'plan':public_plan,'probe':resume_probe,'render':render,'assemble':assemble}[args.command](args,profile=profile)
 

@@ -105,16 +105,19 @@ class TransportTests(unittest.TestCase):
         path.write_bytes(encoded(descriptor))
         return path
 
-    def course(self):
-        directory = self.root / 'final'
+    def course(self, course='TB', profile='eager', directory=None):
+        directory = directory or self.root / 'final'
+        tag = t.tag_for(course, True, profile=profile)
         lessons = []
-        for ident in t.course_ids('TB'):
-            path = self.triple(directory, ident)
+        for ident in t.course_ids(course):
+            path = directory / f'{ident}.descriptor.json'
+            if not path.is_file():
+                self.triple(directory, ident)
             lessons.append(dict(id=ident,
-                                descriptor_url=f'https://github.com/{t.REPOSITORY}/releases/download/{t.tag_for("TB", True)}/{path.name}',
+                                descriptor_url=f'https://github.com/{t.REPOSITORY}/releases/download/{tag}/{path.name}',
                                 sha256=hashlib.sha256(path.read_bytes()).hexdigest()))
         (directory / 'index.json').write_bytes(encoded(dict(version='integrated-lecture-index/v2',
-                                                          release_tag=t.tag_for('TB', True), count=25, lessons=lessons)))
+                                                          release_tag=tag, count=len(lessons), lessons=lessons)))
         return directory
 
     def test_keyless_guard_checks_name_even_if_empty(self):
@@ -262,6 +265,76 @@ class TransportTests(unittest.TestCase):
         with self.assertRaises(t.TransportError):
             t.validate_final_directory(directory, 'TB')
 
+    def test_single_pass_checkpoint_drafts_are_isolated_by_course_and_profile(self):
+        for course in t.COURSES:
+            source = self.root / course
+            original = self.bundle(source, ident=course + '-001')
+            tag = f'bora-fp32-{course.lower()}-single-pass-staging-20261114'
+            self.assertEqual(t.prepare(course, self.backend, profile='single_pass')['tag'], tag)
+            self.assertEqual(t.upload_directory(source, course, self.backend, profile='single_pass')['uploaded'], 1)
+            self.assertEqual(t.download_lesson(course + '-001', self.root / 'old' / course,
+                                              backend=self.backend)['downloaded'], 0)
+            recovered = self.root / 'new' / course
+            self.assertEqual(t.download_lesson(course + '-001', recovered,
+                                              backend=self.backend, profile='single_pass')['downloaded'], 1)
+            self.assertEqual((recovered / original.name).read_bytes(), original.read_bytes())
+            self.backend.release(tag)['draft'] = False
+            with self.assertRaisesRegex(t.TransportError, 'single_pass_staging_must_be_draft'):
+                t.prepare(course, self.backend, profile='single_pass')
+
+    def test_single_pass_partial_draft_resume_then_publish_complete_course(self):
+        source = self.root / 'uploads'
+        descriptor = self.triple(source, 'TB-001')
+        t.publish_directory(source, 'TB', partial=True, backend=self.backend)
+        recovered = self.root / 'collected'
+        self.assertEqual(t.collect_final('TB', recovered, 'TB-001', self.backend,
+                                         profile='single_pass')['collected'], [])
+        result = t.publish_directory(source, 'TB', partial=True, backend=self.backend, profile='single_pass')
+        final_tag = 'bora-fp32-tb-single-pass-v1-20261114'
+        self.assertEqual(result['tag'], final_tag)
+        self.assertFalse(result['activated_index'])
+        self.assertTrue(self.backend.release(final_tag)['draft'])
+        for _ in range(2):
+            self.assertEqual(t.collect_final('TB', recovered, 'TB-001', self.backend,
+                                             profile='single_pass')['collected'], ['TB-001'])
+        self.assertEqual((recovered / descriptor.name).read_bytes(), descriptor.read_bytes())
+        events = list(self.backend.events)
+        with self.assertRaisesRegex(t.TransportError, 'incomplete_course'):
+            t.publish_directory(recovered, 'TB', backend=self.backend, profile='single_pass')
+        self.assertEqual(self.backend.events, events)
+        full = self.course(profile='single_pass', directory=recovered)
+        with self.assertRaisesRegex(t.TransportError, 'index_scope'):
+            t.validate_final_directory(full, 'TB')
+        result = t.publish_directory(full, 'TB', backend=self.backend, profile='single_pass')
+        self.assertEqual((result['uploaded'], result['skipped']), (73, 3))
+        self.assertEqual(self.backend.events[-2:], [('upload', 'index.json'), ('publish', final_tag)])
+        self.assertFalse(self.backend.release(final_tag)['draft'])
+        with self.assertRaisesRegex(t.TransportError, 'course_already_finalized'):
+            t.publish_directory(source, 'TB', partial=True, backend=self.backend, profile='single_pass')
+
+    def test_single_pass_collect_validates_ciphertext_before_reuse(self):
+        source = self.root / 'source'
+        self.triple(source, 'MS-166')
+        result = t.publish_directory(source, 'MS', partial=True, backend=self.backend, profile='single_pass')
+        key = (result['tag'], next(source.glob('*.audio.*.bin')).name)
+        row, raw = self.backend.data[key]
+        self.backend.data[key] = (row, b'x' * len(raw))
+        recovered = self.root / 'recovered'
+        with self.assertRaisesRegex(t.TransportError, 'invalid_lesson_cipher_triple'):
+            t.collect_final('MS', recovered, 'MS-166', self.backend, profile='single_pass')
+        self.assertEqual(list(recovered.iterdir()), [])
+
+    def test_single_pass_mismatched_staged_descriptor_cannot_upload_new_objects(self):
+        source = self.root / 'source'
+        self.triple(source, 'TB-001')
+        t.publish_directory(source, 'TB', partial=True, backend=self.backend, profile='single_pass')
+        changed = self.root / 'changed'
+        self.triple(changed, 'TB-001')
+        events = list(self.backend.events)
+        with self.assertRaisesRegex(t.TransportError, 'immutable_asset_collision'):
+            t.publish_directory(changed, 'TB', partial=True, backend=self.backend, profile='single_pass')
+        self.assertEqual(self.backend.events, events)
+
     def test_remote_asset_url_is_never_trusted(self):
         self.bundle()
         t.upload_directory(self.root, 'TB', self.backend)
@@ -328,3 +401,4 @@ class TransportTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+

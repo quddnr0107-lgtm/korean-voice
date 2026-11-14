@@ -1,0 +1,315 @@
+name: Bora FP32 course production without speech recognition
+on:
+  push:
+    branches: [integrated-lectures-premium-20261028]
+    paths:
+      - 'bora-production/single-pass-request.json'
+permissions:
+  contents: read
+concurrency:
+  group: bora-fp32-single-pass-${{ github.ref }}
+  cancel-in-progress: false
+env:
+  OMP_NUM_THREADS: '4'
+  OPENBLAS_NUM_THREADS: '4'
+  HF_HUB_DISABLE_PROGRESS_BARS: '1'
+  HF_HUB_DISABLE_TELEMETRY: '1'
+  DO_NOT_TRACK: '1'
+  ORT_DISABLE_TELEMETRY: '1'
+
+jobs:
+  preflight:
+    if: github.repository == 'quddnr0107-lgtm/korean-voice' && github.ref == 'refs/heads/integrated-lectures-premium-20261028' && github.event_name == 'push'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    outputs:
+      course: ${{ steps.checked.outputs.course }}
+      render_settings_sha256: ${{ steps.checked.outputs.render_settings_sha256 }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Select CPU wait policy without source or media keys
+        run: python bora-production/cpu_wait_policy.py
+      - name: Install the pinned runtime without source or media keys
+        run: bash bora-production/setup_single_pass_runtime.sh
+      - name: Check producer, checkpoint, transport and assembly contracts
+        run: python -m unittest discover -s bora-production -p 'test_*.py'
+      - name: Download exact revision-pinned models without keys
+        run: bash bora-production/download_single_pass_model.sh
+      - name: Exercise real FP32 speech and assembly without recognition offline with a public sentence
+        run: |
+          umask 077
+          export BORA_HOST_NETNS="$(readlink /proc/self/ns/net)"
+          sudo --preserve-env=BORA_HOST_NETNS,BORA_MODEL,MKL_NUM_THREADS,OMP_NUM_THREADS,OPENBLAS_NUM_THREADS,OMP_WAIT_POLICY,GOMP_SPINCOUNT,KMP_BLOCKTIME,ORT_DISABLE_TELEMETRY,HF_HUB_DISABLE_TELEMETRY,DO_NOT_TRACK,RUNNER_TEMP \
+            unshare --net --setgid "$(id -g)" --setuid "$(id -u)" -- "$(command -v python)" \
+            bora-production/single_pass_runtime.py preflight --output "$RUNNER_TEMP/bora-runtime-smoke.json"
+      - id: checked
+        name: Export only the verified public course and settings fingerprint
+        run: |
+          python - <<'PY'
+          import json, os, re
+          from pathlib import Path
+          result = json.loads((Path(os.environ['RUNNER_TEMP'])/'bora-runtime-smoke.json').read_text())
+          assert result['status'] == 'public_runtime_smoke_passed'
+          assert result['source_key_used'] is False and result['private_manuscript_read'] is False
+          assert result['course'] in ('TB', 'DR', 'RL', 'MS')
+          assert result['execution_profile'] == 'bora-python-fp32-single-pass/v1'
+          assert result['asr_performed'] is False and result['max_attempts'] == 1
+          assert re.fullmatch('[a-f0-9]{64}', result['render_settings_sha256'])
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write('course='+result['course']+'\n')
+              output.write('render_settings_sha256='+result['render_settings_sha256']+'\n')
+          PY
+
+  plan:
+    needs: preflight
+    if: needs.preflight.result == 'success'
+    runs-on: ubuntu-24.04
+    environment: admin-law-premium-production
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      lessons: ${{ steps.plan.outputs.lessons }}
+      course: ${{ steps.plan.outputs.course }}
+      plan_artifact_id: ${{ steps.public_plan.outputs.artifact-id }}
+      complete_course: ${{ steps.plan.outputs.complete_course }}
+    env:
+      BORA_COURSE: ${{ needs.preflight.outputs.course }}
+      BORA_SETTINGS_SHA256: ${{ needs.preflight.outputs.render_settings_sha256 }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Install only source-envelope cryptography without keys
+        run: python -m pip install --disable-pip-version-check cryptography==50.0.0
+      - id: plan
+        name: Authenticate sealed sources and emit an offline plan without manuscript text
+        env:
+          ADMIN_LAW_PREMIUM_SOURCE_KEY_B64: ${{ secrets.ADMIN_LAW_PREMIUM_SOURCE_KEY_B64 }}
+        run: |
+          umask 077
+          export BORA_HOST_NETNS="$(readlink /proc/self/ns/net)"
+          sudo --preserve-env=ADMIN_LAW_PREMIUM_SOURCE_KEY_B64,BORA_HOST_NETNS,GITHUB_REPOSITORY,GITHUB_EVENT_NAME,GITHUB_REF,GITHUB_WORKFLOW_REF,GITHUB_RUN_ID,GITHUB_RUN_ATTEMPT,RUNNER_TEMP \
+            unshare --net --setgid "$(id -g)" --setuid "$(id -u)" -- "$(command -v python)" \
+            bora-production/single_pass_runtime.py plan --output "$RUNNER_TEMP/bora-plan/public-plan.json" \
+            --github-output "$GITHUB_OUTPUT" --settings-sha "$BORA_SETTINGS_SHA256"
+      - name: Prepare the separate ciphertext staging release without source or media keys
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python bora-production/transport.py prepare --profile single_pass --course "$BORA_COURSE"
+      - id: public_plan
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: bora-single-pass-plan-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/bora-plan/public-plan.json
+          retention-days: 1
+          if-no-files-found: error
+
+  render:
+    needs: plan
+    if: needs.plan.result == 'success'
+    runs-on: ubuntu-24.04
+    environment: admin-law-premium-production
+    timeout-minutes: 360
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      max-parallel: 40
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    env:
+      BORA_COURSE: ${{ needs.plan.outputs.course }}
+      BORA_LESSON: ${{ matrix.lesson_id }}
+      BORA_SHARD: ${{ matrix.shard }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: ${{ needs.plan.outputs.plan_artifact_id }}
+          merge-multiple: true
+          path: ${{ runner.temp }}/bora-plan
+      - name: Install only checkpoint cryptography without keys
+        run: python -m pip install --disable-pip-version-check cryptography==50.0.0
+      - name: Download previous encrypted checkpoints without source or media keys
+        timeout-minutes: 10
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python bora-production/transport.py download --profile single_pass --course "$BORA_COURSE" --lesson "$BORA_LESSON" --out "$RUNNER_TEMP/bora-resume"
+      - id: probe
+        name: Authenticate reusable units offline before model preparation
+        timeout-minutes: 15
+        env:
+          ADMIN_LAW_PREMIUM_SOURCE_KEY_B64: ${{ secrets.ADMIN_LAW_PREMIUM_SOURCE_KEY_B64 }}
+          ADMIN_LAW_PREMIUM_MEDIA_KEY_B64: ${{ secrets.ADMIN_LAW_PREMIUM_MEDIA_KEY_B64 }}
+        run: |
+          umask 077
+          export BORA_HOST_NETNS="$(readlink /proc/self/ns/net)"
+          sudo --preserve-env=ADMIN_LAW_PREMIUM_SOURCE_KEY_B64,ADMIN_LAW_PREMIUM_MEDIA_KEY_B64,BORA_HOST_NETNS,GITHUB_REPOSITORY,GITHUB_EVENT_NAME,GITHUB_REF,GITHUB_WORKFLOW_REF,GITHUB_RUN_ID,GITHUB_RUN_ATTEMPT,RUNNER_TEMP \
+            unshare --net --setgid "$(id -g)" --setuid "$(id -u)" -- "$(command -v python)" \
+            bora-production/single_pass_runtime.py probe --lesson-id "$BORA_LESSON" --shard "$BORA_SHARD" \
+            --plan "$RUNNER_TEMP/bora-plan/public-plan.json" --resume-dir "$RUNNER_TEMP/bora-resume" \
+            --output "$RUNNER_TEMP/bora-probe.json" --github-output "$GITHUB_OUTPUT"
+      - name: Select CPU wait policy only for missing units without keys
+        if: steps.probe.outputs.needs_synthesis == 'true'
+        run: python bora-production/cpu_wait_policy.py
+      - name: Install the checked runtime only for missing units without keys
+        if: steps.probe.outputs.needs_synthesis == 'true'
+        timeout-minutes: 20
+        run: bash bora-production/setup_single_pass_runtime.sh
+      - name: Download pinned local models only for missing units without keys
+        if: steps.probe.outputs.needs_synthesis == 'true'
+        timeout-minutes: 20
+        run: bash bora-production/download_single_pass_model.sh
+      - id: render
+        if: steps.probe.outputs.needs_synthesis == 'true'
+        name: Render and authenticate units offline with immediate encrypted checkpoints
+        # runtime stops at its 270-minute soft budget; this step leaves time to
+        # upload already sealed checkpoints before the 360-minute job ceiling.
+        timeout-minutes: 285
+        env:
+          ADMIN_LAW_PREMIUM_SOURCE_KEY_B64: ${{ secrets.ADMIN_LAW_PREMIUM_SOURCE_KEY_B64 }}
+          ADMIN_LAW_PREMIUM_MEDIA_KEY_B64: ${{ secrets.ADMIN_LAW_PREMIUM_MEDIA_KEY_B64 }}
+        run: |
+          umask 077
+          export BORA_HOST_NETNS="$(readlink /proc/self/ns/net)"
+          sudo --preserve-env=ADMIN_LAW_PREMIUM_SOURCE_KEY_B64,ADMIN_LAW_PREMIUM_MEDIA_KEY_B64,BORA_HOST_NETNS,BORA_MODEL,MKL_NUM_THREADS,OMP_NUM_THREADS,OPENBLAS_NUM_THREADS,OMP_WAIT_POLICY,GOMP_SPINCOUNT,KMP_BLOCKTIME,ORT_DISABLE_TELEMETRY,HF_HUB_DISABLE_TELEMETRY,DO_NOT_TRACK,GITHUB_REPOSITORY,GITHUB_EVENT_NAME,GITHUB_REF,GITHUB_WORKFLOW_REF,GITHUB_RUN_ID,GITHUB_RUN_ATTEMPT,RUNNER_TEMP \
+            unshare --net --setgid "$(id -g)" --setuid "$(id -u)" -- "$(command -v python)" \
+            bora-production/single_pass_runtime.py render --lesson-id "$BORA_LESSON" --shard "$BORA_SHARD" \
+            --plan "$RUNNER_TEMP/bora-plan/public-plan.json" --resume-dir "$RUNNER_TEMP/bora-resume" \
+            --output "$RUNNER_TEMP/bora-cipher"
+      - name: Preserve ciphertext checkpoints even after a render failure
+        if: ${{ always() && steps.render.outcome != 'skipped' }}
+        timeout-minutes: 15
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python bora-production/transport.py upload --profile single_pass --course "$BORA_COURSE" --directory "$RUNNER_TEMP/bora-cipher"
+
+  assemble:
+    needs: [plan, render]
+    # A failed shard cannot cancel complete lessons. The offline assembler must
+    # independently authenticate complete coverage before its output can leave.
+    if: ${{ always() && !cancelled() && needs.plan.result == 'success' }}
+    runs-on: ubuntu-24.04
+    environment: admin-law-premium-production
+    timeout-minutes: 45
+    # Staging remains a draft release; reading its inventory requires push access.
+    # This token is exposed only to the keyless download step below.
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      max-parallel: 40
+      matrix: ${{ fromJSON(needs.plan.outputs.lessons) }}
+    env:
+      BORA_COURSE: ${{ needs.plan.outputs.course }}
+      BORA_LESSON: ${{ matrix.lesson_id }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: ${{ needs.plan.outputs.plan_artifact_id }}
+          merge-multiple: true
+          path: ${{ runner.temp }}/bora-plan
+      - name: Install only encoders, arrays and cryptography without keys
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install --yes --no-install-recommends ffmpeg
+          python -m pip install --disable-pip-version-check numpy==2.5.4 cryptography==50.0.0
+          python -m pip check
+      - id: lesson_staged
+        name: Reuse a verified completed encrypted lesson from this course draft
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          python bora-production/transport.py collect-final --profile single_pass --course "$BORA_COURSE" --lesson "$BORA_LESSON" --out "$RUNNER_TEMP/bora-existing"
+          if [[ -s "$RUNNER_TEMP/bora-existing/$BORA_LESSON.descriptor.json" ]]; then
+            printf '%s\n' 'staged=true' >> "$GITHUB_OUTPUT"
+          fi
+      - name: Download all encrypted checkpoints for this lesson without source or media keys
+        if: steps.lesson_staged.outputs.staged != 'true'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python bora-production/transport.py download --profile single_pass --course "$BORA_COURSE" --lesson "$BORA_LESSON" --out "$RUNNER_TEMP/bora-resume"
+      - name: Verify full lesson coverage and seal final audio and manuscript offline
+        if: steps.lesson_staged.outputs.staged != 'true'
+        env:
+          ADMIN_LAW_PREMIUM_SOURCE_KEY_B64: ${{ secrets.ADMIN_LAW_PREMIUM_SOURCE_KEY_B64 }}
+          ADMIN_LAW_PREMIUM_MEDIA_KEY_B64: ${{ secrets.ADMIN_LAW_PREMIUM_MEDIA_KEY_B64 }}
+        run: |
+          umask 077
+          export BORA_HOST_NETNS="$(readlink /proc/self/ns/net)"
+          sudo --preserve-env=ADMIN_LAW_PREMIUM_SOURCE_KEY_B64,ADMIN_LAW_PREMIUM_MEDIA_KEY_B64,BORA_HOST_NETNS,GITHUB_REPOSITORY,GITHUB_EVENT_NAME,GITHUB_REF,GITHUB_WORKFLOW_REF,GITHUB_RUN_ID,GITHUB_RUN_ATTEMPT,RUNNER_TEMP \
+            unshare --net --setgid "$(id -g)" --setuid "$(id -u)" -- "$(command -v python)" \
+            bora-production/single_pass_runtime.py assemble --lesson-id "$BORA_LESSON" \
+            --plan "$RUNNER_TEMP/bora-plan/public-plan.json" --resume-dir "$RUNNER_TEMP/bora-resume" \
+            --output "$RUNNER_TEMP/bora-assembled"
+      - name: Stage the complete encrypted lesson in the course draft
+        if: steps.lesson_staged.outputs.staged != 'true'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python bora-production/transport.py publish --profile single_pass --partial --course "$BORA_COURSE" --directory "$RUNNER_TEMP/bora-assembled"
+
+  publish:
+    needs: [plan, assemble]
+    if: ${{ always() && !cancelled() && needs.plan.result == 'success' && needs.assemble.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: write
+    env:
+      BORA_COURSE: ${{ needs.plan.outputs.course }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Install public envelope validators without source or media keys
+        run: python -m pip install --disable-pip-version-check cryptography==50.0.0
+      - id: gathered
+        name: Verify completed encrypted lessons from the course draft
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          python bora-production/transport.py collect-final --profile single_pass --course "$BORA_COURSE" --out "$RUNNER_TEMP/bora-course" > "$RUNNER_TEMP/bora-final-inventory.json"
+          cat "$RUNNER_TEMP/bora-final-inventory.json"
+          python - <<'PY_INVENTORY'
+          import json, os
+          from pathlib import Path
+          json.loads((Path(os.environ['RUNNER_TEMP']) / 'bora-final-inventory.json').read_text())
+          counts = {'TB': 25, 'RL': 34, 'DR': 78, 'MS': 166}
+          course = os.environ['BORA_COURSE']
+          folder = Path(os.environ['RUNNER_TEMP']) / 'bora-course'
+          have = sum(1 for f in folder.glob('*.descriptor.json'))
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              print(f'complete={str(have == counts[course]).lower()}', file=f)
+          PY_INVENTORY
+      - name: Create an index only when the entire requested course is complete
+        if: steps.gathered.outputs.complete == 'true'
+        run: python bora-production/single_pass_runtime.py index --course "$BORA_COURSE" --directory "$RUNNER_TEMP/bora-course"
+      - name: Publish the complete encrypted course with its index last
+        if: steps.gathered.outputs.complete == 'true'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python bora-production/transport.py publish --profile single_pass --course "$BORA_COURSE" --directory "$RUNNER_TEMP/bora-course"
+

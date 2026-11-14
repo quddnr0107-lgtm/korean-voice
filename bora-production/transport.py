@@ -1,4 +1,4 @@
-"""Keyless, immutable release transport for FP32 production and the TB-002 pilot.
+"""Keyless, immutable release transport for FP32 production profiles.
 
 Only schema-checked ciphertext leaves the runner. No source/media keys, deletion,
 clobber, arbitrary repositories, URLs, tags or command execution are supported.
@@ -30,17 +30,20 @@ from lecture_pack import validate_pack
 REPOSITORY = 'quddnr0107-lgtm/korean-voice'
 COURSES = {'TB': 25, 'RL': 34, 'DR': 78, 'MS': 166}
 KEY_ID = 'integrated-lectures-media-v1'
-PROFILES = ('eager', 'compiled')
+PROFILES = ('eager', 'compiled', 'single_pass')
 COMPILED_LESSON = 'TB-002'
 COMPILED_STAGING_TAG = 'bora-fp32-tb-compiled-pilot-staging-20261114'
 MAX_BUNDLE = 1024 * 1024 * 1024
 MAX_MEMBER = 256 * 1024 * 1024
+FINAL_OBJECT_CAPS = {'audio': 128 * 1024 * 1024, 'content': 9 * 1024 * 1024}
+DESCRIPTOR_CAP = 512 * 1024
 REPORT_FIELDS = {'schema', 'lesson_id', 'shard', 'start', 'end', 'passed', 'blocked', 'pending',
                  'timed_out', 'recipe_sha256', 'plan_sha256', 'render_settings_sha256', 'run_id', 'run_attempt'}
 ENVELOPE_FIELDS = {'version', 'lesson_id', 'unit_index', 'plan_sha256', 'recipe_sha256',
                    'render_settings_sha256', 'manifest', 'cipher_b64'}
 BUNDLE_RE = re.compile(r'(?P<lesson>(?:TB|RL|DR|MS)-[0-9]{3})-s(?P<shard>[0-9]{3})-r(?P<run>[1-9][0-9]{0,19})-a(?P<attempt>[1-9][0-9]{0,9})\.zip')
 HASH_RE = re.compile(r'[a-f0-9]{64}')
+FINAL_ASSET_RE = re.compile(r'(?P<lesson>(?:TB|RL|DR|MS)-[0-9]{3})\.(?:descriptor\.json|(?:audio|content)\.[a-f0-9]{32}\.bin)')
 
 
 class TransportError(ValueError):
@@ -76,6 +79,8 @@ def tag_for(course, final=False, *, profile='eager'):
     _profile(course, profile, final)
     if profile == 'compiled':
         return COMPILED_STAGING_TAG
+    if profile == 'single_pass':
+        return f'bora-fp32-{course.lower()}-single-pass-{"v1" if final else "staging"}-20261114'
     return f'bora-fp32-{course.lower()}-{"v1" if final else "staging"}-20261112'
 
 
@@ -212,7 +217,23 @@ def _asset_url(url, *, host, path):
             and parsed.path == path and not parsed.query and not parsed.fragment, 'asset_url')
 
 
-def validate_final_directory(directory, course, partial=False):
+def _read_descriptor(path, ident):
+    require(0 < path.stat().st_size <= DESCRIPTOR_CAP, 'descriptor_size')
+    descriptor = _json(path.read_bytes())
+    _keys(descriptor, {'version', 'lesson_id', 'audio', 'content'})
+    require(descriptor['version'] == 'integrated-lecture-output/v2' and descriptor['lesson_id'] == ident,
+            'descriptor_scope')
+    objects = {}
+    for kind in FINAL_OBJECT_CAPS:
+        manifest = descriptor[kind]
+        require(isinstance(manifest, dict) and isinstance(manifest.get('object_id'), str)
+                and re.fullmatch(r'[a-f0-9]{32}', manifest['object_id']), 'descriptor_object_id')
+        objects[kind] = f'{ident}.{kind}.{manifest["object_id"]}.bin'
+    return descriptor, objects
+
+
+def validate_final_directory(directory, course, partial=False, *, profile='eager'):
+    tag = tag_for(course, True, profile=profile)
     directory = _safe(directory)
     require(directory.is_dir(), 'final_directory')
     files = {p.name: p for p in directory.iterdir()}
@@ -225,24 +246,18 @@ def validate_final_directory(directory, course, partial=False):
             continue
         ident = match[1]
         _lesson(ident, course)
-        require(path.stat().st_size <= 512 * 1024, 'descriptor_size')
-        descriptor = _json(path.read_bytes())
-        _keys(descriptor, {'version', 'lesson_id', 'audio', 'content'})
-        require(descriptor['version'] == 'integrated-lecture-output/v2' and descriptor['lesson_id'] == ident,
-                'descriptor_scope')
+        descriptor, objects = _read_descriptor(path, ident)
         try:
-            audio_name = f"{ident}.audio.{descriptor['audio']['object_id']}.bin"
-            content_name = f"{ident}.content.{descriptor['content']['object_id']}.bin"
-            require(audio_name in files and content_name in files, 'incomplete_lesson_triple')
-            require(files[audio_name].stat().st_size <= 128 * 1024 * 1024
-                    and files[content_name].stat().st_size <= 9 * 1024 * 1024, 'final_cipher_size')
-            validate_pack(descriptor['audio'], files[audio_name].read_bytes())
+            require(all(name in files for name in objects.values()), 'incomplete_lesson_triple')
+            require(all(files[name].stat().st_size <= FINAL_OBJECT_CAPS[kind]
+                        for kind, name in objects.items()), 'final_cipher_size')
+            validate_pack(descriptor['audio'], files[objects['audio']].read_bytes())
             require(descriptor['audio']['lesson_id'] == ident, 'audio_lesson_scope')
-            _cipher(descriptor['content'], files[content_name].read_bytes(), ident, 'private-metadata')
+            _cipher(descriptor['content'], files[objects['content']].read_bytes(), ident, 'private-metadata')
         except (ValueError, TypeError, KeyError):
             raise TransportError('invalid_lesson_cipher_triple') from None
         descriptors[ident] = path
-        allowed.update((name, audio_name, content_name))
+        allowed.update((name, *objects.values()))
     require(descriptors, 'no_complete_lessons')
     if partial:
         require('index.json' not in files and set(files) == allowed, 'partial_requires_cipher_triples_only')
@@ -252,7 +267,7 @@ def validate_final_directory(directory, course, partial=False):
         require(files['index.json'].stat().st_size <= 128 * 1024, 'index_size')
         index = _json(files['index.json'].read_bytes())
         _keys(index, {'version', 'release_tag', 'count', 'lessons'})
-        require(index['version'] == 'integrated-lecture-index/v2' and index['release_tag'] == tag_for(course, True)
+        require(index['version'] == 'integrated-lecture-index/v2' and index['release_tag'] == tag
                 and type(index['count']) is int and index['count'] == COURSES[course]
                 and isinstance(index['lessons'], list) and len(index['lessons']) == COURSES[course], 'index_scope')
         seen = set()
@@ -262,7 +277,7 @@ def validate_final_directory(directory, course, partial=False):
             require(ident in descriptors and ident not in seen and row['sha256'] == _sha(descriptors[ident]),
                     'index_descriptor_pin')
             _asset_url(row['descriptor_url'], host='github.com',
-                       path=f'/{REPOSITORY}/releases/download/{tag_for(course, True)}/{ident}.descriptor.json')
+                       path=f'/{REPOSITORY}/releases/download/{tag}/{ident}.descriptor.json')
             seen.add(ident)
         require(seen == set(course_ids(course)), 'index_coverage')
     # Immutable cipher objects first, descriptors next, the activation index last.
@@ -385,6 +400,8 @@ def _staging_release(backend, course, profile, create=False):
     # release at its isolated tag. Never fall back to an eager or final release.
     if profile == 'compiled' and release is not None:
         require(release.get('draft') is True, 'compiled_release_must_be_draft')
+    if profile == 'single_pass' and release is not None:
+        require(release.get('draft') is True, 'single_pass_staging_must_be_draft')
     return release
 
 
@@ -395,6 +412,13 @@ def _staging_assets(backend, release, profile):
             match = BUNDLE_RE.fullmatch(name)
             require(match is not None and match['lesson'] == COMPILED_LESSON,
                     'compiled_staging_asset_scope')
+    if profile == 'single_pass':
+        course = release['tag_name'].split('-')[2].upper()
+        ids = set(course_ids(course))
+        for name in assets:
+            match = BUNDLE_RE.fullmatch(name)
+            require(match is not None and match['lesson'] in ids,
+                    'single_pass_staging_asset_scope')
     return assets
 
 
@@ -494,14 +518,93 @@ def download_lesson(lesson_id, out, course=None, backend=None, *, profile='eager
     return dict(status='downloaded', lesson_id=lesson_id, downloaded=downloaded, skipped=skipped)
 
 
+def _final_assets(backend, release, course):
+    assets = _assets(backend, release)
+    require(type(release.get('draft')) is bool
+            and (release['draft'] or 'index.json' in assets), 'final_release_state')
+    ids = set(course_ids(course))
+    for name in assets:
+        if name != 'index.json':
+            match = FINAL_ASSET_RE.fullmatch(name)
+            require(match is not None and match['lesson'] in ids, 'final_asset_scope')
+    return assets
+
+
+def _fetch_final_object(backend, asset, destination, cap):
+    require(asset['size'] <= cap, 'final_asset_size')
+    backend.download(asset, destination)
+    require(destination.is_file() and not destination.is_symlink()
+            and destination.stat().st_size == asset['size'], 'download_size')
+    digest = asset.get('digest')
+    if digest is not None:
+        require(digest == 'sha256:' + _sha(destination), 'final_asset_digest')
+
+
+def collect_final(course, out, lesson_id=None, backend=None, *, profile='eager'):
+    """Recover complete immutable encrypted triples from the single-pass final tag.
+
+    The descriptor is uploaded last per lesson. Uncommitted binaries from an
+    interrupted upload are not reused. A corrupt committed triple stops collection.
+    """
+    assert_keyless()
+    require(profile == 'single_pass', 'collect_final_profile_scope')
+    ids = course_ids(course)
+    if lesson_id is not None:
+        _profile_lesson(lesson_id, course, profile)
+        ids = [lesson_id]
+    destination = _safe(out)
+    require(not destination.exists() or destination.is_dir(), 'download_directory')
+    backend = backend or GitHubBackend()
+    release = _release(backend, tag_for(course, True, profile=profile))
+    destination.mkdir(parents=True, exist_ok=True, mode=0o700)
+    if release is None:
+        return dict(status='no_completed_lessons', course=course, collected=[])
+    assets = _final_assets(backend, release, course)
+    collected = []
+    for ident in ids:
+        name = f'{ident}.descriptor.json'
+        if name not in assets:
+            continue
+        with tempfile.TemporaryDirectory(prefix='.collect-', dir=destination) as temp:
+            staging = Path(temp)
+            descriptor = staging / name
+            _fetch_final_object(backend, assets[name], descriptor, DESCRIPTOR_CAP)
+            _, objects = _read_descriptor(descriptor, ident)
+            for kind, filename in objects.items():
+                require(filename in assets, 'incomplete_lesson_triple')
+                _fetch_final_object(backend, assets[filename], staging / filename, FINAL_OBJECT_CAPS[kind])
+            files = validate_final_directory(staging, course, partial=True, profile=profile)
+            targets = [_safe(destination / path.name) for path in files]
+            # Validate any existing local generation before linking missing files.
+            for path, target in zip(files, targets):
+                if target.exists():
+                    require(target.is_file() and _sha(target) == _sha(path), 'local_final_collision')
+            for path, target in zip(files, targets):
+                try:
+                    os.link(path, target)
+                except FileExistsError:
+                    require(target.is_file() and not target.is_symlink() and _sha(target) == _sha(path),
+                            'local_final_collision')
+            collected.append(ident)
+    return dict(status='collected', course=course, collected=collected)
+
+
 def publish_directory(directory, course, partial=False, backend=None, *, profile='eager'):
     assert_keyless()
-    _profile(course, profile, final=True)
-    files = validate_final_directory(directory, course, partial)
+    tag = tag_for(course, True, profile=profile)
+    files = validate_final_directory(directory, course, partial, profile=profile)
     backend = backend or GitHubBackend()
-    release = _release(backend, tag_for(course, True), create=True)
-    assets = _assets(backend, release)
+    release = _release(backend, tag, create=True)
+    assets = _final_assets(backend, release, course) if profile == 'single_pass' else _assets(backend, release)
     require(not partial or 'index.json' not in assets, 'course_already_finalized')
+    if profile == 'single_pass':
+        if release['draft'] is False:
+            require(all(path.name in assets for path in files), 'final_release_missing_assets')
+        # Reject a different immutable descriptor before uploading its new audio
+        # or content objects. Concurrent jobs may finish distinct lessons.
+        for path in files:
+            if path.name.endswith('.descriptor.json') and path.name in assets:
+                _same_remote(backend, assets[path.name], path)
     # Detect an immutable index conflict before any new upload side effect.
     if not partial and 'index.json' in assets:
         _same_remote(backend, assets['index.json'], Path(directory) / 'index.json')
@@ -516,7 +619,7 @@ def publish_directory(directory, course, partial=False, backend=None, *, profile
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest='command', required=True)
-    for name in ('prepare', 'upload', 'download', 'publish'):
+    for name in ('prepare', 'upload', 'download', 'publish', 'collect-final'):
         sub = commands.add_parser(name)
         sub.add_argument('--course', choices=COURSES, required=name != 'download')
         sub.add_argument('--profile', choices=PROFILES, default='eager')
@@ -524,6 +627,9 @@ def main(argv=None):
             sub.add_argument('--directory', required=True, type=Path)
         if name == 'download':
             sub.add_argument('--lesson', required=True)
+        if name == 'collect-final':
+            sub.add_argument('--lesson')
+        if name in ('download', 'collect-final'):
             sub.add_argument('--out', required=True, type=Path)
         if name == 'publish':
             sub.add_argument('--partial', action='store_true')
@@ -532,6 +638,7 @@ def main(argv=None):
         if args.command == 'prepare': result = prepare(args.course, profile=args.profile)
         elif args.command == 'upload': result = upload_directory(args.directory, args.course, profile=args.profile)
         elif args.command == 'download': result = download_lesson(args.lesson, args.out, args.course, profile=args.profile)
+        elif args.command == 'collect-final': result = collect_final(args.course, args.out, args.lesson, profile=args.profile)
         else: result = publish_directory(args.directory, args.course, args.partial, profile=args.profile)
     except (TransportError, OSError, KeyError, TypeError) as error:
         code = str(error) if isinstance(error, TransportError) else 'transport_failed'

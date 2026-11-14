@@ -135,6 +135,51 @@ class AssemblyTests(unittest.TestCase):
         validate_pack(pack, b''.join(blobs))
         self.assertEqual(pack['total_samples'], metadata['total_samples'])
 
+    def single_pass_entries(self):
+        settings = dict(self.settings, execution_profile='single-pass-no-asr',
+                        transcript_gate='not_run_single_pass_no_asr/v1', seeds=[5192],
+                        asr=dict(status='not_run', performed=False))
+        settings_hash = identity(settings)
+        entries = copy.deepcopy(self.entries)
+        for unit, row in zip(self.plan['units'], entries):
+            row['receipt'].update(render_settings=settings, render_settings_sha256=settings_hash,
+                unit_key=identity(dict(unit=unit, render_settings_sha256=settings_hash)),
+                asr=dict(status='not_run', performed=False), seed=5192,
+                candidates=[dict(seed=5192, natural_eos=True, cap_reached=False, eos_seen=True,
+                    generated_sequence_tokens=300, eos_token_id=151645, last_token=151645,
+                    asr=dict(status='not_run', performed=False), signal=dict(blocked=False))])
+        return entries, settings_hash
+
+    def test_single_pass_requires_explicit_profile_and_truthfully_labels_output(self):
+        entries, settings_hash = self.single_pass_entries()
+        with self.assertRaisesRegex(AssemblyError, 'receipt_transcript_gate'):
+            validate_entries(self.plan, entries, self.recipe_hash, settings_hash)
+        with self.assertRaisesRegex(AssemblyError, 'receipt_single_pass_asr_marker'):
+            validate_entries(self.plan, self.entries, self.recipe_hash, self.settings_hash,
+                             profile='single_pass')
+        metadata = assemble_lesson(self.plan, entries, self.root / 'single-pass',
+                                   **dict(self.args, expected_render_settings_sha256=settings_hash),
+                                   profile='single_pass')
+        self.assertFalse(metadata['asr_verified'])
+        self.assertTrue(metadata['asr_scope'].startswith('not run;'))
+        self.assertTrue(metadata['automatic_unit_checks_passed'])
+
+    def test_single_pass_rejects_second_attempt_forged_asr_or_invalid_eos(self):
+        for field, value, code in (
+                ('candidates', None, 'receipt_single_pass_attempt'),
+                ('asr', dict(status='not_run', performed=0), 'receipt_single_pass_asr_marker'),
+                ('natural_eos', False, 'receipt_missing_natural_eos'),
+                ('cap_reached', True, 'candidate_single_pass_eos')):
+            entries, settings_hash = self.single_pass_entries()
+            receipt = entries[0]['receipt']
+            target = receipt['candidates'][0] if field == 'cap_reached' else receipt
+            if field == 'candidates':
+                value = receipt['candidates'] * 2
+            target[field] = value
+            with self.subTest(field=field), self.assertRaisesRegex(AssemblyError, code):
+                validate_entries(self.plan, entries, self.recipe_hash, settings_hash,
+                                 profile='single_pass')
+
     def test_missing_duplicate_out_of_range_or_bool_index_rejected(self):
         bad = [self.entries[:-1], [self.entries[0]] * len(self.entries)]
         for index in (-1, len(self.entries), True):

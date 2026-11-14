@@ -7,7 +7,7 @@ set metadata.audio_pack_sha256 to the resulting ciphertext pack hash, and seal
 the metadata with lecture_crypto.seal(..., kind='private-metadata').
 
 Input rows are {unit_index, path, receipt}; receipt has already been authenticated
-by the caller. Hashes, acceptance, transcript/EOS gates, source coverage, actual
+by the caller. Hashes, profile-specific acceptance, EOS, source coverage, actual
 WAV samples and the final MP3 decode are independently checked here. The target
 directory must not exist; only a fully verified result is atomically published
 to that LOCAL directory. No human listening approval is inferred from these
@@ -43,6 +43,10 @@ PLAN_SCHEMA = 'kim-bora-production-paragraph-plan/v1'
 PLAN_SCHEMAS = {PLAN_SCHEMA, 'kim-bora-paragraph-plan/v1'}
 RECEIPT_SCHEMA = 'bora-fp32-unit-receipt/v1'
 ASSEMBLY_SCHEMA = 'bora-fp32-assembly/v1'
+SINGLE_PASS_SETTINGS = {
+    'execution_profile': 'single-pass-no-asr',
+    'transcript_gate': 'not_run_single_pass_no_asr/v1',
+}
 
 
 class AssemblyError(ValueError):
@@ -147,8 +151,16 @@ def _safe_path(path):
     return path
 
 
-def validate_entries(plan, entries, expected_recipe_sha256, expected_render_settings_sha256):
+def _asr_skipped(value):
+    return (isinstance(value, dict) and set(value) == {'status', 'performed'}
+            and value['status'] == 'not_run' and value['performed'] is False)
+
+
+def validate_entries(plan, entries, expected_recipe_sha256, expected_render_settings_sha256,
+                     *, profile='eager'):
     """Return rows in source order; input order itself may be arbitrary."""
+    _require(profile in ('eager', 'compiled', 'single_pass'), 'assembly_profile')
+    single_pass = profile == 'single_pass'
     validated = validate_plan(plan)
     _require(_hash(expected_recipe_sha256) and _hash(expected_render_settings_sha256), 'expected_pins')
     _require(isinstance(entries, (list, tuple)) and len(entries) == len(validated), 'entry_count')
@@ -170,9 +182,28 @@ def validate_entries(plan, entries, expected_recipe_sha256, expected_render_sett
                  'receipt_review_only')
         _require(receipt.get('natural_eos') is True, 'receipt_missing_natural_eos')
         asr = receipt.get('asr', {})
-        _require(isinstance(asr, dict) and asr.get('blocked') is False
-                 and asr.get('review_required') is False and type(asr.get('character_errors')) is int
-                 and asr['character_errors'] == 0 and asr.get('missing_critical') == [], 'receipt_transcript_gate')
+        if single_pass:
+            _require(_asr_skipped(asr), 'receipt_single_pass_asr_marker')
+            candidates = receipt.get('candidates')
+            _require(isinstance(candidates, list) and len(candidates) == 1
+                     and isinstance(candidates[0], dict) and receipt.get('seed') == 5192
+                     and candidates[0].get('seed') == 5192, 'receipt_single_pass_attempt')
+            candidate = candidates[0]
+            _require(_asr_skipped(candidate.get('asr')), 'candidate_single_pass_asr_marker')
+            _require(candidate.get('natural_eos') is True and candidate.get('cap_reached') is False
+                     and candidate.get('eos_seen') is True
+                     and _integer(candidate.get('generated_sequence_tokens'), 1, 1099)
+                     and _integer(candidate.get('eos_token_id'))
+                     and type(candidate.get('last_token')) is int
+                     and candidate['last_token'] == candidate['eos_token_id'],
+                     'candidate_single_pass_eos')
+            _require(isinstance(candidate.get('signal'), dict)
+                     and candidate['signal'].get('blocked') is False,
+                     'candidate_single_pass_signal')
+        else:
+            _require(isinstance(asr, dict) and asr.get('blocked') is False
+                     and asr.get('review_required') is False and type(asr.get('character_errors')) is int
+                     and asr['character_errors'] == 0 and asr.get('missing_critical') == [], 'receipt_transcript_gate')
         expected = {
             'lesson_id': plan['lesson_id'], 'unit_index': index, 'unit_id': unit['id'],
             'paragraph_id': unit['paragraph_id'], 'start_utf16': unit['start_utf16'],
@@ -200,6 +231,13 @@ def validate_entries(plan, entries, expected_recipe_sha256, expected_render_sett
         _require(all(settings.get(k) == v for k, v in required_settings.items()), 'not_selected_fp32_profile')
         _require(type(settings['threads']) is int and type(settings['sample_rate']) is int
                  and settings['inference_mode'] is True, 'not_selected_fp32_profile')
+        if single_pass:
+            _require(all(settings.get(k) == v for k, v in SINGLE_PASS_SETTINGS.items())
+                     and settings.get('seeds') == [5192] and _asr_skipped(settings.get('asr')),
+                     'receipt_single_pass_settings')
+        else:
+            _require(all(settings.get(k) != v for k, v in SINGLE_PASS_SETTINGS.items()),
+                     'receipt_strict_settings')
         _require(receipt.get('unit_key') == identity(dict(unit=unit,
                  render_settings_sha256=expected_render_settings_sha256)), 'receipt_unit_key')
         _require(isinstance(row.get('path'), (str, os.PathLike)), 'entry_path')
@@ -337,7 +375,7 @@ def _encode_part(pcm, target, expected_samples, ffmpeg):
 
 def assemble_lesson(plan, entries, output_dir, *, expected_recipe_sha256,
                     expected_render_settings_sha256, title=None, ffmpeg='ffmpeg', ffprobe='ffprobe',
-                    unit_gap_ms=0, paragraph_gap_ms=0, max_part_seconds=60):
+                    unit_gap_ms=0, paragraph_gap_ms=0, max_part_seconds=60, profile='eager'):
     """Return metadata and write final MP3 parts to a fresh private directory.
 
     Root's production recipe uses unit_gap_ms=180, paragraph_gap_ms=350.
@@ -346,7 +384,10 @@ def assemble_lesson(plan, entries, output_dir, *, expected_recipe_sha256,
     The caller owns encrypted packaging and eventual publication separately.
     """
     validated, ordered = validate_entries(plan, entries, expected_recipe_sha256,
-                                          expected_render_settings_sha256)
+                                          expected_render_settings_sha256, profile=profile)
+    asr_verified = profile != 'single_pass'
+    asr_scope = ('each accepted raw candidate: zero canonical transcript errors; final PCM signal checked separately'
+                 if asr_verified else 'not run; first synthesis checked for source coverage, natural EOS and PCM signal')
     _require(_integer(unit_gap_ms, 0, 2000) and _integer(paragraph_gap_ms, 0, 2000), 'gap_setting')
     render_settings = ordered[0]['receipt']['render_settings']
     for key, value in (('unit_gap_s', unit_gap_ms), ('paragraph_gap_s', paragraph_gap_ms)):
@@ -434,8 +475,7 @@ def assemble_lesson(plan, entries, output_dir, *, expected_recipe_sha256,
                         source_text_coverage='exact original code points and UTF-16; complete contiguous coverage',
                         pcm_part_coverage='contiguous measured PCM; independent MP3 decode delta <=1 sample per part',
                         automatic_unit_checks_passed=True, human_listening_verified=False,
-                        asr_verified=True,
-                        asr_scope='each accepted raw candidate: zero canonical transcript errors; final PCM signal checked separately',
+                        asr_verified=asr_verified, asr_scope=asr_scope,
                         status='private_assembly_complete_not_sealed_or_published')
         metadata_path = stage / f'{plan["lesson_id"]}.metadata.json'
         with metadata_path.open('x', encoding='utf-8') as handle:
@@ -448,3 +488,4 @@ def assemble_lesson(plan, entries, output_dir, *, expected_recipe_sha256,
     finally:
         if stage.exists():
             shutil.rmtree(stage)
+
