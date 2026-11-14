@@ -22,5 +22,20 @@ if __name__ == '__main__':
             failure['gate'] = exc.args[0]
             if type(getattr(exc, 'unit_index', None)) is int:
                 failure['unit_index'] = exc.unit_index
+        if failure.get('gate') == 'long_silence_pcm':
+            summary = getattr(exc, 'silence_aggregate', None)
+            allowed = (
+                'pre_gate_max_run_frames_20ms',
+                'post_gate_max_run_frames_20ms',
+                'post_strict_compactable_max_run_frames_20ms',
+                'post_gate_low_peak_max_run_frames_20ms',
+                'post_gate_quiet_frames_20ms',
+                'post_pcm_frames_20ms',
+                'removed_samples',
+            )
+            if (type(summary) is dict and set(summary) == set(allowed)
+                    and all(type(summary[k]) is int and 0 <= summary[k] <= 10**9 for k in allowed)):
+                # Only aggregate counters from the offline protected assembler.
+                failure['silence_aggregate'] = {k: summary[k] for k in allowed}
         print(json.dumps(failure), flush=True)
         sys.exit(1)

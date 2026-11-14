@@ -21,7 +21,8 @@ sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent / 'research' / 'reading-quality'))
 from paragraph_plan import build_plan
 from assemble import (AssemblyError, INPUT_RATE, SAMPLE_RATE, assemble_lesson, identity,
-                      _compact_long_pauses, _metrics, validate_entries, validate_plan)
+                      _compact_long_pauses, _metrics, _quiet_frame_aggregate,
+                      validate_entries, validate_plan)
 from lecture_pack import make_pack_manifest, open_part, seal_part, validate_pack
 
 
@@ -179,6 +180,22 @@ class AssemblyTests(unittest.TestCase):
         self.assertLess(first['end_s'], 1)
         self.assertAlmostEqual(second['start_s'] - first['end_s'], .18)
         self.assertLess(metadata['validation']['max_silence_s'], 3)
+
+
+    def test_silence_failure_aggregate_distinguishes_noise_floor_without_media(self):
+        # Synthetic -52 dBFS tail satisfies the -50 dB gate, not the -55 dB
+        # conservative compaction threshold. The summary is numbers only.
+        active = np.full(SAMPLE_RATE, .1, dtype=np.float32)
+        tail = np.full(SAMPLE_RATE * 4, .0025, dtype=np.float32)
+        pcm = np.concatenate((active, tail, active))
+        summary = _quiet_frame_aggregate(pcm, pre_max_silence_s=4.0, removed_samples=0)
+        self.assertEqual(summary['pre_gate_max_run_frames_20ms'], 200)
+        self.assertEqual(summary['post_gate_max_run_frames_20ms'], 200)
+        self.assertEqual(summary['post_strict_compactable_max_run_frames_20ms'], 0)
+        self.assertEqual(summary['post_gate_low_peak_max_run_frames_20ms'], 200)
+        self.assertEqual(summary['removed_samples'], 0)
+        self.assertEqual(summary['post_pcm_frames_20ms'], 300)
+        self.assertTrue(all(type(value) is int for value in summary.values()))
 
     def test_pause_compaction_preserves_active_and_borderline_frames(self):
         active = np.full(SAMPLE_RATE, .1, dtype=np.float32)

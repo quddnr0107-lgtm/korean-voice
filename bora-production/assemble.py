@@ -322,6 +322,31 @@ def _compact_long_pauses(pcm):
     return np.concatenate(pieces)
 
 
+
+def _quiet_frame_aggregate(pcm, *, pre_max_silence_s, removed_samples):
+    """Only bounded numeric frame counts; never audio, text, timestamps or keys."""
+    frame = SAMPLE_RATE // 50
+    squares = pcm.astype(np.float64) ** 2
+    quiet50 = _silent_frames(squares, threshold_db=-50)
+    quiet55 = _silent_frames(squares, threshold_db=-55)
+    peaks = np.abs(pcm[:len(quiet50) * frame].reshape(-1, frame)).max(axis=1)
+    strict = quiet55 & (peaks < 10 ** (-40 / 20))
+    gate_quiet_with_low_peak = quiet50 & (peaks < 10 ** (-40 / 20))
+
+    def longest(mask):
+        boundaries = np.flatnonzero(np.diff(np.r_[False, mask, False]))
+        return int(np.max(boundaries[1::2] - boundaries[::2])) if len(boundaries) else 0
+
+    return dict(
+        pre_gate_max_run_frames_20ms=int(round(pre_max_silence_s * 50)),
+        post_gate_max_run_frames_20ms=longest(quiet50),
+        post_strict_compactable_max_run_frames_20ms=longest(strict),
+        post_gate_low_peak_max_run_frames_20ms=longest(gate_quiet_with_low_peak),
+        post_gate_quiet_frames_20ms=int(np.count_nonzero(quiet50)),
+        post_pcm_frames_20ms=int(len(quiet50)),
+        removed_samples=int(removed_samples),
+    )
+
 def _require_signal(metrics):
     _require(metrics['clipped_samples'] == 0, 'clipped_pcm')
     _require(metrics['rms'] >= 1e-5, 'silent_pcm')
@@ -359,11 +384,18 @@ def _input_pcm(path, receipt, ffmpeg, ffprobe, *, compact_pauses=False):
              'resample_duration')
     resampled_count = len(final)
     metrics = _metrics(final)
+    pre_max_silence_s = metrics['max_silence_s']
     if compact_pauses and metrics['max_silence_s'] >= 3:
         _require(metrics['clipped_samples'] == 0, 'clipped_pcm')
         _require(metrics['rms'] >= 1e-5, 'silent_pcm')
         final = _compact_long_pauses(final)
         metrics = _metrics(final)
+    if compact_pauses and metrics['max_silence_s'] >= 3 and metrics['clipped_samples'] == 0 and metrics['rms'] >= 1e-5:
+        # A diagnosis is not a waiver: the existing signal gate remains unchanged.
+        failure = AssemblyError('long_silence_pcm')
+        failure.silence_aggregate = _quiet_frame_aggregate(final, pre_max_silence_s=pre_max_silence_s,
+                                                            removed_samples=resampled_count - len(final))
+        raise failure
     _require_signal(metrics)
     if compact_pauses:
         metrics['removed_long_pause_samples'] = resampled_count - len(final)
