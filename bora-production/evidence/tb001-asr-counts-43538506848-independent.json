@@ -1,0 +1,15 @@
+{
+  "schema": "bora-saved-counts-independent-verification/v1",
+  "run_id": 43538506848,
+  "artifact_id": 14090943030,
+  "zip_sha256": "431e3084b58a716e51117a5ef3713ac597a3c6a85eae196a58242315144fb817",
+  "checked_units": 28,
+  "raw_exact": 13,
+  "normalized_exact": 14,
+  "normalized_mismatch": 14,
+  "synthesized": 0,
+  "promoted": 0,
+  "checkpoint_writes": 0,
+  "fixed_unit_field_allowlist_verified": true,
+  "private_audio_or_text_in_export": false
+}
