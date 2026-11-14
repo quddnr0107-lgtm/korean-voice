@@ -1,0 +1,475 @@
+{
+  "execution_fix": {
+    "incompatible_versions_observed": {
+      "av": "19.0.2",
+      "faster-whisper": "1.2.1"
+    },
+    "initial_run": 43532399553,
+    "new_ciphertext_duplicate_uploads": 0,
+    "observed_failure_category": "TypeError",
+    "observed_failure_stage": "transcribe",
+    "original_ciphertext_artifact_reused": 14087588658,
+    "public_zero_pcm_decoder_preflight_passed": true,
+    "repository_token_permissions": [
+      "contents:read",
+      "actions:read"
+    ],
+    "service_deployment_performed": false,
+    "stage_diagnostic_run": 43537511856,
+    "successful_pinned_av": "18.1.0",
+    "upstream_issue": "https://github.com/SYSTRAN/faster-whisper/issues/1589"
+  },
+  "interpretation": {
+    "actual_speech_error_count_established": false,
+    "asr_runtime_seconds_only": 154.471,
+    "automatic_production_passes_added": 0,
+    "independent_artifact_audit": "passed",
+    "needs_resynthesis_not_determined_from_asr_disagreement_alone": true,
+    "new_model_exact_units": [
+      2,
+      10,
+      12,
+      13,
+      14,
+      15,
+      17,
+      18,
+      24,
+      26,
+      39,
+      52,
+      55
+    ],
+    "owner_listened_units_only": [
+      1,
+      33,
+      38
+    ],
+    "quality_criteria_changed": false,
+    "remaining_listening_review_units": [
+      6,
+      7,
+      8,
+      20,
+      25,
+      27,
+      28,
+      34,
+      36,
+      37,
+      40,
+      41,
+      43,
+      47,
+      53
+    ],
+    "same_family_different_whisper_checkpoint": true,
+    "saved_small_missing_critical_sum": 4,
+    "saved_small_text_edit_distance_sum": 82,
+    "turbo_missing_critical_sum": 0,
+    "turbo_text_edit_distance_sum": 41,
+    "units_with_fewer_text_edits": 21,
+    "units_with_more_text_edits": 0,
+    "units_with_same_text_edits": 7
+  },
+  "provenance": {
+    "artifact_id": 14090373182,
+    "artifact_zip_bytes": 2715,
+    "artifact_zip_sha256": "74a7a893083ba2c172c52def392dd850bffbbe2122aa4081de69b429a1b2ba1c",
+    "branch": "integrated-lectures-premium-20261028",
+    "conclusion": "success",
+    "head_sha": "c83da2b2a947a9c1e8a6afad750a6fbb7bf4bb1b",
+    "job_id": 132272460764,
+    "repository": "quddnr0107-lgtm/korean-voice",
+    "run_attempt": 1,
+    "run_id": 43538224355,
+    "summary_bytes": 10783,
+    "summary_sha256": "9ef90124cbe9500d3cb05c89dd948d070613e5a14e1f9b0f0c3a47670fca18a4",
+    "updated_at": "2026-11-14T01:09:40Z",
+    "workflow": ".github/workflows/bora-tb001-asr-crosscheck.yml"
+  },
+  "result": {
+    "asr_seconds": 154.471,
+    "authenticated_units": 58,
+    "causal_attribution_confirmed": false,
+    "checked_units": 28,
+    "human_listening_verified_all_units": false,
+    "larger_exact_units": 13,
+    "larger_mismatch_units": 15,
+    "model": {
+      "av_version": "18.1.0",
+      "compute_type": "int8",
+      "cpu_threads": 4,
+      "faster_whisper_version": "1.2.1",
+      "model_sha256": "e76620f83d5f5b69efd3d87e3dc180c1bd21df9fbebacfd4335e5e1efcc018da",
+      "repo": "dropbox-dash/faster-whisper-large-v3-turbo",
+      "revision": "0a363e9161cbc7ed1431c9597a8ceaf0c4f78fcf"
+    },
+    "original_blocked": 31,
+    "original_checkpoint_writes": 0,
+    "original_passed": 27,
+    "owner_heard_skipped": [
+      {
+        "unit_index": 1,
+        "wav_sha256": "f8b4bf06ec883fbbb162e3827d5c9916966b28b710f8bf4cf4b28be348d5a3ff"
+      },
+      {
+        "unit_index": 33,
+        "wav_sha256": "cd9a610448145a40b0551d619d31b2fd43ff638eb85e05e4c3774ac484513cb3"
+      },
+      {
+        "unit_index": 38,
+        "wav_sha256": "c760855ecbbc3c2a95823be1d9ae22f0e10429498de445b5c0f6e04db07280db"
+      }
+    ],
+    "production_eligible": false,
+    "production_status_changed": false,
+    "promoted": 0,
+    "schema": "bora-tb001-asr-crosscheck/v1",
+    "source_pin": {
+      "assets": [
+        {
+          "blocked": 26,
+          "bytes": 81028727,
+          "end": 42,
+          "id": 742113914,
+          "name": "TB-001-s000-r43275117254-a1.zip",
+          "passed": 16,
+          "sha256": "fa7dc1bb048009000fa07cf8ffa5a7ac30ec5b88d1395294ded2cddf80ce93eb",
+          "shard": 0,
+          "start": 0
+        },
+        {
+          "blocked": 5,
+          "bytes": 23244525,
+          "end": 58,
+          "id": 741720764,
+          "name": "TB-001-s001-r43275117254-a1.zip",
+          "passed": 11,
+          "sha256": "6fb9ed5546420a7b273636061cc9d56326da9d1d1e5dc4bfe1284991281ca657",
+          "shard": 1,
+          "start": 42
+        }
+      ],
+      "lesson_id": "TB-001",
+      "plan_sha256": "63266c9ae5f234ab5852415952ca889b540b05a0348d6bc954d8613da5ec5f87",
+      "recipe_sha256": "d3d35666712d276c0fa60bb5c5b1f7ab7d11c7042d490c95bb6fb8846682502d",
+      "render_settings_sha256": "930c8341302f36e0058eeb0deb3a0821cc6177dc6edc162d41547f93299a0822",
+      "run_id": "43275117254",
+      "units": 58
+    },
+    "status": "read_only_diagnostics_not_a_release",
+    "synthesized": 0,
+    "units": [
+      {
+        "asr_seconds": 5.359,
+        "larger_character_errors": 0,
+        "larger_exact": true,
+        "larger_missing_critical_count": 0,
+        "saved_small_character_errors": 3,
+        "saved_small_exact": false,
+        "saved_small_missing_critical_count": 0,
+        "unit_index": 2,
+        "wav_sha256": "a245cbcf88417e2e6beb6f9a0f9a2ece0fd109969029d87f8ad07774c3133267"
+      },
+      {
+        "asr_seconds": 8.68,
+        "larger_character_errors": 6,
+        "larger_exact": false,
+        "larger_missing_critical_count": 0,
+        "saved_small_character_errors": 7,
+        "saved_small_exact": false,
+        "saved_small_missing_critical_count": 0,
+        "unit_index": 6,
+        "wav_sha256": "571f9f9359bd702592a8619f25f7c55a8f89e237679fdf348bf5b2f03d0add0e"
+      },
+      {
+        "asr_seconds": 8.649,
+        "larger_character_errors": 7,
+        "larger_exact": false,
+        "larger_missing_critical_count": 0,
+        "saved_small_character_errors": 7,
+        "saved_small_exact": false,
+        "saved_small_missing_critical_count": 0,
+        "unit_index": 7,
+        "wav_sha256": "037af25791fb0aedecb1661acc2b4bf0596be6beb50daf2f52389018ee94ae40"
+      },
+      {
+        "asr_seconds": 8.529,
+        "larger_character_errors": 5,
+        "larger_exact": false,
+        "larger_missing_critical_count": 0,
+        "saved_small_character_errors": 6,
+        "saved_small_exact": false,
+        "saved_small_missing_critical_count": 1,
+        "unit_index": 8,
+        "wav_sha256": "0c61129eaca7daa9d3c65060214e7bd96a3fc8d67dd1772f501dfa509efcbed9"
+      },
+      {
+        "asr_seconds": 4.911,
+        "larger_character_errors": 0,
+        "larger_exact": true,
+        "larger_missing_critical_count": 0,
+        "saved_small_character_errors": 4,
+        "saved_small_exact": false,
+        "saved_small_missing_critical_count": 0,
+        "unit_index": 10,
+        "wav_sha256": "ac0ec00f90cb6515f778b0d1eb801a3fd0d5628a94b4570e602db4799676279f"
+      },
+      {
+        "asr_seconds": 4.883,
+        "larger_character_errors": 0,
+        "larger_exact": true,
+        "larger_missing_critical_count": 0,
+        "saved_small_character_errors": 2,
+        "saved_small_exact": false,
+        "saved_small_missing_critical_count": 0,
+        "unit_index": 12,
+        "wav_sha256": "711a540d55075069e277b3cfd2c98ddc0c7605a3bb086276e019120cedac48e5"
+      },
+      {
+        "asr_seconds": 4.267,
+        "larger_character_errors": 0,
+        "larger_exact": true,
+        "larger_missing_critical_count": 0,
+        "saved_small_character_errors": 1,
+        "saved_small_exact": false,
+        "saved_small_missing_critical_count": 0,
+        "unit_index": 13,
+        "wav_sha256": "12b271c7366d16c5d1213ded7db53d9197f5ac110e0b06e2b912a6d58376a291"
+      },
+      {
+        "asr_seconds": 5.068,
+        "larger_character_errors": 0,
+        "larger_exact": true,
+        "larger_missing_critical_count": 0,
+        "saved_small_character_errors": 4,
+        "saved_small_exact": false,
+        "saved_small_missing_critical_count": 0,
+        "unit_index": 14,
+        "wav_sha256": "262a9ecb9ce50ae2f26ebba46434eded37edceb8f9946a9b7c6ef0db25a348b6"
+      },
+      {
+        "asr_seconds": 4.973,
+        "larger_character_errors": 0,
+        "larger_exact": true,
+        "larger_missing_critical_count": 0,
+        "saved_small_character_errors": 2,
+        "saved_small_exact": false,
+        "saved_small_missing_critical_count": 0,
+        "unit_index": 15,
+        "wav_sha256": "d09b72ebbb669152085876b20e87bc4ad85ec5278da85414b783e805b206f28a"
+      },
+      {
+        "asr_seconds": 4.866,
+        "larger_character_errors": 0,
+        "larger_exact": true,
+        "larger_missing_critical_count": 0,
+        "saved_small_character_errors": 3,
+        "saved_small_exact": false,
+        "saved_small_missing_critical_count": 0,
+        "unit_index": 17,
+        "wav_sha256": "420d49b99fbf63712ed2dfa8b5ea385f0de94f3546f4d3c8e7dfaa4ad974fbb3"
+      },
+      {
+        "asr_seconds": 8.888,
+        "larger_character_errors": 0,
+        "larger_exact": true,
+        "larger_missing_critical_count": 0,
+        "saved_small_character_errors": 1,
+        "saved_small_exact": false,
+        "saved_small_missing_critical_count": 0,
+        "unit_index": 18,
+        "wav_sha256": "fa874e9396083d355114c55ab9fdd2c162347d3f8960d5e23c80f1904f8b2696"
+      },
+      {
+        "asr_seconds": 8.664,
+        "larger_character_errors": 2,
+        "larger_exact": false,
+        "larger_missing_critical_count": 0,
+        "saved_small_character_errors": 3,
+        "saved_small_exact": false,
+        "saved_small_missing_critical_count": 0,
+        "unit_index": 20,
+        "wav_sha256": "a6120604884dcf8932d866ab7a74a5fb116b2e1e064c6f164bbb0823f12e1e4c"
+      },
+      {
+        "asr_seconds": 4.234,
+        "larger_character_errors": 0,
+        "larger_exact": true,
+        "larger_missing_critical_count": 0,
+        "saved_small_character_errors": 1,
+        "saved_small_exact": false,
+        "saved_small_missing_critical_count": 0,
+        "unit_index": 24,
+        "wav_sha256": "d2c1f5b390e8c090684048a9498857b97d1493c3016c41b73cbfe2aa330674b1"
+      },
+      {
+        "asr_seconds": 4.247,
+        "larger_character_errors": 1,
+        "larger_exact": false,
+        "larger_missing_critical_count": 0,
+        "saved_small_character_errors": 1,
+        "saved_small_exact": false,
+        "saved_small_missing_critical_count": 0,
+        "unit_index": 25,
+        "wav_sha256": "2d544da73895b2c42b58e2f398c2db0b805190c5d12dbabc820f767e1c0560ce"
+      },
+      {
+        "asr_seconds": 4.896,
+        "larger_character_errors": 0,
+        "larger_exact": true,
+        "larger_missing_critical_count": 0,
+        "saved_small_character_errors": 2,
+        "saved_small_exact": false,
+        "saved_small_missing_critical_count": 1,
+        "unit_index": 26,
+        "wav_sha256": "47ef12ff2585291afbe5a0f4ce09dcc8ef139e12248f2d623a99cd2f31bc7dc9"
+      },
+      {
+        "asr_seconds": 4.576,
+        "larger_character_errors": 3,
+        "larger_exact": false,
+        "larger_missing_critical_count": 0,
+        "saved_small_character_errors": 3,
+        "saved_small_exact": false,
+        "saved_small_missing_critical_count": 0,
+        "unit_index": 27,
+        "wav_sha256": "2787e5801c5b13a5de390b83528740a09c197bee274314d7523025a6c2d8041d"
+      },
+      {
+        "asr_seconds": 4.427,
+        "larger_character_errors": 1,
+        "larger_exact": false,
+        "larger_missing_critical_count": 0,
+        "saved_small_character_errors": 5,
+        "saved_small_exact": false,
+        "saved_small_missing_critical_count": 0,
+        "unit_index": 28,
+        "wav_sha256": "4fe41dca702e82ea338025f83a83ebd1ec5554f8891f7b62085043423655e633"
+      },
+      {
+        "asr_seconds": 4.539,
+        "larger_character_errors": 3,
+        "larger_exact": false,
+        "larger_missing_critical_count": 0,
+        "saved_small_character_errors": 3,
+        "saved_small_exact": false,
+        "saved_small_missing_critical_count": 0,
+        "unit_index": 34,
+        "wav_sha256": "6d0cf012a6b0285d1aa7ce3a7a1c8b95aa752b1e97c3f52821a319f5c1f7ffdf"
+      },
+      {
+        "asr_seconds": 4.689,
+        "larger_character_errors": 2,
+        "larger_exact": false,
+        "larger_missing_critical_count": 0,
+        "saved_small_character_errors": 2,
+        "saved_small_exact": false,
+        "saved_small_missing_critical_count": 0,
+        "unit_index": 36,
+        "wav_sha256": "97d38b01241ee29a7fde89cf64b075aab0cf0714f7dc9b8c49eb1c3ea6cebb59"
+      },
+      {
+        "asr_seconds": 8.643,
+        "larger_character_errors": 1,
+        "larger_exact": false,
+        "larger_missing_critical_count": 0,
+        "saved_small_character_errors": 1,
+        "saved_small_exact": false,
+        "saved_small_missing_critical_count": 0,
+        "unit_index": 37,
+        "wav_sha256": "3f6a2b309eaf057011e588f00b71fa6b12ca6f437770c4fce6769d4b19c577e6"
+      },
+      {
+        "asr_seconds": 4.294,
+        "larger_character_errors": 0,
+        "larger_exact": true,
+        "larger_missing_critical_count": 0,
+        "saved_small_character_errors": 1,
+        "saved_small_exact": false,
+        "saved_small_missing_critical_count": 1,
+        "unit_index": 39,
+        "wav_sha256": "1043f17c69a92bf6dabe3a5762d4d01deb3be64edd86f2e58c918704920d917a"
+      },
+      {
+        "asr_seconds": 4.732,
+        "larger_character_errors": 1,
+        "larger_exact": false,
+        "larger_missing_critical_count": 0,
+        "saved_small_character_errors": 2,
+        "saved_small_exact": false,
+        "saved_small_missing_critical_count": 0,
+        "unit_index": 40,
+        "wav_sha256": "1b77c1efd732828d9d195b51a55bda08a832bca8818073d351e18cf9ed9f2415"
+      },
+      {
+        "asr_seconds": 4.633,
+        "larger_character_errors": 2,
+        "larger_exact": false,
+        "larger_missing_critical_count": 0,
+        "saved_small_character_errors": 3,
+        "saved_small_exact": false,
+        "saved_small_missing_critical_count": 0,
+        "unit_index": 41,
+        "wav_sha256": "80da2c802d9e3ef118b9b474bab403c437e2a15467d8b8ff99c7bb7d2df3621d"
+      },
+      {
+        "asr_seconds": 5.23,
+        "larger_character_errors": 5,
+        "larger_exact": false,
+        "larger_missing_critical_count": 0,
+        "saved_small_character_errors": 6,
+        "saved_small_exact": false,
+        "saved_small_missing_critical_count": 0,
+        "unit_index": 43,
+        "wav_sha256": "d3876f53b8e4a0718924876a989cd1c09014e7042b96904a6999fedcdd0cfa47"
+      },
+      {
+        "asr_seconds": 4.501,
+        "larger_character_errors": 1,
+        "larger_exact": false,
+        "larger_missing_critical_count": 0,
+        "saved_small_character_errors": 3,
+        "saved_small_exact": false,
+        "saved_small_missing_critical_count": 0,
+        "unit_index": 47,
+        "wav_sha256": "4078ed3b3a6577775488139e24b4ff7027b17197a0f867bc50e50a4bb4c76c29"
+      },
+      {
+        "asr_seconds": 4.202,
+        "larger_character_errors": 0,
+        "larger_exact": true,
+        "larger_missing_critical_count": 0,
+        "saved_small_character_errors": 4,
+        "saved_small_exact": false,
+        "saved_small_missing_critical_count": 1,
+        "unit_index": 52,
+        "wav_sha256": "f263d628e28e3ae8ac9c5807a3794946f7b646be8478acd5ffb962194a65297b"
+      },
+      {
+        "asr_seconds": 4.276,
+        "larger_character_errors": 1,
+        "larger_exact": false,
+        "larger_missing_critical_count": 0,
+        "saved_small_character_errors": 1,
+        "saved_small_exact": false,
+        "saved_small_missing_critical_count": 0,
+        "unit_index": 53,
+        "wav_sha256": "e7c6574cdf8cbcd898996db512e124149653704f7ec7f2104dadd74d551a321d"
+      },
+      {
+        "asr_seconds": 4.615,
+        "larger_character_errors": 0,
+        "larger_exact": true,
+        "larger_missing_critical_count": 0,
+        "saved_small_character_errors": 1,
+        "saved_small_exact": false,
+        "saved_small_missing_critical_count": 0,
+        "unit_index": 55,
+        "wav_sha256": "b86044e265bc9ccfcbd1276a38b5109bcdd575efb5fb91bb10cbd1a5e4c6da44"
+      }
+    ]
+  },
+  "schema": "bora-authenticated-asr-diagnostic-evidence/v1"
+}

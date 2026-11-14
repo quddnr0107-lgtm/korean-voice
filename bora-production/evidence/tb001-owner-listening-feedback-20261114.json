@@ -1,6 +1,91 @@
 {
-  "schema": "bora-scoped-owner-listening-feedback/v1",
+  "actions": {
+    "next_diagnostic": "read-only stronger-ASR check of remaining 28 originals",
+    "preserve_original_audio": true,
+    "resynthesize_for_asr_mismatch_alone": false
+  },
+  "authenticated_original_review_bindings": {
+    "clips": [
+      {
+        "unit_index": 1,
+        "wav_sha256": "f8b4bf06ec883fbbb162e3827d5c9916966b28b710f8bf4cf4b28be348d5a3ff"
+      },
+      {
+        "unit_index": 33,
+        "wav_sha256": "cd9a610448145a40b0551d619d31b2fd43ff638eb85e05e4c3774ac484513cb3"
+      },
+      {
+        "unit_index": 38,
+        "wav_sha256": "c760855ecbbc3c2a95823be1d9ae22f0e10429498de445b5c0f6e04db07280db"
+      }
+    ],
+    "deterministic_preview_selection_rechecked": true,
+    "head_sha": "c83da2b2a947a9c1e8a6afad750a6fbb7bf4bb1b",
+    "original_source_pin": {
+      "assets": [
+        {
+          "blocked": 26,
+          "bytes": 81028727,
+          "end": 42,
+          "id": 742113914,
+          "name": "TB-001-s000-r43275117254-a1.zip",
+          "passed": 16,
+          "sha256": "fa7dc1bb048009000fa07cf8ffa5a7ac30ec5b88d1395294ded2cddf80ce93eb",
+          "shard": 0,
+          "start": 0
+        },
+        {
+          "blocked": 5,
+          "bytes": 23244525,
+          "end": 58,
+          "id": 741720764,
+          "name": "TB-001-s001-r43275117254-a1.zip",
+          "passed": 11,
+          "sha256": "6fb9ed5546420a7b273636061cc9d56326da9d1d1e5dc4bfe1284991281ca657",
+          "shard": 1,
+          "start": 42
+        }
+      ],
+      "lesson_id": "TB-001",
+      "plan_sha256": "63266c9ae5f234ab5852415952ca889b540b05a0348d6bc954d8613da5ec5f87",
+      "recipe_sha256": "d3d35666712d276c0fa60bb5c5b1f7ab7d11c7042d490c95bb6fb8846682502d",
+      "render_settings_sha256": "930c8341302f36e0058eeb0deb3a0821cc6177dc6edc162d41547f93299a0822",
+      "run_id": "43275117254",
+      "units": 58
+    },
+    "verified_by_run_id": 43538224355
+  },
+  "automatic_quality_pass_claimed": false,
+  "checkpoint_written": false,
+  "feedback": {
+    "heard_unit_count": 3,
+    "interpretation": "owner_reports_no_audible_problem_in_the_three_delivered_preview_clips",
+    "not_a_blanket_approval_of_other_units": true,
+    "scope": "three_preview_clips_only",
+    "statement": "다 좋은데",
+    "unit_indices_in_listening_order": [
+      38,
+      1,
+      33
+    ],
+    "unreviewed_blocked_unit_count": 28,
+    "word_by_word_accuracy_explicitly_confirmed": false
+  },
   "lesson_id": "TB-001",
+  "preview_provenance": {
+    "envelope_artifact_id": 14030389101,
+    "envelope_artifact_zip_sha256": "ca323e131883b5485fd7091413c61ce336c830f236f27fb8a88c7ccb5222711c",
+    "head_sha": "e61452c498cf7cc59516c5b45538e4f7b24c02db",
+    "original_waveform": true,
+    "recipient_spki_sha256": "ff07b22be2e5bdd3703f9b1d4e96045e92788878b25ff7f535e7c3bf4c57dfda",
+    "request_id": "tb001-owner-listen-20261113-01",
+    "selection_algorithm": "listening_preview.select_reviews at preview head",
+    "workflow_run_id": "43414522290"
+  },
+  "production_eligible": false,
+  "production_receipt_changed": false,
+  "quality_criteria_changed": false,
+  "schema": "bora-scoped-owner-listening-feedback/v1",
   "source_pin": {
     "assets": [
       {
@@ -32,40 +117,5 @@
     "render_settings_sha256": "930c8341302f36e0058eeb0deb3a0821cc6177dc6edc162d41547f93299a0822",
     "run_id": "43275117254",
     "units": 58
-  },
-  "feedback": {
-    "statement": "다 좋은데",
-    "interpretation": "owner_reports_no_audible_problem_in_the_three_delivered_preview_clips",
-    "scope": "three_preview_clips_only",
-    "word_by_word_accuracy_explicitly_confirmed": false,
-    "unit_indices_in_listening_order": [
-      38,
-      1,
-      33
-    ],
-    "heard_unit_count": 3,
-    "unreviewed_blocked_unit_count": 28,
-    "not_a_blanket_approval_of_other_units": true
-  },
-  "preview_provenance": {
-    "workflow_run_id": "43414522290",
-    "head_sha": "e61452c498cf7cc59516c5b45538e4f7b24c02db",
-    "request_id": "tb001-owner-listen-20261113-01",
-    "recipient_spki_sha256": "ff07b22be2e5bdd3703f9b1d4e96045e92788878b25ff7f535e7c3bf4c57dfda",
-    "envelope_artifact_id": 14030389101,
-    "envelope_artifact_zip_sha256": "ca323e131883b5485fd7091413c61ce336c830f236f27fb8a88c7ccb5222711c",
-    "selection_algorithm": "listening_preview.select_reviews at preview head",
-    "original_waveform": true
-  },
-  "actions": {
-    "preserve_original_audio": true,
-    "resynthesize_for_asr_mismatch_alone": false,
-    "next_diagnostic": "read-only stronger-ASR check of remaining 28 originals"
-  },
-  "production_receipt_changed": false,
-  "automatic_quality_pass_claimed": false,
-  "production_eligible": false,
-  "checkpoint_written": false,
-  "quality_criteria_changed": false
+  }
 }
-
