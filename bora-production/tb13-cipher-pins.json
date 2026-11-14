@@ -1,0 +1,358 @@
+{
+  "release_id": 445068693,
+  "run_id": 43565543458,
+  "asset_count": 56,
+  "assets": [
+    {
+      "id": 746703637,
+      "name": "TB-002-s000-r43565543458-a1.zip",
+      "digest": "sha256:d174f91154f4e2d8694b315ceade0745d9204c582c4c6a1c398bee81a9221dd5",
+      "size": 84710812
+    },
+    {
+      "id": 747088435,
+      "name": "TB-002-s001-r43565543458-a1.zip",
+      "digest": "sha256:facdafd48c9913e8ea3a74c117e9823baafe1c8df4ac3ffff48b34b864ca362d",
+      "size": 87532172
+    },
+    {
+      "id": 746958999,
+      "name": "TB-002-s002-r43565543458-a1.zip",
+      "digest": "sha256:6febe93525b65e17a209ba8920dce71dd9e97356dd2c670f979657e2f5ce248d",
+      "size": 86732409
+    },
+    {
+      "id": 747023316,
+      "name": "TB-002-s003-r43565543458-a1.zip",
+      "digest": "sha256:2b2339b3f7f18634f8fdb7cc97553894885835375d59729117014b32fb694db3",
+      "size": 85093844
+    },
+    {
+      "id": 747015434,
+      "name": "TB-002-s004-r43565543458-a1.zip",
+      "digest": "sha256:f7030aea1756a18ba33ee16ad3038563acfdfc3daa123c8dfcdeac1418d72e0c",
+      "size": 41373136
+    },
+    {
+      "id": 746769409,
+      "name": "TB-003-s000-r43565543458-a1.zip",
+      "digest": "sha256:6cfaedae64407a63a6a3bf9c16b32656c6fb6dc1fdea1e32a90fa7a72268ee20",
+      "size": 84105849
+    },
+    {
+      "id": 746812635,
+      "name": "TB-003-s001-r43565543458-a1.zip",
+      "digest": "sha256:48b4d6e81e31a357b09731c5b28fefc9ed986210a8d7887edd25daa9c638f680",
+      "size": 88387573
+    },
+    {
+      "id": 746712736,
+      "name": "TB-003-s002-r43565543458-a1.zip",
+      "digest": "sha256:2e5f0c6de1f35f0dba4256700259b1f2b63b503dd5efb37d10ea3e14d9674884",
+      "size": 90735141
+    },
+    {
+      "id": 747067602,
+      "name": "TB-003-s003-r43565543458-a1.zip",
+      "digest": "sha256:045cd15c5f59e6345d5d0ccb84302f8412082eef026985294b6957a4d4d395ca",
+      "size": 70089334
+    },
+    {
+      "id": 746730806,
+      "name": "TB-005-s000-r43565543458-a1.zip",
+      "digest": "sha256:3d8eac42cbcf92d6b6dc5fb6482c62a55143468d4f4acdc2bffd6ffdc00840d1",
+      "size": 96444042
+    },
+    {
+      "id": 746731649,
+      "name": "TB-005-s001-r43565543458-a1.zip",
+      "digest": "sha256:c7075883f0cf60f1e612543d13ce6e47b25292f662b365d5060d8c08f11028ab",
+      "size": 86817250
+    },
+    {
+      "id": 746814808,
+      "name": "TB-005-s002-r43565543458-a1.zip",
+      "digest": "sha256:954ff4c9b02ba3ab89c72c7975819e68a73ba95573a7747b05fa06e90b62ef18",
+      "size": 87741332
+    },
+    {
+      "id": 747047095,
+      "name": "TB-005-s003-r43565543458-a1.zip",
+      "digest": "sha256:cbdbf9f7efb42fc3461f3e85db5c5431b5d436ab31672ee6eda1c4858a794b9e",
+      "size": 78751857
+    },
+    {
+      "id": 746815335,
+      "name": "TB-009-s000-r43565543458-a1.zip",
+      "digest": "sha256:9b0d1ea7e8cd18e02d97eaf8074fde6d65955c8d2ff7ab611c45bdacc5dd00c8",
+      "size": 86269987
+    },
+    {
+      "id": 747015993,
+      "name": "TB-009-s001-r43565543458-a1.zip",
+      "digest": "sha256:ce6d764e91f6fe82ce40b7e8981be40d8c00d50f36409c163d9815728aefe80c",
+      "size": 88797114
+    },
+    {
+      "id": 746967963,
+      "name": "TB-009-s002-r43565543458-a1.zip",
+      "digest": "sha256:74ccb3839555442111054893be72ddfe17df57cbc85cd846d92edf5eb6f108c7",
+      "size": 83594760
+    },
+    {
+      "id": 746769348,
+      "name": "TB-009-s003-r43565543458-a1.zip",
+      "digest": "sha256:271862a916beae07e1fb35db3cd26d1f3b72506b5f68090ac4c4a9c293125f23",
+      "size": 87903353
+    },
+    {
+      "id": 747099985,
+      "name": "TB-009-s004-r43565543458-a1.zip",
+      "digest": "sha256:a8aa5b02bf6124008e80e7507aadb32366022eafc6aba5e113b79600fca27a49",
+      "size": 32321299
+    },
+    {
+      "id": 746708814,
+      "name": "TB-012-s000-r43565543458-a1.zip",
+      "digest": "sha256:1820b29c54387dd12b38730649e52f886d4ba9bc049a9746d318f23802b97f07",
+      "size": 82984693
+    },
+    {
+      "id": 746715055,
+      "name": "TB-012-s001-r43565543458-a1.zip",
+      "digest": "sha256:542c57ae54bff93fee2af992eeba18f7fc8baec77e4e8dd21e58bc34861c1b11",
+      "size": 89237137
+    },
+    {
+      "id": 747051033,
+      "name": "TB-012-s002-r43565543458-a1.zip",
+      "digest": "sha256:c0d9fb46ccbb6edb19c37042367253c967a0c4f0ae78aef333774b9f38976f97",
+      "size": 86798245
+    },
+    {
+      "id": 747021576,
+      "name": "TB-012-s003-r43565543458-a1.zip",
+      "digest": "sha256:5bd59a16068d8e2b8bc96a13f94d16dec0b26146ccce69a8ea482ee97d87da0a",
+      "size": 91280708
+    },
+    {
+      "id": 747001953,
+      "name": "TB-012-s004-r43565543458-a1.zip",
+      "digest": "sha256:641416ae3e6fa4485e06e18c2b501c82302e0a5365bfca42d9154f57557f9b7a",
+      "size": 70565035
+    },
+    {
+      "id": 746988269,
+      "name": "TB-013-s000-r43565543458-a1.zip",
+      "digest": "sha256:8841f8ca1728ea62013216c9eb7817a1298a177124b181057f5cd8fae45b33b0",
+      "size": 84418511
+    },
+    {
+      "id": 746958953,
+      "name": "TB-013-s001-r43565543458-a1.zip",
+      "digest": "sha256:cfc44d36cbb86e4c8fa873f7c2e99bc81bc2105c6aac778ade21fc62b684c817",
+      "size": 87784979
+    },
+    {
+      "id": 746839959,
+      "name": "TB-013-s002-r43565543458-a1.zip",
+      "digest": "sha256:955fcf9ef3f2fa3e70dc1df2a2a6e9e6b7f8baddf1c19c7c38fb3ff58d2524e6",
+      "size": 89941161
+    },
+    {
+      "id": 746862747,
+      "name": "TB-013-s003-r43565543458-a1.zip",
+      "digest": "sha256:a4f2c04b1dfa59103282374ef535e009bfff6eb7d77ac6d7300ca14d60e632ba",
+      "size": 91339923
+    },
+    {
+      "id": 747040086,
+      "name": "TB-013-s004-r43565543458-a1.zip",
+      "digest": "sha256:bc15ab0e6b2957f5f059bf8990c9aee36a93eab505a5bed925935f255ad0a4aa",
+      "size": 3816576
+    },
+    {
+      "id": 746707963,
+      "name": "TB-015-s000-r43565543458-a1.zip",
+      "digest": "sha256:e704c9a9c6aa896334494a0fdf1bfd543d611f75c321adff44fcec64895bd95d",
+      "size": 84663809
+    },
+    {
+      "id": 746998790,
+      "name": "TB-015-s001-r43565543458-a1.zip",
+      "digest": "sha256:75111fdfb9d134f79534bdbf7a2da1c525c3cae6c8b97fadd9aed3b238b50ae5",
+      "size": 86344726
+    },
+    {
+      "id": 746718524,
+      "name": "TB-015-s002-r43565543458-a1.zip",
+      "digest": "sha256:29eab9c91aab20bedd7b71bc5dea49981568a0a88be9f9121460f41d9754ea7b",
+      "size": 89983588
+    },
+    {
+      "id": 747080931,
+      "name": "TB-015-s003-r43565543458-a1.zip",
+      "digest": "sha256:bd45361f88027b0257c31b38fdb846ac5027cc8ecd17ab5c5e8f0f9035192855",
+      "size": 22252086
+    },
+    {
+      "id": 746713847,
+      "name": "TB-017-s000-r43565543458-a1.zip",
+      "digest": "sha256:b01b6f08169e0ef55432833bf8ec74a1e14bdd3c076fdae48d8b7d4d864b6370",
+      "size": 88021782
+    },
+    {
+      "id": 746964815,
+      "name": "TB-017-s001-r43565543458-a1.zip",
+      "digest": "sha256:d1dc6a8aa23414b1b4efdb0c0ebda521e2e286cfafcd1c5f535878c28a1d9a75",
+      "size": 82028868
+    },
+    {
+      "id": 747055787,
+      "name": "TB-017-s002-r43565543458-a1.zip",
+      "digest": "sha256:f86b67ded1461d1e1cd04fddf0fe2715f7c894d929de9b568d57ce76cfe43d87",
+      "size": 91136586
+    },
+    {
+      "id": 746956781,
+      "name": "TB-017-s003-r43565543458-a1.zip",
+      "digest": "sha256:3e082ab69c8878d435a63c9c2a6f41bb8d418ca3efe45b9412b01060b04464f6",
+      "size": 46404077
+    },
+    {
+      "id": 747060544,
+      "name": "TB-018-s000-r43565543458-a1.zip",
+      "digest": "sha256:bb43e448025e5da6841ac299c592b9150aeac3a676026103971b638454f2b4a4",
+      "size": 88193714
+    },
+    {
+      "id": 746838738,
+      "name": "TB-018-s001-r43565543458-a1.zip",
+      "digest": "sha256:a4ab27697469330b5d1a3da3a5bc8186cecc79c731df154a315a3feb24757223",
+      "size": 82850244
+    },
+    {
+      "id": 746709918,
+      "name": "TB-018-s002-r43565543458-a1.zip",
+      "digest": "sha256:554c5f2719e61acec1580746742fc9985d9eb8c0192b5fc81f564dbcbb1ac919",
+      "size": 85851751
+    },
+    {
+      "id": 747101226,
+      "name": "TB-018-s003-r43565543458-a1.zip",
+      "digest": "sha256:33127235b67ee9d2698a79bb01fb86d31aabf710cfa502cdf582f5d3e249f81d",
+      "size": 18001365
+    },
+    {
+      "id": 746724892,
+      "name": "TB-019-s000-r43565543458-a1.zip",
+      "digest": "sha256:1574e8965282ae75dfa4eca8a69470e67f5be6c8f06031499519d141dea6f378",
+      "size": 88870922
+    },
+    {
+      "id": 746846776,
+      "name": "TB-019-s001-r43565543458-a1.zip",
+      "digest": "sha256:cef2e083181cefa4bbd4a07ec2e032ce5dd1971aeecfbf105333a8a5fb408471",
+      "size": 91497118
+    },
+    {
+      "id": 747061708,
+      "name": "TB-019-s002-r43565543458-a1.zip",
+      "digest": "sha256:ef5332bb7318f6dc78f35d7824dc2d212deca21fc667821b32afbabf283bc47e",
+      "size": 86898499
+    },
+    {
+      "id": 747142458,
+      "name": "TB-019-s003-r43565543458-a1.zip",
+      "digest": "sha256:687fb77a8c1f082059fd1de119c1f275e94ebebfaf53bd1fec84e65745dc25ee",
+      "size": 39331724
+    },
+    {
+      "id": 746954144,
+      "name": "TB-020-s000-r43565543458-a1.zip",
+      "digest": "sha256:a432ae80f703c4c425a3e1a99e1b83df70cca387567794cc0524d1fb01a791ee",
+      "size": 84025030
+    },
+    {
+      "id": 747069339,
+      "name": "TB-020-s001-r43565543458-a1.zip",
+      "digest": "sha256:84578d57839a1d31668d42f5fa12cf3f1ceef98f4a47e6964dcc8e03a14eff79",
+      "size": 18863511
+    },
+    {
+      "id": 746840679,
+      "name": "TB-022-s000-r43565543458-a1.zip",
+      "digest": "sha256:80cc5fe613fdb55b63d362c74e2f7709afb5d09ec1e7289f6731227626b3768b",
+      "size": 85788787
+    },
+    {
+      "id": 746774467,
+      "name": "TB-022-s001-r43565543458-a1.zip",
+      "digest": "sha256:68b34517b7d57f2b026b99e7b06b0d4b64abb5bb48dded0d61fba015ef9b759c",
+      "size": 84316155
+    },
+    {
+      "id": 746815836,
+      "name": "TB-022-s002-r43565543458-a1.zip",
+      "digest": "sha256:a569375cdfa575dc743f06755e2373831eace783596a386985b08afac3ee36b3",
+      "size": 82293719
+    },
+    {
+      "id": 746996077,
+      "name": "TB-022-s003-r43565543458-a1.zip",
+      "digest": "sha256:dc696a059e4578e75182f2f1a454d3ae156d02fcf70fde21e1283bb68a302f96",
+      "size": 58004236
+    },
+    {
+      "id": 746711531,
+      "name": "TB-023-s000-r43565543458-a1.zip",
+      "digest": "sha256:7bea7b257bde19a325a76bd3ef5c523a64d53ae714d70ad9910b9123a4e9658f",
+      "size": 88205662
+    },
+    {
+      "id": 747083658,
+      "name": "TB-023-s001-r43565543458-a1.zip",
+      "digest": "sha256:7368e979d9ee1b9809003482d280039dd0d0dd3cc120aa737468baf8633bba55",
+      "size": 89711654
+    },
+    {
+      "id": 747000298,
+      "name": "TB-023-s002-r43565543458-a1.zip",
+      "digest": "sha256:0c18dfa3a89fb7bdf30ed42a93f7e3641a8edd7d49fcf648f9d418786527d831",
+      "size": 88585287
+    },
+    {
+      "id": 746940503,
+      "name": "TB-023-s003-r43565543458-a1.zip",
+      "digest": "sha256:1c2b66f7c8df4c469cfa7cec3c178a7c67a0d9879ee52edd9d5b04e79a247352",
+      "size": 88515072
+    },
+    {
+      "id": 746847210,
+      "name": "TB-023-s004-r43565543458-a1.zip",
+      "digest": "sha256:7f9a963710474c754d8d4e9fdab6d976b7edf6c4366a856ee8648eb4bcc6b632",
+      "size": 86372320
+    },
+    {
+      "id": 747046688,
+      "name": "TB-023-s005-r43565543458-a1.zip",
+      "digest": "sha256:b26f9474e764f8973ee1aead9b80f67738f468695ffbaa61f8c56c636fdf8a30",
+      "size": 4089337
+    }
+  ],
+  "lesson_ids": [
+    "TB-002",
+    "TB-003",
+    "TB-005",
+    "TB-009",
+    "TB-012",
+    "TB-013",
+    "TB-015",
+    "TB-017",
+    "TB-018",
+    "TB-019",
+    "TB-020",
+    "TB-022",
+    "TB-023"
+  ]
+}

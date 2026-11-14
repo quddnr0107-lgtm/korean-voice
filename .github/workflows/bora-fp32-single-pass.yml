@@ -4,6 +4,7 @@ on:
     branches: [integrated-lectures-premium-20261028]
     paths:
       - 'bora-production/single-pass-request.json'
+      - 'bora-production/tb13-silence-diagnostic-once.json'
 permissions:
   contents: read
 concurrency:
@@ -18,8 +19,25 @@ env:
   ORT_DISABLE_TELEMETRY: '1'
 
 jobs:
-  preflight:
+  route:
     if: github.repository == 'quddnr0107-lgtm/korean-voice' && github.ref == 'refs/heads/integrated-lectures-premium-20261028' && github.event_name == 'push'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      mode: ${{ steps.route.outputs.mode }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - id: route
+        env:
+          EVENT_BEFORE: ${{ github.event.before }}
+        run: python3 bora-production/tb13_diagnostic_route.py
+
+  preflight:
+    needs: route
+    if: needs.route.outputs.mode == 'production' && github.repository == 'quddnr0107-lgtm/korean-voice' && github.ref == 'refs/heads/integrated-lectures-premium-20261028' && github.event_name == 'push'
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     outputs:
@@ -66,8 +84,8 @@ jobs:
           PY
 
   plan:
-    needs: preflight
-    if: needs.preflight.result == 'success'
+    needs: [route, preflight]
+    if: needs.route.outputs.mode == 'production' && needs.preflight.result == 'success'
     runs-on: ubuntu-24.04
     environment: admin-law-premium-production
     timeout-minutes: 20
@@ -117,8 +135,8 @@ jobs:
           if-no-files-found: error
 
   capacity:
-    needs: plan
-    if: needs.plan.outputs.overlap_tb == 'true'
+    needs: [route, plan]
+    if: needs.route.outputs.mode == 'production' && needs.plan.outputs.overlap_tb == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 300
     permissions:
@@ -134,8 +152,8 @@ jobs:
         run: python3 bora-production/wait_for_tb_capacity.py
 
   render:
-    needs: [plan, capacity]
-    if: ${{ always() && !cancelled() && needs.plan.result == 'success' && ((needs.plan.outputs.overlap_tb == 'false' && needs.capacity.result == 'skipped') || (needs.plan.outputs.overlap_tb == 'true' && needs.capacity.result == 'success')) }}
+    needs: [route, plan, capacity]
+    if: ${{ always() && !cancelled() && needs.route.outputs.mode == 'production' && needs.plan.result == 'success' && ((needs.plan.outputs.overlap_tb == 'false' && needs.capacity.result == 'skipped') || (needs.plan.outputs.overlap_tb == 'true' && needs.capacity.result == 'success')) }}
     runs-on: ubuntu-24.04
     environment: admin-law-premium-production
     timeout-minutes: 360
@@ -218,10 +236,10 @@ jobs:
         run: python bora-production/transport.py upload --profile single_pass --course "$BORA_COURSE" --directory "$RUNNER_TEMP/bora-cipher"
 
   assemble:
-    needs: [plan, capacity, render]
+    needs: [route, plan, capacity, render]
     # A failed shard cannot cancel complete lessons. The offline assembler must
     # independently authenticate complete coverage before its output can leave.
-    if: ${{ always() && !cancelled() && needs.plan.result == 'success' && ((needs.plan.outputs.overlap_tb == 'false' && needs.capacity.result == 'skipped') || (needs.plan.outputs.overlap_tb == 'true' && needs.capacity.result == 'success')) && (needs.render.result == 'success' || needs.render.result == 'failure') }}
+    if: ${{ always() && !cancelled() && needs.route.outputs.mode == 'production' && needs.plan.result == 'success' && ((needs.plan.outputs.overlap_tb == 'false' && needs.capacity.result == 'skipped') || (needs.plan.outputs.overlap_tb == 'true' && needs.capacity.result == 'success')) && (needs.render.result == 'success' || needs.render.result == 'failure') }}
     runs-on: ubuntu-24.04
     environment: admin-law-premium-production
     timeout-minutes: 45
@@ -288,8 +306,8 @@ jobs:
         run: python bora-production/transport.py publish --profile single_pass --partial --course "$BORA_COURSE" --directory "$RUNNER_TEMP/bora-assembled"
 
   publish:
-    needs: [plan, assemble]
-    if: ${{ always() && !cancelled() && needs.plan.result == 'success' && needs.assemble.result == 'success' && needs.plan.outputs.overlap_tb == 'false' }}
+    needs: [route, plan, assemble]
+    if: ${{ always() && !cancelled() && needs.route.outputs.mode == 'production' && needs.plan.result == 'success' && needs.assemble.result == 'success' && needs.plan.outputs.overlap_tb == 'false' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     permissions:
@@ -332,3 +350,66 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: python bora-production/transport.py publish --profile single_pass --course "$BORA_COURSE" --directory "$RUNNER_TEMP/bora-course"
 
+
+  tb13_diagnose:
+    needs: route
+    if: needs.route.outputs.mode == 'diagnostic'
+    runs-on: ubuntu-24.04
+    environment: admin-law-premium-production
+    timeout-minutes: 90
+    # Same existing assembly permission, required solely to GET draft assets.
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          path: integration
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          ref: 836500cd9250f38698235c729ae5553f41e7c262
+          path: original
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Install existing assembly-only dependencies without keys
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install --yes --no-install-recommends ffmpeg
+          python -m pip install --disable-pip-version-check numpy==2.5.4 cryptography==50.0.0
+          python -m pip check
+          ffmpeg -version | head -1 | grep -Fx 'ffmpeg version 6.1.1-3ubuntu5 Copyright (c) 2000-2023 the FFmpeg developers'
+      - name: Verify embedded original plan and GET 56 pinned ciphertext bundles without keys
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python integration/bora-production/tb13_diagnostic_transport.py \
+            "$RUNNER_TEMP/tb13-inputs" original/bora-production
+      - name: Diagnose 13 original lessons offline without rendering or publication
+        working-directory: original
+        env:
+          ADMIN_LAW_PREMIUM_SOURCE_KEY_B64: ${{ secrets.ADMIN_LAW_PREMIUM_SOURCE_KEY_B64 }}
+          ADMIN_LAW_PREMIUM_MEDIA_KEY_B64: ${{ secrets.ADMIN_LAW_PREMIUM_MEDIA_KEY_B64 }}
+        run: |
+          umask 077
+          mkdir -m 700 "$RUNNER_TEMP/tb13-summary"
+          export BORA_HOST_NETNS="$(readlink /proc/self/ns/net)"
+          rc=0
+          for lesson in TB-002 TB-003 TB-005 TB-009 TB-012 TB-013 TB-015 TB-017 TB-018 TB-019 TB-020 TB-022 TB-023; do
+            sudo --preserve-env=ADMIN_LAW_PREMIUM_SOURCE_KEY_B64,ADMIN_LAW_PREMIUM_MEDIA_KEY_B64,BORA_HOST_NETNS,GITHUB_REPOSITORY,GITHUB_EVENT_NAME,GITHUB_REF,GITHUB_WORKFLOW_REF,GITHUB_RUN_ID,GITHUB_RUN_ATTEMPT,RUNNER_TEMP \
+              unshare --net --setgid "$(id -g)" --setuid "$(id -u)" -- "$(command -v python)" \
+              ../integration/bora-production/diagnose_silence.py --module-dir bora-production \
+              --lesson-id "$lesson" --plan "$RUNNER_TEMP/tb13-inputs/public-plan.json" \
+              --resume-dir "$RUNNER_TEMP/tb13-inputs/$lesson" \
+              > "$RUNNER_TEMP/tb13-summary/$lesson.json" || rc=1
+          done
+          exit "$rc"
+      - name: Save sanitized aggregate diagnostics only
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: tb13-silence-aggregate-${{ github.run_id }}
+          path: ${{ runner.temp }}/tb13-summary/*.json
+          retention-days: 3
+          if-no-files-found: warn
