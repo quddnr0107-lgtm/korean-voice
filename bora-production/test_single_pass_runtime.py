@@ -27,6 +27,14 @@ class SinglePassRuntimeTests(unittest.TestCase):
                           dict(max_attempts=2), dict(execution_profile=profiles.PROFILE_ID)):
             with self.subTest(overrides=overrides), self.assertRaisesRegex(ValueError, 'request_scope'):
                 profiles.validate_request(self.request(**overrides), 'single_pass')
+        profiles.validate_request(self.request(course='RL', overlap_tb=True, lesson_ids=['RL-001']), 'single_pass')
+        for bad in (self.request(overlap_tb=True, lesson_ids=['TB-001']),
+                    self.request(course='RL', overlap_tb=False, lesson_ids=['RL-001']),
+                    self.request(course='RL', overlap_tb=True),
+                    self.request(course='RL', overlap_tb=True, lesson_ids=['RL-001'],
+                                 selected_shards=[{'lesson_id': 'RL-001', 'shard': 0}])):
+            with self.assertRaisesRegex(ValueError, 'request_scope'):
+                profiles.validate_request(bad, 'single_pass')
         self.assertEqual(profiles.workflow_filename('single_pass'), 'bora-fp32-single-pass.yml')
         self.assertEqual(profiles.request_filename('single_pass'), 'single-pass-request.json')
 
@@ -71,4 +79,5 @@ class SinglePassRuntimeTests(unittest.TestCase):
                                       github_output=Path(tmp)/'github')
             runtime.public_plan(args, profile='single_pass')
             self.assertIn('complete_course=false\n', args.github_output.read_text())
+            self.assertIn('overlap_tb=false\nparallelism=40\n', args.github_output.read_text())
             self.assertNotIn(plan['units'][0]['source'], args.output.read_text())

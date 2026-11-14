@@ -187,6 +187,15 @@ def source_plan(ident, campaign, source_key):
     return build_plan(ident, source), payload
 
 
+
+def course_plan(ident, campaign, source_key, profile):
+    plan, payload = source_plan(ident, campaign, source_key)
+    if profile == 'single_pass' and ident.startswith('RL-'):
+        from rl_pronunciation import apply_to_plan
+        plan = apply_to_plan(plan)
+    return plan, payload
+
+
 def execution_shard_chars(recipe, request):
     """Execution-only fan-out; never change recipe/plan/audio fingerprints."""
     default = recipe['shard_chars']
@@ -221,7 +230,7 @@ def public_plan(args, profile='eager'):
     target_chars=execution_shard_chars(recipe,request)
     records=[]; matrix=[]; review_counts=Counter(); costs={}
     for ident in ids:
-        plan,_=source_plan(ident,campaign,source_key)
+        plan,_=course_plan(ident,campaign,source_key,profile)
         review_counts.update(flag for unit in plan['units'] for flag in set(unit.get('review',[])+unit.get('review_flags',[])))
         groups=shards(plan,target_chars)
         for group in groups:
@@ -261,15 +270,18 @@ def public_plan(args, profile='eager'):
             f.write('course='+request['course']+'\n')
             if profile == 'single_pass':
                 f.write('complete_course='+str(manifest['complete_course']).lower()+'\n')
+                overlap = request.get('overlap_tb') is True
+                f.write('overlap_tb='+str(overlap).lower()+'\n')
+                f.write(f'parallelism={15 if overlap else 40}\n')
 
 
-def matched_plan(args, campaign, recipe, request, key):
+def matched_plan(args, campaign, recipe, request, key, profile='eager'):
     public=read_json(args.plan)
     check(public.get('schema')=='bora-fp32-public-plan/v1' and public.get('campaign_sha256')==identity(campaign)
           and public.get('recipe_sha256')==identity(recipe) and public.get('request_sha256')==identity(request)
           and public.get('course')==request['course'], 'public_plan_pin')
     check(args.lesson_id in [r['lesson_id'] for r in public['lessons']], 'planned_lesson_scope')
-    plan,payload=source_plan(args.lesson_id,campaign,key)
+    plan,payload=course_plan(args.lesson_id,campaign,key,profile)
     row=next(r for r in public['lessons'] if r['lesson_id']==args.lesson_id)
     check(row['source_sha256']==plan['source_sha256'] and row['plan_sha256']==identity(plan)
           and row['unit_count']==len(plan['units']) and row['shards']==shards(plan,execution_shard_chars(recipe,request)), 'private_plan_reproduction')
@@ -395,7 +407,7 @@ def resume_probe(args, profile='eager'):
     campaign,recipe,request,ids=config(profile)
     check_lesson_scope(args, request, ids, profile)
     source_key,media_key=protected_keys(media=True,profile=profile)
-    public,plan,_,row=matched_plan(args,campaign,recipe,request,source_key)
+    public,plan,_,row=matched_plan(args,campaign,recipe,request,source_key,profile)
     del source_key
     check(type(args.shard) is int and 0<=args.shard<len(row['shards']), 'shard_scope')
     group=row['shards'][args.shard]; begin,end=group['start'],group['end']
@@ -431,13 +443,20 @@ def check_lesson_scope(args, request, ids, profile):
                   'single_pass_selected_shard')
 
 
-def make_renderer(recipe, profile='eager'):
+def make_renderer(recipe, profile='eager', *, course=None):
     """Import and load heavy dependencies only when synthesis is required."""
     validate_profile(profile)
     if profile == 'single_pass':
         from single_pass_renderer import SinglePassRenderer
-        return SinglePassRenderer(os.environ['BORA_MODEL'],
-                                  max_new_tokens=recipe['max_new_tokens'], max_attempts=1)
+        renderer = SinglePassRenderer(os.environ['BORA_MODEL'],
+                                      max_new_tokens=recipe['max_new_tokens'], max_attempts=1)
+        if course == 'RL':
+            import rl_pronunciation as overlay
+            renderer.settings['course_pronunciation'] = dict(
+                ruleset=overlay.RULESET, rules_sha256=overlay.rules_sha256(),
+                implementation_sha256=sha(Path(overlay.__file__).read_bytes()))
+            renderer.settings_sha256 = identity(renderer.settings)
+        return renderer
     if profile == 'compiled':
         from compiled_fp32_renderer import CompiledFP32Renderer as Renderer
     else:
@@ -455,13 +474,14 @@ def render(args, profile='eager'):
     campaign,recipe,request,ids=config(profile)
     check_lesson_scope(args, request, ids, profile)
     source_key,media_key=protected_keys(media=True,profile=profile)
-    public,plan,_,row=matched_plan(args,campaign,recipe,request,source_key)
+    public,plan,_,row=matched_plan(args,campaign,recipe,request,source_key,profile)
     del source_key
     check(type(args.shard) is int and 0<=args.shard<len(row['shards']), 'shard_scope')
     shard=row['shards'][args.shard]; begin,end=shard['start'],shard['end']
     output=Path(args.output); output.mkdir(parents=True,exist_ok=True,mode=0o700)
     check(not list(output.iterdir()), 'fresh_cipher_output')
     settings_hash=public['render_settings_sha256']; recipe_hash=identity(recipe)
+    render_options = {'course': request['course']} if profile == 'single_pass' else {}
     run=os.environ.get('GITHUB_RUN_ID',''); attempt=os.environ.get('GITHUB_RUN_ATTEMPT','')
     check(run.isdigit() and attempt.isdigit(), 'run_identity')
     name=f'{plan["lesson_id"]}-s{args.shard:03d}-r{run}-a{attempt}.zip'
@@ -478,7 +498,7 @@ def render(args, profile='eager'):
         try:
             if pending:
                 with quiet():
-                    renderer=make_renderer(recipe,profile)
+                    renderer=make_renderer(recipe,profile,**render_options)
                 check(renderer.settings_sha256==settings_hash, 'preflight_renderer_fingerprint')
                 signal.signal(signal.SIGALRM,alarm)
                 for index in pending:
@@ -527,7 +547,7 @@ def assemble(args, profile='eager'):
     campaign,recipe,request,ids=config(profile)
     check_lesson_scope(args, request, ids, profile)
     source_key,media_key=protected_keys(media=True,profile=profile)
-    public,plan,payload,_=matched_plan(args,campaign,recipe,request,source_key)
+    public,plan,payload,_=matched_plan(args,campaign,recipe,request,source_key,profile)
     del source_key
     settings_hash=public['render_settings_sha256']; recipe_hash=identity(recipe)
     with tempfile.TemporaryDirectory(prefix='bora-assemble-',dir=os.environ.get('RUNNER_TEMP')) as td:
@@ -615,14 +635,20 @@ def preflight(args, profile='eager'):
     from planning import build_plan
     from assemble import assemble_lesson
     source='안녕하세요. 오늘은 차근차근 설명하겠습니다.'
-    plan=build_plan('TB-002' if profile=='compiled' else 'TB-001',source)
+    if profile == 'single_pass' and request['course'] == 'RL':
+        from rl_pronunciation import apply_to_plan
+        plan=build_plan('RL-001',source)
+        plan = apply_to_plan(plan)
+    else:
+        plan=build_plan('TB-002' if profile=='compiled' else 'TB-001',source)
     assembly_policy = {'profile': profile} if profile == 'single_pass' else {}
+    render_options = {'course': request['course']} if profile == 'single_pass' else {}
     with tempfile.TemporaryDirectory(prefix='bora-public-',dir=os.environ.get('RUNNER_TEMP')) as td:
         work=Path(td)
         with quiet():
             renderer=None
             try:
-                renderer=make_renderer(recipe,profile)
+                renderer=make_renderer(recipe,profile,**render_options)
                 entries=[]
                 for index,unit in enumerate(plan['units']):
                     receipt=renderer.render_unit(unit,work/f'unit-{index}')
@@ -663,6 +689,7 @@ def main(profile='eager'):
         else:
             _,_,request,_=config(profile)
             check(args.course==request['course'],'single_pass_index_course_scope')
+            check(request.get('overlap_tb') is not True, 'overlap_run_stages_only')
             make_index(args, profile=profile)
     else:
         {'preflight':preflight,'plan':public_plan,'probe':resume_probe,'render':render,'assemble':assemble}[args.command](args,profile=profile)

@@ -37,8 +37,13 @@ def validate_single_pass_request(request):
                     retry_blocked=False, execution_profile=SINGLE_PASS_PROFILE_ID)
     fields = set(required) | {'request_id', 'course'}
     if (not isinstance(request, dict) or not fields <= request.keys()
-            or set(request) - fields - {'lesson_ids', 'execution_shard_chars', 'selected_shards'}
+            or set(request) - fields - {'lesson_ids', 'execution_shard_chars', 'selected_shards', 'overlap_tb'}
             or any(request[name] != value for name, value in required.items())
+            or ('overlap_tb' in request and
+                (request['overlap_tb'] is not True or request['course'] != 'RL'
+                 or not isinstance(request.get('lesson_ids'), list)
+                 or not 1 <= len(request['lesson_ids']) <= 8
+                 or 'selected_shards' in request))
             or request['retry_blocked'] is not False
             or not isinstance(request['request_id'], str)
             or not re.fullmatch('[a-z0-9][a-z0-9-]{0,127}', request['request_id'])
