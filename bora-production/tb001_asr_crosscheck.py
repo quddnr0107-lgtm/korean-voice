@@ -34,6 +34,16 @@ OWNER_HEARD = frozenset((1, 33, 38))
 TRANSCRIBE = dict(language='ko', beam_size=5, temperature=0.0,
                   condition_on_previous_text=False, vad_filter=False,
                   word_timestamps=False)
+STAGE = 'request'
+
+
+def stage(name):
+    global STAGE
+    require(name in ('request', 'context', 'namespace', 'keys', 'config',
+        'inventory', 'model_assets', 'model_import', 'model_load', 'source_plan',
+        'plan_pin', 'restore', 'reviews', 'selection', 'audio', 'transcribe',
+        'score', 'receipt_integrity', 'summary', 'download'))
+    STAGE = name
 
 
 def require(ok):
@@ -46,7 +56,7 @@ def expected_request():
         pin=copy.deepcopy(full.PIN), model=dict(repo=MODEL_REPO,
         revision=MODEL_REVISION, model_sha256=MODEL_SHA256),
         excluded_owner_heard_unit_indices=sorted(OWNER_HEARD),
-        synthesis=False, promotion=False)
+        synthesis=False, promotion=False, diagnostic_revision=2)
 
 
 def validate_request(request):
@@ -102,13 +112,17 @@ def file_hash(path):
 
 
 def run_reviews(reviews, model, progress=None):
+    stage('selection')
     selected = select_unheard(reviews)
     result = []
     for row in selected:
+        stage('audio')
         require(file_hash(row['path']) == row['wav_sha256'])
         start = time.monotonic()
+        stage('transcribe')
         segments, _ = model.transcribe(str(row['path']), **TRANSCRIBE)
         recognized = ''.join(segment.text for segment in segments).strip()
+        stage('score')
         require(isinstance(recognized, str) and len(recognized) <= 10000)
         score = transcript_score(row['expected_spoken'], recognized,
                                  row['critical_terms'], max_cer=0)
@@ -131,11 +145,14 @@ def run_reviews(reviews, model, progress=None):
 
 
 def inspect(directory, model_path, output):
+    stage('context')
     check_context(os.environ, os.getuid(), os.geteuid())
+    stage('namespace')
     from namespace_guard import validate_snapshot
     validate_snapshot(os.getuid(), os.getuid(), socket.if_nameindex(),
         Path('/proc/net/route').read_text(), os.readlink('/proc/self/ns/net'),
         os.environ.get('BORA_HOST_NETNS', ''), Path('/proc/net/ipv6_route').read_text())
+    stage('keys')
     values = [os.environ.pop(name, '') for name in preview.PRIVATE_KEYS]
     source_key, media_key = [base64.b64decode(value, validate=True) for value in values]
     del values
@@ -147,32 +164,43 @@ def inspect(directory, model_path, output):
     socket.socket.connect = deny
     socket.socket.connect_ex = deny
     socket.create_connection = deny
+    stage('config')
     import runtime
     campaign, recipe, _, _ = runtime.config()
     require(runtime.identity(recipe) == full.PIN['recipe_sha256'])
+    stage('inventory')
     full.inventory(directory)
     with runtime.quiet():
+        stage('model_assets')
         verify_model(model_path)
+        stage('model_import')
         from faster_whisper import WhisperModel
+        stage('model_load')
         model = WhisperModel(str(model_path), device='cpu', compute_type='int8',
                              cpu_threads=4, num_workers=1, local_files_only=True)
+        stage('source_plan')
         plan, _ = runtime.source_plan('TB-001', campaign, source_key)
     del source_key
+    stage('plan_pin')
     require(runtime.identity(plan) == full.PIN['plan_sha256']
         and len(plan['units']) == 58
         and not any(u.get('review') or u.get('review_flags') for u in plan['units']))
     with tempfile.TemporaryDirectory(prefix='bora-private-crosscheck-',
                                      dir=os.environ['RUNNER_TEMP']) as temporary:
         with runtime.quiet():
+            stage('restore')
             rows = runtime.restore(directory, media_key, plan, full.PIN['recipe_sha256'],
                 full.PIN['render_settings_sha256'], Path(temporary))
             receipt_before = copy.deepcopy({i: row['receipt'] for i, row in rows.items()})
+            stage('reviews')
             reviews = preview.available_reviews(rows, plan)
             results = run_reviews(reviews, model)
+            stage('receipt_integrity')
             require(receipt_before == {i: row['receipt'] for i, row in rows.items()})
             heard = [dict(unit_index=x['index'], wav_sha256=x['wav_sha256'])
                      for x in reviews if x['index'] in OWNER_HEARD]
     del media_key, model
+    stage('summary')
     summary = dict(schema=SCHEMA, status='read_only_diagnostics_not_a_release',
         source_pin=full.PIN, model=dict(repo=MODEL_REPO, revision=MODEL_REVISION,
         model_sha256=MODEL_SHA256, compute_type='int8', cpu_threads=4),
@@ -198,6 +226,7 @@ def main():
     args = parser.parse_args()
     validate_request(json.loads(REQUEST.read_text()))
     if args.mode == 'download-model':
+        stage('download')
         require(args.directory is None and args.output is None)
         download_model(args.model_path)
     else:
@@ -208,6 +237,11 @@ def main():
 if __name__ == '__main__':
     try:
         main()
-    except Exception:
-        print('{"status":"failed","reason":"tb001_crosscheck_validation_failed"}', flush=True)
+    except Exception as error:
+        category = type(error).__name__
+        if category not in ('ValueError', 'RuntimeError', 'ImportError',
+                'ModuleNotFoundError', 'OSError', 'KeyError', 'TypeError'):
+            category = 'other'
+        print(json.dumps(dict(status='failed', reason='tb001_crosscheck_validation_failed',
+                              stage=STAGE, category=category)), flush=True)
         raise SystemExit(1)

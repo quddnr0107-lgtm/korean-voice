@@ -44,6 +44,6 @@
     38
   ],
   "synthesis": false,
-  "promotion": false
+  "promotion": false,
+  "diagnostic_revision": 2
 }
-
