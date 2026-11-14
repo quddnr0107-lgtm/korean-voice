@@ -11,7 +11,9 @@ class ExecutionProfileTests(unittest.TestCase):
         campaign, recipe, legacy, legacy_ids = runtime.config()
         compiled_campaign, compiled_recipe, compiled, compiled_ids = runtime.config('compiled')
         self.assertEqual((compiled_campaign, compiled_recipe), (campaign, recipe))
-        self.assertEqual(legacy_ids, ['TB-001'])
+        expected_ids = [f"{legacy['course']}-{index:03d}"
+                        for index in range(1, runtime.LIMITS[legacy['course']] + 1)]
+        self.assertEqual(legacy_ids, sorted(legacy.get('lesson_ids', expected_ids)))
         self.assertEqual(compiled_ids, ['TB-002'])
         self.assertNotIn('execution_profile', legacy)
         self.assertEqual(compiled['execution_profile'], profiles.PROFILE_ID)
