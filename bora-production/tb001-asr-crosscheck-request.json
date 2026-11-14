@@ -1,0 +1,49 @@
+{
+  "schema": "bora-tb001-asr-crosscheck/v1",
+  "purpose": "read-only-cross-model-diagnostics",
+  "pin": {
+    "assets": [
+      {
+        "blocked": 26,
+        "bytes": 81028727,
+        "end": 42,
+        "id": 742113914,
+        "name": "TB-001-s000-r43275117254-a1.zip",
+        "passed": 16,
+        "sha256": "fa7dc1bb048009000fa07cf8ffa5a7ac30ec5b88d1395294ded2cddf80ce93eb",
+        "shard": 0,
+        "start": 0
+      },
+      {
+        "blocked": 5,
+        "bytes": 23244525,
+        "end": 58,
+        "id": 741720764,
+        "name": "TB-001-s001-r43275117254-a1.zip",
+        "passed": 11,
+        "sha256": "6fb9ed5546420a7b273636061cc9d56326da9d1d1e5dc4bfe1284991281ca657",
+        "shard": 1,
+        "start": 42
+      }
+    ],
+    "lesson_id": "TB-001",
+    "plan_sha256": "63266c9ae5f234ab5852415952ca889b540b05a0348d6bc954d8613da5ec5f87",
+    "recipe_sha256": "d3d35666712d276c0fa60bb5c5b1f7ab7d11c7042d490c95bb6fb8846682502d",
+    "render_settings_sha256": "930c8341302f36e0058eeb0deb3a0821cc6177dc6edc162d41547f93299a0822",
+    "run_id": "43275117254",
+    "units": 58
+  },
+  "model": {
+    "repo": "dropbox-dash/faster-whisper-large-v3-turbo",
+    "revision": "0a363e9161cbc7ed1431c9597a8ceaf0c4f78fcf",
+    "model_sha256": "e76620f83d5f5b69efd3d87e3dc180c1bd21df9fbebacfd4335e5e1efcc018da"
+  },
+  "excluded_owner_heard_unit_indices": [
+    1,
+    33,
+    38
+  ],
+  "synthesis": false,
+  "promotion": false
+}
+

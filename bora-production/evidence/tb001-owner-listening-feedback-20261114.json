@@ -1,0 +1,71 @@
+{
+  "schema": "bora-scoped-owner-listening-feedback/v1",
+  "lesson_id": "TB-001",
+  "source_pin": {
+    "assets": [
+      {
+        "blocked": 26,
+        "bytes": 81028727,
+        "end": 42,
+        "id": 742113914,
+        "name": "TB-001-s000-r43275117254-a1.zip",
+        "passed": 16,
+        "sha256": "fa7dc1bb048009000fa07cf8ffa5a7ac30ec5b88d1395294ded2cddf80ce93eb",
+        "shard": 0,
+        "start": 0
+      },
+      {
+        "blocked": 5,
+        "bytes": 23244525,
+        "end": 58,
+        "id": 741720764,
+        "name": "TB-001-s001-r43275117254-a1.zip",
+        "passed": 11,
+        "sha256": "6fb9ed5546420a7b273636061cc9d56326da9d1d1e5dc4bfe1284991281ca657",
+        "shard": 1,
+        "start": 42
+      }
+    ],
+    "lesson_id": "TB-001",
+    "plan_sha256": "63266c9ae5f234ab5852415952ca889b540b05a0348d6bc954d8613da5ec5f87",
+    "recipe_sha256": "d3d35666712d276c0fa60bb5c5b1f7ab7d11c7042d490c95bb6fb8846682502d",
+    "render_settings_sha256": "930c8341302f36e0058eeb0deb3a0821cc6177dc6edc162d41547f93299a0822",
+    "run_id": "43275117254",
+    "units": 58
+  },
+  "feedback": {
+    "statement": "다 좋은데",
+    "interpretation": "owner_reports_no_audible_problem_in_the_three_delivered_preview_clips",
+    "scope": "three_preview_clips_only",
+    "word_by_word_accuracy_explicitly_confirmed": false,
+    "unit_indices_in_listening_order": [
+      38,
+      1,
+      33
+    ],
+    "heard_unit_count": 3,
+    "unreviewed_blocked_unit_count": 28,
+    "not_a_blanket_approval_of_other_units": true
+  },
+  "preview_provenance": {
+    "workflow_run_id": "43414522290",
+    "head_sha": "e61452c498cf7cc59516c5b45538e4f7b24c02db",
+    "request_id": "tb001-owner-listen-20261113-01",
+    "recipient_spki_sha256": "ff07b22be2e5bdd3703f9b1d4e96045e92788878b25ff7f535e7c3bf4c57dfda",
+    "envelope_artifact_id": 14030389101,
+    "envelope_artifact_zip_sha256": "ca323e131883b5485fd7091413c61ce336c830f236f27fb8a88c7ccb5222711c",
+    "selection_algorithm": "listening_preview.select_reviews at preview head",
+    "original_waveform": true
+  },
+  "actions": {
+    "preserve_original_audio": true,
+    "resynthesize_for_asr_mismatch_alone": false,
+    "next_diagnostic": "read-only stronger-ASR check of remaining 28 originals"
+  },
+  "production_receipt_changed": false,
+  "automatic_quality_pass_claimed": false,
+  "production_eligible": false,
+  "checkpoint_written": false,
+  "quality_criteria_changed": false
+}
+
