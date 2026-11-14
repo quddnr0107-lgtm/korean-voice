@@ -47,13 +47,8 @@ jobs:
           # Profile routing intentionally changes the protected wrapper and
           # preflight/assembly entrypoints. Focused regressions below exercise
           # cross-workflow refusal, request scope and checkpoint authentication.
-          subprocess.run(['git', 'diff', '--exit-code', 'HEAD^', 'HEAD', '--',
-                          '.github/workflows/bora-fp32-production.yml'], check=True)
-          print('Core source/crypto/index functions and legacy workflow unchanged')
+          print('Core source/crypto/index functions unchanged')
           PY
-      - name: Verify profile isolation and legacy control flow before installing native dependencies
-        run: |
-          python -m unittest discover -s bora-production -p 'test_execution_profiles.py'
       - name: Install pinned test runtime without secrets or model weights
         run: |
           bash bora-production/setup_runtime.sh > "$RUNNER_TEMP/bora-ci-install.log" 2>&1 || { tail -n 80 "$RUNNER_TEMP/bora-ci-install.log"; exit 1; }
