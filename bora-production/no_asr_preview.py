@@ -12,11 +12,12 @@ import importlib.metadata
 import json
 import os
 from pathlib import Path
-import re
+import shutil
 import signal
 import socket
 import subprocess
 import sys
+import tempfile
 import time
 
 from download_models import require_keyless
@@ -65,7 +66,19 @@ def check_context(env, uid, euid):
 def dump(path, value):
     path = Path(path)
     require(not path.is_symlink())
-    path.write_text(json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2)+'\n')
+    with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', dir=path.parent,
+                                     prefix='.raw-summary-', delete=False) as handle:
+        temporary = Path(handle.name)
+        try:
+            json.dump(value, handle, ensure_ascii=False, sort_keys=True, indent=2)
+            handle.write('\n')
+        except BaseException:
+            temporary.unlink(missing_ok=True)
+            raise
+    try:
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def download(model_dir):
@@ -124,6 +137,81 @@ def generate_once(model, torch_module):
     return waves[0], rate, observed, elapsed
 
 
+def optional_mp3(wav, mp3):
+    """Create a verified playback copy, keeping any codec failure nonfatal."""
+    started = time.perf_counter()
+    phase = 'find_ffmpeg'
+    temporary = None
+
+    def outcome(category=None, returncode=None, sha256=None, size=0):
+        return dict(status='ready' if category is None else 'unavailable',
+                    phase=phase, error_category=category, returncode=returncode,
+                    seconds=time.perf_counter()-started, sha256=sha256, bytes=size)
+
+    try:
+        ffmpeg = shutil.which('ffmpeg')
+        if ffmpeg is None:
+            return outcome('ffmpeg_unavailable')
+        phase = 'encode'
+        require(not mp3.exists() and not mp3.is_symlink())
+        with tempfile.NamedTemporaryFile(dir=mp3.parent, prefix='.raw-preview-',
+                                         suffix='.mp3', delete=False) as handle:
+            temporary = Path(handle.name)
+        subprocess.run([ffmpeg, '-hide_banner', '-loglevel', 'error', '-nostdin', '-y',
+            '-i', str(wav), '-map_metadata', '-1', '-c:a', 'libmp3lame', '-b:a', '128k',
+            '-ar', str(SAMPLE_RATE), '-ac', '1', str(temporary)], check=True,
+            capture_output=True, timeout=120)
+        phase = 'decode_check'
+        subprocess.run([ffmpeg, '-hide_banner', '-loglevel', 'error', '-nostdin',
+            '-i', str(temporary), '-f', 'null', '-'], check=True, capture_output=True, timeout=120)
+        size = temporary.stat().st_size
+        require(size > 0)
+        digest = file_hash(temporary)
+        os.replace(temporary, mp3)
+        return outcome(sha256=digest, size=size)
+    except subprocess.CalledProcessError as error:
+        return outcome('ffmpeg_failed', returncode=error.returncode)
+    except subprocess.TimeoutExpired:
+        return outcome('ffmpeg_timeout')
+    except FileNotFoundError:
+        return outcome('ffmpeg_or_file_unavailable')
+    except OSError:
+        return outcome('playback_io_error')
+    except ValueError:
+        return outcome('invalid_playback_copy')
+    finally:
+        if temporary is not None:
+            try:
+                temporary.unlink(missing_ok=True)
+            except OSError:
+                pass  # The unverified derivative is hidden and never named raw-preview.mp3.
+
+
+def finish_preview(output, result, started):
+    """Persist the raw result before trying any optional playback conversion."""
+    summary = output/'no-asr-preview-summary.json'
+    result.update(raw_audio_ready=True, mp3_sha256=None, mp3_bytes=0,
+        audio_reencoded_for_playback=False,
+        playback_conversion=dict(status='not_attempted', phase='not_started',
+                                 error_category=None, returncode=None))
+    result['timing_seconds'].update(raw_ready=time.perf_counter()-started,
+                                    mp3_encode_and_decode=None,
+                                    total_render=time.perf_counter()-started)
+    dump(summary, result)
+    (output/'source.txt').write_text(SOURCE+'\n', encoding='utf-8')
+
+    converted = optional_mp3(output/'raw-preview.wav', output/'raw-preview.mp3')
+    result['playback_conversion'] = {key: converted[key] for key in
+        ('status', 'phase', 'error_category', 'returncode')}
+    result.update(mp3_sha256=converted['sha256'], mp3_bytes=converted['bytes'],
+                  audio_reencoded_for_playback=converted['status'] == 'ready')
+    result['timing_seconds'].update(mp3_encode_and_decode=converted['seconds'],
+                                    total_render=time.perf_counter()-started)
+    dump(summary, result)
+    print(json.dumps(result, sort_keys=True), flush=True)
+    return result
+
+
 def render(model_dir, output_dir):
     global STAGE
     started = time.perf_counter()
@@ -176,6 +264,7 @@ def render(model_dir, output_dir):
             wave, rate, observed, synthesis_seconds = generate_once(model, torch)
     finally:
         signal.alarm(0)
+    assert_no_recognizer_modules()
     STAGE = 'signal'
     stats = signal_stats(wave, rate)
     require(stats['blocked'] is False and stats['samples'] > 0)
@@ -186,16 +275,7 @@ def render(model_dir, output_dir):
     sf.write(str(wav), wave, rate, subtype='FLOAT')
     require(0 < wav.stat().st_size <= 16*1024*1024)
     write_seconds = time.perf_counter()-write_start
-    STAGE = 'mp3_encode'
-    encode_start = time.perf_counter()
-    mp3 = output/'raw-preview.mp3'
-    subprocess.run(['ffmpeg', '-hide_banner', '-loglevel', 'error', '-nostdin', '-y',
-        '-i', str(wav), '-map_metadata', '-1', '-c:a', 'libmp3lame', '-b:a', '128k',
-        '-ar', str(SAMPLE_RATE), '-ac', '1', str(mp3)], check=True,
-        capture_output=True, timeout=120)
-    subprocess.run(['ffmpeg', '-hide_banner', '-loglevel', 'error', '-nostdin',
-        '-i', str(mp3), '-f', 'null', '-'], check=True, capture_output=True, timeout=120)
-    encode_seconds = time.perf_counter()-encode_start
+    STAGE = 'receipt_and_optional_playback'
     result = dict(schema=SCHEMA, status='new_public_raw_audio_without_asr',
         source=SOURCE, source_sha256=hashlib.sha256(SOURCE.encode('utf-8')).hexdigest(), seed=SEED,
         model=MODEL_REPOSITORY, model_revision=MODEL_REVISION,
@@ -204,21 +284,15 @@ def render(model_dir, output_dir):
         attention='sdpa', speaker='Sohee', language='Korean', mode='explain',
         original_style=STYLES['explain'], sampling=dict(SAMPLING, max_new_tokens=MAX_NEW_TOKENS),
         packages=packages, timing_seconds=dict(asset_verification=verification_seconds,
-        model_load=load_seconds, synthesis=synthesis_seconds, wav_write=write_seconds,
-        mp3_encode_and_decode=encode_seconds, total_render=time.perf_counter()-started),
+        model_load=load_seconds, synthesis=synthesis_seconds, wav_write=write_seconds),
         audio_seconds=stats['seconds'], sample_rate=rate, sample_count=stats['samples'],
         signal=stats, eos=observed,
         wav_sha256=file_hash(wav), wav_bytes=wav.stat().st_size,
-        mp3_sha256=file_hash(mp3), mp3_bytes=mp3.stat().st_size,
         recognition_models_downloaded=0, recognition_models_loaded=0,
         asr_performed=False, transcript_generated=False, audio_trimmed=False,
         audio_filtered=False, audio_tempo_factor=1, audio_pitch_shift=0,
-        audio_reencoded_for_playback=True, production_eligible=False,
-        production_status_changed=False, human_listening_required=True)
-    dump(output/'no-asr-preview-summary.json', result)
-    (output/'source.txt').write_text(SOURCE+'\n')
-    print(json.dumps(result, sort_keys=True), flush=True)
-    return result
+        production_eligible=False, production_status_changed=False, human_listening_required=True)
+    return finish_preview(output, result, started)
 
 
 def main():

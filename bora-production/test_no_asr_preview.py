@@ -1,11 +1,14 @@
 import ast
 import contextlib
 import copy
+import io
 import json
 import os
 from pathlib import Path
+import subprocess
 import sys
 import tempfile
+import time
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
@@ -129,6 +132,87 @@ class NoASRPreviewTests(unittest.TestCase):
         with patch.dict(sys.modules, {'faster_whisper': object()}):
             with self.assertRaises(ValueError):
                 preview.assert_no_recognizer_modules()
+
+    def raw_fixture(self, output):
+        wav = output/'raw-preview.wav'
+        wav.write_bytes(b'RIFF verified raw-wave fixture for optional codec tests')
+        return wav, dict(status='new_public_raw_audio_without_asr',
+            wav_sha256=preview.file_hash(wav), wav_bytes=wav.stat().st_size,
+            asr_performed=False, production_eligible=False,
+            timing_seconds=dict(model_load=4.25, synthesis=87.125, wav_write=.12))
+
+    def test_missing_ffmpeg_keeps_raw_wav_and_exact_synthesis_receipt(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary)
+            wav, result = self.raw_fixture(output)
+            with patch.object(preview.shutil, 'which', return_value=None), \
+                 patch.object(preview.subprocess, 'run') as run, \
+                 contextlib.redirect_stdout(io.StringIO()):
+                returned = preview.finish_preview(output, result, time.perf_counter())
+            run.assert_not_called()
+            persisted = json.loads((output/'no-asr-preview-summary.json').read_text())
+            self.assertEqual(persisted, returned)
+            self.assertEqual(persisted['playback_conversion']['error_category'], 'ffmpeg_unavailable')
+            self.assertFalse(persisted['audio_reencoded_for_playback'])
+            self.assertTrue(persisted['raw_audio_ready'])
+            self.assertFalse(persisted['asr_performed'])
+            self.assertEqual(persisted['timing_seconds']['synthesis'], 87.125)
+            self.assertEqual(persisted['timing_seconds']['model_load'], 4.25)
+            self.assertEqual(persisted['wav_sha256'], preview.file_hash(wav))
+            self.assertFalse((output/'raw-preview.mp3').exists())
+            self.assertEqual((output/'source.txt').read_text(), preview.SOURCE+'\n')
+
+    def test_failed_codec_has_raw_receipt_already_saved_and_removes_partial_mp3(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary)
+            wav, result = self.raw_fixture(output)
+            summary = output/'no-asr-preview-summary.json'
+
+            def failed_encode(argv, **kwargs):
+                old = json.loads(summary.read_text())
+                self.assertEqual(old['playback_conversion']['status'], 'not_attempted')
+                self.assertEqual(old['timing_seconds']['synthesis'], 87.125)
+                self.assertEqual(old['wav_sha256'], preview.file_hash(wav))
+                self.assertTrue(old['raw_audio_ready'])
+                Path(argv[-1]).write_bytes(b'partial mp3')
+                raise subprocess.CalledProcessError(2, argv, stderr=b'never copied to receipt')
+
+            with patch.object(preview.shutil, 'which', return_value='/fake/ffmpeg'), \
+                 patch.object(preview.subprocess, 'run', side_effect=failed_encode), \
+                 contextlib.redirect_stdout(io.StringIO()):
+                returned = preview.finish_preview(output, result, time.perf_counter())
+            self.assertEqual(returned['playback_conversion'], dict(status='unavailable',
+                phase='encode', error_category='ffmpeg_failed', returncode=2))
+            self.assertEqual(json.loads(summary.read_text()), returned)
+            self.assertEqual(returned['wav_sha256'], preview.file_hash(wav))
+            self.assertFalse(returned['audio_reencoded_for_playback'])
+            self.assertFalse(list(output.glob('*.mp3')))
+            self.assertNotIn('never copied', summary.read_text())
+
+    def test_decode_timeout_does_not_publish_unverified_playback_copy(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary)
+            wav, result = self.raw_fixture(output)
+            calls = []
+
+            def timeout_on_decode(argv, **kwargs):
+                calls.append(argv)
+                if len(calls) == 1:
+                    Path(argv[-1]).write_bytes(b'codec output awaiting decode check')
+                else:
+                    raise subprocess.TimeoutExpired(argv, timeout=120)
+
+            with patch.object(preview.shutil, 'which', return_value='/fake/ffmpeg'), \
+                 patch.object(preview.subprocess, 'run', side_effect=timeout_on_decode), \
+                 contextlib.redirect_stdout(io.StringIO()):
+                returned = preview.finish_preview(output, result, time.perf_counter())
+            self.assertEqual(len(calls), 2)
+            self.assertEqual(returned['playback_conversion']['phase'], 'decode_check')
+            self.assertEqual(returned['playback_conversion']['error_category'], 'ffmpeg_timeout')
+            self.assertEqual(returned['timing_seconds']['model_load'], 4.25)
+            self.assertEqual(returned['timing_seconds']['synthesis'], 87.125)
+            self.assertEqual(returned['wav_sha256'], preview.file_hash(wav))
+            self.assertFalse(list(output.glob('*.mp3')))
 
 
 if __name__ == '__main__':
