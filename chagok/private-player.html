@@ -96,6 +96,114 @@ function parseTranscript(source){const out=[];let scene='생활 회화';for(cons
 function renderTranscript(q=''){let last='',html='',found=0;const l=q.toLowerCase().trim();for(const item of all){if(l&&!(item.en.toLowerCase().includes(l)||item.ko.toLowerCase().includes(l)||item.scene.toLowerCase().includes(l)))continue;found++;if(item.scene!==last){last=item.scene;html+='<div class="scene">'+escape(last)+'</div>'}html+='<div class="line" data-n="'+item.n+'"><div class="en"><span class="n">'+item.n+'.</span> '+escape(item.en)+'</div><p class="ko">'+escape(item.ko)+'</p></div>'} $('utterances').innerHTML=html||'<p class="note">검색 결과가 없습니다.</p>';}
 $('search').addEventListener('input',e=>renderTranscript(e.target.value));
 fetch('/transcript',{cache:'force-cache'}).then(r=>{if(!r.ok)throw Error(r.status);return r.text()}).then(txt=>{all=parseTranscript(txt);if(all.length!==389)throw Error('389개 대본 수량 불일치');renderTranscript()}).catch(()=>{$('utterances').textContent='대본을 불러오지 못했습니다. 네트워크 연결을 확인하세요.'});
+function makeReviewSchedule(){
+  const due=[],out=[];let nextN=1;
+  for(let slot=1;slot<=389*3;slot++){
+    due.sort((a,b)=>a.due-b.due||a.n-b.n||a.pass-b.pass);
+    let x=due.length&&due[0].due<=slot?due.shift():null;
+    if(!x&&nextN<=389){x={n:nextN,pass:0};due.push({n:nextN,pass:1,due:slot+5},{n:nextN,pass:2,due:slot+11});nextN++}
+    else if(!x)x=due.shift();
+    out.push({n:x.n,pass:x.pass});
+  }
+  if(out.length!==1167||out[0].n!==1||out[5].n!==1||out[11].n!==1)throw Error('복습 순서가 올바르지 않습니다');
+  return out;
+}
+function cue(n){return cueData&&cueData.cues[n-1]}
+function getStart(n){const c=cue(n);return !c?0:(mode==='learn'?c[1]:c[5])}
+function getEnd(n){const c=cue(n);return !c?0:(mode==='learn'?c[4]:c[6])}
+function normalSentence(t){
+  let lo=0,hi=388;
+  while(lo<hi){const mid=(lo+hi)>>1;if((mode==='learn'?cueData.cues[mid][4]:cueData.cues[mid][6])>t)hi=mid;else lo=mid+1}
+  return lo+1;
+}
+function phase(n,t){const c=cue(n);if(!c||mode==='listen')return '영어';return t<c[2]?'영어 듣기':t<c[3]?'한국어 뜻':'영어 다시 듣기'}
+function updateFollow(force=false){
+  if(!cueData||all.length!==389)return;
+  const item=reviewEnabled?reviewPlan[reviewIndex]:{n:normalSentence(audio.currentTime),pass:-1};
+  if(!item)return;
+  const n=item.n,record=all[n-1],status=phase(n,audio.currentTime);
+  const key=[mode,n,status,item.pass,reviewIndex].join(':');
+  if(!force&&key===lastSyncKey)return;
+  lastSyncKey=key;
+  $('nowPosition').textContent=n+' / 389';
+  $('nowEn').textContent=record.en;$('nowKo').textContent=record.ko;$('nowPhase').textContent=status;
+  $('nowRepeat').textContent=reviewEnabled?['처음','1차 복습','2차 복습'][item.pass]:'원본 순서';
+  if(reviewEnabled)$('reviewProgress').textContent=(reviewIndex+1).toLocaleString()+' / 1,167회 · '+n+'번 문장';
+  const scroller=$('liveScroll'),first=Math.max(0,n-4),last=Math.min(389,n+3);
+  scroller.innerHTML=all.slice(first,last).map(x=>'<div class="live-entry '+(x.n===n?'active':'')+'" data-n="'+x.n+'" role="button" tabindex="0"><b>'+x.n+'. '+escape(x.en)+'</b><p>'+escape(x.ko)+'</p></div>').join('');
+  const el=scroller.querySelector('.active');
+  if(el)scroller.scrollTop=Math.max(0,el.offsetTop-scroller.offsetTop-scroller.clientHeight/2+el.offsetHeight/2);
+  const list=$('utterances'),details=list.closest('details');
+  if(details&&details.open){
+    const before=list.querySelector('.line.current');
+    if(before)before.classList.remove('current');
+    const active=list.querySelector('.line[data-n="'+n+'"]');
+    if(active){active.classList.add('current');list.scrollTop=Math.max(0,active.offsetTop-list.offsetTop-list.clientHeight/2)}
+  }
+}
+function updateReviewButtons(){
+  $('reviewState').hidden=!reviewEnabled;
+  $('reviewSetupBtn').textContent=reviewEnabled?'↺ 간격복습 처음부터 다시':'↺ 복습 설정하기 · 1·6·12 간격';
+}
+function jumpReview(index){
+  if(!reviewEnabled||!cueData||!reviewPlan.length)return;
+  reviewIndex=Math.min(Math.max(index,0),reviewPlan.length-1);put('reviewIndex',reviewIndex);
+  const seek=getStart(reviewPlan[reviewIndex].n);
+  if(audio.readyState>=1){
+    if(Math.abs(audio.currentTime-seek)<.04){reviewSeeking=false}
+    else{reviewSeeking=true;try{audio.currentTime=seek}catch{reviewSeeking=false}}
+  }
+  updateFollow(true);
+}
+function finishReview(){
+  if(!reviewEnabled)return;
+  if($('loop').checked){jumpReview(0);audio.play().catch(()=>msg('재생 버튼을 다시 눌러주세요'))}
+  else{audio.pause();msg('389개 문장을 각각 세 번씩 복습했습니다.')}
+}
+function reviewTick(){
+  if(reviewEnabled&&cueData&&reviewPlan.length&&audio.readyState>=1&&!audio.paused&&!audio.seeking&&!reviewSeeking){
+    const item=reviewPlan[reviewIndex];
+    if(item&&audio.currentTime>=getEnd(item.n)-.07){
+      if(reviewIndex===reviewPlan.length-1)finishReview();
+      else jumpReview(reviewIndex+1);
+    }
+  }
+  updateFollow();
+}
+audio.addEventListener('seeked',()=>{reviewSeeking=false;updateFollow(true)});
+audio.addEventListener('timeupdate',reviewTick);
+audio.addEventListener('play',()=>updateFollow(true));
+$('reviewSetupBtn').addEventListener('click',()=>{
+  if(!cueData){msg('문장별 음성 구간을 불러오는 중입니다.');return;}
+  audio.pause();reviewEnabled=true;put('reviewEnabled',true);reviewPlan=makeReviewSchedule();
+  reviewIndex=0;audio.loop=false;updateReviewButtons();jumpReview(0);
+  audio.play().catch(()=>msg('재생 버튼을 눌러 간격복습을 시작하세요.'));
+});
+$('reviewStop').addEventListener('click',()=>{
+  audio.pause();reviewEnabled=false;put('reviewEnabled',false);audio.loop=$('loop').checked;updateReviewButtons();
+  const saved=get('position:'+mode,0);if(audio.readyState>=1&&Number.isFinite(saved))audio.currentTime=saved;
+  updateFollow(true);msg('일반 순서로 돌아왔습니다.');
+});
+const jumpSentence=n=>{
+  if(!cueData||n<1||n>389)return;
+  if(reviewEnabled){
+    let i=reviewPlan.findIndex((x,k)=>k>=reviewIndex&&x.n===n);
+    if(i<0)i=reviewPlan.findIndex(x=>x.n===n);
+    if(i>=0)jumpReview(i);
+  }else{audio.currentTime=getStart(n)}
+  audio.play().catch(()=>msg('재생 버튼을 눌러주세요.'));
+};
+for(const id of ['liveScroll','utterances']){
+  $(id).addEventListener('click',e=>{const row=e.target.closest('[data-n]');if(row)jumpSentence(Number(row.dataset.n))});
+  $(id).addEventListener('keydown',e=>{const row=e.target.closest('[data-n]');if(row&&(e.key==='Enter'||e.key===' ')){e.preventDefault();jumpSentence(Number(row.dataset.n))}});
+}
+fetch('/cues',{cache:'force-cache'}).then(r=>{if(!r.ok)throw Error(r.status);return r.json()}).then(data=>{
+  if(data.count!==389||!Array.isArray(data.cues)||data.cues.length!==389||data.cues[0][0]!==1||data.cues[388][0]!==389)throw Error('타임코드 검증 실패');
+  cueData=data;reviewPlan=makeReviewSchedule();updateReviewButtons();
+  if(reviewEnabled){reviewIndex=Math.min(reviewIndex,1166);audio.loop=false;jumpReview(reviewIndex)}
+  updateFollow(true);
+}).catch(()=>{reviewEnabled=false;put('reviewEnabled',false);updateReviewButtons();msg('대본 동기화 자료가 로드되지 않았지만 기본 음원은 들을 수 있습니다.')});
+
 })();
 </script>
 </body></html>
