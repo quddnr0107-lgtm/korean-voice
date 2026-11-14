@@ -1,0 +1,109 @@
+name: Export published TB activation metadata
+
+on:
+  push:
+    branches: [integrated-lectures-premium-20261028]
+    paths: ['.github/workflows/bora-tb-activation-metadata.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    if: github.repository == 'quddnr0107-lgtm/korean-voice'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Verify and transfer only published TB metadata
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          import re
+          import subprocess
+          from pathlib import Path
+
+          repository = 'quddnr0107-lgtm/korean-voice'
+          tag = 'bora-fp32-tb-single-pass-v1-20261114'
+          release_id = 445262138
+          expected_index_sha256 = '174fce697dc12f9aa3d6da7d6e98ddd8e9c1a3c79ac7e6ba39ef1b9de2dd1290'
+          release_path = f'/repos/{repository}/releases'
+          asset_prefix = f'https://github.com/{repository}/releases/download/{tag}/'
+          lesson_ids = {f'TB-{n:03d}' for n in range(1, 26)}
+          allowed = {'index.json': 128 * 1024}
+          allowed.update({f'{lesson_id}.descriptor.json': 512 * 1024 for lesson_id in lesson_ids})
+
+          def github(endpoint, *args):
+              return subprocess.run(['gh', 'api', endpoint, *args], check=True,
+                                    stdout=subprocess.PIPE, timeout=45).stdout
+
+          def require(condition, message):
+              if not condition:
+                  raise ValueError(message)
+
+          def digest(data):
+              return hashlib.sha256(data).hexdigest()
+
+          release = json.loads(github(f'{release_path}/tags/{tag}'))
+          require(release['id'] == release_id and release['tag_name'] == tag
+                  and release['draft'] is False and release['prerelease'] is False
+                  and release['published_at'], 'Release is not the pinned published TB release')
+          require(isinstance(release['assets'], list) and len(release['assets']) == 76,
+                  'Expected index and exactly 25 completed lesson triples')
+          assets = {asset['name']: asset for asset in release['assets']}
+          require(len(assets) == 76 and allowed.keys() <= assets.keys(), 'Incomplete or duplicate assets')
+          files = {}
+          for name, maximum in sorted(allowed.items()):
+              asset = assets[name]
+              require(type(asset['id']) is int and asset['id'] > 0 and asset['state'] == 'uploaded'
+                      and type(asset['size']) is int and 0 < asset['size'] <= maximum
+                      and re.fullmatch(r'sha256:[a-f0-9]{64}', asset['digest'] or '')
+                      and asset['browser_download_url'] == asset_prefix + name, 'Invalid metadata asset')
+              data = github(f'{release_path}/assets/{asset["id"]}', '-H', 'Accept: application/octet-stream')
+              require(len(data) == asset['size'] and 'sha256:' + digest(data) == asset['digest'],
+                      f'Published metadata size/digest mismatch: {name}')
+              files[name] = data
+
+          require(digest(files['index.json']) == expected_index_sha256, 'Index differs from the production verification')
+          index = json.loads(files['index.json'])
+          require(set(index) == {'version', 'release_tag', 'count', 'lessons'}
+                  and index['version'] == 'integrated-lecture-index/v2' and index['release_tag'] == tag
+                  and type(index['count']) is int and index['count'] == len(lesson_ids)
+                  and isinstance(index['lessons'], list) and len(index['lessons']) == len(lesson_ids),
+                  'Invalid TB activation index')
+          expected_assets = set(allowed)
+          seen = set()
+          for row in index['lessons']:
+              require(set(row) == {'id', 'descriptor_url', 'sha256'}, 'Invalid index lesson fields')
+              ident = row['id']
+              require(ident in lesson_ids and ident not in seen, 'Unexpected or duplicate index lesson ID')
+              seen.add(ident)
+              name = f'{ident}.descriptor.json'
+              require(row['descriptor_url'] == asset_prefix + name and row['sha256'] == digest(files[name]),
+                      f'Index descriptor mismatch: {ident}')
+              descriptor = json.loads(files[name])
+              require(set(descriptor) == {'version', 'lesson_id', 'audio', 'content'}
+                      and descriptor['version'] == 'integrated-lecture-output/v2'
+                      and descriptor['lesson_id'] == ident, f'Descriptor scope mismatch: {ident}')
+              for kind in ('audio', 'content'):
+                  object_id = descriptor[kind]['object_id']
+                  require(re.fullmatch(r'[a-f0-9]{32}', object_id), f'Invalid {kind} object ID: {ident}')
+                  expected_assets.add(f'{ident}.{kind}.{object_id}.bin')
+          require(seen == lesson_ids and expected_assets == assets.keys(), 'Published TB course inventory mismatch')
+
+          out = Path(os.environ['RUNNER_TEMP']) / 'bora-tb-activation-metadata'
+          out.mkdir(mode=0o700)
+          for name, data in files.items():
+              (out / name).write_bytes(data)
+          print(json.dumps({'release_id': release_id, 'tag': tag, 'lessons': len(seen),
+                            'index_sha256': digest(files['index.json'])}))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: bora-tb-activation-metadata
+          path: ${{ runner.temp }}/bora-tb-activation-metadata/
+          retention-days: 3
+          if-no-files-found: error
