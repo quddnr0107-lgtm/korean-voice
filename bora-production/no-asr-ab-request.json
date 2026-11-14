@@ -1,0 +1,11 @@
+{
+  "asr_performed": false,
+  "chunks": 12,
+  "fixture_sha256": "ac04e9f956564f5852c9520f9c1e9f80405bb6119d038ad61b9b0d2e5458c345",
+  "paired_cpu_threads": 4,
+  "request_id": "bora-cpu-no-asr-five-minute-comparison-20261114",
+  "retries": 0,
+  "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+  "schema": "bora-no-asr-ab-request/v1",
+  "shards": 3
+}
