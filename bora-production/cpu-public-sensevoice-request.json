@@ -1,0 +1,47 @@
+{
+  "schema": "bora-public-sensevoice-check/v1",
+  "request_id": "public-sensevoice-20261114-01",
+  "source_run_id": 43533278937,
+  "source_commit": "d7d3a46cd7dd8461a276eace71ccd57393ae9cc0",
+  "artifact_id": 14089353182,
+  "public_input_request_sha256": "318d737f135fe68a408867e7a209c550dac9c64bdb539f2f53a7027b77fd143a",
+  "authenticator_sha256": "929c8eaee76406d4b5067798d709da409f8b90eff9860861e5fb500969636fdc",
+  "model": {
+    "repo": "csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17",
+    "revision": "2365baeacb507f821a0c8120fcee3d484dba7a07",
+    "files": {
+      "model.int8.onnx": {
+        "size_bytes": 239233841,
+        "sha256": "c71f0ce00bec95b07744e116345e33d8cbbe08cef896382cf907bf4b51a2cd51"
+      },
+      "tokens.txt": {
+        "size_bytes": 315894,
+        "sha256": "f449eb28dc567533d7fa59be34e2abca8784f771850c78a47fb731a31429a1dc"
+      }
+    },
+    "tokens_git_blob_sha1": "2cfc92fc2ff26aaa690b7c01fd96b41109413881"
+  },
+  "runtime": {
+    "sherpa-onnx": "2.0.1",
+    "sherpa-onnx-core": "2.0.1",
+    "numpy": "2.5.4",
+    "soundfile": "0.14.0",
+    "scipy": "1.18.1",
+    "huggingface-hub": "0.36.2"
+  },
+  "recognition_options": {
+    "num_threads": 4,
+    "sample_rate": 16000,
+    "feature_dim": 80,
+    "decoding_method": "greedy_search",
+    "debug": false,
+    "provider": "cpu",
+    "language": "ko",
+    "use_itn": false
+  },
+  "synthesis": false,
+  "private_inputs": false,
+  "secrets": false,
+  "promotion": false,
+  "model_or_audio_upload": false
+}
