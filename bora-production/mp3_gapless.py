@@ -1,6 +1,15 @@
-"""Narrow correction of pinned FFmpeg 7.0.2 MPEG1 mono44100/128k end-padding.
+"""Narrow correction of FFmpeg MPEG1 mono44100/128k end-padding.
 Only gapless metadata and its CRC change; audio frames are preserved.
 Reject unknown encoders, formats, CRCs and length discrepancies."""
+
+# FFmpeg stores only the first nine bytes of LIBAVCODEC_IDENT here.
+SUPPORTED_ENCODER_TAGS = (
+    b'Lavc60.31',  # Ubuntu 24.04 FFmpeg 6.1.1 used by course assembly
+    b'Lavc61.3.',  # FFmpeg 7.0.2
+    b'Lavc61.19',  # FFmpeg 7.1
+)
+
+
 def crc16(data):
  c=0
  for b in data:
@@ -18,7 +27,7 @@ def repair(data,expected,decoded):
  if bytes(b[start:start+4])!=bytes.fromhex('fffb90c0'):raise ValueError('MPEG scope')
  x=start+21
  if bytes(b[x:x+4])!=b'Info' or bytes(b[x+4:x+8])!=b'\0\0\0\x0f':raise ValueError('Xing scope')
- if b[x+120:x+129]!=b'Lavc61.3.':raise ValueError('encoder scope')
+ if b[x+120:x+129] not in SUPPORTED_ENCODER_TAGS:raise ValueError('encoder scope')
  if len(b)<start+417 or len(b)<x+156:raise ValueError('header truncated')
  if any(b[start+190:start+417]):raise ValueError('header reserved bytes')
  crcpos=x+154;oldcrc=int.from_bytes(b[crcpos:crcpos+2],'big');b[crcpos:crcpos+2]=b'\0\0'

@@ -23,8 +23,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     outputs:
-      course: ${{ steps.checked.outputs.course }}
-      render_settings_sha256: ${{ steps.checked.outputs.render_settings_sha256 }}
+      course: ${{ steps.checked.outputs.course || steps.requested.outputs.course }}
+      render_settings_sha256: ${{ steps.checked.outputs.render_settings_sha256 || steps.requested.outputs.render_settings_sha256 }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -32,15 +32,42 @@ jobs:
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
           python-version: '3.12'
+      - id: requested
+        name: Validate recovery scope and the original checkpoint settings pin
+        run: |
+          PYTHONPATH=bora-production python - <<'PY'
+          import json, os
+          from pathlib import Path
+          from execution_profiles import validate_single_pass_request
+          request = json.loads(Path('bora-production/single-pass-request.json').read_text())
+          validate_single_pass_request(request)
+          recovery = request.get('assembly_only') is True
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              print(f'assembly_only={str(recovery).lower()}', file=output)
+              if recovery:
+                  print('course='+request['course'], file=output)
+                  print('render_settings_sha256='+request['checkpoint_settings_sha256'], file=output)
+          PY
       - name: Select CPU wait policy without source or media keys
+        if: steps.requested.outputs.assembly_only == 'false'
         run: python bora-production/cpu_wait_policy.py
       - name: Install the pinned runtime without source or media keys
+        if: steps.requested.outputs.assembly_only == 'false'
         run: bash bora-production/setup_single_pass_runtime.sh
+      - name: Install only encoders, arrays and cryptography for checkpoint recovery
+        if: steps.requested.outputs.assembly_only == 'true'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install --yes --no-install-recommends ffmpeg
+          python -m pip install --disable-pip-version-check numpy==2.5.4 cryptography==50.0.0
+          python -m pip check
       - name: Check producer, checkpoint, transport and assembly contracts
         run: python -m unittest discover -s bora-production -p 'test_*.py'
       - name: Download exact revision-pinned models without keys
+        if: steps.requested.outputs.assembly_only == 'false'
         run: bash bora-production/download_single_pass_model.sh
       - name: Exercise real FP32 speech and assembly without recognition offline with a public sentence
+        if: steps.requested.outputs.assembly_only == 'false'
         run: |
           umask 077
           export BORA_HOST_NETNS="$(readlink /proc/self/ns/net)"
@@ -49,6 +76,7 @@ jobs:
             bora-production/single_pass_runtime.py preflight --output "$RUNNER_TEMP/bora-runtime-smoke.json"
       - id: checked
         name: Export only the verified public course and settings fingerprint
+        if: steps.requested.outputs.assembly_only == 'false'
         run: |
           python - <<'PY'
           import json, os, re
@@ -81,6 +109,7 @@ jobs:
       complete_course: ${{ steps.plan.outputs.complete_course }}
       overlap_tb: ${{ steps.plan.outputs.overlap_tb }}
       parallelism: ${{ steps.plan.outputs.parallelism }}
+      assembly_only: ${{ steps.plan.outputs.assembly_only }}
     env:
       BORA_COURSE: ${{ needs.preflight.outputs.course }}
       BORA_SETTINGS_SHA256: ${{ needs.preflight.outputs.render_settings_sha256 }}
@@ -105,6 +134,7 @@ jobs:
             bora-production/single_pass_runtime.py plan --output "$RUNNER_TEMP/bora-plan/public-plan.json" \
             --github-output "$GITHUB_OUTPUT" --settings-sha "$BORA_SETTINGS_SHA256"
       - name: Prepare the separate ciphertext staging release without source or media keys
+        if: steps.plan.outputs.assembly_only == 'false'
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: python bora-production/transport.py prepare --profile single_pass --course "$BORA_COURSE"
@@ -135,7 +165,11 @@ jobs:
 
   render:
     needs: [plan, capacity]
-    if: ${{ always() && !cancelled() && needs.plan.result == 'success' && ((needs.plan.outputs.overlap_tb == 'false' && needs.capacity.result == 'skipped') || (needs.plan.outputs.overlap_tb == 'true' && needs.capacity.result == 'success')) }}
+    if: >-
+      ${{ always() && !cancelled() && needs.plan.result == 'success' &&
+          needs.plan.outputs.assembly_only == 'false' &&
+          ((needs.plan.outputs.overlap_tb == 'false' && needs.capacity.result == 'skipped') ||
+           (needs.plan.outputs.overlap_tb == 'true' && needs.capacity.result == 'success')) }}
     runs-on: ubuntu-24.04
     environment: admin-law-premium-production
     timeout-minutes: 360
@@ -221,7 +255,13 @@ jobs:
     needs: [plan, capacity, render]
     # A failed shard cannot cancel complete lessons. The offline assembler must
     # independently authenticate complete coverage before its output can leave.
-    if: ${{ always() && !cancelled() && needs.plan.result == 'success' && ((needs.plan.outputs.overlap_tb == 'false' && needs.capacity.result == 'skipped') || (needs.plan.outputs.overlap_tb == 'true' && needs.capacity.result == 'success')) && (needs.render.result == 'success' || needs.render.result == 'failure') }}
+    if: >-
+      ${{ always() && !cancelled() && needs.plan.result == 'success' &&
+          ((needs.plan.outputs.overlap_tb == 'false' && needs.capacity.result == 'skipped') ||
+           (needs.plan.outputs.overlap_tb == 'true' && needs.capacity.result == 'success')) &&
+          ((needs.plan.outputs.assembly_only == 'true' && needs.render.result == 'skipped') ||
+           (needs.plan.outputs.assembly_only == 'false' &&
+            (needs.render.result == 'success' || needs.render.result == 'failure'))) }}
     runs-on: ubuntu-24.04
     environment: admin-law-premium-production
     timeout-minutes: 45

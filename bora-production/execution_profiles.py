@@ -37,7 +37,8 @@ def validate_single_pass_request(request):
                     retry_blocked=False, execution_profile=SINGLE_PASS_PROFILE_ID)
     fields = set(required) | {'request_id', 'course'}
     if (not isinstance(request, dict) or not fields <= request.keys()
-            or set(request) - fields - {'lesson_ids', 'execution_shard_chars', 'selected_shards', 'overlap_tb'}
+            or set(request) - fields - {'lesson_ids', 'execution_shard_chars', 'selected_shards',
+                                       'overlap_tb', 'assembly_only', 'checkpoint_settings_sha256'}
             or any(request[name] != value for name, value in required.items())
             or ('overlap_tb' in request and
                 (request['overlap_tb'] is not True or request['course'] != 'RL'
@@ -49,6 +50,13 @@ def validate_single_pass_request(request):
             or not re.fullmatch('[a-z0-9][a-z0-9-]{0,127}', request['request_id'])
             or request['course'] not in ('TB', 'RL', 'DR', 'MS')):
         raise ValueError('single_pass_request_scope')
+    recovery_fields = {'assembly_only', 'checkpoint_settings_sha256'}
+    if not recovery_fields.isdisjoint(request):
+        fingerprint = request.get('checkpoint_settings_sha256')
+        if (request.get('assembly_only') is not True or not isinstance(fingerprint, str)
+                or not re.fullmatch('[a-f0-9]{64}', fingerprint)
+                or not {'selected_shards', 'overlap_tb'}.isdisjoint(request)):
+            raise ValueError('single_pass_assembly_only_scope')
 
 
 def validate_request(request, profile='eager'):

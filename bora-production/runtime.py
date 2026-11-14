@@ -226,6 +226,9 @@ def shards(plan, target=4000):
 def public_plan(args, profile='eager'):
     campaign,recipe,request,ids=config(profile)
     check(HASH.fullmatch(args.settings_sha or ''), 'preflight_settings_hash')
+    assembly_only = profile == 'single_pass' and request.get('assembly_only') is True
+    if assembly_only:
+        check(args.settings_sha == request['checkpoint_settings_sha256'], 'assembly_checkpoint_settings_pin')
     source_key,_=protected_keys(profile=profile)
     target_chars=execution_shard_chars(recipe,request)
     records=[]; matrix=[]; review_counts=Counter(); costs={}
@@ -249,7 +252,7 @@ def public_plan(args, profile='eager'):
         wanted={(v['lesson_id'],v['shard']) for v in selected}
         check(len(wanted)==len(selected) and wanted<={(v['lesson_id'],v['shard']) for v in matrix}, 'selected_shards')
         matrix=[v for v in matrix if (v['lesson_id'],v['shard']) in wanted]
-    check(0<len(matrix)<=256, 'matrix_requires_lesson_batch')
+    check(assembly_only or 0<len(matrix)<=256, 'matrix_requires_lesson_batch')
     matrix.sort(key=lambda x:(-costs[(x['lesson_id'],x['shard'])],x['lesson_id'],x['shard']))
     manifest=dict(schema='bora-fp32-public-plan/v1',course=request['course'],
         campaign_sha256=identity(campaign),recipe_sha256=identity(recipe),
@@ -265,7 +268,7 @@ def public_plan(args, profile='eager'):
     check(unresolved==0, 'source_review_required_before_render')
     if args.github_output:
         with open(args.github_output,'a') as f:
-            f.write('matrix='+enc(dict(include=matrix)).decode()+'\n')
+            f.write('matrix='+enc(dict(include=[] if assembly_only else matrix)).decode()+'\n')
             f.write('lessons='+enc(dict(include=[dict(lesson_id=i) for i in ids])).decode()+'\n')
             f.write('course='+request['course']+'\n')
             if profile == 'single_pass':
@@ -273,6 +276,7 @@ def public_plan(args, profile='eager'):
                 overlap = request.get('overlap_tb') is True
                 f.write('overlap_tb='+str(overlap).lower()+'\n')
                 f.write(f'parallelism={15 if overlap else 40}\n')
+                f.write('assembly_only='+str(assembly_only).lower()+'\n')
 
 
 def matched_plan(args, campaign, recipe, request, key, profile='eager'):
@@ -280,6 +284,9 @@ def matched_plan(args, campaign, recipe, request, key, profile='eager'):
     check(public.get('schema')=='bora-fp32-public-plan/v1' and public.get('campaign_sha256')==identity(campaign)
           and public.get('recipe_sha256')==identity(recipe) and public.get('request_sha256')==identity(request)
           and public.get('course')==request['course'], 'public_plan_pin')
+    if profile == 'single_pass' and request.get('assembly_only') is True:
+        check(public.get('render_settings_sha256') == request['checkpoint_settings_sha256'],
+              'assembly_checkpoint_settings_pin')
     check(args.lesson_id in [r['lesson_id'] for r in public['lessons']], 'planned_lesson_scope')
     plan,payload=course_plan(args.lesson_id,campaign,key,profile)
     row=next(r for r in public['lessons'] if r['lesson_id']==args.lesson_id)
@@ -437,6 +444,8 @@ def check_lesson_scope(args, request, ids, profile):
         check(args.lesson_id in ids, 'compiled_lesson_scope')
     if profile == 'single_pass':
         check(args.lesson_id in ids, 'single_pass_lesson_scope')
+        if hasattr(args, 'shard'):
+            check(request.get('assembly_only') is not True, 'assembly_only_forbids_render')
         selected = request.get('selected_shards')
         if selected is not None and hasattr(args, 'shard'):
             check({'lesson_id': args.lesson_id, 'shard': args.shard} in selected,
@@ -630,6 +639,8 @@ def make_index(args, profile='eager'):
 
 def preflight(args, profile='eager'):
     _,recipe,request,_=config(profile)
+    if profile == 'single_pass':
+        check(request.get('assembly_only') is not True, 'assembly_only_forbids_render')
     check(not any(os.environ.get(v) for v in ('ADMIN_LAW_PREMIUM_SOURCE_KEY_B64','ADMIN_LAW_PREMIUM_MEDIA_KEY_B64')),
           'keyless_preflight')
     from planning import build_plan

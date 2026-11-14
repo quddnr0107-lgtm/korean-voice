@@ -21,7 +21,7 @@ sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent / 'research' / 'reading-quality'))
 from paragraph_plan import build_plan
 from assemble import (AssemblyError, INPUT_RATE, SAMPLE_RATE, assemble_lesson, identity,
-                      validate_entries, validate_plan)
+                      _compact_long_pauses, _metrics, validate_entries, validate_plan)
 from lecture_pack import make_pack_manifest, open_part, seal_part, validate_pack
 
 
@@ -30,12 +30,15 @@ def sha(path):
 
 
 def make_wave(path, *, rate=INPUT_RATE, count=10080, frequency=220, channels=1,
-              clipped=False, silent=False):
+              clipped=False, silent=False, pause_seconds=0):
     samples = .17 * np.sin(2 * np.pi * frequency * np.arange(count) / rate)
     if silent:
         samples[:] = 0
     if clipped:
         samples[100:200] = 1
+    if pause_seconds:
+        middle = len(samples) // 2
+        samples = np.concatenate((samples[:middle], np.zeros(rate * pause_seconds), samples[middle:]))
     samples = np.clip(samples * 32767, -32768, 32767).astype('<i2')
     if channels > 1:
         samples = np.repeat(samples[:, None], channels, axis=1)
@@ -163,6 +166,31 @@ class AssemblyTests(unittest.TestCase):
         self.assertFalse(metadata['asr_verified'])
         self.assertTrue(metadata['asr_scope'].startswith('not run;'))
         self.assertTrue(metadata['automatic_unit_checks_passed'])
+
+    def test_single_pass_compacts_only_long_quiet_pauses_and_remeasures_timing(self):
+        entries, settings_hash = self.single_pass_entries()
+        sample = entries[0]
+        make_wave(sample['path'], pause_seconds=4)
+        sample['receipt'].update(sha256=sha(sample['path']), sample_count=10080 + 4 * INPUT_RATE)
+        metadata = assemble_lesson(self.plan, entries, self.root / 'compacted',
+                                   **dict(self.args, expected_render_settings_sha256=settings_hash),
+                                   profile='single_pass')
+        first, second = metadata['segments'][:2]
+        self.assertLess(first['end_s'], 1)
+        self.assertAlmostEqual(second['start_s'] - first['end_s'], .18)
+        self.assertLess(metadata['validation']['max_silence_s'], 3)
+
+    def test_pause_compaction_preserves_active_and_borderline_frames(self):
+        active = np.full(SAMPLE_RATE, .1, dtype=np.float32)
+        pause = np.zeros(4 * SAMPLE_RATE, dtype=np.float32)
+        borderline = np.full(SAMPLE_RATE, .0018, dtype=np.float32)
+        pcm = np.concatenate((active, pause, borderline, active))
+        shortened = _compact_long_pauses(pcm)
+        np.testing.assert_array_equal(shortened[:SAMPLE_RATE], active)
+        np.testing.assert_array_equal(shortened[-2 * SAMPLE_RATE:-SAMPLE_RATE], borderline)
+        np.testing.assert_array_equal(shortened[-SAMPLE_RATE:], active)
+        self.assertLess(_metrics(shortened)['max_silence_s'], 3)
+        self.assertIs(_compact_long_pauses(pause), pause)
 
     def test_single_pass_rejects_second_attempt_forged_asr_or_invalid_eos(self):
         for field, value, code in (

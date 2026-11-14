@@ -18,6 +18,7 @@ on:
       - 'bora-production/assemble.py'
       - 'bora-production/single-pass-request.json'
       - '.github/workflows/bora-fp32-production.yml'
+      - '.github/workflows/bora-fp32-single-pass.yml'
       - '.github/workflows/bora-execution-ci.yml'
 permissions:
   contents: read

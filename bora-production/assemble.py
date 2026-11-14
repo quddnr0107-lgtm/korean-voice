@@ -271,15 +271,50 @@ def _metrics(pcm):
     squares = pcm.astype(np.float64) ** 2
     energy = float(squares.sum())
     rms = math.sqrt(energy / len(pcm))
-    frame = max(1, round(SAMPLE_RATE * .02))
-    n = len(pcm) // frame
     longest = run = 0
-    for silent in (squares[:n * frame].reshape(n, frame).mean(axis=1) < 10**(-50 / 10)) if n else []:
+    for silent in _silent_frames(squares):
         run = run + 1 if silent else 0
         longest = max(longest, run)
     return dict(finite=True, sample_count=len(pcm), duration_s=len(pcm) / SAMPLE_RATE,
                 peak=float(np.max(np.abs(pcm))), clipped_samples=clipped, rms=rms,
-                energy=energy, max_silence_s=longest * frame / SAMPLE_RATE)
+                energy=energy, max_silence_s=longest * .02)
+
+
+def _silent_frames(squares, *, threshold_db=-50):
+    frame = SAMPLE_RATE // 50
+    return (squares[:len(squares) // frame * frame].reshape(-1, frame).mean(axis=1)
+            < 10**(threshold_db / 10))
+
+
+def _compact_long_pauses(pcm):
+    """Shorten only contiguous quiet frames that reach the silence gate."""
+    frame = SAMPLE_RATE // 50
+    # Do not cut borderline frames counted as silent by the validation gate.
+    quiet = _silent_frames(pcm.astype(np.float64) ** 2, threshold_db=-65)
+    peaks = np.abs(pcm[:len(quiet) * frame].reshape(-1, frame)).max(axis=1)
+    silent = quiet & (peaks < 10**(-45 / 20))
+    boundaries = np.flatnonzero(np.diff(np.r_[False, silent, False]))
+    cuts = [(start * frame, end * frame) for start, end in boundaries.reshape(-1, 2)
+            if end - start >= 150]
+    if not cuts or silent.all():
+        return pcm
+
+    pieces = []
+    cursor = 0
+    fade_length = round(SAMPLE_RATE * .005)
+    fade_out = np.linspace(1, 0, fade_length, dtype=np.float32)
+    for start, end in cuts:
+        # Keep the quiet frames adjacent to speech and join inside the pause.
+        keep = round(SAMPLE_RATE * (.12 if start == 0 or end == len(silent) * frame else .175))
+        cut_start = start + keep
+        cut_end = end - keep
+        left = pcm[cursor:cut_start].copy()
+        left[-fade_length:] *= fade_out
+        right = pcm[cut_end:cut_end + fade_length] * fade_out[::-1]
+        pieces.extend((left, right))
+        cursor = cut_end + fade_length
+    pieces.append(pcm[cursor:])
+    return np.concatenate(pieces)
 
 
 def _require_signal(metrics):
@@ -288,7 +323,7 @@ def _require_signal(metrics):
     _require(metrics['max_silence_s'] < 3, 'long_silence_pcm')
 
 
-def _input_pcm(path, receipt, ffmpeg, ffprobe):
+def _input_pcm(path, receipt, ffmpeg, ffprobe, *, compact_pauses=False):
     raw = path.read_bytes()
     _require(0 < len(raw) <= MAX_UNIT_BYTES and _sha(raw) == receipt['sha256'], 'unit_audio_hash')
     probe = _run([ffprobe, '-v', 'error', '-show_entries',
@@ -317,9 +352,17 @@ def _input_pcm(path, receipt, ffmpeg, ffprobe):
     final = np.frombuffer(resampled, dtype='<f4')
     _require(abs(len(final) - receipt['sample_count'] * SAMPLE_RATE / INPUT_RATE) <= 1,
              'resample_duration')
+    resampled_count = len(final)
     metrics = _metrics(final)
+    if compact_pauses and metrics['max_silence_s'] >= 3:
+        _require(metrics['clipped_samples'] == 0, 'clipped_pcm')
+        _require(metrics['rms'] >= 1e-5, 'silent_pcm')
+        final = _compact_long_pauses(final)
+        metrics = _metrics(final)
     _require_signal(metrics)
-    return resampled, metrics
+    if compact_pauses:
+        metrics['removed_long_pause_samples'] = resampled_count - len(final)
+    return final.astype('<f4', copy=False).tobytes(), metrics
 
 
 def _part_boundaries(segments, total, limit):
@@ -417,7 +460,12 @@ def assemble_lesson(plan, entries, output_dir, *, expected_recipe_sha256,
         with spool.open('xb') as handle:
             os.chmod(spool, 0o600)
             for index, (row, (unit, start_cp, end_cp)) in enumerate(zip(ordered, validated)):
-                final, metrics = _input_pcm(row['path'], row['receipt'], executable, probe)
+                try:
+                    final, metrics = _input_pcm(row['path'], row['receipt'], executable, probe,
+                                                compact_pauses=profile == 'single_pass')
+                except AssemblyError as exc:
+                    exc.unit_index = index
+                    raise
                 count = len(final) // 4
                 _require(count <= limit, 'unit_exceeds_part_duration')
                 gap = 0

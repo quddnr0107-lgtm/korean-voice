@@ -2,6 +2,7 @@
 import argparse
 import contextlib
 import io
+import json
 import os
 from pathlib import Path
 import tempfile
@@ -37,6 +38,28 @@ class SinglePassRuntimeTests(unittest.TestCase):
                 profiles.validate_request(bad, 'single_pass')
         self.assertEqual(profiles.workflow_filename('single_pass'), 'bora-fp32-single-pass.yml')
         self.assertEqual(profiles.request_filename('single_pass'), 'single-pass-request.json')
+
+    def test_assembly_only_requires_a_pin_and_excludes_render_options(self):
+        recovery = self.request(assembly_only=True, checkpoint_settings_sha256='a'*64)
+        profiles.validate_request(recovery, 'single_pass')
+        for invalid in (self.request(assembly_only=True), self.request(checkpoint_settings_sha256='a'*64),
+                        dict(recovery, assembly_only=1), dict(recovery, checkpoint_settings_sha256='z'*64),
+                        dict(recovery, retry_blocked=True),
+                        dict(recovery, selected_shards=[{'lesson_id': 'TB-001', 'shard': 0}]),
+                        dict(recovery, course='RL', overlap_tb=True, lesson_ids=['RL-001'])):
+            with self.subTest(invalid=invalid), self.assertRaisesRegex(ValueError, 'scope'):
+                profiles.validate_request(invalid, 'single_pass')
+
+    def test_assembly_only_rejects_synthesis_before_keys_or_renderer(self):
+        request = self.request(assembly_only=True, checkpoint_settings_sha256='a'*64)
+        args = argparse.Namespace(lesson_id='TB-001', shard=0)
+        with patch.object(runtime, 'config', return_value=({}, {}, request, ['TB-001'])), \
+             patch.object(runtime, 'protected_keys') as keys, patch.object(runtime, 'make_renderer') as renderer:
+            for operation in (runtime.resume_probe, runtime.render, runtime.preflight):
+                with self.assertRaisesRegex(ValueError, 'assembly_only_forbids_render'):
+                    operation(args, profile='single_pass')
+            keys.assert_not_called()
+            renderer.assert_not_called()
 
     def test_reject_other_workflow_before_namespace_or_keys(self):
         wrong = dict(GITHUB_REPOSITORY=runtime.REPO, GITHUB_EVENT_NAME='push',
@@ -80,4 +103,49 @@ class SinglePassRuntimeTests(unittest.TestCase):
             runtime.public_plan(args, profile='single_pass')
             self.assertIn('complete_course=false\n', args.github_output.read_text())
             self.assertIn('overlap_tb=false\nparallelism=40\n', args.github_output.read_text())
+            self.assertIn('assembly_only=false\n', args.github_output.read_text())
             self.assertNotIn(plan['units'][0]['source'], args.output.read_text())
+
+    def test_recovery_keeps_exact_checkpoint_plan_without_render_matrix(self):
+        pin = 'a'*64
+        request = self.request(assembly_only=True, checkpoint_settings_sha256=pin,
+                               execution_shard_chars=200)
+        plan = dict(lesson_id='TB-001', source_sha256='1'*64, paragraphs=[{}],
+                    units=[dict(source='가'*180)]*257)
+        with tempfile.TemporaryDirectory() as tmp, \
+             patch.object(runtime, 'config', return_value=({}, {'shard_chars': 4000}, request, ['TB-001'])), \
+             patch.object(runtime, 'protected_keys', return_value=(b'source', b'')) as keys, \
+             patch.object(runtime, 'source_plan', return_value=(plan, {})), \
+             contextlib.redirect_stdout(io.StringIO()):
+            args = argparse.Namespace(settings_sha='b'*64, output=Path(tmp)/'plan.json',
+                                      github_output=Path(tmp)/'github')
+            with self.assertRaisesRegex(ValueError, 'assembly_checkpoint_settings_pin'):
+                runtime.public_plan(args, profile='single_pass')
+            keys.assert_not_called()
+            args.settings_sha = pin
+            runtime.public_plan(args, profile='single_pass')
+            outputs = dict(line.split('=', 1) for line in args.github_output.read_text().splitlines())
+            manifest = json.loads(args.output.read_text())
+            self.assertEqual(outputs['assembly_only'], 'true')
+            self.assertEqual(json.loads(outputs['matrix']), {'include':[]})
+            self.assertEqual(json.loads(outputs['lessons']), {'include':[{'lesson_id':'TB-001'}]})
+            self.assertEqual(manifest['render_settings_sha256'], pin)
+            self.assertEqual(manifest['lessons'][0]['shards'], runtime.shards(plan, 200))
+            self.assertEqual(runtime.matched_plan(argparse.Namespace(plan=args.output, lesson_id='TB-001'),
+                             {}, {'shard_chars':4000}, request, b'source', 'single_pass')[1], plan)
+            manifest['render_settings_sha256'] = 'b'*64
+            args.output.write_text(json.dumps(manifest))
+            with self.assertRaisesRegex(ValueError, 'assembly_checkpoint_settings_pin'):
+                runtime.matched_plan(argparse.Namespace(plan=args.output, lesson_id='TB-001'),
+                                     {}, {'shard_chars':4000}, request, b'source', 'single_pass')
+
+    def test_workflow_allows_recovery_assembly_after_skipped_render(self):
+        workflow = runtime.ROOT/'.github/workflows/bora-fp32-single-pass.yml'
+        _, jobs = workflow.read_text().split('\njobs:\n', 1)
+        render, jobs = jobs.split('\n  render:\n', 1)[1].split('\n  assemble:\n', 1)
+        assembly, publication = jobs.split('\n  publish:\n', 1)
+        self.assertIn("needs.plan.outputs.assembly_only == 'false'", render)
+        self.assertIn("needs.plan.outputs.assembly_only == 'true' && needs.render.result == 'skipped'", assembly)
+        self.assertIn('environment: admin-law-premium-production', assembly)
+        self.assertIn("needs.assemble.result == 'success'", publication)
+        self.assertIn("steps.gathered.outputs.complete == 'true'", publication)
