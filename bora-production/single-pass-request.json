@@ -1,35 +1,18 @@
 {
   "schema": "bora-fp32-request/v1",
   "campaign_sha256": "60e9763ab344e8a59264ec634a47ee60321667bc426108100f2973a04cfdca76",
-  "course": "DR",
+  "course": "RL",
   "execution_profile": "bora-python-fp32-single-pass/v1",
   "execution_shard_chars": 2200,
   "retry_blocked": false,
-  "request_id": "dr-single-pass-expansion-005-028-defer-018-20261115",
-  "render_workers": 32,
+  "request_id": "rl-single-pass-recover-002-shard-2-exact-20261115",
   "lesson_ids": [
-    "DR-005",
-    "DR-006",
-    "DR-007",
-    "DR-008",
-    "DR-009",
-    "DR-010",
-    "DR-011",
-    "DR-012",
-    "DR-013",
-    "DR-014",
-    "DR-015",
-    "DR-016",
-    "DR-017",
-    "DR-019",
-    "DR-020",
-    "DR-021",
-    "DR-022",
-    "DR-023",
-    "DR-024",
-    "DR-025",
-    "DR-026",
-    "DR-027",
-    "DR-028"
+    "RL-002"
+  ],
+  "selected_shards": [
+    {
+      "lesson_id": "RL-002",
+      "shard": 2
+    }
   ]
 }
