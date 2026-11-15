@@ -1,16 +1,16 @@
 {
   "schema": "bora-fp32-request/v1",
   "campaign_sha256": "60e9763ab344e8a59264ec634a47ee60321667bc426108100f2973a04cfdca76",
-  "course": "MS",
+  "course": "DR",
   "execution_profile": "bora-python-fp32-single-pass/v1",
   "execution_shard_chars": 2200,
   "retry_blocked": false,
-  "request_id": "ms-single-pass-pilot-001-004-20261115",
-  "render_workers": 5,
+  "request_id": "dr-single-pass-refill-030-033-20261115",
+  "render_workers": 3,
   "lesson_ids": [
-    "MS-001",
-    "MS-002",
-    "MS-003",
-    "MS-004"
+    "DR-030",
+    "DR-031",
+    "DR-032",
+    "DR-033"
   ]
 }
