@@ -279,9 +279,10 @@ def public_plan(args, profile='eager'):
         manifest['complete_course'] = len(ids) == LIMITS[request['course']]
     atomic(args.output,enc(manifest))
     unresolved=sum(v['review_units'] for v in records)
+    review_lessons = {row['lesson_id']: row['review_units'] for row in records if row['review_units']}
     print(json.dumps(dict(status='sources_authenticated',course=request['course'],lessons=len(ids),
         shards=len(matrix),units=sum(v['unit_count'] for v in records),
-        review_units=unresolved,review_counts=dict(review_counts))),flush=True)
+        review_units=unresolved,review_counts=dict(review_counts),review_lessons=review_lessons)),flush=True)
     # Resolve manuscript pronunciation before spending a full matrix of CPU.
     check(unresolved==0, 'source_review_required_before_render')
     if args.github_output:
