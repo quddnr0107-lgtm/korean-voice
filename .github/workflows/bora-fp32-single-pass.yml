@@ -7,7 +7,10 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: bora-fp32-single-pass-next-${{ github.ref }}
+  group: >-
+    ${{ startsWith(github.event.head_commit.message, 'Bora early RL assembly: ') && 'bora-fp32-single-pass-rl-assembly' ||
+        startsWith(github.event.head_commit.message, 'Bora DR overlap: ') && 'bora-fp32-single-pass-dr-overlap' ||
+        'bora-fp32-single-pass-next' }}-${{ github.ref }}
   cancel-in-progress: false
 env:
   OMP_NUM_THREADS: '4'
@@ -33,7 +36,12 @@ jobs:
         with:
           python-version: '3.12'
       - id: requested
-        name: Validate recovery scope and the original checkpoint settings pin
+        name: Validate request scope and any original checkpoint settings pin
+        env:
+          BORA_EARLY_RL_ASSEMBLY: >-
+            ${{ startsWith(github.event.head_commit.message, 'Bora early RL assembly: ') }}
+          BORA_DR_OVERLAP: >-
+            ${{ startsWith(github.event.head_commit.message, 'Bora DR overlap: ') }}
         run: |
           PYTHONPATH=bora-production python - <<'PY'
           import json, os
@@ -42,6 +50,16 @@ jobs:
           request = json.loads(Path('bora-production/single-pass-request.json').read_text())
           validate_single_pass_request(request)
           recovery = request.get('assembly_only') is True
+          lessons = request.get('lesson_ids')
+          if os.environ['BORA_EARLY_RL_ASSEMBLY'] == 'true':
+              if (request['course'] != 'RL' or not recovery
+                      or not isinstance(lessons, list) or not 1 <= len(lessons) <= 30):
+                  raise SystemExit('Early Reserve Forces assembly requires an explicit checkpoint-only lesson batch.')
+          if os.environ['BORA_DR_OVERLAP'] == 'true':
+              workers = request.get('render_workers', 0)
+              if (request['course'] != 'DR' or not 1 <= workers <= 10
+                      or not isinstance(lessons, list) or not 1 <= len(lessons) <= 10):
+                  raise SystemExit('Overlapping ministry-directive production requires a lesson batch and at most ten grouped workers.')
           with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
               print(f'assembly_only={str(recovery).lower()}', file=output)
               if recovery:
@@ -429,7 +447,11 @@ jobs:
 
   publish:
     needs: [plan, assemble]
-    if: ${{ always() && !cancelled() && needs.plan.result == 'success' && needs.assemble.result == 'success' && needs.plan.outputs.overlap_tb == 'false' }}
+    if: >-
+      ${{ always() && !cancelled() && needs.plan.result == 'success' && needs.assemble.result == 'success' &&
+          needs.plan.outputs.overlap_tb == 'false' &&
+          !startsWith(github.event.head_commit.message, 'Bora early RL assembly: ') &&
+          !startsWith(github.event.head_commit.message, 'Bora DR overlap: ') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     permissions:
