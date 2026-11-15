@@ -206,7 +206,17 @@ def course_pronunciation(profile, course):
 def course_plan(ident, campaign, source_key, profile):
     plan, payload = source_plan(ident, campaign, source_key)
     overlay = course_pronunciation(profile, ident.split('-', 1)[0])
-    return (overlay.apply_to_plan(plan) if overlay else plan), payload
+    if overlay is None:
+        return plan, payload
+    annotated = overlay.apply_to_plan(plan)
+    if ident.startswith('DR-') and annotated['review_unit_count'] and not plan['source'].endswith('\n'):
+        # Some authenticated text omits the reference document's final LF.
+        # Try that exact reference hash without changing source text or unit offsets.
+        reference = plan['source'] + '\n'
+        checked = overlay.apply_to_plan(dict(plan, source=reference, source_sha256=sha(reference.encode())))
+        if checked['review_unit_count'] < annotated['review_unit_count']:
+            annotated = dict(checked, source=plan['source'], source_sha256=plan['source_sha256'])
+    return annotated, payload
 
 
 def execution_shard_chars(recipe, request):
