@@ -10,6 +10,7 @@ concurrency:
   group: >-
     ${{ startsWith(github.event.head_commit.message, 'Bora early RL assembly: ') && 'bora-fp32-single-pass-rl-assembly' ||
         startsWith(github.event.head_commit.message, 'Bora DR overlap: ') && 'bora-fp32-single-pass-dr-overlap' ||
+        startsWith(github.event.head_commit.message, 'Bora DR expansion: ') && 'bora-fp32-single-pass-dr-expansion' ||
         'bora-fp32-single-pass-next' }}-${{ github.ref }}
   cancel-in-progress: false
 env:
@@ -42,6 +43,8 @@ jobs:
             ${{ startsWith(github.event.head_commit.message, 'Bora early RL assembly: ') }}
           BORA_DR_OVERLAP: >-
             ${{ startsWith(github.event.head_commit.message, 'Bora DR overlap: ') }}
+          BORA_DR_EXPANSION: >-
+            ${{ startsWith(github.event.head_commit.message, 'Bora DR expansion: ') }}
         run: |
           PYTHONPATH=bora-production python - <<'PY'
           import json, os
@@ -60,6 +63,13 @@ jobs:
               if (request['course'] != 'DR' or not 1 <= workers <= 10
                       or not isinstance(lessons, list) or not 1 <= len(lessons) <= 10):
                   raise SystemExit('Overlapping ministry-directive production requires a lesson batch and at most ten grouped workers.')
+          if os.environ['BORA_DR_EXPANSION'] == 'true':
+              workers = request.get('render_workers', 0)
+              expansion_ids = {f'DR-{index:03d}' for index in range(5, 79)}
+              if (request['course'] != 'DR' or not 1 <= workers <= 32
+                      or not isinstance(lessons, list) or not 1 <= len(lessons) <= 24
+                      or not all(isinstance(lesson, str) and lesson in expansion_ids for lesson in lessons)):
+                  raise SystemExit('Ministry-directive expansion requires up to 24 lessons starting after DR-004 and at most 32 grouped workers.')
           with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
               print(f'assembly_only={str(recovery).lower()}', file=output)
               if recovery:
@@ -451,7 +461,8 @@ jobs:
       ${{ always() && !cancelled() && needs.plan.result == 'success' && needs.assemble.result == 'success' &&
           needs.plan.outputs.overlap_tb == 'false' &&
           !startsWith(github.event.head_commit.message, 'Bora early RL assembly: ') &&
-          !startsWith(github.event.head_commit.message, 'Bora DR overlap: ') }}
+          !startsWith(github.event.head_commit.message, 'Bora DR overlap: ') &&
+          !startsWith(github.event.head_commit.message, 'Bora DR expansion: ') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     permissions:
