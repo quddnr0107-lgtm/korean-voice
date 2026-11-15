@@ -7,6 +7,7 @@ from production_plan import digest
 import fp32_renderer
 import ms_pronunciation as overlay
 import planning
+import runtime
 
 
 class MilitaryServicePronunciationTests(unittest.TestCase):
@@ -104,6 +105,22 @@ class MilitaryServicePronunciationTests(unittest.TestCase):
             assemble.validate_plan(result)
             unrelated = planning.build_plan('MS-072', '수업 기간(年限)을 설명합니다.')
             self.assertIs(overlay.apply_to_plan(unrelated), unrelated)
+
+    def test_reference_final_newline_preserves_authenticated_legal_reading_boundaries(self):
+        line = ('3. 이 법 또는 「예시법」에 따라 공적 기준의 대상자 명단을 작성하는 데 필요한 '
+                '자료의 하나 이상을 빠짐없이 제출하는 경우')
+        plan = planning.build_plan('MS-005', line)
+        paragraph = plan['paragraphs'][0]
+        pin = ('MS-005', digest(line + '\n'), paragraph['id'], digest(paragraph['source']))
+        with patch.object(overlay, '_rules', return_value=(set(), set(), {pin}, set(), 'a'*64)), \
+             patch.object(runtime, 'source_plan', return_value=(plan, None)):
+            result, _ = runtime.course_plan('MS-005', None, None, 'single_pass')
+        self.assertEqual(result['source'], line)
+        self.assertEqual(result['source_sha256'], digest(line))
+        self.assertEqual(result['paragraphs'], plan['paragraphs'])
+        self.assertEqual(result['reading_spans'], [[0, len(line)]])
+        self.assertEqual(result['review_unit_count'], 0)
+        assemble.validate_plan(result)
 
 
 if __name__ == '__main__':

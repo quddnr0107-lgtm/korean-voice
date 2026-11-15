@@ -205,11 +205,12 @@ def course_pronunciation(profile, course):
 
 def course_plan(ident, campaign, source_key, profile):
     plan, payload = source_plan(ident, campaign, source_key)
-    overlay = course_pronunciation(profile, ident.split('-', 1)[0])
+    course = ident.split('-', 1)[0]
+    overlay = course_pronunciation(profile, course)
     if overlay is None:
         return plan, payload
     annotated = overlay.apply_to_plan(plan)
-    if ident.startswith('DR-') and annotated['review_unit_count'] and not plan['source'].endswith('\n'):
+    if course in ('DR', 'MS') and annotated['review_unit_count'] and not plan['source'].endswith('\n'):
         # Some authenticated text omits the reference document's final LF.
         # Try that exact reference hash without changing source text or unit offsets.
         reference = plan['source'] + '\n'
