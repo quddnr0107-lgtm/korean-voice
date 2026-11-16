@@ -1,20 +1,16 @@
 {
   "schema": "bora-fp32-request/v1",
   "campaign_sha256": "60e9763ab344e8a59264ec634a47ee60321667bc426108100f2973a04cfdca76",
-  "course": "MS",
+  "course": "DR",
   "execution_profile": "bora-python-fp32-single-pass/v1",
   "execution_shard_chars": 2200,
   "retry_blocked": false,
-  "request_id": "ms-backfill-after-approvals-061-068-20261116",
-  "render_workers": 40,
+  "request_id": "dr-four-reference-padding-pins-20261116",
+  "render_workers": 21,
   "lesson_ids": [
-    "MS-061",
-    "MS-062",
-    "MS-063",
-    "MS-064",
-    "MS-065",
-    "MS-066",
-    "MS-067",
-    "MS-068"
+    "DR-018",
+    "DR-029",
+    "DR-042",
+    "DR-068"
   ]
 }

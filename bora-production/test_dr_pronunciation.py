@@ -75,13 +75,13 @@ class DirectivePronunciationTests(unittest.TestCase):
                 self.assertEqual(actual['review_unit_count'], 0 if pin == exact else 1)
                 self.assertEqual(actual is plan, pin != exact)
 
-    def test_reference_final_newline_can_match_without_altering_authenticated_source(self):
+    def test_reference_line_padding_can_match_without_altering_authenticated_source(self):
         source = '가격 · 조건을 확인합니다.'
         reference = planning.build_plan('DR-018', source + '\n')
         unit = reference['units'][0]
         pin = (*scope(reference)[:3], unit['normalization']['middot_input_sha256'],
                unit['spoken_sha256'], unit['spoken'].index('·'), '·')
-        for raw in (source, source + '\n', source + ' '):
+        for raw in (source, source + '\n', '\n\n' + source + '\n\n\n', source + ' '):
             plan = planning.build_plan('DR-018', raw)
             with self.subTest(raw=raw), patch.object(
                 overlay, '_rules', return_value=(frozenset(), {pin: ','}, {}, '0'*64)

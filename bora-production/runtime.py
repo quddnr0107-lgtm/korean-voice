@@ -210,13 +210,17 @@ def course_plan(ident, campaign, source_key, profile):
     if overlay is None:
         return plan, payload
     annotated = overlay.apply_to_plan(plan)
-    if course in ('DR', 'MS') and annotated['review_unit_count'] and not plan['source'].endswith('\n'):
-        # Some authenticated text omits the reference document's final LF.
-        # Try that exact reference hash without changing source text or unit offsets.
-        reference = plan['source'] + '\n'
-        checked = overlay.apply_to_plan(dict(plan, source=reference, source_sha256=sha(reference.encode())))
-        if checked['review_unit_count'] < annotated['review_unit_count']:
-            annotated = dict(checked, source=plan['source'], source_sha256=plan['source_sha256'])
+    if course in ('DR', 'MS') and annotated['review_unit_count']:
+        source = plan['source']
+        # The sealed Directive pack can include blank lines around a lesson.
+        # Only the reference digest lookup may use the unpadded form.
+        reference = source.strip('\n') + '\n' if course == 'DR' else source
+        if course == 'MS' and not source.endswith('\n'):
+            reference += '\n'
+        if reference != source:
+            checked = overlay.apply_to_plan(dict(plan, source=reference, source_sha256=sha(reference.encode())))
+            if checked['review_unit_count'] < annotated['review_unit_count']:
+                annotated = dict(checked, source=source, source_sha256=plan['source_sha256'])
     return annotated, payload
 
 
