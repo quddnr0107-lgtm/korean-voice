@@ -3,12 +3,12 @@
   "campaign_sha256": "60e9763ab344e8a59264ec634a47ee60321667bc426108100f2973a04cfdca76",
   "course": "DR",
   "execution_profile": "bora-python-fp32-single-pass/v1",
-  "execution_shard_chars": 2200,
+  "execution_shard_chars": 470,
   "retry_blocked": false,
-  "request_id": "dr-017-recover-sealed-checkpoints-and-upload-20261117",
-  "assembly_only": true,
-  "checkpoint_settings_sha256": "85dd1f980277928fd42b8930cd6cb2cb47c98584f289c11831d50204dbf61a25",
+  "request_id": "dr-029-043-shorter-unit-recovery-20261117",
+  "render_workers": 28,
   "lesson_ids": [
-    "DR-017"
+    "DR-029",
+    "DR-043"
   ]
 }
