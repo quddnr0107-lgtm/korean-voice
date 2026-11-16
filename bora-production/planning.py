@@ -130,7 +130,7 @@ def _structural_modes(source):
     return spans, paragraphs
 
 
-def _pronunciation(raw):
+def _pronunciation(raw, lesson_id):
     visible = raw.strip(production_plan.JS_SPACE)
     prepared = quality.prepare(visible)
     try:
@@ -142,7 +142,11 @@ def _pronunciation(raw):
         spoken, edits, flags = prepared['spoken'], [], []
         normalization_error = True
     substitutions = []
-    for old, new in PRONUNCIATION_REPLACEMENTS:
+    replacements = PRONUNCIATION_REPLACEMENTS
+    if lesson_id == 'RL-034':
+        # Keep 하여금 together and cue a pause before 관할 in article 19.
+        replacements += (('으로 하여금 관할 수임군부대의', '으로 하여금, 관할 수임군부대의'),)
+    for old, new in replacements:
         count = spoken.count(old)
         if count:
             spoken = spoken.replace(old, new)
@@ -208,7 +212,7 @@ def build_plan(lesson_id, source):
     for unit in plan['units']:
         start, end = utf16_to_cp[unit['start_utf16']], utf16_to_cp[unit['end_utf16']]
         unit.update(start_cp=start, end_cp=end)
-        spoken, review, normalization = _pronunciation(unit['source'])
+        spoken, review, normalization = _pronunciation(unit['source'], lesson_id)
         if 'long_unbroken_span_review' in unit['review']:
             review.append('long_unbroken_span_review')
         evidence = paragraph_evidence[unit['paragraph_id']]
