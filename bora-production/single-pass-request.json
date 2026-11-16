@@ -5,7 +5,7 @@
   "execution_profile": "bora-python-fp32-single-pass/v1",
   "execution_shard_chars": 2200,
   "retry_blocked": false,
-  "request_id": "ms-priority-fill-open-slots-037-060-20261116",
+  "request_id": "ms-fill-open-22-protected-plan-clear-20261116",
   "render_workers": 40,
   "lesson_ids": [
     "MS-037",
@@ -24,8 +24,6 @@
     "MS-050",
     "MS-051",
     "MS-052",
-    "MS-053",
-    "MS-054",
     "MS-055",
     "MS-056",
     "MS-057",
