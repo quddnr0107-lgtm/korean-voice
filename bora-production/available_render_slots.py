@@ -3,6 +3,7 @@
 import os
 from pathlib import Path
 import re
+import subprocess
 import time
 
 from wait_for_tb_capacity import (
@@ -29,6 +30,31 @@ def list_items(url, field, token):
     raise CapacityError("actions_inventory_page_limit")
 
 
+def published_cap(jobs, token):
+    """Read the earlier capacity job's numeric allocation, when present."""
+    for job in jobs:
+        if job["name"] != "capacity" or job.get("conclusion") != "success":
+            continue
+        if not any(step["name"] == "Count available course synthesis slots"
+                   and step.get("conclusion") == "success" for step in job.get("steps", [])):
+            continue
+        require(type(job["id"]) is int and job["id"] > 0, "invalid_capacity_job")
+        try:
+            logs = subprocess.run(
+                ["gh", "api", f"repos/{REPOSITORY}/actions/jobs/{job['id']}/logs"],
+                env={**os.environ, "GH_TOKEN": token}, capture_output=True,
+                text=True, timeout=45, check=True,
+            ).stdout
+        except (OSError, UnicodeError, subprocess.SubprocessError):
+            raise RetrySnapshot from None
+        slots = re.findall(r"Reserved synthesis jobs: [0-9]+; Military Service slots: ([0-9]+)$",
+                           logs, flags=re.MULTILINE)
+        require(len(slots) == 1 and 1 <= int(slots[0]) <= WORKER_LIMIT,
+                "invalid_published_worker_count")
+        return int(slots[0])
+    return WORKER_LIMIT
+
+
 def reserved_slots(current_run, token):
     other_runs = set()
     for status in ACTIVE_STATES:
@@ -52,7 +78,13 @@ def reserved_slots(current_run, token):
         ):
             # An active run can still be planning its synthesis matrix.
             raise RetrySnapshot
-        reserved += sum(job["status"] != "completed" for job in renders)
+        open_jobs = [job for job in renders if job["status"] != "completed"]
+        if any(job["status"] == "queued" for job in open_jobs):
+            # Matrix jobs above max-parallel wait until an active worker ends.
+            # The earlier capacity job bounds how many can run concurrently.
+            reserved += min(len(open_jobs), published_cap(jobs, token))
+        else:
+            reserved += len(open_jobs)
     return reserved
 
 

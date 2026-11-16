@@ -29,3 +29,24 @@ class AvailableRenderSlotsTests(unittest.TestCase):
         ):
             with self.assertRaises(capacity.RetrySnapshot):
                 capacity.reserved_slots(1, 'mock-token')
+
+    def test_matrix_backlog_is_bounded_by_the_verified_worker_cap(self):
+        jobs = [
+            {'name': 'render_grouped (MS-005, 0, 1)', 'status': 'in_progress'},
+            *[{'name': f'render_grouped (MS-006, 0, {index})', 'status': 'queued'}
+              for index in range(2, 5)],
+        ]
+        with patch.object(capacity, 'list_items', side_effect=[
+            *([[{'id': 2}]] * len(capacity.ACTIVE_STATES)), jobs,
+        ]), patch.object(capacity, 'published_cap', return_value=2) as cap:
+            self.assertEqual(capacity.reserved_slots(1, 'mock-token'), 2)
+            cap.assert_called_once_with(jobs, 'mock-token')
+
+    def test_reads_the_recorded_capacity_from_the_actions_job_log(self):
+        jobs = [{'name': 'capacity', 'id': 4, 'conclusion': 'success', 'steps': [
+            {'name': 'Count available course synthesis slots', 'conclusion': 'success'},
+        ]}]
+        with patch.object(capacity.subprocess, 'run') as cli:
+            cli.return_value.stdout = '2026-11-16T03:38:34Z Reserved synthesis jobs: 7; Military Service slots: 33\n'
+            self.assertEqual(capacity.published_cap(jobs, 'mock-token'), 33)
+            self.assertTrue(cli.call_args.args[0][-1].endswith('/actions/jobs/4/logs'))

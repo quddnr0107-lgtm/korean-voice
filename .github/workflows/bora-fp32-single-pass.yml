@@ -11,6 +11,7 @@ concurrency:
     ${{ startsWith(github.event.head_commit.message, 'Bora early RL assembly: ') && 'bora-fp32-single-pass-rl-assembly' ||
         startsWith(github.event.head_commit.message, 'Bora DR overlap: ') && 'bora-fp32-single-pass-dr-overlap' ||
         startsWith(github.event.head_commit.message, 'Bora DR expansion: ') && 'bora-fp32-single-pass-dr-expansion' ||
+        startsWith(github.event.head_commit.message, 'Bora MS production: Refill ') && 'bora-fp32-single-pass-ms-refill' ||
         (startsWith(github.event.head_commit.message, 'Bora MS pilot: ') || startsWith(github.event.head_commit.message, 'Bora MS production: ')) && 'bora-fp32-single-pass-ms-pilot' ||
         'bora-fp32-single-pass-next' }}-${{ github.ref }}
   cancel-in-progress: false
