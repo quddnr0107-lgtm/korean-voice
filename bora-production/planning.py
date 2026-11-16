@@ -145,7 +145,10 @@ def _pronunciation(raw, lesson_id):
     replacements = PRONUNCIATION_REPLACEMENTS
     if lesson_id == 'RL-034':
         # Keep 하여금 together and cue a pause before 관할 in article 19.
-        replacements += (('으로 하여금 관할 수임군부대의', '으로 하여금, 관할 수임군부대의'),)
+        replacements += (
+            ('으로 하여 금 관할 ', '으로 하여금, 관할 '),
+            ('으로 하여금 관할 ', '으로 하여금, 관할 '),
+        )
     for old, new in replacements:
         count = spoken.count(old)
         if count:
