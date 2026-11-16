@@ -390,12 +390,20 @@ def _assets(backend, release):
     for asset in backend.assets(release):
         require(isinstance(asset, dict) and _int(asset.get('id'), 1, 2**53-1)
                 and isinstance(asset.get('name'), str) and Path(asset['name']).name == asset['name']
-                and asset['name'] not in result and _int(asset.get('size'), 1, MAX_BUNDLE), 'remote_asset_identity')
+                and _int(asset.get('size'), 0, MAX_BUNDLE), 'remote_asset_identity')
         if 'url' in asset:
             _asset_url(asset['url'], host='api.github.com', path=f'/repos/{REPOSITORY}/releases/assets/{asset["id"]}')
         if 'browser_download_url' in asset:
             _asset_url(asset['browser_download_url'], host='github.com',
                        path=f'/{REPOSITORY}/releases/download/{download_tag}/{quote(asset["name"], safe="")}')
+        # GitHub can expose an empty placeholder while another job uploads.
+        if asset.get('state') == 'starter' and asset['size'] == 0:
+            continue
+        require(asset['size'] > 0, 'remote_asset_identity')
+        # Offset pagination can repeat an asset while the release is changing.
+        # Accept a repeated row only when GitHub reports the identical asset.
+        previous = result.get(asset['name'])
+        require(previous is None or previous == asset, 'remote_asset_identity')
         result[asset['name']] = asset
     return result
 

@@ -70,6 +70,21 @@ class TransportTests(unittest.TestCase):
         self.env.start()
         self.addCleanup(self.env.stop)
 
+    def test_release_inventory_accepts_repeated_rows_and_ignores_empty_starters(self):
+        release = self.backend.create(t.tag_for('DR', True, profile='single_pass'))
+        uploaded = {'id': 4, 'name': 'DR-017.descriptor.json', 'size': 31, 'state': 'uploaded'}
+        starter = {'id': 5, 'name': 'DR-018.descriptor.json', 'size': 0, 'state': 'starter'}
+        with patch.object(self.backend, 'assets', return_value=[uploaded, starter, dict(uploaded)]):
+            self.assertEqual(t._assets(self.backend, release), {uploaded['name']: uploaded})
+
+    def test_release_inventory_rejects_conflicting_duplicates_and_empty_uploads(self):
+        release = self.backend.create(t.tag_for('DR', True, profile='single_pass'))
+        uploaded = {'id': 4, 'name': 'DR-017.descriptor.json', 'size': 31, 'state': 'uploaded'}
+        for rows in ([uploaded, dict(uploaded, id=5)], [dict(uploaded, size=0)]):
+            with patch.object(self.backend, 'assets', return_value=rows), \
+                 self.assertRaisesRegex(t.TransportError, 'remote_asset_identity'):
+                t._assets(self.backend, release)
+
     def bundle(self, directory=None, ident='TB-001', mutate=None, extra=None, cipher_mutate=False):
         directory = directory or self.root
         directory.mkdir(parents=True, exist_ok=True)

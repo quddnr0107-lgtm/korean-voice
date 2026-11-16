@@ -207,7 +207,9 @@ def build_plan(lesson_id, source):
     structural, paragraph_rules = _structural_modes(source)
     reading_spans = (annotations['spans'] if annotations else
                      [[cp_to_utf16[a], cp_to_utf16[b]] for a, b, _ in structural])
-    max_chars = 112 if lesson_id in ('DR-017', 'DR-022', 'DR-043') else MAX_CHARS
+    max_chars = {
+        'DR-017': 112, 'DR-022': 112, 'DR-029': 88, 'DR-043': 72,
+    }.get(lesson_id, MAX_CHARS)
     plan = production_plan.build_plan(source, lesson_id, max_chars, reading_spans)
     paragraphs = {row['id']: row for row in plan['paragraphs']}
     paragraph_evidence = {}

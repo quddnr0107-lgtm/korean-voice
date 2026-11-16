@@ -40,12 +40,12 @@ class SinglePassRuntimeTests(unittest.TestCase):
         self.assertEqual(profiles.workflow_filename('single_pass'), 'bora-fp32-single-pass.yml')
         self.assertEqual(profiles.request_filename('single_pass'), 'single-pass-request.json')
 
-    def test_shorter_units_are_scoped_to_the_three_directive_retries(self):
+    def test_shorter_units_are_scoped_to_the_directive_retries(self):
         source = ('이 자료는 교육 내용을 설명하며 모든 수강생이 쉽게 이해할 수 있도록 '
                   '차근차근 순서대로 읽고 관련 사례를 함께 검토합니다. ') * 3
         source = source.rstrip()
         for lesson_id, limit, unit_count in (
-            ('DR-017', 112, 3), ('DR-022', 112, 3), ('DR-043', 112, 3),
+            ('DR-017', 112, 3), ('DR-022', 112, 3), ('DR-029', 88, 3), ('DR-043', 72, 3),
             ('DR-034', 180, 2), ('MS-069', 180, 2),
         ):
             with self.subTest(lesson_id=lesson_id):
