@@ -11,6 +11,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 import execution_profiles as profiles
+import planning
 import runtime
 
 
@@ -38,6 +39,22 @@ class SinglePassRuntimeTests(unittest.TestCase):
                 profiles.validate_request(bad, 'single_pass')
         self.assertEqual(profiles.workflow_filename('single_pass'), 'bora-fp32-single-pass.yml')
         self.assertEqual(profiles.request_filename('single_pass'), 'single-pass-request.json')
+
+    def test_shorter_units_are_scoped_to_the_three_directive_retries(self):
+        source = ('이 자료는 교육 내용을 설명하며 모든 수강생이 쉽게 이해할 수 있도록 '
+                  '차근차근 순서대로 읽고 관련 사례를 함께 검토합니다. ') * 3
+        source = source.rstrip()
+        for lesson_id, limit, unit_count in (
+            ('DR-017', 112, 3), ('DR-022', 112, 3), ('DR-043', 112, 3),
+            ('DR-034', 180, 2), ('MS-069', 180, 2),
+        ):
+            with self.subTest(lesson_id=lesson_id):
+                plan = planning.build_plan(lesson_id, source)
+                self.assertEqual(plan['max_chars'], limit)
+                self.assertEqual(plan['review_unit_count'], 0)
+                self.assertEqual(len(plan['units']), unit_count)
+                self.assertEqual(''.join(unit['source'] for unit in plan['units']), source)
+                self.assertTrue(all(len(unit['source']) <= limit for unit in plan['units']))
 
     def test_assembly_only_requires_a_pin_and_excludes_render_options(self):
         recovery = self.request(assembly_only=True, checkpoint_settings_sha256='a'*64)
