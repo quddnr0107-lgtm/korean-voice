@@ -13,6 +13,7 @@ concurrency:
         startsWith(github.event.head_commit.message, 'Bora DR expansion: ') && 'bora-fp32-single-pass-dr-expansion' ||
         startsWith(github.event.head_commit.message, 'Bora MS production: Refill ') && 'bora-fp32-single-pass-ms-refill' ||
         startsWith(github.event.head_commit.message, 'Bora MS production: Fill open ') && 'bora-fp32-single-pass-ms-fill' ||
+        startsWith(github.event.head_commit.message, 'Bora MS production: Backfill ') && 'bora-fp32-single-pass-ms-backfill' ||
         (startsWith(github.event.head_commit.message, 'Bora MS pilot: ') || startsWith(github.event.head_commit.message, 'Bora MS production: ')) && 'bora-fp32-single-pass-ms-pilot' ||
         'bora-fp32-single-pass-next' }}-${{ github.ref }}
   cancel-in-progress: false
@@ -226,6 +227,7 @@ jobs:
           BORA_COURSE: ${{ needs.plan.outputs.course }}
           BORA_PRECEDING_CAPACITY: >-
             ${{ startsWith(github.event.head_commit.message, 'Bora DR overlap: Recover missing ') && '43798929547:133075539380:33,43800654438:133081378493:4' ||
+                startsWith(github.event.head_commit.message, 'Bora MS production: Backfill 20261116 ') && '43798929547:133075539380:33,43800654438:133081378493:4,43802967734:133092317760:2,43817761505:133135108793:25' ||
                 startsWith(github.event.head_commit.message, 'Bora MS production: Fill open 20261116 ') && '43798929547:133075539380:33,43800654438:133081378493:4,43802967734:133092317760:2' ||
                 startsWith(github.event.head_commit.message, 'Bora MS production: Refill verified 20261116 ') && '43798929547:133075539380:33' || '' }}
         run: python3 bora-production/available_render_slots.py
