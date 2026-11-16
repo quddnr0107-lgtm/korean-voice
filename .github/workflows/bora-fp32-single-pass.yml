@@ -198,7 +198,7 @@ jobs:
   capacity:
     needs: plan
     if: >-
-      ${{ needs.plan.outputs.overlap_tb == 'true' || startsWith(github.event.head_commit.message, 'Bora MS production: ') }}
+      ${{ needs.plan.outputs.overlap_tb == 'true' || startsWith(github.event.head_commit.message, 'Bora MS production: ') || startsWith(github.event.head_commit.message, 'Bora DR overlap: Recover missing ') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 300
     permissions:
@@ -218,12 +218,14 @@ jobs:
       - id: available
         name: Count available course synthesis slots
         if: >-
-          ${{ startsWith(github.event.head_commit.message, 'Bora MS production: ') }}
+          ${{ startsWith(github.event.head_commit.message, 'Bora MS production: ') || startsWith(github.event.head_commit.message, 'Bora DR overlap: Recover missing ') }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
           BORA_MAX_WORKERS: ${{ needs.plan.outputs.parallelism }}
+          BORA_COURSE: ${{ needs.plan.outputs.course }}
           BORA_PRECEDING_CAPACITY: >-
-            ${{ startsWith(github.event.head_commit.message, 'Bora MS production: Refill verified 20261116 ') && '43798929547:133075539380:33' || '' }}
+            ${{ startsWith(github.event.head_commit.message, 'Bora DR overlap: Recover missing ') && '43798929547:133075539380:33,43800654438:133081378493:4' ||
+                startsWith(github.event.head_commit.message, 'Bora MS production: Refill verified 20261116 ') && '43798929547:133075539380:33' || '' }}
         run: python3 bora-production/available_render_slots.py
 
   render:

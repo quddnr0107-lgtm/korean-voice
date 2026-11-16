@@ -40,8 +40,8 @@ def published_cap(run_id, jobs, token):
             continue
         require(type(job["id"]) is int and job["id"] > 0, "invalid_capacity_job")
         verified = os.environ.get("BORA_PRECEDING_CAPACITY", "")
-        if verified:
-            pin = re.fullmatch(r"([1-9][0-9]*):([1-9][0-9]*):([1-9][0-9]*)", verified)
+        for value in filter(None, verified.split(",")):
+            pin = re.fullmatch(r"([1-9][0-9]*):([1-9][0-9]*):([1-9][0-9]*)", value)
             require(pin is not None, "invalid_preceding_capacity_pin")
             prior_run, prior_job, prior_cap = map(int, pin.groups())
             if (prior_run, prior_job) == (run_id, job["id"]):
@@ -55,7 +55,7 @@ def published_cap(run_id, jobs, token):
             ).stdout
         except (OSError, UnicodeError, subprocess.SubprocessError):
             raise RetrySnapshot from None
-        slots = re.findall(r"Reserved synthesis jobs: [0-9]+; Military Service slots: ([0-9]+)$",
+        slots = re.findall(r"Reserved synthesis jobs: [0-9]+; (?:Military Service|Defense Directive) slots: ([0-9]+)$",
                            logs, flags=re.MULTILINE)
         require(len(slots) == 1 and 1 <= int(slots[0]) <= WORKER_LIMIT,
                 "invalid_published_worker_count")
@@ -100,6 +100,8 @@ def main():
     token = check_context(os.environ)
     current_run = int(os.environ["GITHUB_RUN_ID"])
     requested = int(os.environ["BORA_MAX_WORKERS"])
+    label = {"MS": "Military Service", "DR": "Defense Directive"}.get(os.environ.get("BORA_COURSE"))
+    require(label is not None, "unexpected_capacity_course")
     require(1 <= requested <= WORKER_LIMIT, "invalid_requested_worker_count")
     deadline = time.monotonic() + MAX_WAIT_SECONDS
     while time.monotonic() < deadline:
@@ -112,7 +114,7 @@ def main():
         if slots > 0:
             with Path(os.environ["GITHUB_OUTPUT"]).open("a") as output:
                 print(f"parallelism={slots}", file=output)
-            print(f"Reserved synthesis jobs: {reserved}; Military Service slots: {slots}")
+            print(f"Reserved synthesis jobs: {reserved}; {label} slots: {slots}")
             return
         time.sleep(POLL_SECONDS)
     raise CapacityError("synthesis_capacity_wait_expired")

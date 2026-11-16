@@ -1,19 +1,44 @@
 {
   "schema": "bora-fp32-request/v1",
   "campaign_sha256": "60e9763ab344e8a59264ec634a47ee60321667bc426108100f2973a04cfdca76",
-  "course": "MS",
+  "course": "DR",
   "execution_profile": "bora-python-fp32-single-pass/v1",
   "execution_shard_chars": 2200,
   "retry_blocked": false,
-  "request_id": "ms-single-pass-production-refill-verified-029-036-20261116",
-  "render_workers": 7,
+  "request_id": "dr-priority-retry-six-missing-encrypted-shards-20261116",
+  "render_workers": 6,
   "lesson_ids": [
-    "MS-029",
-    "MS-030",
-    "MS-032",
-    "MS-033",
-    "MS-034",
-    "MS-035",
-    "MS-036"
+    "DR-034",
+    "DR-035",
+    "DR-043",
+    "DR-049",
+    "DR-055",
+    "DR-057"
+  ],
+  "selected_shards": [
+    {
+      "lesson_id": "DR-034",
+      "shard": 2
+    },
+    {
+      "lesson_id": "DR-035",
+      "shard": 0
+    },
+    {
+      "lesson_id": "DR-043",
+      "shard": 1
+    },
+    {
+      "lesson_id": "DR-049",
+      "shard": 2
+    },
+    {
+      "lesson_id": "DR-055",
+      "shard": 4
+    },
+    {
+      "lesson_id": "DR-057",
+      "shard": 4
+    }
   ]
 }

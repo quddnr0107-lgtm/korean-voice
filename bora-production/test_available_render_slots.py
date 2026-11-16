@@ -55,7 +55,7 @@ class AvailableRenderSlotsTests(unittest.TestCase):
         jobs = [{'name': 'capacity', 'id': 4, 'conclusion': 'success', 'steps': [
             {'name': 'Count available course synthesis slots', 'conclusion': 'success'},
         ]}]
-        with patch.dict(capacity.os.environ, BORA_PRECEDING_CAPACITY='2:4:33'), \
+        with patch.dict(capacity.os.environ, BORA_PRECEDING_CAPACITY='2:4:33,3:5:4'), \
                 patch.object(capacity.subprocess, 'run') as cli:
             self.assertEqual(capacity.published_cap(2, jobs, 'mock-token'), 33)
             cli.assert_not_called()
