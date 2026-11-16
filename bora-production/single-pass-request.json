@@ -5,15 +5,10 @@
   "execution_profile": "bora-python-fp32-single-pass/v1",
   "execution_shard_chars": 2200,
   "retry_blocked": false,
-  "request_id": "dr-last-seven-fixed-parallel-31-20261116",
-  "render_workers": 31,
+  "request_id": "dr-017-recover-sealed-checkpoints-and-upload-20261117",
+  "assembly_only": true,
+  "checkpoint_settings_sha256": "85dd1f980277928fd42b8930cd6cb2cb47c98584f289c11831d50204dbf61a25",
   "lesson_ids": [
-    "DR-017",
-    "DR-018",
-    "DR-022",
-    "DR-029",
-    "DR-042",
-    "DR-043",
-    "DR-068"
+    "DR-017"
   ]
 }
