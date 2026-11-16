@@ -70,7 +70,7 @@ def recover(directory, key):
         rest = min(expected, target_samples - len(timeline) // 2)
         timeline.extend(pcm[:2 * rest].ljust(2 * rest, b"\0"))
     if len(timeline) != 2 * target_samples:
-        raise ValueError("incomplete ten-minute timeline")
+        raise ValueError("incomplete first ten-minute timeline")
     wave_file = io.BytesIO()
     with wave.open(wave_file, "wb") as audio_out:
         audio_out.setparams((1, 2, rate, 0, "NONE", ""))

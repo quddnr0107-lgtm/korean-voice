@@ -26,7 +26,10 @@ jobs:
             --pattern 'TB-005.audio.5837334b4ddde1843527b28e2954e11d.bin' \
             --pattern 'TB-005.content.01d748af392cb49ccf3ca24ba057b80f.bin' \
             --pattern 'TB-005.descriptor.json'
-          command -v ffmpeg >/dev/null
+          if ! command -v ffmpeg >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq ffmpeg
+          fi
           python -m pip install --disable-pip-version-check cryptography==50.0.0
       - name: Recover TB-005 in the offline namespace and seal to the owner edit key
         env:
