@@ -37,6 +37,14 @@ PRONUNCIATION_REPLACEMENTS = (
     ('수립ᆞ시행', '수립 시행'), ('침투·도발', '침투, 도발'),
     ('통합·운용', '통합 운용'), ('수립·시행', '수립 시행'),
 )
+LESSON_PRONUNCIATION_REPLACEMENTS = {
+    'RL-034': (
+        ('으로 하여 금 관할 ', '으로 하여금, 관할 '),
+        ('으로 하여금 관할 ', '으로 하여금, 관할 '),
+    ),
+    'DR-006': (('현역 병이었으니', '현역병이었으니'),),
+    'MS-005': (('현역 병은 징집이나 지원', '현역병은 징집이나 지원'),),
+}
 _ARTICLE = re.compile(r'^제\s*[0-9일이삼사오육칠팔구십백천]+\s*조(?:의\s*[0-9일이삼사오육칠팔구십백천]+)?(?=\s|[（(①-⑳]|$)')
 _ITEM = re.compile(r'^(?:[①-⑳]|[1-9][0-9]{0,3}[.)][ \t]+|[가-하][.)][ \t]+)')
 _LEGAL_PREDICATE = re.compile(r'(?:하여야\s*한다|따라야\s*한다|해서는\s*아니\s*된다|할\s*수\s*있다|목적으로\s*한다|아니한다|말한다|뜻한다|따른다|포함한다|제외한다|본다|한한다|적용한다|처한다|벌한다|정한다|금지한다|둔다)(?:[.!。]|\s|$)')
@@ -142,13 +150,7 @@ def _pronunciation(raw, lesson_id):
         spoken, edits, flags = prepared['spoken'], [], []
         normalization_error = True
     substitutions = []
-    replacements = PRONUNCIATION_REPLACEMENTS
-    if lesson_id == 'RL-034':
-        # Keep 하여금 together and cue a pause before 관할 in article 19.
-        replacements += (
-            ('으로 하여 금 관할 ', '으로 하여금, 관할 '),
-            ('으로 하여금 관할 ', '으로 하여금, 관할 '),
-        )
+    replacements = PRONUNCIATION_REPLACEMENTS + LESSON_PRONUNCIATION_REPLACEMENTS.get(lesson_id, ())
     for old, new in replacements:
         count = spoken.count(old)
         if count:

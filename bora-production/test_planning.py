@@ -98,6 +98,20 @@ class PlanningTests(unittest.TestCase):
             self.assertIn(expected, result['units'][0]['review'])
             self.assertEqual(result['review_unit_count'], 1)
 
+    def test_active_duty_soldier_is_joined_only_in_the_reviewed_lesson_contexts(self):
+        cases = (
+            ('DR-006', '출퇴근을 했어도 현역 병이었으니 같은 줄에 섭니다.'),
+            ('MS-005', '현역 병은 징집이나 지원에 의하여 입영합니다.'),
+        )
+        for lesson_id, source in cases:
+            with self.subTest(lesson_id=lesson_id):
+                plan = self.plan(source, lesson_id)
+                self.assertEqual(plan['source'], source)
+                self.assertEqual(plan['units'][0]['spoken'], source.replace('현역 병', '현역병'))
+                self.assertEqual(self.plan(source)['units'][0]['spoken'], source)
+                other_context = '현역 병적에 편입됩니다.'
+                self.assertEqual(self.plan(other_context, lesson_id)['units'][0]['spoken'], other_context)
+
     def test_middot_known_exact_alias_only(self):
         known = self.plan('통합·운용과 침투·도발을 설명합니다.')
         self.assertEqual(known['review_unit_count'], 0)
