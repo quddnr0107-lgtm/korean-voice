@@ -65,6 +65,31 @@ class PlanningTests(unittest.TestCase):
         self.assertEqual(result['review_unit_count'], 0)
         self.assertIn('review_remaining_numeric_notation', result['units'][0]['normalization']['resolved_preparation_flags'])
 
+    def test_rl_034_cues_pause_after_hayeogeum_only_in_reported_phrase(self):
+        source = (
+            '① 소속 부대원으로 하여 금 관할 수임군부대의 업무를 검사하게 할 수 있다.\n'
+            '② 소속 공무원으로 하여 금 관할 수임군부대의 업무를 검사하게 할 수 있다.\n'
+            '③ 소속 부대원으로 하여 금 관할 예비군부대의 업무를 검사하게 할 수 있다.\n'
+            '소속 공무원으로 하여금 관할 부대를 살피게 합니다.\n'
+            '소속 공무원으로 하여금 업무를 살피게 합니다.'
+        )
+        plan = self.plan(source, 'RL-034')
+        comparison = self.plan(source, 'RL-033')
+        self.assertEqual(plan['source'], source)
+        self.assertEqual(''.join(row['source'] for row in plan['paragraphs']), source)
+        self.assertEqual(len(plan['units']), 5)
+        for unit, previous in zip(plan['units'][:3], comparison['units'][:3]):
+            self.assertEqual(unit['source'], previous['source'])
+            self.assertEqual((unit['start_utf16'], unit['end_utf16']),
+                             (previous['start_utf16'], previous['end_utf16']))
+            self.assertEqual(unit['mode'], 'reading')
+            self.assertEqual(unit['review'], previous['review'])
+            self.assertIn('하여 금 관할', previous['spoken'])
+            self.assertEqual(unit['spoken'], previous['spoken'].replace('하여 금 관할', '하여금, 관할'))
+            self.assertEqual(unit['spoken_sha256'], hashlib.sha256(unit['spoken'].encode()).hexdigest())
+        self.assertIn('하여금, 관할', plan['units'][3]['spoken'])
+        self.assertEqual(plan['units'][4]['spoken'], comparison['units'][4]['spoken'])
+
     def test_ambiguous_range_and_unknown_roman_remain_blocking(self):
         for source, expected in [('범위는 3-4개입니다.', 'normalization_ambiguous-range'),
                                  ('형식 Ⅱ를 보겠습니다.', 'normalization_ambiguous-roman'),
@@ -72,6 +97,20 @@ class PlanningTests(unittest.TestCase):
             result = self.plan(source)
             self.assertIn(expected, result['units'][0]['review'])
             self.assertEqual(result['review_unit_count'], 1)
+
+    def test_active_duty_soldier_is_joined_only_in_the_reviewed_lesson_contexts(self):
+        cases = (
+            ('DR-006', '출퇴근을 했어도 현역 병이었으니 같은 줄에 섭니다.'),
+            ('MS-005', '현역 병은 징집이나 지원에 의하여 입영합니다.'),
+        )
+        for lesson_id, source in cases:
+            with self.subTest(lesson_id=lesson_id):
+                plan = self.plan(source, lesson_id)
+                self.assertEqual(plan['source'], source)
+                self.assertEqual(plan['units'][0]['spoken'], source.replace('현역 병', '현역병'))
+                self.assertEqual(self.plan(source)['units'][0]['spoken'], source)
+                other_context = '현역 병적에 편입됩니다.'
+                self.assertEqual(self.plan(other_context, lesson_id)['units'][0]['spoken'], other_context)
 
     def test_middot_known_exact_alias_only(self):
         known = self.plan('통합·운용과 침투·도발을 설명합니다.')
