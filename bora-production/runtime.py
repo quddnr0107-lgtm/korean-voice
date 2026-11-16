@@ -606,13 +606,13 @@ def assemble(args, profile='eager'):
     settings_hash=public['render_settings_sha256']; recipe_hash=identity(recipe)
     with tempfile.TemporaryDirectory(prefix='bora-assemble-',dir=os.environ.get('RUNNER_TEMP')) as td:
         work=Path(td)
-        restored=restore(args.resume_dir,media_key,plan,recipe_hash,settings_hash,work/'restored',
-                         profile=profile)
         alternate_settings = request.get('compatible_checkpoint_settings_sha256')
-        if alternate_settings is not None:
-            alternate = restore(args.resume_dir,media_key,plan,recipe_hash,alternate_settings,
-                                work/'restored-compatible',profile=profile)
-            for index, row in alternate.items():
+        fingerprints = [settings_hash] if alternate_settings is None else [settings_hash, alternate_settings]
+        restored = {}
+        for fingerprint in fingerprints:
+            candidates = restore(args.resume_dir, media_key, plan, recipe_hash, fingerprint,
+                                 work / ('restored-' + fingerprint), profile=profile)
+            for index, row in candidates.items():
                 if index not in restored or restored[index]['receipt'].get('status') != 'passed':
                     restored[index] = row
         check(set(restored)==set(range(len(plan['units']))) and
