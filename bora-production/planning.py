@@ -207,7 +207,8 @@ def build_plan(lesson_id, source):
     structural, paragraph_rules = _structural_modes(source)
     reading_spans = (annotations['spans'] if annotations else
                      [[cp_to_utf16[a], cp_to_utf16[b]] for a, b, _ in structural])
-    plan = production_plan.build_plan(source, lesson_id, MAX_CHARS, reading_spans)
+    max_chars = 112 if lesson_id in ('DR-017', 'DR-022', 'DR-043') else MAX_CHARS
+    plan = production_plan.build_plan(source, lesson_id, max_chars, reading_spans)
     paragraphs = {row['id']: row for row in plan['paragraphs']}
     paragraph_evidence = {}
     for paragraph, evidence in zip(plan['paragraphs'], paragraph_rules):
@@ -243,7 +244,7 @@ def build_plan(lesson_id, source):
         owner = paragraphs[unit['paragraph_id']]
         if source[start:end] != unit['source'] or not owner['start_cp'] <= start < end <= owner['end_cp']:
             raise ValueError('raw_source_mapping_failed')
-    plan.update(planner_schema=SCHEMA, namespace=namespace, max_chars=MAX_CHARS,
+    plan.update(planner_schema=SCHEMA, namespace=namespace, max_chars=max_chars,
                 reading_mode_ruleset=MODE_RULESET,
                 normalization_ruleset=NORMALIZATION_RULESET,
                 reading_spans=reading_spans,
