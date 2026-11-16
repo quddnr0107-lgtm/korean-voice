@@ -156,8 +156,16 @@ def _asr_skipped(value):
             and value['status'] == 'not_run' and value['performed'] is False)
 
 
+def _without_planning_fingerprint(settings):
+    """The authenticated render plan pins the exact text and units independently."""
+    code = settings.get('code_sha256')
+    planner = 'bora-production/planning.py'
+    _require(isinstance(code, dict) and _hash(code.get(planner)), 'receipt_planner_hash')
+    return dict(settings, code_sha256={path: value for path, value in code.items() if path != planner})
+
+
 def validate_entries(plan, entries, expected_recipe_sha256, expected_render_settings_sha256,
-                     *, profile='eager'):
+                     *, profile='eager', compatible_settings_sha256=None):
     """Return rows in source order; input order itself may be arbitrary."""
     _require(profile in ('eager', 'compiled', 'single_pass'), 'assembly_profile')
     single_pass = profile == 'single_pass'
@@ -165,6 +173,14 @@ def validate_entries(plan, entries, expected_recipe_sha256, expected_render_sett
     _require(_hash(expected_recipe_sha256) and _hash(expected_render_settings_sha256), 'expected_pins')
     _require(isinstance(entries, (list, tuple)) and len(entries) == len(validated), 'entry_count')
     plan_hash = identity(plan)
+    accepted_settings = {expected_render_settings_sha256}
+    comparable_settings = None
+    if compatible_settings_sha256 is not None:
+        from execution_profiles import DR_RECOVERY_LESSONS, DR_RECOVERY_SETTINGS
+        _require(single_pass and plan['lesson_id'] in DR_RECOVERY_LESSONS
+                 and (expected_render_settings_sha256, compatible_settings_sha256) == DR_RECOVERY_SETTINGS,
+                 'compatible_checkpoint_scope')
+        accepted_settings.add(compatible_settings_sha256)
     by_index, paths = {}, set()
     for row in entries:
         _require(isinstance(row, dict), 'entry_schema')
@@ -204,13 +220,16 @@ def validate_entries(plan, entries, expected_recipe_sha256, expected_render_sett
             _require(isinstance(asr, dict) and asr.get('blocked') is False
                      and asr.get('review_required') is False and type(asr.get('character_errors')) is int
                      and asr['character_errors'] == 0 and asr.get('missing_critical') == [], 'receipt_transcript_gate')
+        receipt_settings_hash = receipt.get('render_settings_sha256')
+        _require(_hash(receipt_settings_hash) and receipt_settings_hash in accepted_settings,
+                 'receipt_checkpoint_settings_pin')
         expected = {
             'lesson_id': plan['lesson_id'], 'unit_index': index, 'unit_id': unit['id'],
             'paragraph_id': unit['paragraph_id'], 'start_utf16': unit['start_utf16'],
             'end_utf16': unit['end_utf16'], 'source_sha256': unit['source_sha256'],
             'spoken_sha256': _sha(unit['spoken'].encode()), 'plan_sha256': plan_hash,
             'recipe_sha256': expected_recipe_sha256,
-            'render_settings_sha256': expected_render_settings_sha256, 'mode': unit['mode'],
+            'render_settings_sha256': receipt_settings_hash, 'mode': unit['mode'],
             'file': 'final.wav', 'sample_rate': INPUT_RATE, 'measurement_kind': 'final_decoded_pcm',
         }
         _require(all(receipt.get(k) == v for k, v in expected.items()), 'receipt_scope_or_pin')
@@ -222,8 +241,13 @@ def validate_entries(plan, entries, expected_recipe_sha256, expected_render_sett
             if field in receipt:
                 _require(type(receipt[field]) is int and receipt[field] == value, 'receipt_cp_bounds')
         settings = receipt.get('render_settings')
-        _require(isinstance(settings, dict) and identity(settings) == expected_render_settings_sha256,
+        _require(isinstance(settings, dict) and identity(settings) == receipt_settings_hash,
                  'receipt_render_settings_hash')
+        if compatible_settings_sha256 is not None:
+            comparable = _without_planning_fingerprint(settings)
+            if comparable_settings is None:
+                comparable_settings = comparable
+            _require(comparable == comparable_settings, 'incompatible_checkpoint_settings')
         required_settings = {'schema': 'bora-python-fp32-production/v1', 'engine': 'qwen-tts-python',
                              'dtype': 'float32', 'threads': 4, 'device': 'cpu', 'attention': 'sdpa',
                              'inference_mode': True, 'sample_rate': INPUT_RATE, 'tempo_factor': 1,
@@ -239,7 +263,7 @@ def validate_entries(plan, entries, expected_recipe_sha256, expected_render_sett
             _require(all(settings.get(k) != v for k, v in SINGLE_PASS_SETTINGS.items()),
                      'receipt_strict_settings')
         _require(receipt.get('unit_key') == identity(dict(unit=unit,
-                 render_settings_sha256=expected_render_settings_sha256)), 'receipt_unit_key')
+                 render_settings_sha256=receipt_settings_hash)), 'receipt_unit_key')
         _require(isinstance(row.get('path'), (str, os.PathLike)), 'entry_path')
         path = _safe_path(row['path'])
         _require(path.is_file() and 0 < path.stat().st_size <= MAX_UNIT_BYTES, 'unit_file_size')
@@ -501,7 +525,8 @@ def _encode_part(pcm, target, expected_samples, ffmpeg):
 
 def assemble_lesson(plan, entries, output_dir, *, expected_recipe_sha256,
                     expected_render_settings_sha256, title=None, ffmpeg='ffmpeg', ffprobe='ffprobe',
-                    unit_gap_ms=0, paragraph_gap_ms=0, max_part_seconds=60, profile='eager'):
+                    unit_gap_ms=0, paragraph_gap_ms=0, max_part_seconds=60, profile='eager',
+                    compatible_settings_sha256=None):
     """Return metadata and write final MP3 parts to a fresh private directory.
 
     Root's production recipe uses unit_gap_ms=180, paragraph_gap_ms=350.
@@ -510,7 +535,8 @@ def assemble_lesson(plan, entries, output_dir, *, expected_recipe_sha256,
     The caller owns encrypted packaging and eventual publication separately.
     """
     validated, ordered = validate_entries(plan, entries, expected_recipe_sha256,
-                                          expected_render_settings_sha256, profile=profile)
+                                          expected_render_settings_sha256, profile=profile,
+                                          compatible_settings_sha256=compatible_settings_sha256)
     asr_verified = profile != 'single_pass'
     asr_scope = ('each accepted raw candidate: zero canonical transcript errors; final PCM signal checked separately'
                  if asr_verified else 'not run; first synthesis checked for source coverage, natural EOS and PCM signal')
@@ -608,6 +634,8 @@ def assemble_lesson(plan, entries, output_dir, *, expected_recipe_sha256,
                         automatic_unit_checks_passed=True, human_listening_verified=False,
                         asr_verified=asr_verified, asr_scope=asr_scope,
                         status='private_assembly_complete_not_sealed_or_published')
+        if compatible_settings_sha256 is not None:
+            metadata['compatible_checkpoint_settings_sha256'] = compatible_settings_sha256
         metadata_path = stage / f'{plan["lesson_id"]}.metadata.json'
         with metadata_path.open('x', encoding='utf-8') as handle:
             os.chmod(metadata_path, 0o600)

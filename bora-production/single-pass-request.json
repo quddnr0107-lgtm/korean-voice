@@ -5,12 +5,15 @@
   "execution_profile": "bora-python-fp32-single-pass/v1",
   "execution_shard_chars": 2200,
   "retry_blocked": false,
-  "request_id": "dr-four-reference-padding-pins-20261116",
-  "render_workers": 21,
+  "request_id": "dr-reuse-authenticated-equivalent-checkpoints-20261116",
+  "assembly_only": true,
+  "checkpoint_settings_sha256": "23877016aac70cafa588714b595a5254d55c72387c4768a14c12a4647bb7a681",
+  "compatible_checkpoint_settings_sha256": "2fabab4a10c67164403f759fc12b9af489a4eeb948599d4657e014ec75c96d13",
   "lesson_ids": [
-    "DR-018",
-    "DR-029",
-    "DR-042",
-    "DR-068"
+    "DR-034",
+    "DR-035",
+    "DR-049",
+    "DR-055",
+    "DR-057"
   ]
 }

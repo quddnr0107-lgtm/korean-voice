@@ -608,10 +608,19 @@ def assemble(args, profile='eager'):
         work=Path(td)
         restored=restore(args.resume_dir,media_key,plan,recipe_hash,settings_hash,work/'restored',
                          profile=profile)
+        alternate_settings = request.get('compatible_checkpoint_settings_sha256')
+        if alternate_settings is not None:
+            alternate = restore(args.resume_dir,media_key,plan,recipe_hash,alternate_settings,
+                                work/'restored-compatible',profile=profile)
+            for index, row in alternate.items():
+                if index not in restored or restored[index]['receipt'].get('status') != 'passed':
+                    restored[index] = row
         check(set(restored)==set(range(len(plan['units']))) and
               all(v['receipt'].get('status')=='passed' for v in restored.values()), 'lesson_not_complete')
         from assemble import assemble_lesson
         assembly_policy = {'profile': profile} if profile == 'single_pass' else {}
+        if alternate_settings is not None:
+            assembly_policy['compatible_settings_sha256'] = alternate_settings
         with quiet():
             metadata=assemble_lesson(plan,list(restored.values()),work/'assembled',
                 expected_recipe_sha256=recipe_hash,expected_render_settings_sha256=settings_hash,

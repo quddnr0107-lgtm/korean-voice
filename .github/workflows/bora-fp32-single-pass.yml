@@ -15,6 +15,7 @@ concurrency:
         startsWith(github.event.head_commit.message, 'Bora MS production: Fill open ') && 'bora-fp32-single-pass-ms-fill' ||
         startsWith(github.event.head_commit.message, 'Bora MS production: Backfill ') && 'bora-fp32-single-pass-ms-backfill' ||
         (startsWith(github.event.head_commit.message, 'Bora MS pilot: ') || startsWith(github.event.head_commit.message, 'Bora MS production: ')) && 'bora-fp32-single-pass-ms-pilot' ||
+        startsWith(github.event.head_commit.message, 'Bora DR checkpoint assembly: ') && 'bora-fp32-single-pass-dr-assembly' ||
         'bora-fp32-single-pass-next' }}-${{ github.ref }}
   cancel-in-progress: false
 env:

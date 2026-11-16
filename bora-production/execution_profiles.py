@@ -32,6 +32,11 @@ def workflow_filename(profile='eager'):
     return WORKFLOW_FILENAMES[validate_profile(profile)]
 
 
+DR_RECOVERY_SETTINGS = ('23877016aac70cafa588714b595a5254d55c72387c4768a14c12a4647bb7a681',
+                        '2fabab4a10c67164403f759fc12b9af489a4eeb948599d4657e014ec75c96d13')
+DR_RECOVERY_LESSONS = frozenset(["DR-034","DR-035","DR-049","DR-055","DR-057"])
+
+
 def validate_single_pass_request(request):
     required = dict(schema='bora-fp32-request/v1', campaign_sha256=CAMPAIGN_SHA256,
                     retry_blocked=False, execution_profile=SINGLE_PASS_PROFILE_ID)
@@ -39,7 +44,7 @@ def validate_single_pass_request(request):
     if (not isinstance(request, dict) or not fields <= request.keys()
             or set(request) - fields - {'lesson_ids', 'execution_shard_chars', 'selected_shards',
                                        'overlap_tb', 'assembly_only', 'checkpoint_settings_sha256',
-                                       'render_workers'}
+                                       'render_workers', 'compatible_checkpoint_settings_sha256'}
             or any(request[name] != value for name, value in required.items())
             or ('overlap_tb' in request and
                 (request['overlap_tb'] is not True or request['course'] != 'RL'
@@ -62,6 +67,15 @@ def validate_single_pass_request(request):
                 or not re.fullmatch('[a-f0-9]{64}', fingerprint)
                 or not {'selected_shards', 'overlap_tb'}.isdisjoint(request)):
             raise ValueError('single_pass_assembly_only_scope')
+
+    if 'compatible_checkpoint_settings_sha256' in request:
+        ids = request.get('lesson_ids')
+        if (request.get('assembly_only') is not True or request['course'] != 'DR'
+                or not isinstance(ids, list) or not ids
+                or not all(isinstance(ident, str) and ident in DR_RECOVERY_LESSONS for ident in ids)
+                or (request.get('checkpoint_settings_sha256'),
+                    request['compatible_checkpoint_settings_sha256']) != DR_RECOVERY_SETTINGS):
+            raise ValueError('directive_checkpoint_compatibility_scope')
 
 
 def validate_request(request, profile='eager'):

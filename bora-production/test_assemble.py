@@ -154,6 +154,40 @@ class AssemblyTests(unittest.TestCase):
                     asr=dict(status='not_run', performed=False), signal=dict(blocked=False))])
         return entries, settings_hash
 
+    def test_directive_recovery_accepts_only_planning_fingerprint_difference(self):
+        from unittest.mock import patch
+        self.plan['lesson_id'] = 'DR-034'
+        for paragraph in self.plan['paragraphs']:
+            paragraph['id'] = paragraph['id'].replace('TB-001:', 'DR-034:', 1)
+        for unit in self.plan['units']:
+            unit['id'] = unit['id'].replace('TB-001:', 'DR-034:', 1)
+            unit['paragraph_id'] = unit['paragraph_id'].replace('TB-001:', 'DR-034:', 1)
+        entries, _ = self.single_pass_entries()
+        for change_engine in (False, True):
+            with self.subTest(change_engine=change_engine):
+                pins = []
+                for i, (unit, row) in enumerate(zip(self.plan['units'], entries)):
+                    old = i == 0
+                    settings = dict(row['receipt']['render_settings'],
+                        code_sha256={'bora-production/planning.py': ('1' if old else '2') * 64,
+                                     'bora-production/single_pass_renderer.py': '3' * 64},
+                        ffmpeg_version='different' if old and change_engine else 'pinned')
+                    fingerprint = identity(settings)
+                    pins.append(fingerprint)
+                    row['receipt'].update(lesson_id='DR-034', unit_id=unit['id'],
+                        paragraph_id=unit['paragraph_id'], plan_sha256=identity(self.plan),
+                        render_settings=settings, render_settings_sha256=fingerprint,
+                        unit_key=identity(dict(unit=unit, render_settings_sha256=fingerprint)))
+                with patch('execution_profiles.DR_RECOVERY_SETTINGS', (pins[1], pins[0])):
+                    validate = lambda: validate_entries(self.plan, entries, self.recipe_hash,
+                        pins[1], compatible_settings_sha256=pins[0], profile='single_pass')
+                    if change_engine:
+                        with self.assertRaisesRegex(AssemblyError, 'incompatible_checkpoint_settings'):
+                            validate()
+                    else:
+                        self.assertEqual(len(validate()[1]), len(entries))
+
+
     def test_single_pass_requires_explicit_profile_and_truthfully_labels_output(self):
         entries, settings_hash = self.single_pass_entries()
         with self.assertRaisesRegex(AssemblyError, 'receipt_transcript_gate'):
