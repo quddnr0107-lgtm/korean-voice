@@ -5,40 +5,12 @@
   "execution_profile": "bora-python-fp32-single-pass/v1",
   "execution_shard_chars": 2200,
   "retry_blocked": false,
-  "request_id": "dr-priority-retry-six-missing-encrypted-shards-20261116",
-  "render_workers": 6,
+  "request_id": "dr-priority-four-reconciled-20261116",
+  "render_workers": 21,
   "lesson_ids": [
-    "DR-034",
-    "DR-035",
-    "DR-043",
-    "DR-049",
-    "DR-055",
-    "DR-057"
-  ],
-  "selected_shards": [
-    {
-      "lesson_id": "DR-034",
-      "shard": 2
-    },
-    {
-      "lesson_id": "DR-035",
-      "shard": 0
-    },
-    {
-      "lesson_id": "DR-043",
-      "shard": 1
-    },
-    {
-      "lesson_id": "DR-049",
-      "shard": 2
-    },
-    {
-      "lesson_id": "DR-055",
-      "shard": 4
-    },
-    {
-      "lesson_id": "DR-057",
-      "shard": 4
-    }
+    "DR-018",
+    "DR-029",
+    "DR-042",
+    "DR-068"
   ]
 }
