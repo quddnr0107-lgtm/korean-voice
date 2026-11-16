@@ -5,7 +5,7 @@
   "execution_profile": "bora-python-fp32-single-pass/v1",
   "execution_shard_chars": 2200,
   "retry_blocked": false,
-  "request_id": "ms-single-pass-production-refill-029-036-20261116",
+  "request_id": "ms-single-pass-production-refill-verified-029-036-20261116",
   "render_workers": 7,
   "lesson_ids": [
     "MS-029",

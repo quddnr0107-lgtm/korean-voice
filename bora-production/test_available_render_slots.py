@@ -40,7 +40,7 @@ class AvailableRenderSlotsTests(unittest.TestCase):
             *([[{'id': 2}]] * len(capacity.ACTIVE_STATES)), jobs,
         ]), patch.object(capacity, 'published_cap', return_value=2) as cap:
             self.assertEqual(capacity.reserved_slots(1, 'mock-token'), 2)
-            cap.assert_called_once_with(jobs, 'mock-token')
+            cap.assert_called_once_with(2, jobs, 'mock-token')
 
     def test_reads_the_recorded_capacity_from_the_actions_job_log(self):
         jobs = [{'name': 'capacity', 'id': 4, 'conclusion': 'success', 'steps': [
@@ -48,5 +48,16 @@ class AvailableRenderSlotsTests(unittest.TestCase):
         ]}]
         with patch.object(capacity.subprocess, 'run') as cli:
             cli.return_value.stdout = '2026-11-16T03:38:34Z Reserved synthesis jobs: 7; Military Service slots: 33\n'
-            self.assertEqual(capacity.published_cap(jobs, 'mock-token'), 33)
+            self.assertEqual(capacity.published_cap(2, jobs, 'mock-token'), 33)
             self.assertTrue(cli.call_args.args[0][-1].endswith('/actions/jobs/4/logs'))
+
+    def test_previous_capacity_pin_requires_the_matching_run_and_job(self):
+        jobs = [{'name': 'capacity', 'id': 4, 'conclusion': 'success', 'steps': [
+            {'name': 'Count available course synthesis slots', 'conclusion': 'success'},
+        ]}]
+        with patch.dict(capacity.os.environ, BORA_PRECEDING_CAPACITY='2:4:33'), \
+                patch.object(capacity.subprocess, 'run') as cli:
+            self.assertEqual(capacity.published_cap(2, jobs, 'mock-token'), 33)
+            cli.assert_not_called()
+            cli.return_value.stdout = 'Reserved synthesis jobs: 8; Military Service slots: 32\n'
+            self.assertEqual(capacity.published_cap(3, jobs, 'mock-token'), 32)

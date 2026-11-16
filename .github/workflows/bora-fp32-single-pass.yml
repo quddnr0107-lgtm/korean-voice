@@ -222,6 +222,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
           BORA_MAX_WORKERS: ${{ needs.plan.outputs.parallelism }}
+          BORA_PRECEDING_CAPACITY: >-
+            ${{ startsWith(github.event.head_commit.message, 'Bora MS production: Refill verified 20261116 ') && '43798929547:133075539380:33' || '' }}
         run: python3 bora-production/available_render_slots.py
 
   render:

@@ -30,7 +30,7 @@ def list_items(url, field, token):
     raise CapacityError("actions_inventory_page_limit")
 
 
-def published_cap(jobs, token):
+def published_cap(run_id, jobs, token):
     """Read the earlier capacity job's numeric allocation, when present."""
     for job in jobs:
         if job["name"] != "capacity" or job.get("conclusion") != "success":
@@ -39,6 +39,14 @@ def published_cap(jobs, token):
                    and step.get("conclusion") == "success" for step in job.get("steps", [])):
             continue
         require(type(job["id"]) is int and job["id"] > 0, "invalid_capacity_job")
+        verified = os.environ.get("BORA_PRECEDING_CAPACITY", "")
+        if verified:
+            pin = re.fullmatch(r"([1-9][0-9]*):([1-9][0-9]*):([1-9][0-9]*)", verified)
+            require(pin is not None, "invalid_preceding_capacity_pin")
+            prior_run, prior_job, prior_cap = map(int, pin.groups())
+            if (prior_run, prior_job) == (run_id, job["id"]):
+                require(prior_cap <= WORKER_LIMIT, "invalid_preceding_worker_count")
+                return prior_cap
         try:
             logs = subprocess.run(
                 ["gh", "api", f"repos/{REPOSITORY}/actions/jobs/{job['id']}/logs"],
@@ -82,7 +90,7 @@ def reserved_slots(current_run, token):
         if any(job["status"] == "queued" for job in open_jobs):
             # Matrix jobs above max-parallel wait until an active worker ends.
             # The earlier capacity job bounds how many can run concurrently.
-            reserved += min(len(open_jobs), published_cap(jobs, token))
+            reserved += min(len(open_jobs), published_cap(run_id, jobs, token))
         else:
             reserved += len(open_jobs)
     return reserved
