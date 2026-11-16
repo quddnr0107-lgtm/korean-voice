@@ -5,11 +5,9 @@
   "execution_profile": "bora-python-fp32-single-pass/v1",
   "execution_shard_chars": 2200,
   "retry_blocked": false,
-  "request_id": "ms-single-pass-production-005-028-20261116",
+  "request_id": "ms-single-pass-production-20-authenticated-lessons-20261116",
   "render_workers": 40,
   "lesson_ids": [
-    "MS-005",
-    "MS-006",
     "MS-007",
     "MS-008",
     "MS-009",
@@ -24,13 +22,11 @@
     "MS-018",
     "MS-019",
     "MS-020",
-    "MS-021",
     "MS-022",
     "MS-023",
     "MS-024",
     "MS-025",
     "MS-026",
-    "MS-027",
-    "MS-028"
+    "MS-027"
   ]
 }
