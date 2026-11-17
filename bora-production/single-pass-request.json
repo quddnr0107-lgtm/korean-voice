@@ -5,15 +5,13 @@
   "execution_profile": "bora-python-fp32-single-pass/v1",
   "execution_shard_chars": 2200,
   "retry_blocked": false,
-  "request_id": "ms-six-lessons-checkpoint-recovery-20261117",
-  "assembly_only": true,
-  "checkpoint_settings_sha256": "2706c05eb2168d63e6b0c71f8f7c18ad693433f5c38860dae741287adedef48b",
+  "request_id": "ms-backfill-088-092-source-cleared-26-workers-20261117",
+  "render_workers": 26,
   "lesson_ids": [
-    "MS-044",
-    "MS-049",
-    "MS-052",
-    "MS-055",
-    "MS-057",
-    "MS-058"
+    "MS-088",
+    "MS-089",
+    "MS-090",
+    "MS-091",
+    "MS-092"
   ]
 }
