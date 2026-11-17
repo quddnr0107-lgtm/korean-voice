@@ -5,8 +5,8 @@
   "execution_profile": "bora-python-fp32-single-pass/v1",
   "execution_shard_chars": 470,
   "retry_blocked": false,
-  "request_id": "dr-029-043-shorter-unit-recovery-20261117",
-  "render_workers": 28,
+  "request_id": "dr-029-043-english-pin-fix-20261117",
+  "render_workers": 26,
   "lesson_ids": [
     "DR-029",
     "DR-043"
