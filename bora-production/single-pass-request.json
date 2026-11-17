@@ -1,14 +1,28 @@
 {
   "schema": "bora-fp32-request/v1",
   "campaign_sha256": "60e9763ab344e8a59264ec634a47ee60321667bc426108100f2973a04cfdca76",
-  "course": "DR",
+  "course": "MS",
   "execution_profile": "bora-python-fp32-single-pass/v1",
-  "execution_shard_chars": 470,
+  "execution_shard_chars": 2200,
   "retry_blocked": false,
-  "request_id": "dr-029-043-english-pin-fix-20261117",
-  "render_workers": 26,
+  "request_id": "ms-next-069-087-source-cleared-14-workers-20261117",
+  "render_workers": 14,
   "lesson_ids": [
-    "DR-029",
-    "DR-043"
+    "MS-069",
+    "MS-070",
+    "MS-072",
+    "MS-074",
+    "MS-076",
+    "MS-077",
+    "MS-078",
+    "MS-079",
+    "MS-080",
+    "MS-081",
+    "MS-082",
+    "MS-083",
+    "MS-084",
+    "MS-085",
+    "MS-086",
+    "MS-087"
   ]
 }
