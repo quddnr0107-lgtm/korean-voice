@@ -5,11 +5,10 @@
   "execution_profile": "bora-python-fp32-single-pass/v1",
   "execution_shard_chars": 2200,
   "retry_blocked": false,
-  "request_id": "ms-next-093-116-source-cleared-24-workers-20261117",
+  "request_id": "ms-next-093-116-without-094-24-workers-20261117",
   "render_workers": 24,
   "lesson_ids": [
     "MS-093",
-    "MS-094",
     "MS-095",
     "MS-096",
     "MS-098",
