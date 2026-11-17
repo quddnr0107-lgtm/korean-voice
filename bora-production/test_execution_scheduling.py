@@ -305,6 +305,33 @@ class MilitaryServiceCheckpointWorkflowTests(unittest.TestCase):
         request.update(changes)
         return request
 
+    def test_ms_verified_fill_is_separate_and_keeps_all_production_gates(self):
+        message = 'Bora MS production: Fill verified twenty-four source-cleared lessons'
+        self.assertEqual(self.concurrency_group(message), 'bora-fp32-single-pass-ms-verified-fill')
+        for prefix, suffix in (('Refill ', 'ms-refill'), ('Fill open ', 'ms-fill'),
+                               ('Backfill ', 'ms-backfill'), ('Batch ', 'ms-pilot'),
+                               ('Recover setup ', 'ms-setup-recovery')):
+            self.assertEqual(self.concurrency_group('Bora MS production: ' + prefix + 'unchanged'),
+                             'bora-fp32-single-pass-' + suffix)
+        request = self.setup_request(render_workers=24,
+                                     lesson_ids=[f'MS-{index:03d}' for index in range(117, 141)])
+        request.pop('selected_shards')
+        self.assertEqual(self.preflight(request, {'BORA_MS_PRODUCTION': 'true'}),
+                         {'assembly_only': 'false'})
+        values = {'needs.plan.result': 'success', 'needs.plan.outputs.overlap_tb': 'false',
+                  'needs.plan.outputs.assembly_only': 'false', 'needs.plan.outputs.grouped_render': 'true',
+                  'needs.capacity.result': 'success', 'needs.capacity.outputs.parallelism': '4',
+                  'needs.render.result': 'skipped', 'needs.render_grouped.result': 'success',
+                  'needs.assemble.result': 'success'}
+        self.assertTrue(self.job_condition('capacity', message, values))
+        self.assertTrue(self.job_condition('render_grouped', message, values))
+        self.assertTrue(self.job_condition('assemble', message, values))
+        self.assertFalse(self.job_condition('publish', message, values))
+        values['needs.capacity.result'] = 'failure'
+        values['needs.capacity.outputs.parallelism'] = ''
+        self.assertFalse(self.job_condition('render_grouped', message, values))
+        self.assertFalse(self.job_condition('assemble', message, values))
+
     def setup_preflight(self, request):
         return self.preflight(request, dict(BORA_MS_PRODUCTION='true', BORA_MS_SETUP_RECOVERY='true'))
 
