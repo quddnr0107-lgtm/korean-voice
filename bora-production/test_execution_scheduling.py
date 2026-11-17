@@ -223,7 +223,7 @@ class MilitaryServiceCheckpointWorkflowTests(unittest.TestCase):
             lesson_ids=['MS-044', 'MS-049', 'MS-052', 'MS-055', 'MS-057', 'MS-058'],
         ), **changes)
 
-    def preflight(self, request):
+    def preflight(self, request, scope_flags=None):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             (root/'bora-production').mkdir()
@@ -232,6 +232,9 @@ class MilitaryServiceCheckpointWorkflowTests(unittest.TestCase):
             flags = re.findall(r"os\.environ\['(BORA_[A-Z_]+)'\]", self.preflight_script)
             env = {name: 'false' for name in flags}
             env.update(BORA_MS_CHECKPOINT_ASSEMBLY='true', GITHUB_OUTPUT=str(output))
+            if scope_flags is not None:
+                env.update({name: 'false' for name in flags})
+                env.update(scope_flags)
             with contextlib.chdir(root), patch.dict(os.environ, env, clear=True):
                 exec(compile(self.preflight_script, '<workflow request guard>', 'exec'), {})
             return dict(line.split('=', 1) for line in output.read_text().splitlines())
@@ -287,6 +290,122 @@ class MilitaryServiceCheckpointWorkflowTests(unittest.TestCase):
         for request in invalid:
             with self.subTest(request=request), self.assertRaises((SystemExit, ValueError)):
                 self.preflight(request)
+
+    def setup_request(self, **changes):
+        request = self.request()
+        request.pop('assembly_only')
+        request.pop('checkpoint_settings_sha256')
+        request.update(request_id='ms-setup-recovery-workflow-test', render_workers=1,
+                       execution_shard_chars=2200,
+                       lesson_ids=['MS-098', 'MS-104', 'MS-107', 'MS-111'],
+                       selected_shards=[{'lesson_id': 'MS-104', 'shard': 3},
+                                        {'lesson_id': 'MS-098', 'shard': 5},
+                                        {'lesson_id': 'MS-111', 'shard': 0},
+                                        {'lesson_id': 'MS-107', 'shard': 3}])
+        request.update(changes)
+        return request
+
+    def setup_preflight(self, request):
+        return self.preflight(request, dict(BORA_MS_PRODUCTION='true', BORA_MS_SETUP_RECOVERY='true'))
+
+    def test_setup_recovery_guard_accepts_only_bounded_explicit_work(self):
+        for request in (self.setup_request(),
+                        self.setup_request(lesson_ids=['MS-104'], selected_shards=[{'lesson_id': 'MS-104', 'shard': 3}]),
+                        self.setup_request(lesson_ids=['MS-104'], selected_shards=[{'lesson_id': 'MS-104', 'shard': i} for i in range(6)])):
+            with self.subTest(request=request):
+                self.assertEqual(self.setup_preflight(request), {'assembly_only': 'false'})
+
+    def test_setup_recovery_guard_rejects_expansion_ambiguity_and_type_confusion(self):
+        invalid = [self.setup_request(render_workers=value) for value in (0, 2, True, 1.0, '1')]
+        invalid += [self.setup_request(selected_shards=value) for value in
+                    (None, {}, [], ['MS-104'], [{'lesson_id': 'MS-104', 'shard': i} for i in range(7)])]
+        invalid += [self.setup_request(selected_shards=[{'lesson_id': 'MS-104', 'shard': value}])
+                    for value in (True, '3', -1, 1000)]
+        invalid += [self.setup_request(selected_shards=[row]) for row in
+                    (None, {'lesson_id': 'MS-104'}, {'shard': 3},
+                     {'lesson_id': 'MS-104', 'shard': 3, 'extra': 1},
+                     {'lesson_id': 'DR-104', 'shard': 3}, {'lesson_id': 'MS-000', 'shard': 3})]
+        duplicate = self.setup_request()
+        duplicate['selected_shards'].append(copy.deepcopy(duplicate['selected_shards'][0]))
+        missing = self.setup_request()
+        missing.pop('selected_shards')
+        invalid += [duplicate, missing,
+                    self.setup_request(lesson_ids=['MS-098', 'MS-104', 'MS-107']),
+                    self.setup_request(lesson_ids=['MS-098', 'MS-104', 'MS-107', 'MS-111', 'MS-112']),
+                    self.setup_request(lesson_ids=['MS-098', 'MS-104', 'MS-107', 'MS-111', 'MS-111']),
+                    self.setup_request(course='DR'), self.setup_request(retry_blocked=True),
+                    self.setup_request(assembly_only=True, checkpoint_settings_sha256='a'*64)]
+        for request in invalid:
+            with self.subTest(request=request), self.assertRaises((SystemExit, ValueError)):
+                self.setup_preflight(request)
+        with self.assertRaises(SystemExit):
+            self.preflight(self.setup_request(), {'BORA_MS_SETUP_RECOVERY': 'true'})
+
+    def test_setup_recovery_concurrency_is_isolated_without_changing_existing_groups(self):
+        message = 'Bora MS production: Recover setup 44046060122 group 13'
+        self.assertEqual(self.concurrency_group(message), 'bora-fp32-single-pass-ms-setup-recovery')
+        for prefix, suffix in (('Refill ', 'ms-refill'), ('Fill open ', 'ms-fill'),
+                               ('Backfill ', 'ms-backfill'), ('Batch ', 'ms-pilot')):
+            self.assertEqual(self.concurrency_group('Bora MS production: ' + prefix + 'unchanged'),
+                             'bora-fp32-single-pass-' + suffix)
+
+    def test_setup_recovery_smoke_requires_original_settings_without_pinning_other_runs(self):
+        match = re.search(r"(?ms)^          python - <<'PY'\n(.*?)^          PY\n", self.workflow)
+        self.assertIsNotNone(match)
+        script = textwrap.dedent(match.group(1))
+        original = '5597ef328c8f1381e634e45a00b11dd556a8423597d7dfc80771f3085649dd32'
+        for recovery, course, fingerprint, accepted in ((True, 'MS', original, True), (True, 'MS', '0'*64, False),
+                                                        (False, 'MS', '0'*64, True), (False, 'DR', '0'*64, True)):
+            with self.subTest(recovery=recovery, course=course, fingerprint=fingerprint), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                smoke = dict(status='public_runtime_smoke_passed', source_key_used=False,
+                             private_manuscript_read=False, course=course, asr_performed=False,
+                             execution_profile='bora-python-fp32-single-pass/v1', max_attempts=1,
+                             render_settings_sha256=fingerprint)
+                (root/'bora-runtime-smoke.json').write_text(json.dumps(smoke))
+                env = dict(RUNNER_TEMP=str(root), GITHUB_OUTPUT=str(root/'outputs'),
+                           BORA_MS_SETUP_RECOVERY=str(recovery).lower())
+                with patch.dict(os.environ, env, clear=True):
+                    if accepted:
+                        exec(compile(script, '<workflow smoke export>', 'exec'), {})
+                        self.assertIn('render_settings_sha256='+fingerprint, (root/'outputs').read_text())
+                    else:
+                        with self.assertRaises(AssertionError):
+                            exec(compile(script, '<workflow smoke export>', 'exec'), {})
+                        self.assertFalse((root/'outputs').exists())
+
+    def job_condition(self, job, message, values):
+        body = re.search(r'(?ms)^  ' + job + r':\n(.*?)(?=^  [a-z_]+:|\Z)', self.workflow).group(1)
+        expression = re.search(r'(?ms)^    if: >-\n(.*?)(?=^    [a-z_-]+:)', body).group(1)
+        expression = expression.strip().removeprefix('${{').removesuffix('}}').strip()
+        expression = re.sub(r"startsWith\(github\.event\.head_commit\.message, '([^']+)'\)",
+                            lambda match: str(message.startswith(match.group(1))), expression)
+        for key, value in sorted(values.items(), key=lambda item: -len(item[0])):
+            expression = re.sub(r'\b' + re.escape(key) + r'\b', repr(value), expression)
+        expression = expression.replace('always()', 'True').replace('cancelled()', 'False')
+        expression = expression.replace('&&', 'and').replace('||', 'or')
+        expression = re.sub(r'!(?!=)', 'not ', expression)
+        tree = ast.parse('(' + expression + ')', mode='eval')
+        allowed = (ast.Expression, ast.BoolOp, ast.And, ast.Or, ast.Constant,
+                   ast.Compare, ast.Eq, ast.NotEq, ast.UnaryOp, ast.Not)
+        self.assertTrue(all(isinstance(node, allowed) for node in ast.walk(tree)))
+        return eval(compile(tree, '<workflow job condition>', 'eval'), {'__builtins__': {}}, {})
+
+    def test_setup_recovery_retains_capacity_and_skips_full_lesson_assembly(self):
+        message = 'Bora MS production: Recover setup 44046060122 group 13'
+        values = {'needs.plan.result': 'success', 'needs.plan.outputs.overlap_tb': 'false',
+                  'needs.plan.outputs.assembly_only': 'false', 'needs.plan.outputs.grouped_render': 'true',
+                  'needs.capacity.result': 'success', 'needs.capacity.outputs.parallelism': '1',
+                  'needs.render.result': 'skipped', 'needs.render_grouped.result': 'success',
+                  'needs.assemble.result': 'success'}
+        self.assertTrue(self.job_condition('capacity', message, values))
+        self.assertTrue(self.job_condition('render_grouped', message, values))
+        self.assertFalse(self.job_condition('assemble', message, values))
+        self.assertFalse(self.job_condition('publish', message, values))
+        values['needs.render_grouped.result'] = 'failure'
+        original = 'Bora MS production: Refill original fifteen lessons'
+        self.assertTrue(self.job_condition('assemble', original, values))
+        self.assertFalse(self.job_condition('publish', original, values))
 
 
 if __name__=='__main__':
