@@ -6,9 +6,12 @@ import copy
 import hashlib
 import io
 import json
+import os
 from pathlib import Path
 import random
+import re
 import tempfile
+import textwrap
 import unittest
 from unittest.mock import patch
 
@@ -194,6 +197,96 @@ class ExecutionSchedulingTests(unittest.TestCase):
             self.assertIn('recipe_sha256',text)
             self.assertIn('render_settings_sha256',text)
             self.assertIn('plan_sha256',text)
+
+
+class MilitaryServiceCheckpointWorkflowTests(unittest.TestCase):
+    """Exercise the actual keyless workflow guard and concurrency expression."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.workflow = (Path(__file__).resolve().parent.parent /
+                        '.github/workflows/bora-fp32-single-pass.yml').read_text()
+        match = re.search(
+            r"(?ms)^          PYTHONPATH=bora-production python - <<'PY'\n(.*?)^          PY\n",
+            cls.workflow)
+        if match is None:
+            raise AssertionError('request validation script missing')
+        cls.preflight_script = textwrap.dedent(match.group(1))
+
+    def request(self, **changes):
+        return dict(dict(
+            schema='bora-fp32-request/v1',
+            campaign_sha256='60e9763ab344e8a59264ec634a47ee60321667bc426108100f2973a04cfdca76',
+            course='MS', execution_profile='bora-python-fp32-single-pass/v1',
+            request_id='ms-checkpoint-workflow-test', retry_blocked=False,
+            assembly_only=True, checkpoint_settings_sha256='a'*64,
+            lesson_ids=['MS-044', 'MS-049', 'MS-052', 'MS-055', 'MS-057', 'MS-058'],
+        ), **changes)
+
+    def preflight(self, request):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root/'bora-production').mkdir()
+            (root/'bora-production/single-pass-request.json').write_text(json.dumps(request))
+            output = root/'outputs'
+            flags = re.findall(r"os\.environ\['(BORA_[A-Z_]+)'\]", self.preflight_script)
+            env = {name: 'false' for name in flags}
+            env.update(BORA_MS_CHECKPOINT_ASSEMBLY='true', GITHUB_OUTPUT=str(output))
+            with contextlib.chdir(root), patch.dict(os.environ, env, clear=True):
+                exec(compile(self.preflight_script, '<workflow request guard>', 'exec'), {})
+            return dict(line.split('=', 1) for line in output.read_text().splitlines())
+
+    def concurrency_group(self, message):
+        group = self.workflow.split('concurrency:\n', 1)[1].split('\nenv:\n', 1)[0]
+        self.assertIn('}}-${{ github.ref }}', group)
+        self.assertIn('cancel-in-progress: false', group)
+        expression = group.split('${{', 1)[1].split('}}', 1)[0]
+        expression = re.sub(
+            r"startsWith\(github\.event\.head_commit\.message, '([^']+)'\)",
+            lambda match: str(message.startswith(match.group(1))), expression)
+        expression = expression.replace('&&', 'and').replace('||', 'or').strip()
+        tree = ast.parse('(' + expression + ')', mode='eval')
+        allowed = (ast.Expression, ast.BoolOp, ast.And, ast.Or, ast.Constant)
+        self.assertTrue(all(isinstance(node, allowed) for node in ast.walk(tree)))
+        return eval(compile(tree, '<workflow concurrency>', 'eval'), {'__builtins__': {}}, {})
+
+    def test_ms_checkpoint_batches_share_one_group_without_waiting_for_directive_synthesis(self):
+        first = self.concurrency_group('Bora MS checkpoint assembly: Recover six approved lessons')
+        again = self.concurrency_group('Bora MS checkpoint assembly: Recover another approved batch')
+        self.assertEqual(first, 'bora-fp32-single-pass-ms-assembly')
+        self.assertEqual(first, again)
+        self.assertNotEqual(first, self.concurrency_group('Bora DR completion: Finish the course'))
+        self.assertNotEqual(first, self.concurrency_group('Bora MS production: Backfill remaining work'))
+        self.assertEqual(self.concurrency_group('Bora DR completion: Finish the course'),
+                         'bora-fp32-single-pass-next')
+        self.assertEqual(self.concurrency_group('Bora MS production: Backfill remaining work'),
+                         'bora-fp32-single-pass-ms-backfill')
+
+    def test_ms_checkpoint_guard_accepts_explicit_bounded_recovery_and_keeps_the_pin(self):
+        for ids in (['MS-001'], self.request()['lesson_ids'],
+                    [f'MS-{index:03d}' for index in range(143, 167)]):
+            with self.subTest(lesson_count=len(ids)):
+                output = self.preflight(self.request(lesson_ids=ids))
+                self.assertEqual(output, dict(assembly_only='true', course='MS',
+                                              render_settings_sha256='a'*64))
+
+    def test_ms_checkpoint_guard_rejects_synthesis_other_courses_and_unbounded_scope(self):
+        missing_ids = self.request()
+        missing_ids.pop('lesson_ids')
+        synthesis = self.request()
+        synthesis.pop('assembly_only')
+        synthesis.pop('checkpoint_settings_sha256')
+        invalid = [missing_ids, synthesis,
+                   self.request(course='DR', lesson_ids=['DR-044']),
+                   self.request(lesson_ids=[]), self.request(lesson_ids='MS-044'),
+                   self.request(lesson_ids=[f'MS-{index:03d}' for index in range(1, 26)]),
+                   self.request(lesson_ids=['MS-000']), self.request(lesson_ids=['MS-167']),
+                   self.request(lesson_ids=['MS-044', 'MS-044']),
+                   self.request(lesson_ids=[44]), self.request(render_workers=6),
+                   self.request(retry_blocked=True), self.request(checkpoint_settings_sha256='bad')]
+        for request in invalid:
+            with self.subTest(request=request), self.assertRaises((SystemExit, ValueError)):
+                self.preflight(request)
 
 
 if __name__=='__main__':

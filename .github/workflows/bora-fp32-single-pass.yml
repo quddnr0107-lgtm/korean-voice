@@ -15,6 +15,7 @@ concurrency:
         startsWith(github.event.head_commit.message, 'Bora MS production: Fill open ') && 'bora-fp32-single-pass-ms-fill' ||
         startsWith(github.event.head_commit.message, 'Bora MS production: Backfill ') && 'bora-fp32-single-pass-ms-backfill' ||
         (startsWith(github.event.head_commit.message, 'Bora MS pilot: ') || startsWith(github.event.head_commit.message, 'Bora MS production: ')) && 'bora-fp32-single-pass-ms-pilot' ||
+        startsWith(github.event.head_commit.message, 'Bora MS checkpoint assembly: ') && 'bora-fp32-single-pass-ms-assembly' ||
         startsWith(github.event.head_commit.message, 'Bora DR checkpoint assembly: ') && 'bora-fp32-single-pass-dr-assembly' ||
         'bora-fp32-single-pass-next' }}-${{ github.ref }}
   cancel-in-progress: false
@@ -54,6 +55,8 @@ jobs:
             ${{ startsWith(github.event.head_commit.message, 'Bora MS pilot: ') }}
           BORA_MS_PRODUCTION: >-
             ${{ startsWith(github.event.head_commit.message, 'Bora MS production: ') }}
+          BORA_MS_CHECKPOINT_ASSEMBLY: >-
+            ${{ startsWith(github.event.head_commit.message, 'Bora MS checkpoint assembly: ') }}
         run: |
           PYTHONPATH=bora-production python - <<'PY'
           import json, os
@@ -93,6 +96,13 @@ jobs:
                       or not isinstance(lessons, list) or not 1 <= len(lessons) <= 24
                       or not all(isinstance(lesson, str) and lesson in production_ids for lesson in lessons)):
                   raise SystemExit('Military Service production requires an explicit batch of up to 24 non-pilot lessons.')
+          if os.environ['BORA_MS_CHECKPOINT_ASSEMBLY'] == 'true':
+              assembly_ids = {f'MS-{index:03d}' for index in range(1, 167)}
+              if (request['course'] != 'MS' or not recovery
+                      or not isinstance(lessons, list) or not 1 <= len(lessons) <= 24
+                      or not all(isinstance(lesson, str) and lesson in assembly_ids for lesson in lessons)
+                      or len(lessons) != len(set(lessons))):
+                  raise SystemExit('Military Service checkpoint assembly requires an explicit checkpoint-only batch of up to 24 distinct lessons.')
           with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
               print(f'assembly_only={str(recovery).lower()}', file=output)
               if recovery:
