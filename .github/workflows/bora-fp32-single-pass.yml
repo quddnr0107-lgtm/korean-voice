@@ -11,6 +11,7 @@ concurrency:
     ${{ startsWith(github.event.head_commit.message, 'Bora early RL assembly: ') && 'bora-fp32-single-pass-rl-assembly' ||
         startsWith(github.event.head_commit.message, 'Bora DR overlap: ') && 'bora-fp32-single-pass-dr-overlap' ||
         startsWith(github.event.head_commit.message, 'Bora DR expansion: ') && 'bora-fp32-single-pass-dr-expansion' ||
+        startsWith(github.event.head_commit.message, 'Bora MS production: Recover setup ') && 'bora-fp32-single-pass-ms-setup-recovery' ||
         startsWith(github.event.head_commit.message, 'Bora MS production: Refill ') && 'bora-fp32-single-pass-ms-refill' ||
         startsWith(github.event.head_commit.message, 'Bora MS production: Fill open ') && 'bora-fp32-single-pass-ms-fill' ||
         startsWith(github.event.head_commit.message, 'Bora MS production: Backfill ') && 'bora-fp32-single-pass-ms-backfill' ||
@@ -55,6 +56,8 @@ jobs:
             ${{ startsWith(github.event.head_commit.message, 'Bora MS pilot: ') }}
           BORA_MS_PRODUCTION: >-
             ${{ startsWith(github.event.head_commit.message, 'Bora MS production: ') }}
+          BORA_MS_SETUP_RECOVERY: >-
+            ${{ startsWith(github.event.head_commit.message, 'Bora MS production: Recover setup ') }}
           BORA_MS_CHECKPOINT_ASSEMBLY: >-
             ${{ startsWith(github.event.head_commit.message, 'Bora MS checkpoint assembly: ') }}
         run: |
@@ -96,6 +99,24 @@ jobs:
                       or not isinstance(lessons, list) or not 1 <= len(lessons) <= 24
                       or not all(isinstance(lesson, str) and lesson in production_ids for lesson in lessons)):
                   raise SystemExit('Military Service production requires an explicit batch of up to 24 non-pilot lessons.')
+          if os.environ['BORA_MS_SETUP_RECOVERY'] == 'true':
+              if os.environ['BORA_MS_PRODUCTION'] != 'true':
+                  raise SystemExit('Military Service setup recovery must retain the production capacity path.')
+              selected = request.get('selected_shards')
+              valid_selected = (
+                  isinstance(selected, list) and 1 <= len(selected) <= 6
+                  and all(isinstance(row, dict) and set(row) == {'lesson_id', 'shard'}
+                          and isinstance(row['lesson_id'], str) and row['lesson_id'] in production_ids
+                          and type(row['shard']) is int and 0 <= row['shard'] <= 999
+                          for row in selected))
+              if (os.environ['BORA_MS_PRODUCTION'] != 'true' or request['course'] != 'MS'
+                      or recovery or type(request.get('render_workers')) is not int
+                      or request['render_workers'] != 1 or not valid_selected):
+                  raise SystemExit('Military Service setup recovery requires one worker and one to six explicit shards.')
+              pairs = [(row['lesson_id'], row['shard']) for row in selected]
+              if (len(pairs) != len(set(pairs)) or len(lessons) != len(set(lessons))
+                      or set(lessons) != {row['lesson_id'] for row in selected}):
+                  raise SystemExit('Military Service setup recovery requires distinct shards and their exact lesson scope.')
           if os.environ['BORA_MS_CHECKPOINT_ASSEMBLY'] == 'true':
               assembly_ids = {f'MS-{index:03d}' for index in range(1, 167)}
               if (request['course'] != 'MS' or not recovery
@@ -138,6 +159,9 @@ jobs:
       - id: checked
         name: Export only the verified public course and settings fingerprint
         if: steps.requested.outputs.assembly_only == 'false'
+        env:
+          BORA_MS_SETUP_RECOVERY: >-
+            ${{ startsWith(github.event.head_commit.message, 'Bora MS production: Recover setup ') }}
         run: |
           python - <<'PY'
           import json, os, re
@@ -149,6 +173,8 @@ jobs:
           assert result['execution_profile'] == 'bora-python-fp32-single-pass/v1'
           assert result['asr_performed'] is False and result['max_attempts'] == 1
           assert re.fullmatch('[a-f0-9]{64}', result['render_settings_sha256'])
+          if os.environ['BORA_MS_SETUP_RECOVERY'] == 'true':
+              assert result['render_settings_sha256'] == '5597ef328c8f1381e634e45a00b11dd556a8423597d7dfc80771f3085649dd32'
           with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
               output.write('course='+result['course']+'\n')
               output.write('render_settings_sha256='+result['render_settings_sha256']+'\n')
@@ -433,6 +459,7 @@ jobs:
     # independently authenticate complete coverage before its output can leave.
     if: >-
       ${{ always() && !cancelled() && needs.plan.result == 'success' &&
+          !startsWith(github.event.head_commit.message, 'Bora MS production: Recover setup ') &&
           ((needs.plan.outputs.overlap_tb == 'false' && needs.capacity.result == 'skipped') ||
            (needs.capacity.result == 'success' && (needs.plan.outputs.overlap_tb == 'true' || needs.capacity.outputs.parallelism != ''))) &&
           ((needs.plan.outputs.assembly_only == 'true' && needs.render.result == 'skipped' &&
@@ -558,4 +585,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: python bora-production/transport.py publish --profile single_pass --course "$BORA_COURSE" --directory "$RUNNER_TEMP/bora-course"
+
 
