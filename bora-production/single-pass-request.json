@@ -5,10 +5,24 @@
   "execution_profile": "bora-python-fp32-single-pass/v1",
   "execution_shard_chars": 2200,
   "retry_blocked": false,
-  "request_id": "ms-two-slots-110-112-restored-after-dr-20261117",
-  "render_workers": 2,
+  "request_id": "ms-next-093-116-source-cleared-24-workers-20261117",
+  "render_workers": 24,
   "lesson_ids": [
-    "MS-110",
-    "MS-112"
+    "MS-093",
+    "MS-094",
+    "MS-095",
+    "MS-096",
+    "MS-098",
+    "MS-099",
+    "MS-100",
+    "MS-101",
+    "MS-102",
+    "MS-104",
+    "MS-105",
+    "MS-106",
+    "MS-107",
+    "MS-108",
+    "MS-109",
+    "MS-111"
   ]
 }
