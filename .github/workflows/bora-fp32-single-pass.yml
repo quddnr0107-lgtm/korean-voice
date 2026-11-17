@@ -13,6 +13,7 @@ concurrency:
         startsWith(github.event.head_commit.message, 'Bora DR expansion: ') && 'bora-fp32-single-pass-dr-expansion' ||
         startsWith(github.event.head_commit.message, 'Bora MS production: Recover setup ') && 'bora-fp32-single-pass-ms-setup-recovery' ||
         startsWith(github.event.head_commit.message, 'Bora MS production: Refill ') && 'bora-fp32-single-pass-ms-refill' ||
+        startsWith(github.event.head_commit.message, 'Bora MS production: Fill verified ') && 'bora-fp32-single-pass-ms-verified-fill' ||
         startsWith(github.event.head_commit.message, 'Bora MS production: Fill open ') && 'bora-fp32-single-pass-ms-fill' ||
         startsWith(github.event.head_commit.message, 'Bora MS production: Backfill ') && 'bora-fp32-single-pass-ms-backfill' ||
         (startsWith(github.event.head_commit.message, 'Bora MS pilot: ') || startsWith(github.event.head_commit.message, 'Bora MS production: ')) && 'bora-fp32-single-pass-ms-pilot' ||

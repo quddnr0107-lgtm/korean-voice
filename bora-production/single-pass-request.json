@@ -5,31 +5,32 @@
   "execution_profile": "bora-python-fp32-single-pass/v1",
   "execution_shard_chars": 2200,
   "retry_blocked": false,
-  "request_id": "ms-setup-recovery-44046060122-job-133914169646-4-shards-1-worker-20261117",
-  "render_workers": 1,
+  "request_id": "ms-fill-verified-117-140-24-workers-20261117",
+  "render_workers": 24,
   "lesson_ids": [
-    "MS-098",
-    "MS-104",
-    "MS-107",
-    "MS-111"
-  ],
-  "selected_shards": [
-    {
-      "lesson_id": "MS-104",
-      "shard": 3
-    },
-    {
-      "lesson_id": "MS-098",
-      "shard": 5
-    },
-    {
-      "lesson_id": "MS-111",
-      "shard": 0
-    },
-    {
-      "lesson_id": "MS-107",
-      "shard": 3
-    }
+    "MS-117",
+    "MS-118",
+    "MS-119",
+    "MS-120",
+    "MS-121",
+    "MS-122",
+    "MS-123",
+    "MS-124",
+    "MS-125",
+    "MS-126",
+    "MS-127",
+    "MS-128",
+    "MS-129",
+    "MS-130",
+    "MS-131",
+    "MS-132",
+    "MS-133",
+    "MS-134",
+    "MS-135",
+    "MS-136",
+    "MS-137",
+    "MS-138",
+    "MS-139",
+    "MS-140"
   ]
 }
-
