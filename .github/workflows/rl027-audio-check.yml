@@ -30,10 +30,11 @@ jobs:
           python-version: '3.12'
       - name: Test measurements and encrypted decoding using synthetic inputs
         run: |
-          if ! command -v ffmpeg >/dev/null; then
-            sudo apt-get update -qq
-            sudo apt-get install -y -qq ffmpeg
-          fi
+          python -m pip install --disable-pip-version-check --require-hashes --only-binary=:all: --no-deps -r /dev/stdin <<'WHEEL'
+          imageio-ffmpeg==0.8.1 --hash=sha256:050d6850601c3b3890bd2b28306f3b842b3daea390a561101174375a1c460bda
+          WHEEL
+          sudo install -m755 "$(python -c 'import imageio_ffmpeg as pkg; print(pkg.get_ffmpeg_exe())')" /usr/bin/ffmpeg
+          /usr/bin/ffmpeg -version | head -n 1
           python -m pip install --disable-pip-version-check cryptography==50.0.0 numpy==2.5.4
           python -m unittest discover -s lecture-premium/code -p test_rl027_audio_check.py -v
   inspect:
@@ -61,10 +62,11 @@ jobs:
             --pattern 'RL-027.descriptor.json' \
             --pattern 'RL-027.audio.3fc6e2662eeffd1e1fad5f6d97103f80.bin' \
             --pattern 'RL-027.content.1106eec1ccd4272d9b8231cf51a2526e.bin'
-          if ! command -v ffmpeg >/dev/null; then
-            sudo apt-get update -qq
-            sudo apt-get install -y -qq ffmpeg
-          fi
+          python -m pip install --disable-pip-version-check --require-hashes --only-binary=:all: --no-deps -r /dev/stdin <<'WHEEL'
+          imageio-ffmpeg==0.8.1 --hash=sha256:050d6850601c3b3890bd2b28306f3b842b3daea390a561101174375a1c460bda
+          WHEEL
+          sudo install -m755 "$(python -c 'import imageio_ffmpeg as pkg; print(pkg.get_ffmpeg_exe())')" /usr/bin/ffmpeg
+          /usr/bin/ffmpeg -version | head -n 1
           python -m pip install --disable-pip-version-check cryptography==50.0.0 numpy==2.5.4
       - name: Prepare the previously verified offline speech recognizer
         id: recognition
