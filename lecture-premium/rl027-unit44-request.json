@@ -2,6 +2,8 @@
   "request": "rl027-unit44-audible-correction-20261119",
   "mode": "encrypted-candidate-only",
   "source_descriptor_sha256": "1a8208b34035471e6cf0d96558139301eecf13eb7ba54731e02cb145337e01ed",
+  "render_revision": "clause-bounded-reading-v2",
+  "repair_units": [44, 97],
   "lesson_id": "RL-027",
   "unit": 44,
   "identical_reading_donor": 97,
