@@ -73,6 +73,16 @@ class CandidateTests(unittest.TestCase):
         self.assertFalse(accepted)
         self.assertTrue(all(not item['words']['accepted'] for item in checks))
 
+    def test_reported_tone_followed_by_dropout_fails_but_isolated_controls_pass(self):
+        tone = {'from_s': 1.19, 'to_s': 1.74}
+        gap = {'from_s': 2.44, 'to_s': 3.84}
+        def measurements(tones, gaps):
+            return {'tone_runs': tones, 'stationary_spectrum_runs': [], 'quiet_runs': gaps}
+        self.assertTrue(c.has_dropout(measurements([tone], [gap])))
+        self.assertFalse(c.has_dropout(measurements([tone], [])))
+        self.assertFalse(c.has_dropout(measurements([], [gap])))
+        self.assertFalse(c.has_dropout(measurements([tone], [{'from_s': 4.0, 'to_s': 5.5}])))
+
     def test_models_run_with_whitelisted_offline_inputs_only(self):
         # No private field may be sent to synthesis from an unapproved unit.
         with tempfile.TemporaryDirectory() as tmp, patch.object(c, 'guarded'):

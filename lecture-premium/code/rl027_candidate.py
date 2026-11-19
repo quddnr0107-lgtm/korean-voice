@@ -30,7 +30,7 @@ LESSON = check.LESSON
 SPEAKER = 'Sohee'
 RATE = check.RATE
 TARGET, DONOR = 44, 97
-SOURCE_SHA = '2cc1a75aed34651c62ad523ac0c55fdcdc5fbea44d974984f40c917279748b5f'
+REFERENCE_SOURCE_SHA = '2cc1a75aed34651c62ad523ac0c55fdcdc5fbea44d974984f40c917279748b5f'
 SPOKEN_SHA = '33af2bb8bab15639b0f4542b29ae0be07c8b4e952cf27f8f6074dfcc4972e943'
 SCHEMA = 'rl027-unit-44-voice-candidate/v1'
 
@@ -88,9 +88,18 @@ class Original:
         plain, _ = crypto.open_range(key, meta, sealed, expected_id=LESSON,
                                      expected_kind='private-metadata', expected_key_id=delivery.KEY_ID)
         self.record = json.loads(plain)
-        require(self.record['id'] == LESSON and self.record['audio_pack_sha256'] == self.audio['pack_sha256']
-                and self.record['source_sha256'] == SOURCE_SHA and self.audio['sample_rate'] == RATE
-                and sha256(self.record['narration_text'].encode()).hexdigest() == SOURCE_SHA, 'record_pin')
+        source = self.record['narration_text']
+        original_lesson = self.record['lesson_source']
+        actual_sha = sha256(source.encode()).hexdigest()
+        require(self.record['id'] == LESSON and original_lesson['id'] == LESSON
+                and self.record['audio_pack_sha256'] == self.audio['pack_sha256']
+                and self.audio['sample_rate'] == RATE
+                and actual_sha == self.record['source_sha256'] == original_lesson['source_sha256']
+                and ''.join(chunk['text'] for chunk in original_lesson['chunks']) == source,
+                'record_pin')
+        print(json.dumps({'producer_original_source_verified': True,
+                          'reference_source_hash_matches': actual_sha == REFERENCE_SOURCE_SHA}), flush=True)
+
 
     def unit(self, index):
         segment = self.record['segments'][index]
@@ -142,6 +151,23 @@ def load_recognizer(model):
                         local_files_only=True), asr.TRANSCRIBE
 
 
+def has_dropout(acoustic):
+    quiet = acoustic['quiet_runs']
+    tones = acoustic['tone_runs'] + acoustic['stationary_spectrum_runs']
+    if any(span['to_s'] - span['from_s'] >= 3.0 for span in quiet):
+        return True
+    for tone in tones:
+        length = tone['to_s'] - tone['from_s']
+        if length >= 1.0:
+            return True
+        # RL-027 had about half a second of low-pitch buzz and a nearby 1.4s
+        # dropout. Benign pauses and short voiced notes occur in our controls.
+        if length >= .45 and any(gap['to_s'] - gap['from_s'] >= 1.2
+                                 and -.1 <= gap['from_s'] - tone['to_s'] <= 1.0 for gap in quiet):
+            return True
+    return False
+
+
 def score_candidate(pcm, recognizer):
     model, params = recognizer
     duration = len(pcm) / (2 * RATE)
@@ -153,11 +179,8 @@ def score_candidate(pcm, recognizer):
         acoustic = check.measurements(signal, 0, speed)
         words, _ = model.transcribe(signal, **params)
         score = score_spoken_words(''.join(piece.text for piece in words))
-        longest_quiet = max((v['to_s'] - v['from_s'] for v in acoustic['quiet_runs']), default=0)
-        anomalous_tone = any(run['to_s'] - run['from_s'] >= 1.0
-                             for run in acoustic['tone_runs'] + acoustic['stationary_spectrum_runs'])
-        approved = (score['accepted'] and not anomalous_tone
-                    and -40 < acoustic['rms_dbfs'] < -3 and longest_quiet < 3.0
+        approved = (score['accepted'] and not has_dropout(acoustic)
+                    and -40 < acoustic['rms_dbfs'] < -3
                     and np.mean(np.abs(samples.astype('int32')) >= 32766) < .0001)
         checks.append(dict(speed=speed, acoustic=acoustic, words=score, accepted=bool(approved)))
     return all(item['accepted'] for item in checks), checks

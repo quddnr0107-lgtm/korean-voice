@@ -6,6 +6,8 @@ on:
       - '.github/workflows/rl027-audio-candidate.yml'
       - 'lecture-premium/code/rl027_candidate*.py'
       - 'lecture-premium/code/test_rl027_candidate*.py'
+      - 'lecture-premium/code/rl027_package.py'
+      - 'lecture-premium/code/test_rl027_package.py'
       - 'lecture-premium/rl027-unit44-request.json'
   push:
     branches: [integrated-lectures-premium-20261028]
@@ -32,6 +34,7 @@ jobs:
           WHEEL
           sudo install -m755 "$(python -c 'import imageio_ffmpeg as pkg; print(pkg.get_ffmpeg_exe())')" /usr/bin/ffmpeg
           python -m unittest discover -s lecture-premium/code -p 'test_rl027_candidate*.py' -v
+          python -m unittest discover -s lecture-premium/code -p 'test_rl027_package.py' -v
   candidate:
     needs: preflight
     if: github.repository == 'quddnr0107-lgtm/korean-voice' && github.event_name == 'push' && github.ref == 'refs/heads/integrated-lectures-premium-20261028'
@@ -73,12 +76,26 @@ jobs:
             unshare --net --setgid "$(id -g)" --setuid "$(id -u)" -- "$(command -v python)" \
             lecture-premium/code/rl027_candidate.py build "$RUNNER_TEMP/rl027" \
             "$RUNNER_TEMP/rl027-sealed-candidate" "$RUNNER_TEMP/rl027-asr" "$RUNNER_TEMP/bora-qwen" "$RUNNER_TEMP/bora-asr"
-      - name: Retain only authenticated ciphertext for independent assembly
+      - name: Assemble the encrypted lecture and verify final decoded speech at both speeds
+        env:
+          ADMIN_LAW_PREMIUM_MEDIA_KEY_B64: ${{ secrets.ADMIN_LAW_PREMIUM_MEDIA_KEY_B64 }}
+        run: |
+          umask 077
+          command -v ffprobe
+          export BORA_HOST_NETNS="$(readlink /proc/self/ns/net)"
+          sudo --preserve-env=ADMIN_LAW_PREMIUM_MEDIA_KEY_B64,BORA_HOST_NETNS \
+            unshare --net --setgid "$(id -g)" --setuid "$(id -u)" -- "$(command -v python)" \
+            lecture-premium/code/rl027_package.py "$RUNNER_TEMP/rl027" \
+            "$RUNNER_TEMP/rl027-sealed-candidate" "$RUNNER_TEMP/rl027-publishable" "$RUNNER_TEMP/rl027-asr"
+      - name: Retain only the approved encrypted lecture and safe public manifests
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: rl027-unit44-candidate-${{ github.run_id }}-${{ github.run_attempt }}
+          name: rl027-verified-pack-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
-            ${{ runner.temp }}/rl027-sealed-candidate/RL-027.unit44.candidate.sealed.json
-            ${{ runner.temp }}/rl027-sealed-candidate/RL-027.unit44.candidate.sealed.bin
-          retention-days: 7
+            ${{ runner.temp }}/rl027-publishable/RL-027.audio.*.bin
+            ${{ runner.temp }}/rl027-publishable/RL-027.content.*.bin
+            ${{ runner.temp }}/rl027-publishable/RL-027.descriptor.json
+            ${{ runner.temp }}/rl027-publishable/index.json
+          retention-days: 3
+          compression-level: 0
           if-no-files-found: error
