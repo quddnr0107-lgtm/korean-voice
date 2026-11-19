@@ -1,7 +1,7 @@
 name: Export TB-002 lecture for owner video edit
 on:
   push:
-    branches: [owner-edit/tb002-20261119]
+    branches: [integrated-lectures-premium-20261028]
     paths: [lecture-premium/code/tb002_owner_video_export.py]
 permissions:
   contents: read
