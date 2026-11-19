@@ -5,18 +5,16 @@
   "execution_profile": "bora-python-fp32-single-pass/v1",
   "execution_shard_chars": 2200,
   "retry_blocked": false,
-  "request_id": "ms-refill-source-cleared-ten-checkpoint-first-20261119",
-  "render_workers": 24,
+  "request_id": "ms-tail-source-probe-141-148-20261120",
+  "render_workers": 12,
   "lesson_ids": [
-    "MS-018",
-    "MS-022",
-    "MS-033",
-    "MS-034",
-    "MS-035",
-    "MS-036",
-    "MS-045",
-    "MS-113",
-    "MS-114",
-    "MS-116"
+    "MS-141",
+    "MS-142",
+    "MS-143",
+    "MS-144",
+    "MS-145",
+    "MS-146",
+    "MS-147",
+    "MS-148"
   ]
 }
