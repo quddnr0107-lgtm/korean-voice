@@ -5,6 +5,7 @@ The source release, public transcript, timings and production pins are read-only
 """
 import argparse
 import base64
+import gc
 from hashlib import sha256
 import io
 import json
@@ -23,7 +24,7 @@ import lecture_crypto as crypto
 import lecture_pack as pack
 import rl027_audio_check as check
 from namespace_guard import validate_snapshot
-from rl027_candidate_text import score_spoken_words, validate_donor
+from rl027_candidate_text import SOURCE_DIGEST, score_spoken_words, validate_donor
 
 ROOT = Path(__file__).resolve().parents[2]
 LESSON = check.LESSON
@@ -45,6 +46,7 @@ def check_request(path):
     require(request == {
         'request': 'rl027-unit44-audible-correction-20261119',
         'mode': 'encrypted-candidate-only', 'source_descriptor_sha256': check.DESCRIPTOR_DIGEST,
+        'render_revision': 'clause-bounded-reading-v2', 'repair_units': [44, 97],
         'lesson_id': LESSON, 'unit': TARGET, 'identical_reading_donor': DONOR, 'alternate_seed': 7319,
     }, 'request_scope')
 
@@ -207,8 +209,51 @@ def fit_candidate(pcm, target_samples):
     return fitted, 'matched_duration'
 
 
+def split_reading(unit, source_anchor, spoken_anchor):
+    """Partition the pinned reading, retaining exact source/voice text and offsets."""
+    source, spoken = unit['source'], unit['spoken']
+    require(source.count(source_anchor) == spoken.count(spoken_anchor) == 1
+            and not unit['review'] and not unit.get('critical_terms'), 'split_identity')
+    source_at, spoken_at = source.index(source_anchor), spoken.index(spoken_anchor)
+    require(0 < source_at < len(source) and 0 < spoken_at < len(spoken), 'split_identity')
+    parts = []
+    for start, end, text in ((0, source_at, spoken[:spoken_at]),
+                             (source_at, len(source), spoken[spoken_at:])):
+        body = source[start:end]
+        start16 = unit['start_utf16'] + len(source[:start].encode('utf-16-le')) // 2
+        parts.append(dict(id=unit['id'], paragraph_id=unit['paragraph_id'], mode=unit['mode'],
+                          source=body, spoken=text, source_sha256=sha256(body.encode()).hexdigest(),
+                          spoken_sha256=sha256(text.encode()).hexdigest(),
+                          start_cp=unit['start_cp'] + start, end_cp=unit['start_cp'] + end,
+                          start_utf16=start16, end_utf16=start16 + len(body.encode('utf-16-le')) // 2,
+                          reading_mode_verified=unit['reading_mode_verified'], review=[], critical_terms=[]))
+    require(parts[-1]['end_cp'] == unit['end_cp'] and parts[-1]['end_utf16'] == unit['end_utf16'],
+            'split_identity')
+    return parts
+
+
+def render_phrase(renderer, unit, destination, position):
+    receipt = renderer.render_unit(unit, destination)
+    # Export only fixed stage labels and numeric quality results. The full receipt
+    # contains protected speech and must remain inside the offline child.
+    attempts = [dict(seed=c['seed'], eos=c.get('natural_eos') is True,
+                     signal=c.get('signal', {}).get('blocked') is False,
+                     errors=c.get('asr', {}).get('character_errors', -1))
+                for c in receipt['candidates']]
+    print(json.dumps(dict(phrase=position, passed=receipt['status'] == 'passed', attempts=attempts)), flush=True)
+    if receipt['status'] != 'passed':
+        return None
+    require(receipt['natural_eos'] is True and receipt['production_eligible']
+            and receipt['automatic_checks_passed'] and not receipt['blocked']
+            and receipt['seed'] in renderer.seeds and receipt['file'] == 'final.wav'
+            and not receipt['asr']['blocked'] and receipt['spoken_sha256'] == unit['spoken_sha256'],
+            'synth_receipt')
+    raw = (destination / 'final.wav').read_bytes()
+    require(sha256(raw).hexdigest() == receipt['sha256'], 'generated_waveform_digest')
+    return decoded(raw)
+
+
 def synthesize(unit_path, output, model, renderer_asr):
-    # This child runs in the same offline namespace with no decryption key in its environment.
     guarded()
     require('ADMIN_LAW_PREMIUM_MEDIA_KEY_B64' not in os.environ and
             'ADMIN_LAW_PREMIUM_SOURCE_KEY_B64' not in os.environ, 'keys_in_synth')
@@ -217,19 +262,53 @@ def synthesize(unit_path, output, model, renderer_asr):
     unit = json.loads(unit_path.read_text())
     require(unit['mode'] == 'reading' and unit['spoken_sha256'] == SPOKEN_SHA
             and sha256(unit['spoken'].encode()).hexdigest() == SPOKEN_SHA
-            and unit['id'].startswith(LESSON + ':') and not unit['review'], 'synth_scope')
+            and sha256(unit['source'].strip().encode()).hexdigest() == SOURCE_DIGEST
+            and unit['id'] == 'RL-027:p0032:u001' and not unit['review'], 'synth_scope')
     require(base.SEEDS == (5192, 7319), 'producer_seed_pair')
     renderer = base.FP32Renderer(str(model), str(renderer_asr), max_attempts=2)
     require(renderer.settings['speaker'] == SPEAKER and renderer.settings['dtype'] == 'float32'
             and renderer.seeds == base.SEEDS, 'original_voice')
-    # Use the unchanged producer entry point. Its own independent recognition
-    # gate selects the original seed or its approved retry, with an honest receipt.
-    receipt = renderer.render_unit(unit, output)
-    require(receipt['status'] == 'passed' and receipt['natural_eos'] is True
-            and receipt['production_eligible'] and receipt['automatic_checks_passed']
-            and not receipt['blocked'] and receipt['seed'] in base.SEEDS and receipt['file'] == 'final.wav'
-            and not receipt['asr']['blocked'] and receipt['spoken_sha256'] == SPOKEN_SHA, 'synth_receipt')
+    output.mkdir(mode=0o700)
+    introduction, penalty = split_reading(unit, '3년', '삼 년')
+    phrases = []
+    for label, phrase, source_anchor, spoken_anchor in (
+            ('conduct', introduction, '정치운동', '정치운동'),
+            ('penalty', penalty, '또는', '또는')):
+        pcm = render_phrase(renderer, phrase, output / label, label)
+        if pcm is not None:
+            phrases.append(pcm)
+            continue
+        for i, part in enumerate(split_reading(phrase, source_anchor, spoken_anchor)):
+            sublabel = f'{label}-{i}'
+            pcm = render_phrase(renderer, part, output / sublabel, sublabel)
+            require(pcm is not None, 'subphrase_failed')
+            phrases.append(pcm)
+    # Use the approved renderer’s already faded, quiet boundaries and normal
+    # within-paragraph gap. The resulting complete sentence is checked twice.
+    gap = bytes(2 * round(RATE * renderer.settings['unit_gap_s']))
+    (output / 'joined.s16le').write_bytes(gap.join(phrases))
 
+
+SAFE_RENDER_FAILURES = frozenset({
+    'subphrase_failed', 'split_identity', 'original_voice', 'producer_seed_pair',
+    'synth_receipt', 'synth_scope', 'generated_waveform_digest', 'keys_in_synth',
+    'renderer_must_be_unprivileged', 'offline_namespace_guard_failed', 'runtime_model_load_failed',
+    'runtime_package_missing', 'runtime_package_version_mismatch', 'model_directory_invalid',
+    'runtime_dtype_or_threads_mismatch', 'unit_critical_terms_invalid', 'MemoryError', 'OSError',
+    'TimeoutExpired', 'RenderFailure', 'ValueError', 'RuntimeError', 'KeyError',
+})
+
+
+def is_public_render_report(row):
+    if not isinstance(row, dict) or set(row) != {'phrase', 'passed', 'attempts'}:
+        return False
+    phrases = {'conduct', 'penalty', 'conduct-0', 'conduct-1', 'penalty-0', 'penalty-1'}
+    return (isinstance(row['phrase'], str) and row['phrase'] in phrases
+            and type(row['passed']) is bool and isinstance(row['attempts'], list)
+            and len(row['attempts']) <= 2 and all(
+                isinstance(c, dict) and set(c) == {'seed', 'eos', 'signal', 'errors'}
+                and c['seed'] in (5192, 7319) and type(c['eos']) is bool and type(c['signal']) is bool
+                and type(c['errors']) is int and -1 <= c['errors'] <= 500 for c in row['attempts']))
 
 
 def seal_candidate(outdir, key, pcm, manifest):
@@ -262,26 +341,45 @@ def build(directory, output, model, voice, renderer_asr):
     require(round(target['start_s'], 2) == 702.56 and round(target['end_s'], 2) == 718.23,
             'target_timeline')
     recognizer = load_recognizer(model)
-    for kind in ('donor97', 'original_renderer'):
+    for kind in ('donor97', 'clause_renderer'):
         if kind == 'donor97':
             # Equal synthesis checkpoints do not prove independently encoded MP3
             # excerpts have equal playback. Measure the released donor itself.
             pcm = original.unit(DONOR)
-            print(json.dumps({'candidate': kind, 'identical_source_waveform': identical_wav,
+            print(json.dumps({'candidate': kind, 'donor_start_s': round(source['segments'][DONOR]['start_s'], 3),
+                              'donor_end_s': round(source['segments'][DONOR]['end_s'], 3),
+                              'identical_source_waveform': identical_wav,
                               'identical_released_pcm': pcm == original_pcm}), flush=True)
         else:
+            # Keep the large recognizer and TTS models out of memory together.
+            del recognizer
+            gc.collect()
             with tempfile.TemporaryDirectory(prefix='rl027-') as tmp:
                 work = Path(tmp)
                 unit_path = work / 'unit.json'
                 unit_path.write_bytes(canonical(unit))
                 wav = work / 'generated'
-                subprocess.run([sys.executable, __file__, 'synthesize', str(unit_path), str(wav), str(voice), str(renderer_asr)],
-                               capture_output=True, check=True, timeout=1200)
-                receipt = json.loads((wav / 'receipt.json').read_text())
-                require(sha256((wav / 'final.wav').read_bytes()).hexdigest() == receipt['sha256'],
-                        'generated_waveform_digest')
-                kind = 'seed' + str(receipt['seed'])
-                pcm = decoded((wav / 'final.wav').read_bytes())
+                # Third-party stdout can contain protected speech. Accept only
+                # structured aggregate metrics, even on a signal or OOM.
+                proc = subprocess.run([sys.executable, __file__, 'synthesize', str(unit_path), str(wav),
+                                       str(voice), str(renderer_asr)], capture_output=True, timeout=3600)
+                for line in proc.stdout.splitlines():
+                    prefix = b'RL-027 audio candidate stage failed: '
+                    if line.startswith(prefix):
+                        reason = line[len(prefix):].decode('ascii', errors='replace')
+                        if reason in SAFE_RENDER_FAILURES:
+                            print(json.dumps(dict(render_failure=reason)), flush=True)
+                        continue
+                    try:
+                        row = json.loads(line)
+                    except (ValueError, UnicodeError):
+                        continue
+                    if is_public_render_report(row):
+                        print(json.dumps(row), flush=True)
+                print(json.dumps(dict(renderer_exit=proc.returncode)), flush=True)
+                require(proc.returncode == 0, 'clause_renderer_failed')
+                pcm = (wav / 'joined.s16le').read_bytes()
+            recognizer = load_recognizer(model)
         pcm, fit = fit_candidate(pcm, target_n)
         if pcm == original_pcm:
             continue
@@ -317,8 +415,8 @@ if __name__ == '__main__':
         # Only closed failure categories may leave the runner, never private text.
         known = {'descriptor_pin', 'record_pin', 'request_scope', 'plan_size', 'plan_identity',
                  'target_timeline', 'no_candidate_passed', 'candidate_duration', 'original_voice',
-                 'synth_receipt', 'generated_waveform_digest', 'mp3_decode_length', 'output_exists',
+                 'synth_receipt', 'clause_renderer_failed', 'split_identity', 'subphrase_failed', 'generated_waveform_digest', 'mp3_decode_length', 'output_exists',
                  'incomplete_unit', 'unit_crosses_part_boundary', 'unit_length', 'roundtrip'}
-        category = str(error) if type(error) is ValueError and str(error) in known else type(error).__name__
+        category = str(error) if str(error) in known | SAFE_RENDER_FAILURES else type(error).__name__
         print('RL-027 audio candidate stage failed:', category, flush=True)
         raise SystemExit(1) from None

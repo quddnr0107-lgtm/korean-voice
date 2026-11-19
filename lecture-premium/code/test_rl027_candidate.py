@@ -83,6 +83,30 @@ class CandidateTests(unittest.TestCase):
         self.assertFalse(c.has_dropout(measurements([], [gap])))
         self.assertFalse(c.has_dropout(measurements([tone], [{'from_s': 4.0, 'to_s': 5.5}])))
 
+    def test_phrase_splits_preserve_source_spoken_and_native_utf16_offsets(self):
+        source = '「③ 제12조제2항을 위반하여 정치운동에 관여한 사람은 3년 이하의 징역 또는 3천만원 이하의 벌금에 처한다.」'
+        spoken = '「제삼항, 제십이조제이항을 위반하여 정치운동에 관여한 사람은 삼 년 이하의 징역 또는 삼천만원 이하의 벌금에 처한다.」'
+        unit = dict(id='RL-027:p0032:u001', paragraph_id='RL-027:p0032', mode='reading',
+                    source=source, spoken=spoken, start_cp=9, end_cp=9+len(source),
+                    start_utf16=10, end_utf16=10+len(source), reading_mode_verified=True, review=[])
+        conduct, penalty = c.split_reading(unit, '3년', '삼 년')
+        parts = c.split_reading(conduct, '정치운동', '정치운동') + c.split_reading(penalty, '또는', '또는')
+        for field in ('source', 'spoken'):
+            self.assertEqual(''.join(p[field] for p in parts), unit[field])
+        for left, right in zip(parts, parts[1:]):
+            for scale in ('cp','utf16'):
+                self.assertEqual(left['end_'+scale], right['start_'+scale])
+        with self.assertRaisesRegex(ValueError, 'split_identity'):
+            c.split_reading(unit, '3년', 'missing')
+
+    def test_public_reports_cannot_pass_private_fields_or_labels(self):
+        row = {'phrase':'conduct','passed':False,
+               'attempts':[{'seed':5192,'eos':True,'signal':True,'errors':1}]}
+        self.assertTrue(c.is_public_render_report(row))
+        for bad in [dict(row, private='text'), dict(row, phrase='private text'),
+                    dict(row, attempts=[dict(row['attempts'][0], errors='text')]), None]:
+            self.assertFalse(c.is_public_render_report(bad))
+
     def test_models_run_with_whitelisted_offline_inputs_only(self):
         # No private field may be sent to synthesis from an unapproved unit.
         with tempfile.TemporaryDirectory() as tmp, patch.object(c, 'guarded'):

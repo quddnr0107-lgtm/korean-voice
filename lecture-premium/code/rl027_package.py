@@ -6,6 +6,7 @@ import io
 import math
 import os
 from pathlib import Path
+from types import SimpleNamespace
 import sys
 import tempfile
 import zipfile
@@ -15,7 +16,7 @@ import delivery
 import lecture_crypto as crypto
 import lecture_pack as pack
 import rl027_candidate as candidate
-from rl027_candidate import LESSON, RATE, TARGET, require
+from rl027_candidate import DONOR, LESSON, RATE, TARGET, require
 from rl027_candidate_text import validate_donor
 
 sys.path.insert(0, str(candidate.ROOT / 'bora-production'))
@@ -150,11 +151,11 @@ def build_pack(original, key, evidence, pcm, work, verify_delivery_audio, *, tar
                                   peak=max(p['peak'] for p in metrics), max_silence_s=max(p['max_silence_s'] for p in metrics),
                                   rms=math.sqrt(sum(p['energy'] for p in metrics) / decoded_total),
                                   decoded_sample_count=decoded_total, decoded_sample_delta=decoded_total - total))
-    record['unit_repair'] = dict(schema='rl027-unit-repair/v1', target_index=target,
+    record.setdefault('unit_repairs', []).append(dict(schema='rl027-unit-repair/v1', target_index=target,
                                  baseline_descriptor_sha256=evidence['source_descriptor_sha256'],
                                  original_measurement=previous, original_part_index=changed_index,
                                  original_start_sample=begin, original_end_sample=end, new_end_sample=end + delta,
-                                 candidate=evidence, final_mp3_checks=delivery_checks)
+                                 candidate=evidence, final_mp3_checks=delivery_checks))
     serialized = crypto.enc(record)
     content, private = crypto.seal(key, serialized, LESSON, 'private-metadata', delivery.KEY_ID)
     recovered, _ = crypto.open_range(key, content, private, expected_id=LESSON,
@@ -165,8 +166,36 @@ def build_pack(original, key, evidence, pcm, work, verify_delivery_audio, *, tar
     return descriptor, blob, private
 
 
+def replace_occurrences(original, key, evidence, pcm, work, verify, targets):
+    # Reuse the single-unit encoder. Each corrected occurrence is in a distinct
+    # source MP3 part, so the second pass retains the first repaired MP3 verbatim.
+    changed_parts = []
+    for target in targets:
+        unit = original.record['segments'][target]
+        matches = [p['part_index'] for p in original.audio['parts']
+                   if p['start_sample'] <= unit['start_sample'] and unit['end_sample'] <= p['end_sample']]
+        require(len(matches) == 1 and matches[0] not in changed_parts, 'repair_part_overlap')
+        changed_parts.extend(matches)
+    state = original
+    landmarks = []
+    for target in targets:
+        base = original.record['segments'][target]
+        current = state.record['segments'][target]
+        landmarks.append(dict(unit=target, old_start_sample=base['start_sample'], old_end_sample=base['end_sample'],
+                              new_start_sample=current['start_sample'], new_end_sample=current['start_sample'] + len(pcm) // 2))
+        descriptor, audio, private = build_pack(state, key, evidence, pcm, work, verify, target=target)
+        raw, _ = crypto.open_range(key, descriptor['content'], private, expected_id=LESSON,
+                                   expected_kind='private-metadata', expected_key_id=delivery.KEY_ID)
+        state = SimpleNamespace(audio=descriptor['audio'], cipher=audio, record=delivery.loads(raw))
+    require(len(state.record['unit_repairs']) == len(targets) and all(
+        state.record['segments'][p['unit']]['start_sample'] == p['new_start_sample']
+        and state.record['segments'][p['unit']]['end_sample'] == p['new_end_sample']
+        for p in landmarks), 'repair_landmarks')
+    return descriptor, audio, private, landmarks
+
+
 def one_lesson_index(descriptor_bytes):
-    tag = 'bora-fp32-rl027-unit44-v1-20261119'
+    tag = 'bora-fp32-rl027-art15p3-v2-20261119'
     descriptor_url = ('https://github.com/quddnr0107-lgtm/korean-voice/releases/download/'
                       + tag + '/' + delivery.descriptor_name(LESSON))
     return crypto.enc(dict(version='integrated-lecture-index/v2', release_tag=tag, count=1,
@@ -186,8 +215,8 @@ def stage(source, sealed_candidate, destination, model):
     require(not destination.exists(), 'destination_exists')
     with tempfile.TemporaryDirectory(dir=destination.parent, prefix='.rl027-') as stage_dir:
         work = Path(stage_dir)
-        descriptor, audio, private = build_pack(original, key, evidence, pcm, work,
-            lambda clip: candidate.score_candidate(clip, recognizer))
+        descriptor, audio, private, landmarks = replace_occurrences(original, key, evidence, pcm, work,
+            lambda clip: candidate.score_candidate(clip, recognizer), (TARGET, DONOR))
         out = work / 'sealed'
         out.mkdir(mode=0o700)
         for typ, cipher in [('audio', audio), ('content', private)]:
@@ -208,9 +237,7 @@ def stage(source, sealed_candidate, destination, model):
     print(crypto.enc(dict(lesson=LESSON, descriptor_sha256=crypto.digest(raw), index_sha256=crypto.digest(index),
                           duration_s=descriptor['audio']['total_samples'] / RATE,
                           source_descriptor_sha256=evidence['source_descriptor_sha256'],
-                          original_start_sample=evidence['original_start_sample'],
-                          original_end_sample=evidence['original_end_sample'],
-                          replacement_end_sample=evidence['original_start_sample'] + len(pcm) // 2,
+                          landmarks=landmarks,
                           total_samples=descriptor['audio']['total_samples'], sample_rate=RATE)).decode())
 
 

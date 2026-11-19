@@ -63,7 +63,7 @@ class PackageTests(unittest.TestCase):
     def test_index_contains_only_the_new_lesson_and_digest_of_its_exact_descriptor(self):
         descriptor = b'test descriptor bytes'
         index = json.loads(mod.one_lesson_index(descriptor))
-        tag = 'bora-fp32-rl027-unit44-v1-20261119'
+        tag = 'bora-fp32-rl027-art15p3-v2-20261119'
         self.assertEqual(index, {'version':'integrated-lecture-index/v2','release_tag':tag,'count':1,
             'lessons':[{'id':LESSON,'sha256':crypto.digest(descriptor),
                         'descriptor_url':f'https://github.com/quddnr0107-lgtm/korean-voice/releases/download/{tag}/RL-027.descriptor.json'}]})
@@ -99,6 +99,28 @@ class PackageTests(unittest.TestCase):
         self.original.cipher=b'X'+self.original.cipher[1:]
         with self.assertRaises(ValueError):
             self.build(2*RATE)
+
+    def test_two_repairs_shift_both_occurrences_and_keep_other_mp3_bytes(self):
+        pcm = (self.pcm(2 * RATE + 502, 333) * 32768).astype('<i2').tobytes()
+        ev = dict(self.evidence, pcm_sha256=crypto.digest(pcm))
+        verified = []
+        def verify(clip):
+            verified.append(len(clip))
+            return True, [{'speed': speed, 'accepted': True} for speed in (1, 1.2)]
+        d, audio, private, spans = mod.replace_occurrences(
+            self.original, self.key, ev, pcm, self.root, verify, (0, 2))
+        record, parts = self.unpack(d, audio, private)
+        self.assertEqual(verified, [len(pcm), len(pcm)])
+        self.assertEqual([r['target_index'] for r in record['unit_repairs']], [0, 2])
+        self.assertEqual(parts[-1], self.original_bytes[-1])
+        for s in spans:
+            self.assertEqual(s['new_end_sample'] - s['new_start_sample'], len(pcm)//2)
+            self.assertEqual(s['old_start_sample'], self.record['segments'][s['unit']]['start_sample'])
+        delta = sum((s['new_end_sample']-s['new_start_sample']) -
+                    (s['old_end_sample']-s['old_start_sample']) for s in spans)
+        self.assertEqual(record['total_samples'], self.record['total_samples'] + delta)
+        with self.assertRaisesRegex(ValueError, 'repair_part_overlap'):
+            mod.replace_occurrences(self.original, self.key, ev, pcm, self.root, verify, (1, 2))
 
     def test_sealed_candidate_must_match_release_and_pcm(self):
         samples=2*RATE; raw=bytes(2*samples)

@@ -40,7 +40,7 @@ jobs:
     if: github.repository == 'quddnr0107-lgtm/korean-voice' && github.event_name == 'push' && github.ref == 'refs/heads/integrated-lectures-premium-20261028'
     runs-on: ubuntu-24.04
     environment: admin-law-premium-production
-    timeout-minutes: 55
+    timeout-minutes: 80
     env:
       HF_HUB_DISABLE_TELEMETRY: '1'
       HF_HUB_DISABLE_IMPLICIT_TOKEN: '1'
