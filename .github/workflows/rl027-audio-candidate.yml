@@ -1,0 +1,84 @@
+name: Prepare an encrypted RL-027 unit 44 candidate
+on:
+  pull_request:
+    branches: [integrated-lectures-premium-20261028]
+    paths:
+      - '.github/workflows/rl027-audio-candidate.yml'
+      - 'lecture-premium/code/rl027_candidate*.py'
+      - 'lecture-premium/code/test_rl027_candidate*.py'
+      - 'lecture-premium/rl027-unit44-request.json'
+  push:
+    branches: [integrated-lectures-premium-20261028]
+    paths: ['lecture-premium/rl027-unit44-request.json']
+permissions:
+  contents: read
+concurrency:
+  group: encrypted-rl027-unit44-candidate
+  cancel-in-progress: false
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with: {python-version: '3.12'}
+      - name: Check the fixed scope, word scoring and encrypted candidate format
+        run: |
+          python -m pip install --disable-pip-version-check cryptography==50.0.0 numpy==2.5.4
+          python -m pip install --disable-pip-version-check --require-hashes --only-binary=:all: --no-deps -r /dev/stdin <<'WHEEL'
+          imageio-ffmpeg==0.8.1 --hash=sha256:050d6850601c3b3890bd2b28306f3b842b3daea390a561101174375a1c460bda
+          WHEEL
+          sudo install -m755 "$(python -c 'import imageio_ffmpeg as pkg; print(pkg.get_ffmpeg_exe())')" /usr/bin/ffmpeg
+          python -m unittest discover -s lecture-premium/code -p 'test_rl027_candidate*.py' -v
+  candidate:
+    needs: preflight
+    if: github.repository == 'quddnr0107-lgtm/korean-voice' && github.event_name == 'push' && github.ref == 'refs/heads/integrated-lectures-premium-20261028'
+    runs-on: ubuntu-24.04
+    environment: admin-law-premium-production
+    timeout-minutes: 55
+    env:
+      HF_HUB_DISABLE_TELEMETRY: '1'
+      HF_HUB_DISABLE_IMPLICIT_TOKEN: '1'
+      OMP_NUM_THREADS: '4'
+      OPENBLAS_NUM_THREADS: '4'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with: {python-version: '3.12'}
+      - name: Download the released, pinned ciphertext
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download bora-fp32-rl-single-pass-v1-20261114 --repo quddnr0107-lgtm/korean-voice \
+            --dir "$RUNNER_TEMP/rl027" --pattern 'RL-027.descriptor.json' \
+            --pattern 'RL-027.audio.3fc6e2662eeffd1e1fad5f6d97103f80.bin' \
+            --pattern 'RL-027.content.1106eec1ccd4272d9b8231cf51a2526e.bin'
+      - name: Prepare the production Kim Bora CPU voice and offline recognizer without keys
+        run: |
+          bash bora-production/setup_runtime.sh
+          python -m pip install --disable-pip-version-check huggingface-hub==0.36.2
+          python bora-production/download_models.py
+          python -m pip install --disable-pip-version-check faster-whisper==1.2.1 av==18.1.0 onnxruntime==1.31.1 ctranslate2==4.9.0
+          python bora-production/tb001_asr_crosscheck.py download-model --model-path "$RUNNER_TEMP/rl027-asr"
+      - name: Select, verify and seal only the replacement utterance offline
+        env:
+          ADMIN_LAW_PREMIUM_MEDIA_KEY_B64: ${{ secrets.ADMIN_LAW_PREMIUM_MEDIA_KEY_B64 }}
+        run: |
+          umask 077
+          export BORA_HOST_NETNS="$(readlink /proc/self/ns/net)"
+          sudo --preserve-env=ADMIN_LAW_PREMIUM_MEDIA_KEY_B64,BORA_HOST_NETNS \
+            unshare --net --setgid "$(id -g)" --setuid "$(id -u)" -- "$(command -v python)" \
+            lecture-premium/code/rl027_candidate.py build "$RUNNER_TEMP/rl027" \
+            "$RUNNER_TEMP/rl027-sealed-candidate" "$RUNNER_TEMP/rl027-asr" "$RUNNER_TEMP/bora-qwen" "$RUNNER_TEMP/bora-asr"
+      - name: Retain only authenticated ciphertext for independent assembly
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: rl027-unit44-candidate-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/rl027-sealed-candidate/RL-027.unit44.candidate.sealed.json
+            ${{ runner.temp }}/rl027-sealed-candidate/RL-027.unit44.candidate.sealed.bin
+          retention-days: 7
+          if-no-files-found: error
