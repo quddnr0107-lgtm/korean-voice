@@ -1,0 +1,324 @@
+"""Measure one fully matched donor or one alternative Kim Bora synthesis for RL-027.
+
+Only an authenticated, encrypted candidate leaves the offline production job.
+The source release, public transcript, timings and production pins are read-only.
+"""
+import argparse
+import base64
+from hashlib import sha256
+import io
+import json
+import os
+from pathlib import Path
+import socket
+import subprocess
+import sys
+import tempfile
+import zipfile
+
+import numpy as np
+
+import delivery
+import lecture_crypto as crypto
+import lecture_pack as pack
+import rl027_audio_check as check
+from namespace_guard import validate_snapshot
+from rl027_candidate_text import score_spoken_words, validate_donor
+
+ROOT = Path(__file__).resolve().parents[2]
+LESSON = check.LESSON
+SPEAKER = 'Sohee'
+RATE = check.RATE
+TARGET, DONOR = 44, 97
+REFERENCE_SOURCE_SHA = '2cc1a75aed34651c62ad523ac0c55fdcdc5fbea44d974984f40c917279748b5f'
+SPOKEN_SHA = '33af2bb8bab15639b0f4542b29ae0be07c8b4e952cf27f8f6074dfcc4972e943'
+SCHEMA = 'rl027-unit-44-voice-candidate/v1'
+
+
+def require(condition, code):
+    if not condition:
+        raise ValueError(code)
+
+
+def check_request(path):
+    request = json.loads(path.read_text())
+    require(request == {
+        'request': 'rl027-unit44-audible-correction-20261119',
+        'mode': 'encrypted-candidate-only', 'source_descriptor_sha256': check.DESCRIPTOR_DIGEST,
+        'lesson_id': LESSON, 'unit': TARGET, 'identical_reading_donor': DONOR, 'alternate_seed': 7319,
+    }, 'request_scope')
+
+
+def canonical(value):
+    return json.dumps(value, ensure_ascii=True, sort_keys=True, separators=(',', ':')).encode()
+
+
+def guarded():
+    validate_snapshot(os.getuid(), os.getuid(), socket.if_nameindex(),
+                      Path('/proc/net/route').read_text(), os.readlink('/proc/self/ns/net'),
+                      os.environ['BORA_HOST_NETNS'], Path('/proc/net/ipv6_route').read_text())
+
+
+def decoded(mp3):
+    # Input must be seekable so the pinned decoder honors LAME end padding.
+    with os.fdopen(os.memfd_create('rl027-part'), 'w+b') as stream:
+        stream.write(mp3)
+        stream.seek(0)
+        result = subprocess.run(
+            ['ffmpeg', '-nostdin', '-v', 'error', '-i', f'/proc/self/fd/{stream.fileno()}',
+             '-ar', str(RATE), '-ac', '1', '-f', 's16le', 'pipe:1'],
+            pass_fds=(stream.fileno(),), capture_output=True, timeout=90, check=True,
+            env={'PATH': os.defpath, 'LANG': 'C'})
+    return result.stdout
+
+
+class Original:
+    def __init__(self, directory, key):
+        raw = (directory / f'{LESSON}.descriptor.json').read_bytes()
+        require(sha256(raw).hexdigest() == check.DESCRIPTOR_DIGEST, 'descriptor_pin')
+        descriptor = delivery.check_descriptor(json.loads(raw), LESSON)
+        self.audio = descriptor['audio']
+        self.key = key
+        encrypted = directory / delivery.media_name(LESSON, 'audio', self.audio)
+        self.cipher = encrypted.read_bytes()
+        pack.validate_pack(self.audio, self.cipher)
+        self.cache = {}
+        meta = descriptor['content']
+        sealed = (directory / delivery.media_name(LESSON, 'content', meta)).read_bytes()
+        plain, _ = crypto.open_range(key, meta, sealed, expected_id=LESSON,
+                                     expected_kind='private-metadata', expected_key_id=delivery.KEY_ID)
+        self.record = json.loads(plain)
+        source = self.record['narration_text']
+        original_lesson = self.record['lesson_source']
+        actual_sha = sha256(source.encode()).hexdigest()
+        require(self.record['id'] == LESSON and original_lesson['id'] == LESSON
+                and self.record['audio_pack_sha256'] == self.audio['pack_sha256']
+                and self.audio['sample_rate'] == RATE
+                and actual_sha == self.record['source_sha256'] == original_lesson['source_sha256']
+                and ''.join(chunk['text'] for chunk in original_lesson['chunks']) == source,
+                'record_pin')
+        print(json.dumps({'producer_original_source_verified': True,
+                          'reference_source_hash_matches': actual_sha == REFERENCE_SOURCE_SHA}), flush=True)
+
+
+    def unit(self, index):
+        segment = self.record['segments'][index]
+        begin, end = segment['start_sample'], segment['end_sample']
+        count = end - begin
+        require(0 < count < 60 * RATE, 'unit_length')
+        for part in self.audio['parts']:
+            if part['start_sample'] <= begin and end <= part['end_sample']:
+                i = part['part_index']
+                if i not in self.cache:
+                    start = part['pack_offset']
+                    data = pack.open_part(self.key, part, self.cipher[start:start + part['cipher_bytes']],
+                                          expected_id=LESSON, expected_part_index=i,
+                                          expected_pack_id=self.audio['object_id'])
+                    pcm = decoded(data)
+                    require(abs(len(pcm) // 2 - (part['end_sample'] - part['start_sample'])) <= 1,
+                            'mp3_decode_length')
+                    self.cache[i] = pcm
+                offset = 2 * (begin - part['start_sample'])
+                pcm = self.cache[i][offset:offset + 2 * count]
+                require(len(pcm) == 2 * count, 'incomplete_unit')
+                return pcm
+        raise ValueError('unit_crosses_part_boundary')
+
+
+def target_plan(record):
+    sys.path.insert(0, str(ROOT / 'bora-production'))
+    import planning
+    import rl_pronunciation
+    plan = rl_pronunciation.apply_to_plan(planning.build_plan(LESSON, record['narration_text']))
+    require(len(plan['units']) == len(record['segments']) == 191, 'plan_size')
+    for i in (TARGET, DONOR):
+        unit = plan['units'][i]
+        segment = record['segments'][i]
+        require(unit['id'] == segment['unit_id'] and unit['mode'] == segment['mode'] == 'reading'
+                and unit['source'] == segment['text'] and unit['spoken_sha256'] == SPOKEN_SHA
+                and unit['start_utf16'] == segment['start_utf16']
+                and unit['end_utf16'] == segment['end_utf16']
+                and unit['reading_mode_verified'] and not unit['review'], 'plan_identity')
+    return plan['units'][TARGET]
+
+
+def load_recognizer(model):
+    sys.path.insert(0, str(ROOT / 'bora-production'))
+    import tb001_asr_crosscheck as asr
+    from faster_whisper import WhisperModel
+    asr.verify_model(model)
+    return WhisperModel(str(model), device='cpu', compute_type='int8', cpu_threads=4,
+                        local_files_only=True), asr.TRANSCRIBE
+
+
+def has_dropout(acoustic):
+    quiet = acoustic['quiet_runs']
+    tones = acoustic['tone_runs'] + acoustic['stationary_spectrum_runs']
+    if any(span['to_s'] - span['from_s'] >= 3.0 for span in quiet):
+        return True
+    for tone in tones:
+        length = tone['to_s'] - tone['from_s']
+        if length >= 1.0:
+            return True
+        # RL-027 had about half a second of low-pitch buzz and a nearby 1.4s
+        # dropout. Benign pauses and short voiced notes occur in our controls.
+        if length >= .45 and any(gap['to_s'] - gap['from_s'] >= 1.2
+                                 and -.1 <= gap['from_s'] - tone['to_s'] <= 1.0 for gap in quiet):
+            return True
+    return False
+
+
+def score_candidate(pcm, recognizer):
+    model, params = recognizer
+    duration = len(pcm) / (2 * RATE)
+    require(2 <= duration <= 32, 'candidate_duration')
+    samples = np.frombuffer(pcm, dtype='<i2')
+    checks = []
+    for speed in (1.0, 1.2):
+        signal = check.playback_signal(pcm, speed)
+        acoustic = check.measurements(signal, 0, speed)
+        words, _ = model.transcribe(signal, **params)
+        score = score_spoken_words(''.join(piece.text for piece in words))
+        approved = (score['accepted'] and not has_dropout(acoustic)
+                    and -40 < acoustic['rms_dbfs'] < -3
+                    and np.mean(np.abs(samples.astype('int32')) >= 32766) < .0001)
+        checks.append(dict(speed=speed, acoustic=acoustic, words=score, accepted=bool(approved)))
+    return all(item['accepted'] for item in checks), checks
+
+
+def fit_candidate(pcm, target_samples):
+    """Preserve the old slot only when timing adjustment is within 5% and sample edges are quiet."""
+    count = len(pcm) // 2
+    ratio = count / target_samples
+    if count == target_samples:
+        return pcm, 'unchanged'
+    if not .95 <= ratio <= 1.05:
+        return pcm, 'natural_duration'
+    fitted = check.media_bytes(['-f', 's16le', '-ar', str(RATE), '-ac', '1', '-i', 'pipe:0',
+                                '-af', f'atempo={ratio:.10f}', '-ar', str(RATE), '-ac', '1',
+                                '-f', 's16le', 'pipe:1'], pcm)
+    delta = target_samples - len(fitted) // 2
+    # Stretch filter granularity may vary. Do not cut a voiced ending.
+    quiet_window = max(-delta + RATE // 250, RATE // 100)
+    ending = np.frombuffer(fitted[-2 * quiet_window:], dtype='<i2').astype('float32')
+    if abs(delta) > RATE // 25 or np.sqrt(np.mean(ending ** 2)) > 220:
+        return pcm, 'natural_duration'
+    fitted = fitted[:target_samples * 2].ljust(target_samples * 2, b'\0')
+    return fitted, 'matched_duration'
+
+
+def synthesize(unit_path, output, model, renderer_asr):
+    # This child runs in the same offline namespace with no decryption key in its environment.
+    guarded()
+    require('ADMIN_LAW_PREMIUM_MEDIA_KEY_B64' not in os.environ and
+            'ADMIN_LAW_PREMIUM_SOURCE_KEY_B64' not in os.environ, 'keys_in_synth')
+    sys.path.insert(0, str(ROOT / 'bora-production'))
+    import fp32_renderer as base
+    unit = json.loads(unit_path.read_text())
+    require(unit['mode'] == 'reading' and unit['spoken_sha256'] == SPOKEN_SHA
+            and sha256(unit['spoken'].encode()).hexdigest() == SPOKEN_SHA
+            and unit['id'].startswith(LESSON + ':') and not unit['review'], 'synth_scope')
+    require(base.SEEDS == (5192, 7319), 'producer_seed_pair')
+    renderer = base.FP32Renderer(str(model), str(renderer_asr), max_attempts=2)
+    require(renderer.settings['speaker'] == SPEAKER and renderer.settings['dtype'] == 'float32'
+            and renderer.seeds == base.SEEDS, 'original_voice')
+    # Use the unchanged producer entry point. Its own independent recognition
+    # gate selects the original seed or its approved retry, with an honest receipt.
+    receipt = renderer.render_unit(unit, output)
+    require(receipt['status'] == 'passed' and receipt['natural_eos'] is True
+            and receipt['production_eligible'] and receipt['automatic_checks_passed']
+            and not receipt['blocked'] and receipt['seed'] in base.SEEDS and receipt['file'] == 'final.wav'
+            and not receipt['asr']['blocked'] and receipt['spoken_sha256'] == SPOKEN_SHA, 'synth_receipt')
+
+
+
+def seal_candidate(outdir, key, pcm, manifest):
+    require(not outdir.exists(), 'output_exists')
+    outdir.mkdir(mode=0o700)
+    envelope = io.BytesIO()
+    with zipfile.ZipFile(envelope, 'w', compression=zipfile.ZIP_STORED) as data:
+        data.writestr('candidate.json', canonical(manifest))
+        data.writestr('unit.s16le', pcm)
+    raw = envelope.getvalue()
+    header, cipher = crypto.seal(key, raw, LESSON, 'checkpoint', delivery.KEY_ID)
+    recovered, _ = crypto.open_range(key, header, cipher, expected_id=LESSON,
+                                     expected_kind='checkpoint', expected_key_id=delivery.KEY_ID)
+    require(recovered == raw, 'roundtrip')
+    (outdir / 'RL-027.unit44.candidate.sealed.json').write_bytes(canonical(header))
+    (outdir / 'RL-027.unit44.candidate.sealed.bin').write_bytes(cipher)
+
+
+def build(directory, output, model, voice, renderer_asr):
+    check_request(ROOT / 'lecture-premium' / 'rl027-unit44-request.json')
+    guarded()
+    key = base64.b64decode(os.environ.pop('ADMIN_LAW_PREMIUM_MEDIA_KEY_B64'), validate=True)
+    original = Original(directory, key)
+    source = original.record
+    identical_wav = validate_donor(source)
+    unit = target_plan(source)
+    original_pcm = original.unit(TARGET)
+    target = source['segments'][TARGET]
+    target_n = target['end_sample'] - target['start_sample']
+    require(round(target['start_s'], 2) == 702.56 and round(target['end_s'], 2) == 718.23,
+            'target_timeline')
+    recognizer = load_recognizer(model)
+    for kind in ('donor97', 'original_renderer'):
+        if kind == 'donor97':
+            # Equal synthesis checkpoints do not prove independently encoded MP3
+            # excerpts have equal playback. Measure the released donor itself.
+            pcm = original.unit(DONOR)
+            print(json.dumps({'candidate': kind, 'identical_source_waveform': identical_wav,
+                              'identical_released_pcm': pcm == original_pcm}), flush=True)
+        else:
+            with tempfile.TemporaryDirectory(prefix='rl027-') as tmp:
+                work = Path(tmp)
+                unit_path = work / 'unit.json'
+                unit_path.write_bytes(canonical(unit))
+                wav = work / 'generated'
+                subprocess.run([sys.executable, __file__, 'synthesize', str(unit_path), str(wav), str(voice), str(renderer_asr)],
+                               capture_output=True, check=True, timeout=1200)
+                receipt = json.loads((wav / 'receipt.json').read_text())
+                require(sha256((wav / 'final.wav').read_bytes()).hexdigest() == receipt['sha256'],
+                        'generated_waveform_digest')
+                kind = 'seed' + str(receipt['seed'])
+                pcm = decoded((wav / 'final.wav').read_bytes())
+        pcm, fit = fit_candidate(pcm, target_n)
+        if pcm == original_pcm:
+            continue
+        accepted, results = score_candidate(pcm, recognizer)
+        summary = dict(candidate=kind, timing=fit, original_samples=target_n,
+                       candidate_samples=len(pcm)//2, accepted=accepted, checks=results)
+        print(json.dumps(summary, ensure_ascii=True), flush=True)
+        if accepted:
+            evidence = dict(schema=SCHEMA, lesson_id=LESSON, unit_index=TARGET, donor_index=DONOR if kind=='donor97' else None,
+                            source_descriptor_sha256=check.DESCRIPTOR_DIGEST, speaker=SPEAKER,
+                            spoken_sha256=SPOKEN_SHA, original_start_sample=target['start_sample'],
+                            original_end_sample=target['end_sample'], pcm_sha256=sha256(pcm).hexdigest(),
+                            pcm_format='s16le', channels=1, rate=RATE, candidate=summary)
+            seal_candidate(output, key, pcm, evidence)
+            return
+    raise ValueError('no_candidate_passed')
+
+
+if __name__ == '__main__':
+    try:
+        os.umask(0o077)
+        parser = argparse.ArgumentParser()
+        commands = parser.add_subparsers(dest='command', required=True)
+        for name, fields in [('build', ['directory','output','model','voice','renderer_asr']),
+                             ('synthesize', ['unit_path','output','model','renderer_asr'])]:
+            command = commands.add_parser(name)
+            for field in fields:
+                command.add_argument(field, type=Path)
+        values = vars(parser.parse_args())
+        action = values.pop('command')
+        (build if action == 'build' else synthesize)(**values)
+    except Exception as error:
+        # Only closed failure categories may leave the runner, never private text.
+        known = {'descriptor_pin', 'record_pin', 'request_scope', 'plan_size', 'plan_identity',
+                 'target_timeline', 'no_candidate_passed', 'candidate_duration', 'original_voice',
+                 'synth_receipt', 'generated_waveform_digest', 'mp3_decode_length', 'output_exists',
+                 'incomplete_unit', 'unit_crosses_part_boundary', 'unit_length', 'roundtrip'}
+        category = str(error) if type(error) is ValueError and str(error) in known else type(error).__name__
+        print('RL-027 audio candidate stage failed:', category, flush=True)
+        raise SystemExit(1) from None
