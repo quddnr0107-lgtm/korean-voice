@@ -5,25 +5,9 @@
   "execution_profile": "bora-python-fp32-single-pass/v1",
   "execution_shard_chars": 2200,
   "retry_blocked": false,
-  "request_id": "ms-tail-17-with-40-shared-slots-20261120",
-  "render_workers": 40,
+  "request_id": "ms-tail-isolated-152-20261120",
+  "render_workers": 8,
   "lesson_ids": [
-    "MS-149",
-    "MS-150",
-    "MS-151",
-    "MS-153",
-    "MS-154",
-    "MS-155",
-    "MS-156",
-    "MS-157",
-    "MS-158",
-    "MS-159",
-    "MS-160",
-    "MS-161",
-    "MS-162",
-    "MS-163",
-    "MS-164",
-    "MS-165",
-    "MS-166"
+    "MS-152"
   ]
 }
