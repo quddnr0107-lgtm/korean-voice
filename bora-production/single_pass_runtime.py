@@ -11,6 +11,27 @@ if __name__ == '__main__':
     try:
         runtime.main(profile='single_pass')
     except BaseException as exc:
+        if '--diagnose-blocked-receipt' in sys.argv:
+            lesson_id = next((lesson for lesson in ('MS-018', 'MS-022', 'MS-034')
+                              if '--lesson-id' in sys.argv
+                              and sys.argv[sys.argv.index('--lesson-id')+1:][:1] == [lesson]), None)
+            category = 'diagnostic_failed'
+            if lesson_id == 'MS-034' and type(exc).__name__ == 'AssemblyError':
+                gate = exc.args
+                if gate == ('long_silence_pcm',):
+                    part = getattr(exc, 'part_silence_diagnostic', None)
+                    if type(part) is dict:
+                        origin = 'preexisting' if part['pre_run_frames'] >= 150 else 'codec_induced'
+                        position = 'boundary' if part['gap_overlap_samples'] > 0 else 'within_unit'
+                        category = 'silence_' + origin + '_' + position
+                    else:
+                        category = 'silence_unit'
+                elif gate in (('part_decoded_sample_mismatch',), ('clipped_pcm',),
+                              ('nonfinite_pcm',), ('silent_pcm',)):
+                    category = gate[0]
+            print(json.dumps(dict(status='receipt_diagnostic', lesson_id=lesson_id,
+                                  category=category)), flush=True)
+            sys.exit(1)
         locations = [dict(file=Path(frame.filename).name, line=frame.lineno)
             for frame in traceback.extract_tb(exc.__traceback__)
             if Path(frame.filename).parent == runtime.HERE]

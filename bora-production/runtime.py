@@ -609,6 +609,36 @@ def render(args, profile='eager'):
         check(passed == end-begin, 'render_worker_shard_incomplete')
 
 
+def blocked_checkpoint_category(receipt):
+    # Never log arbitrary receipt fields; only fixed labels escape.
+    if not isinstance(receipt, dict):
+        return 'checkpoint_missing'
+    if receipt.get('status') == 'passed':
+        return 'passed'
+    if receipt.get('synthesis_skipped') == 'unresolved_input_review':
+        return 'unresolved_input_review'
+    flags = receipt.get('review_flags')
+    if isinstance(flags, list) and 'postprocess_or_final_signal_failed' in flags:
+        return 'postprocess_or_final_signal_failed'
+    candidates = receipt.get('candidates')
+    if not isinstance(candidates, list) or len(candidates) != 1 or not isinstance(candidates[0], dict):
+        return 'candidate_unavailable'
+    candidate = candidates[0]
+    error = candidate.get('error_code')
+    if error in ('unit_tts_failed', 'unit_candidate_failed', 'generated_audio_shape_or_rate_mismatch',
+                 'natural_eos_not_observed', 'candidate_audio_size_invalid',
+                 'single_pass_token_observation_invalid'):
+        return error
+    if error:
+        return 'other_candidate_error'
+    if candidate.get('natural_eos') is not True:
+        return 'generation_without_natural_eos'
+    signal = candidate.get('signal')
+    if not isinstance(signal, dict) or signal.get('blocked') is not False:
+        return 'candidate_signal_blocked'
+    return 'unknown_blocked_gate'
+
+
 def assemble(args, profile='eager'):
     campaign,recipe,request,ids=config(profile)
     check_lesson_scope(args, request, ids, profile)
@@ -616,6 +646,21 @@ def assemble(args, profile='eager'):
     public,plan,payload,_=matched_plan(args,campaign,recipe,request,source_key,profile)
     del source_key
     settings_hash=public['render_settings_sha256']; recipe_hash=identity(recipe)
+    diagnose = getattr(args, 'diagnose_blocked_receipt', False)
+    if diagnose:
+        pins = {
+            'MS-018': (50, 'eb16ff7b35451180b4afb5ba717fb85b497558ec9856e756469d4b6a8ea94b35'),
+            'MS-022': (28, 'ce621e9fe576dc6b1f56f3241e5dc8d7a8013160b8b3375b16841073718435e9'),
+            'MS-034': (None, '83a39cc0dabf1a8a861edec5232287f2d395db69dda0121eb024b638abd11b52'),
+        }
+        check(profile == 'single_pass' and request.get('assembly_only') is True
+              and request['request_id'] == 'ms-diagnose-018-022-034-20261121'
+              and set(ids) == set(pins) and args.lesson_id in pins
+              and settings_hash == '5597ef328c8f1381e634e45a00b11dd556a8423597d7dfc80771f3085649dd32'
+              and recipe_hash == 'd3d35666712d276c0fa60bb5c5b1f7ab7d11c7042d490c95bb6fb8846682502d'
+              and identity(plan) == pins[args.lesson_id][1]
+              and 'compatible_checkpoint_settings_sha256' not in request,
+              'receipt_diagnostic_scope')
     with tempfile.TemporaryDirectory(prefix='bora-assemble-',dir=os.environ.get('RUNNER_TEMP')) as td:
         work=Path(td)
         alternate_settings = request.get('compatible_checkpoint_settings_sha256')
@@ -627,6 +672,13 @@ def assemble(args, profile='eager'):
             for index, row in candidates.items():
                 if index not in restored or restored[index]['receipt'].get('status') != 'passed':
                     restored[index] = row
+        if diagnose and args.lesson_id != 'MS-034':
+            index = pins[args.lesson_id][0]
+            receipt = restored.get(index, {}).get('receipt')
+            print(json.dumps(dict(status='receipt_diagnostic', lesson_id=args.lesson_id,
+                                  category=blocked_checkpoint_category(receipt))),
+                  flush=True)
+            return  # Never assemble or create any output in this mode.
         check(set(restored)==set(range(len(plan['units']))) and
               all(v['receipt'].get('status')=='passed' for v in restored.values()), 'lesson_not_complete')
         from assemble import assemble_lesson
@@ -639,6 +691,10 @@ def assemble(args, profile='eager'):
                 title=payload['lesson'].get('title'),
                 unit_gap_ms=recipe['unit_gap_ms'],paragraph_gap_ms=recipe['paragraph_gap_ms'],
                 max_part_seconds=recipe['max_part_seconds'], **assembly_policy)
+        if diagnose:
+            print(json.dumps(dict(status='receipt_diagnostic', lesson_id='MS-034',
+                                  category='assembly_checks_passed')), flush=True)
+            return  # No encrypted lesson pack is produced by diagnostics.
         pack_id=os.urandom(16).hex(); offset=0; parts=[]; ciphertext=[]
         for part in metadata['audio_parts']:
             raw=(work/'assembled'/part['file_name']).read_bytes()
@@ -757,6 +813,7 @@ def main(profile='eager'):
         if name in ('render','probe'): p.add_argument('--shard',required=True,type=int)
         if name=='render' and profile=='single_pass': p.add_argument('--worker-deadline', type=int)
         if name=='probe': p.add_argument('--github-output')
+        if name=='assemble' and profile=='single_pass': p.add_argument('--diagnose-blocked-receipt', action='store_true')
     p=sub.add_parser('index'); p.add_argument('--directory',required=True); p.add_argument('--course',required=True)
     args=parser.parse_args()
     if args.command=='index':

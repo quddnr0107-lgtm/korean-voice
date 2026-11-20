@@ -61,6 +61,8 @@ jobs:
             ${{ startsWith(github.event.head_commit.message, 'Bora MS production: Recover setup ') }}
           BORA_MS_CHECKPOINT_ASSEMBLY: >-
             ${{ startsWith(github.event.head_commit.message, 'Bora MS checkpoint assembly: ') }}
+          BORA_MS_RECEIPT_DIAGNOSTIC: >-
+            ${{ github.event.head_commit.message == 'Bora MS checkpoint assembly: Diagnose MS-018 MS-022 MS-034' }}
         run: |
           PYTHONPATH=bora-production python - <<'PY'
           import json, os
@@ -70,6 +72,13 @@ jobs:
           validate_single_pass_request(request)
           recovery = request.get('assembly_only') is True
           lessons = request.get('lesson_ids')
+          receipt_diagnostic = os.environ['BORA_MS_RECEIPT_DIAGNOSTIC'] == 'true'
+          if receipt_diagnostic or request['request_id'] == 'ms-diagnose-018-022-034-20261121':
+              if (not receipt_diagnostic or request['request_id'] != 'ms-diagnose-018-022-034-20261121'
+                      or request['course'] != 'MS' or not recovery
+                      or lessons != ['MS-018', 'MS-022', 'MS-034']
+                      or request['checkpoint_settings_sha256'] != '5597ef328c8f1381e634e45a00b11dd556a8423597d7dfc80771f3085649dd32'):
+                  raise SystemExit('Receipt diagnostic requires its precise checkpoint-only request.')
           if os.environ['BORA_EARLY_RL_ASSEMBLY'] == 'true':
               if (request['course'] != 'RL' or not recovery
                       or not isinstance(lessons, list) or not 1 <= len(lessons) <= 30):
@@ -504,6 +513,8 @@ jobs:
           python -m pip check
       - id: lesson_staged
         name: Reuse a verified completed encrypted lesson from this course draft
+        if: >-
+          ${{ !(github.event.head_commit.message == 'Bora MS checkpoint assembly: Diagnose MS-018 MS-022 MS-034') }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
@@ -519,18 +530,23 @@ jobs:
       - name: Verify full lesson coverage and seal final audio and manuscript offline
         if: steps.lesson_staged.outputs.staged != 'true'
         env:
+          BORA_MS_RECEIPT_DIAGNOSTIC: >-
+            ${{ github.event.head_commit.message == 'Bora MS checkpoint assembly: Diagnose MS-018 MS-022 MS-034' }}
           ADMIN_LAW_PREMIUM_SOURCE_KEY_B64: ${{ secrets.ADMIN_LAW_PREMIUM_SOURCE_KEY_B64 }}
           ADMIN_LAW_PREMIUM_MEDIA_KEY_B64: ${{ secrets.ADMIN_LAW_PREMIUM_MEDIA_KEY_B64 }}
         run: |
           umask 077
           export BORA_HOST_NETNS="$(readlink /proc/self/ns/net)"
+          diagnose=()
+          if [[ "$BORA_MS_RECEIPT_DIAGNOSTIC" == true ]]; then diagnose+=(--diagnose-blocked-receipt); fi
           sudo --preserve-env=ADMIN_LAW_PREMIUM_SOURCE_KEY_B64,ADMIN_LAW_PREMIUM_MEDIA_KEY_B64,BORA_HOST_NETNS,GITHUB_REPOSITORY,GITHUB_EVENT_NAME,GITHUB_REF,GITHUB_WORKFLOW_REF,GITHUB_RUN_ID,GITHUB_RUN_ATTEMPT,RUNNER_TEMP \
             unshare --net --setgid "$(id -g)" --setuid "$(id -u)" -- "$(command -v python)" \
             bora-production/single_pass_runtime.py assemble --lesson-id "$BORA_LESSON" \
             --plan "$RUNNER_TEMP/bora-plan/public-plan.json" --resume-dir "$RUNNER_TEMP/bora-resume" \
-            --output "$RUNNER_TEMP/bora-assembled"
+            --output "$RUNNER_TEMP/bora-assembled" "${diagnose[@]}"
       - name: Stage the complete encrypted lesson in the course draft
-        if: steps.lesson_staged.outputs.staged != 'true'
+        if: >-
+          ${{ steps.lesson_staged.outputs.staged != 'true' && !(github.event.head_commit.message == 'Bora MS checkpoint assembly: Diagnose MS-018 MS-022 MS-034') }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: python bora-production/transport.py publish --profile single_pass --partial --course "$BORA_COURSE" --directory "$RUNNER_TEMP/bora-assembled"
@@ -540,6 +556,7 @@ jobs:
     if: >-
       ${{ always() && !cancelled() && needs.plan.result == 'success' && needs.assemble.result == 'success' &&
           needs.plan.outputs.overlap_tb == 'false' &&
+          !(github.event.head_commit.message == 'Bora MS checkpoint assembly: Diagnose MS-018 MS-022 MS-034') &&
           !startsWith(github.event.head_commit.message, 'Bora early RL assembly: ') &&
           !startsWith(github.event.head_commit.message, 'Bora DR overlap: ') &&
           !startsWith(github.event.head_commit.message, 'Bora DR expansion: ') &&

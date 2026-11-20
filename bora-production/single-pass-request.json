@@ -5,24 +5,12 @@
   "execution_profile": "bora-python-fp32-single-pass/v1",
   "execution_shard_chars": 2200,
   "retry_blocked": false,
-  "request_id": "ms-source-review-digests-20261121",
-  "render_workers": 8,
+  "request_id": "ms-diagnose-018-022-034-20261121",
   "lesson_ids": [
-    "MS-005",
-    "MS-006",
-    "MS-021",
-    "MS-028",
-    "MS-031",
-    "MS-053",
-    "MS-054",
-    "MS-071",
-    "MS-073",
-    "MS-075",
-    "MS-094",
-    "MS-097",
-    "MS-103",
-    "MS-115",
-    "MS-141",
-    "MS-144"
-  ]
+    "MS-018",
+    "MS-022",
+    "MS-034"
+  ],
+  "assembly_only": true,
+  "checkpoint_settings_sha256": "5597ef328c8f1381e634e45a00b11dd556a8423597d7dfc80771f3085649dd32"
 }

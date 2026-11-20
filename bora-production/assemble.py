@@ -492,7 +492,26 @@ def _part_boundaries(segments, total, limit):
     return result
 
 
-def _encode_part(pcm, target, expected_samples, ffmpeg):
+def _assembled_silence_diagnostic(pcm, decoded, index, begin, segments):
+    frame = SAMPLE_RATE // 50
+    def longest(signal):
+        runs = _frame_runs(_silent_frames(signal.astype(np.float64) ** 2))
+        return max(runs, key=lambda run: run[1] - run[0], default=(0, 0))
+    post_start, post_end = longest(decoded)
+    start, end = post_start * frame, min(post_end * frame, len(decoded))
+    pre_start, pre_end = longest(np.frombuffer(pcm, dtype='<f4')[start:end])
+    coordinates = [(s['start_sample'], s['end_sample']) for s in segments]
+    absolute_start, absolute_end = begin + start, begin + end
+    nearest = sorted(range(len(coordinates)), key=lambda i: (
+        max(0, coordinates[i][0] - absolute_end, absolute_start - coordinates[i][1]), i))[:4]
+    overlap = sum(max(0, min(absolute_end, right[0]) - max(absolute_start, left[1]))
+                  for left, right in zip(coordinates, coordinates[1:]))
+    return dict(part_index=index, pre_run_frames=int(pre_end-pre_start), post_run_frames=int(post_end-post_start),
+                start_sample=int(start), end_sample=int(end), gap_overlap_samples=int(overlap),
+                nearby_unit_indices=sorted(nearest))
+
+
+def _encode_part(pcm, target, expected_samples, ffmpeg, *, diagnostic_context=None):
     _run([ffmpeg, '-nostdin', '-v', 'error', '-y', '-f', 'f32le', '-ar', str(SAMPLE_RATE),
           '-ac', '1', '-i', 'pipe:0', '-map_metadata', '-1', '-c:a', 'libmp3lame',
           '-b:a', '128k', '-write_xing', '1', str(target)], pcm)
@@ -515,7 +534,13 @@ def _encode_part(pcm, target, expected_samples, ffmpeg):
             decoded, corrected = decode(), True
     _require(abs(len(decoded) - expected_samples) <= 1, 'part_decoded_sample_mismatch')
     metrics = _metrics(decoded)
-    _require_signal(metrics)
+    try:
+        _require_signal(metrics)
+    except AssemblyError as exc:
+        if diagnostic_context is not None and exc.args == ('long_silence_pcm',):
+            # Diagnostics can never replace the existing failure or release audio.
+            exc.part_silence_diagnostic = _assembled_silence_diagnostic(pcm, decoded, *diagnostic_context)
+        raise
     raw = target.read_bytes()
     _require(0 < len(raw) <= MAX_PART_BYTES and 0 < expected_samples <= MAX_PART_SAMPLES, 'part_bounds')
     return dict(plain_bytes=len(raw), audio_sha256=_sha(raw), validation=metrics,
@@ -605,7 +630,9 @@ def assemble_lesson(plan, entries, output_dir, *, expected_recipe_sha256,
                 pcm = handle.read((end - begin) * 4)
                 _require(len(pcm) == (end - begin) * 4, 'pcm_partition_truncated')
                 name = f'{plan["lesson_id"]}.part-{index:04d}.mp3'
-                details = _encode_part(pcm, stage / name, end - begin, executable)
+                details = _encode_part(pcm, stage / name, end - begin, executable,
+                                       diagnostic_context=(index, begin, segments)
+                                       if profile == 'single_pass' and plan['lesson_id'] == 'MS-034' else None)
                 parts.append(dict(index=index, start_sample=begin, end_sample=end,
                                   start_s=begin / SAMPLE_RATE, end_s=end / SAMPLE_RATE,
                                   sample_rate=SAMPLE_RATE, file_name=name, **details))
