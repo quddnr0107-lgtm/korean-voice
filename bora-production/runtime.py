@@ -258,7 +258,19 @@ def public_plan(args, profile='eager'):
     workers = request.get('render_workers') if profile == 'single_pass' else None
     if assembly_only:
         check(args.settings_sha == request['checkpoint_settings_sha256'], 'assembly_checkpoint_settings_pin')
+    from ms_source_review_diagnostic import enabled as ms_diagnostic_enabled, record as ms_diagnostic_record
+    diagnostic = ms_diagnostic_enabled(request, ids, profile)
     source_key,_=protected_keys(profile=profile)
+    if diagnostic:
+        # Reuse the existing protected, offline source-only stage. No matrices,
+        # manifests, staging, render or publish can follow even with zero flags.
+        import ms_pronunciation
+        pins = ms_pronunciation._rules()
+        for ident in ids:
+            plan,_ = course_plan(ident, campaign, source_key, profile)
+            print(json.dumps(dict(status='ms_source_review_metadata',
+                                  **ms_diagnostic_record(plan, ident, pins)), sort_keys=True), flush=True)
+        check(False, 'ms_source_review_diagnostic_complete_no_render')
     target_chars=execution_shard_chars(recipe,request)
     records=[]; matrix=[]; review_counts=Counter(); costs={}
     for ident in ids:
