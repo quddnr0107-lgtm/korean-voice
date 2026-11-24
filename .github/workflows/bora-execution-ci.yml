@@ -1,8 +1,20 @@
 name: Bora execution scheduling CI
 on:
+  pull_request:
+    branches: [integrated-lectures-premium-20261028]
+    paths:
+      - 'bora-production/available_render_slots.py'
+      - 'bora-production/test_available_render_slots.py'
+      - 'bora-production/wait_for_tb_capacity.py'
+      - 'bora-production/test_wait_for_tb_capacity.py'
+      - '.github/workflows/bora-execution-ci.yml'
   push:
     branches: [integrated-lectures-premium-20261028]
     paths:
+      - 'bora-production/available_render_slots.py'
+      - 'bora-production/test_available_render_slots.py'
+      - 'bora-production/wait_for_tb_capacity.py'
+      - 'bora-production/test_wait_for_tb_capacity.py'
       - 'bora-production/request.json'
       - 'bora-production/runtime.py'
       - 'bora-production/cpu_wait_policy.py'

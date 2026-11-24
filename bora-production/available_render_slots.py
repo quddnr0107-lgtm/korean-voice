@@ -20,14 +20,112 @@ WORKER_LIMIT = 40
 
 def list_items(url, field, token):
     rows = []
+    seen = set()
+    total = None
     for page in range(1, 11):
         response = fetch_json(f"{url}&per_page=100&page={page}", token)
         items = response.get(field)
-        require(isinstance(items, list), "invalid_actions_inventory")
+        count = response.get("total_count")
+        require(type(count) is int and count >= 0 and isinstance(items, list)
+                and len(items) <= 100, "invalid_actions_inventory")
+        require(count <= 1000, "actions_inventory_page_limit")
+        if total is None:
+            total = count
+        elif total != count:
+            raise RetrySnapshot
+        for item in items:
+            require(isinstance(item, dict) and type(item.get("id")) is int
+                    and item["id"] > 0, "invalid_actions_inventory_identity")
+            if item["id"] in seen:
+                raise RetrySnapshot
+            seen.add(item["id"])
         rows.extend(items)
-        if len(items) < 100:
+        if len(rows) > total:
+            raise RetrySnapshot
+        if len(rows) == total:
             return rows
+        if len(items) < 100:
+            raise RetrySnapshot
     raise CapacityError("actions_inventory_page_limit")
+
+
+
+def _active_repository_runs(token):
+    """Project identities for every active workflow, including unknown pools."""
+    runs = {}
+    for state in ACTIVE_STATES:
+        rows = list_items(f"{API}/runs?status={state}", "workflow_runs", token)
+        for row in rows:
+            run_id = row.get("id")
+            workflow_id = row.get("workflow_id")
+            attempt = row.get("run_attempt")
+            repository = row.get("repository")
+            sha = row.get("head_sha")
+            path = row.get("path")
+            branch = row.get("head_branch")
+            event = row.get("event")
+            require(type(run_id) is int and run_id > 0
+                    and type(workflow_id) is int and workflow_id > 0
+                    and type(attempt) is int and attempt > 0
+                    and isinstance(repository, dict)
+                    and repository.get("full_name") == REPOSITORY
+                    and isinstance(sha, str) and re.fullmatch(r"[0-9a-f]{40}", sha)
+                    and all(isinstance(x, str) and x for x in (path, branch, event))
+                    and row.get("status") in ACTIVE_STATES,
+                    "invalid_shared_run_identity")
+            if row["status"] != state or run_id in runs:
+                raise RetrySnapshot
+            runs[run_id] = (run_id, workflow_id, path, sha, branch, event,
+                            attempt, state)
+    # Bound the number of individual job inventory requests. Never truncate.
+    require(len(runs) <= 100, "shared_active_run_limit")
+    return runs
+
+
+def _repository_inventory_once(token):
+    runs = _active_repository_runs(token)
+    inventory = []
+    seen_jobs = set()
+    for run_id, identity in sorted(runs.items()):
+        _, _, _, sha, branch, _, attempt, _ = identity
+        jobs = list_items(f"{API}/runs/{run_id}/jobs?filter=latest", "jobs", token)
+        projected = []
+        for job in jobs:
+            job_id = job.get("id")
+            name = job.get("name")
+            state = job.get("status")
+            conclusion = job.get("conclusion")
+            require(type(job_id) is int and job_id > 0
+                    and isinstance(name, str) and bool(name)
+                    and state in (*ACTIVE_STATES, "completed")
+                    and (conclusion is None or isinstance(conclusion, str)),
+                    "invalid_shared_job_identity")
+            if (job.get("run_id") != run_id or job.get("run_attempt") != attempt
+                    or job.get("head_sha") != sha or job.get("head_branch") != branch
+                    or job_id in seen_jobs):
+                raise RetrySnapshot
+            if (state == "completed") != bool(conclusion):
+                raise RetrySnapshot
+            seen_jobs.add(job_id)
+            projected.append((job_id, name, state, conclusion))
+        # Preserve an empty job inventory as an unknown pending plan, not zero slots.
+        inventory.append((identity, tuple(sorted(projected))))
+    if _active_repository_runs(token) != runs:
+        raise RetrySnapshot
+    return tuple(inventory)
+
+
+def shared_inventory(token):
+    """Read-only conservative snapshot; not an admission or reservation API.
+
+    All workflows and branches are retained. Two identical observations detect
+    visible churn but are not atomic. The caller must still classify every
+    synthesis path and obtain an atomic global reservation before allocating.
+    """
+    first = _repository_inventory_once(token)
+    if _repository_inventory_once(token) != first:
+        raise RetrySnapshot
+    return first
 
 
 def published_cap(run_id, jobs, token):
