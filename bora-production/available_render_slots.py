@@ -20,13 +20,32 @@ WORKER_LIMIT = 40
 
 def list_items(url, field, token):
     rows = []
+    seen = set()
+    total = None
     for page in range(1, 11):
         response = fetch_json(f"{url}&per_page=100&page={page}", token)
         items = response.get(field)
-        require(isinstance(items, list), "invalid_actions_inventory")
+        count = response.get("total_count")
+        require(type(count) is int and count >= 0 and isinstance(items, list)
+                and len(items) <= 100, "invalid_actions_inventory")
+        require(count <= 1000, "actions_inventory_page_limit")
+        if total is None:
+            total = count
+        elif total != count:
+            raise RetrySnapshot
+        for item in items:
+            require(isinstance(item, dict) and type(item.get("id")) is int
+                    and item["id"] > 0, "invalid_actions_inventory_identity")
+            if item["id"] in seen:
+                raise RetrySnapshot
+            seen.add(item["id"])
         rows.extend(items)
-        if len(items) < 100:
+        if len(rows) > total:
+            raise RetrySnapshot
+        if len(rows) == total:
             return rows
+        if len(items) < 100:
+            raise RetrySnapshot
     raise CapacityError("actions_inventory_page_limit")
 
 

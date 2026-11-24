@@ -61,3 +61,48 @@ class AvailableRenderSlotsTests(unittest.TestCase):
             cli.assert_not_called()
             cli.return_value.stdout = 'Reserved synthesis jobs: 8; Military Service slots: 32\n'
             self.assertEqual(capacity.published_cap(3, jobs, 'mock-token'), 32)
+
+
+class InventoryPaginationTests(unittest.TestCase):
+    def read(self, pages):
+        with patch.object(capacity, 'fetch_json', side_effect=pages):
+            return capacity.list_items('mock?filter=latest', 'jobs', 'mock-token')
+
+    @staticmethod
+    def page(count, ids):
+        return {'total_count': count, 'jobs': [{'id': i} for i in ids]}
+
+    def test_short_page_is_not_complete_inventory(self):
+        with self.assertRaises(capacity.RetrySnapshot):
+            self.read([self.page(40, range(1, 3))])
+
+    def test_complete_and_empty_inventory(self):
+        self.assertEqual(len(self.read([self.page(103, range(1, 101)),
+                                        self.page(103, range(101, 104))])), 103)
+        self.assertEqual(self.read([self.page(0, [])]), [])
+
+    def test_count_changes(self):
+        with self.assertRaises(capacity.RetrySnapshot):
+            self.read([self.page(101, range(1, 101)), self.page(102, [101, 102])])
+
+    def test_duplicate_across_pages(self):
+        with self.assertRaises(capacity.RetrySnapshot):
+            self.read([self.page(101, range(1, 101)), self.page(101, [100])])
+
+    def test_more_rows_than_count(self):
+        with self.assertRaises(capacity.RetrySnapshot):
+            self.read([self.page(1, [1, 2])])
+
+    def test_missing_total_or_invalid_identity(self):
+        with self.assertRaises(capacity.CapacityError):
+            self.read([{'jobs': []}])
+        with self.assertRaises(capacity.CapacityError):
+            self.read([self.page(1, [True])])
+
+    def test_page_limit(self):
+        with self.assertRaises(capacity.CapacityError):
+            self.read([self.page(1001, range(1, 101))])
+        self.assertEqual(len(self.read([
+            self.page(1000, range(i * 100 + 1, i * 100 + 101))
+            for i in range(10)
+        ])), 1000)
