@@ -106,3 +106,96 @@ class InventoryPaginationTests(unittest.TestCase):
             self.page(1000, range(i * 100 + 1, i * 100 + 101))
             for i in range(10)
         ])), 1000)
+
+
+class SharedInventoryTests(unittest.TestCase):
+    @staticmethod
+    def run_row(run_id, workflow_id, path, state="waiting", attempt=1):
+        return dict(id=run_id, workflow_id=workflow_id, path=path,
+                    head_sha="a" * 40, head_branch="integration", event="push",
+                    run_attempt=attempt, status=state,
+                    repository={"full_name": capacity.REPOSITORY})
+
+    @staticmethod
+    def job_row(run_id, job_id, name, state="waiting", attempt=1):
+        return dict(id=job_id, run_id=run_id, run_attempt=attempt,
+                    head_sha="a" * 40, head_branch="integration", name=name,
+                    status=state, conclusion="success" if state == "completed" else None)
+
+    def inventory(self, runs, jobs):
+        def read(url, field, token):
+            if field == "workflow_runs":
+                self.assertNotIn("/workflows/", url)
+                state = url.rsplit("=", 1)[-1]
+                return [r for r in runs if r["status"] == state]
+            run_id = int(url.split("/runs/")[1].split("/")[0])
+            return jobs.get(run_id, [])
+        return read
+
+    def test_keeps_all_workflows_and_empty_pending_plan(self):
+        runs = [self.run_row(1, 11, ".github/workflows/bora-fp32-single-pass.yml"),
+                self.run_row(2, 22, ".github/workflows/bora-fp32-compiled-pilot.yml"),
+                self.run_row(3, 33, ".github/workflows/unknown.yml")]
+        jobs = {1: [self.job_row(1, 101, "plan")],
+                2: [self.job_row(2, 201, "render (0)", "queued")]}
+        with patch.object(capacity, "list_items", side_effect=self.inventory(runs, jobs)):
+            result = capacity.shared_inventory("mock-token")
+        self.assertEqual([r[0][0] for r in result], [1, 2, 3])
+        self.assertEqual(result[2][1], ())
+        self.assertEqual(result[1][1][0][2], "queued")
+
+    def test_empty_repository(self):
+        with patch.object(capacity, "list_items", side_effect=self.inventory([], {})):
+            self.assertEqual(capacity.shared_inventory("mock-token"), ())
+
+    def test_cross_status_duplicate_or_stale_status_is_rejected(self):
+        run = self.run_row(1, 11, "workflow", "waiting")
+        with patch.object(capacity, "list_items", return_value=[run]):
+            with self.assertRaises(capacity.RetrySnapshot):
+                capacity._active_repository_runs("mock-token")
+
+    def test_job_wrong_attempt_or_run_is_rejected(self):
+        run = self.run_row(1, 11, "workflow", attempt=2)
+        for job in (self.job_row(1, 101, "render (0)"),
+                    self.job_row(2, 101, "render (0)", attempt=2)):
+            with self.subTest(job=job):
+                with patch.object(capacity, "list_items", side_effect=self.inventory([run], {1: [job]})):
+                    with self.assertRaises(capacity.RetrySnapshot):
+                        capacity.shared_inventory("mock-token")
+
+    def test_duplicate_job_id_across_runs_is_rejected(self):
+        runs = [self.run_row(1, 11, "workflow"), self.run_row(2, 22, "other")]
+        jobs = {1: [self.job_row(1, 101, "plan")], 2: [self.job_row(2, 101, "plan")]}
+        with patch.object(capacity, "list_items", side_effect=self.inventory(runs, jobs)):
+            with self.assertRaises(capacity.RetrySnapshot):
+                capacity.shared_inventory("mock-token")
+
+    def test_unknown_job_state_fails_closed(self):
+        run = self.run_row(1, 11, "workflow")
+        job = self.job_row(1, 101, "render (0)", "unknown")
+        with patch.object(capacity, "list_items", side_effect=self.inventory([run], {1: [job]})):
+            with self.assertRaises(capacity.CapacityError):
+                capacity.shared_inventory("mock-token")
+
+    def test_changed_job_inventory_with_same_run_count_is_rejected(self):
+        run = self.run_row(1, 11, "workflow")
+        observations = iter([[self.job_row(1, 101, "render (0)")],
+                             [self.job_row(1, 102, "render (0)")]])
+        def read(url, field, token):
+            if field == "jobs":
+                return next(observations)
+            return [run] if url.endswith("status=waiting") else []
+        with patch.object(capacity, "list_items", side_effect=read):
+            with self.assertRaises(capacity.RetrySnapshot):
+                capacity.shared_inventory("mock-token")
+
+    def test_run_changes_during_job_read_are_rejected(self):
+        run = self.run_row(1, 11, "workflow")
+        replacement = self.run_row(2, 11, "workflow")
+        with patch.object(capacity, "_active_repository_runs",
+                          side_effect=[{1: tuple((1, 11, "workflow", "a"*40, "integration", "push", 1, "waiting"))},
+                                       {2: tuple((2, 11, "workflow", "a"*40, "integration", "push", 1, "waiting"))}]), \
+                patch.object(capacity, "list_items", return_value=[]):
+            with self.assertRaises(capacity.RetrySnapshot):
+                capacity.shared_inventory("mock-token")
+
