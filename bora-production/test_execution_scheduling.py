@@ -405,7 +405,7 @@ class MilitaryServiceCheckpointWorkflowTests(unittest.TestCase):
         body = re.search(r'(?ms)^  ' + job + r':\n(.*?)(?=^  [a-z_]+:|\Z)', self.workflow).group(1)
         expression = re.search(r'(?ms)^    if: >-\n(.*?)(?=^    [a-z_-]+:)', body).group(1)
         expression = expression.strip().removeprefix('${{').removesuffix('}}').strip()
-        expression = re.sub(r"startsWith\(github\.event\.head_commit\.message, '([^']+)'\)",
+        expression = re.sub(r"github\.event\.head_commit\.message\s*==\s*'([^']+)'",\n                            lambda match: str(message == match.group(1)), expression)\n        expression = re.sub(r"startsWith\(github\.event\.head_commit\.message, '([^']+)'\)",
                             lambda match: str(message.startswith(match.group(1))), expression)
         for key, value in sorted(values.items(), key=lambda item: -len(item[0])):
             expression = re.sub(r'\b' + re.escape(key) + r'\b', repr(value), expression)
@@ -417,6 +417,14 @@ class MilitaryServiceCheckpointWorkflowTests(unittest.TestCase):
                    ast.Compare, ast.Eq, ast.NotEq, ast.UnaryOp, ast.Not)
         self.assertTrue(all(isinstance(node, allowed) for node in ast.walk(tree)))
         return eval(compile(tree, '<workflow job condition>', 'eval'), {'__builtins__': {}}, {})
+
+    def test_ms_receipt_diagnostic_does_not_publish(self):
+        values = {'needs.plan.result': 'success', 'needs.assemble.result': 'success',
+                  'needs.plan.outputs.overlap_tb': 'false'}
+        self.assertFalse(self.job_condition(
+            'publish', 'Bora MS checkpoint assembly: Diagnose MS-018 MS-022 MS-034', values))
+        self.assertTrue(self.job_condition(
+            'publish', 'Bora MS checkpoint assembly: Recover verified checkpoints', values))
 
     def test_setup_recovery_retains_capacity_and_skips_full_lesson_assembly(self):
         message = 'Bora MS production: Recover setup 44046060122 group 13'
