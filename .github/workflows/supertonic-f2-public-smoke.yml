@@ -1,0 +1,90 @@
+name: Supertonic F2 public voice smoke
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/supertonic-f2-public-smoke.yml'
+permissions:
+  contents: read
+jobs:
+  smoke:
+    if: github.head_ref == 'codex/supertonic-f2-smoke-20261125' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      ORT_DISABLE_TELEMETRY: '1'
+      OMP_NUM_THREADS: '4'
+      OPENBLAS_NUM_THREADS: '4'
+      HF_HUB_DISABLE_TELEMETRY: '1'
+      DO_NOT_TRACK: '1'
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Install the existing pinned lecture runtime
+        run: |
+          python3 -m venv "$RUNNER_TEMP/smoke-env"
+          "$RUNNER_TEMP/smoke-env/bin/python" -m pip install --disable-pip-version-check -r lecture-premium/requirements.txt
+          "$RUNNER_TEMP/smoke-env/bin/python" -m pip check
+          command -v ffmpeg
+          command -v ffprobe
+      - name: Fetch and verify the existing pinned F2 assets
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,urllib.request
+          p=json.loads(pathlib.Path('lecture-premium/model-pins.json').read_text())
+          assert p['repository']=='Supertone/supertonic-3'
+          assert p['revision']=='3cadd1ee6394adea1bd021217a0e650ede09a323'
+          d=pathlib.Path(os.environ['RUNNER_TEMP'])/'smoke-model'
+          for name,expected in p['sha256'].items():
+              f=d/name
+              f.parent.mkdir(parents=True,exist_ok=True)
+              u=p['helper_url'] if name=='py/helper.py' else 'https://huggingface.co/'+p['repository']+'/resolve/'+p['revision']+'/'+name
+              with urllib.request.urlopen(u,timeout=120) as response, f.open('wb') as out:
+                  import shutil
+                  shutil.copyfileobj(response,out)
+              digest=hashlib.file_digest(f.open('rb'),'sha256').hexdigest()
+              assert digest==expected, name
+              print('verified',name,f.stat().st_size)
+          PY
+      - name: Real Korean F2 synthesis (public test sentence only)
+        run: |
+          cat > "$RUNNER_TEMP/f2-smoke.py" <<'PY'
+          import os,pathlib,sys,time,hashlib,json
+          import numpy as np
+          import soundfile as sf
+          import onnxruntime as ort
+          ort.disable_telemetry_events()
+          root=pathlib.Path(os.environ['RUNNER_TEMP'])/'smoke-model'
+          sys.path.insert(0,str(root/'py'))
+          import helper
+          opts=ort.SessionOptions()
+          opts.intra_op_num_threads=4
+          opts.inter_op_num_threads=1
+          started=time.perf_counter()
+          base=str(root/'onnx')
+          sessions=helper.load_onnx_all(base,opts,['CPUExecutionProvider'])
+          tts=helper.TextToSpeech(helper.load_cfgs(base),helper.load_text_processor(base),*sessions)
+          style=helper.load_voice_style([str(root/'voice_styles/F2.json')])
+          np.random.seed(20261125)
+          source='통합방위법 제일조 목적입니다.'
+          w,_=tts._infer([source],['ko'],style,16,0.95)
+          y=np.asarray(w,dtype=np.float32).reshape(-1)
+          assert np.isfinite(y).all() and 0.001<float(np.abs(y).max()) and len(y)>tts.sample_rate
+          y=y*(0.86/float(np.abs(y).max()))
+          f=pathlib.Path(os.environ['RUNNER_TEMP'])/'F2-public-smoke.wav'
+          sf.write(f,y,tts.sample_rate,subtype='PCM_16')
+          print(json.dumps({'engine':'Supertonic 3 F2','source':source,'seconds':len(y)/tts.sample_rate,'sample_rate':tts.sample_rate,'elapsed':time.perf_counter()-started,'wav_sha256':hashlib.file_digest(f.open('rb'),'sha256').hexdigest(),'human_listening_verified':False},ensure_ascii=False),flush=True)
+          PY
+          sudo -n unshare --net -- runuser -u "$USER" -- env RUNNER_TEMP="$RUNNER_TEMP" ORT_DISABLE_TELEMETRY=1 OMP_NUM_THREADS=4 OPENBLAS_NUM_THREADS=4 "$RUNNER_TEMP/smoke-env/bin/python" "$RUNNER_TEMP/f2-smoke.py"
+          ffmpeg -hide_banner -loglevel error -i "$RUNNER_TEMP/F2-public-smoke.wav" -map_metadata -1 -ac 1 -ar 16000 -c:a libmp3lame -b:a 16k "$RUNNER_TEMP/F2-public-smoke.mp3"
+          ffmpeg -hide_banner -loglevel error -i "$RUNNER_TEMP/F2-public-smoke.mp3" -f null -
+          sha256sum "$RUNNER_TEMP/F2-public-smoke.mp3"
+          python3 - <<'PY'
+          import os, pathlib, base64
+          f=pathlib.Path(os.environ['RUNNER_TEMP'])/'F2-public-smoke.mp3'
+          assert 100 < f.stat().st_size <= 20000
+          print('PUBLIC_SMOKE_MP3_START')
+          s=base64.b64encode(f.read_bytes()).decode()
+          for i in range(0,len(s),512): print('PUBLIC_SMOKE_MP3 '+s[i:i+512])
+          print('PUBLIC_SMOKE_MP3_END')
+          PY
