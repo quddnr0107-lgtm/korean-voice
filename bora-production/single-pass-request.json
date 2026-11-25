@@ -5,10 +5,8 @@
     "execution_profile": "bora-python-fp32-single-pass/v1",
     "execution_shard_chars": 2200,
     "retry_blocked": false,
-    "request_id": "ms-diagnose-018-022-034-20261121",
+    "request_id": "ms034-checkpoint-only-20261125",
     "lesson_ids": [
-        "MS-018",
-        "MS-022",
         "MS-034"
     ],
     "assembly_only": true,
