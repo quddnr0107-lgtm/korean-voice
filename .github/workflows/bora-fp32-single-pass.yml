@@ -11,6 +11,7 @@ concurrency:
     ${{ startsWith(github.event.head_commit.message, 'Bora early RL assembly: ') && 'bora-fp32-single-pass-rl-assembly' ||
         startsWith(github.event.head_commit.message, 'Bora DR overlap: ') && 'bora-fp32-single-pass-dr-overlap' ||
         startsWith(github.event.head_commit.message, 'Bora DR expansion: ') && 'bora-fp32-single-pass-dr-expansion' ||
+        startsWith(github.event.head_commit.message, 'Bora MS production: Recover unit50 ') && 'bora-fp32-single-pass-ms018-unit50' ||
         startsWith(github.event.head_commit.message, 'Bora MS production: Recover setup ') && 'bora-fp32-single-pass-ms-setup-recovery' ||
         startsWith(github.event.head_commit.message, 'Bora MS production: Refill ') && 'bora-fp32-single-pass-ms-refill' ||
         startsWith(github.event.head_commit.message, 'Bora MS production: Fill verified ') && 'bora-fp32-single-pass-ms-verified-fill' ||
@@ -63,6 +64,8 @@ jobs:
             ${{ startsWith(github.event.head_commit.message, 'Bora MS checkpoint assembly: ') }}
           BORA_MS_RECEIPT_DIAGNOSTIC: >-
             ${{ github.event.head_commit.message == 'Bora MS checkpoint assembly: Diagnose MS-018 MS-022 MS-034' }}
+          BORA_MS018_PUBLIC: >-
+            ${{ startsWith(github.event.head_commit.message, 'Bora MS production: Recover unit50 public MS-018') && github.actor == github.repository_owner }}
         run: |
           PYTHONPATH=bora-production python - <<'PY'
           import json, os
@@ -72,6 +75,9 @@ jobs:
           validate_single_pass_request(request)
           recovery = request.get('assembly_only') is True
           lessons = request.get('lesson_ids')
+          from ms018_recovery import REQUEST_ID
+          if (request['request_id'] == REQUEST_ID) != (os.environ.get('BORA_MS018_PUBLIC', 'false') == 'true'):
+              raise SystemExit('MS-018 public recovery requires its exact owner-approved production request.')
           receipt_diagnostic = os.environ['BORA_MS_RECEIPT_DIAGNOSTIC'] == 'true'
           if receipt_diagnostic or request['request_id'] == 'ms-diagnose-018-022-034-20261121':
               if (not receipt_diagnostic or request['request_id'] != 'ms-diagnose-018-022-034-20261121'
@@ -278,6 +284,12 @@ jobs:
                 startsWith(github.event.head_commit.message, 'Bora MS production: Fill open 20261116 ') && '43798929547:133075539380:33,43800654438:133081378493:4,43802967734:133092317760:2' ||
                 startsWith(github.event.head_commit.message, 'Bora MS production: Refill verified 20261116 ') && '43798929547:133075539380:33' || '' }}
         run: python3 bora-production/available_render_slots.py
+      - name: Check the complete shared job inventory for the scoped one-worker recovery
+        if: >-
+          ${{ startsWith(github.event.head_commit.message, 'Bora MS production: Recover unit50 public MS-018') }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 bora-production/ms018_capacity_guard.py
 
   render:
     needs: [plan, capacity]
@@ -381,6 +393,7 @@ jobs:
     timeout-minutes: 360
     permissions:
       contents: write
+      actions: read
     strategy:
       fail-fast: false
       max-parallel: ${{ fromJSON(needs.capacity.outputs.parallelism || needs.plan.outputs.parallelism) }}
@@ -403,6 +416,12 @@ jobs:
           path: ${{ runner.temp }}/bora-plan
       - name: Install only checkpoint cryptography without keys
         run: python -m pip install --disable-pip-version-check cryptography==50.0.0
+      - name: Recheck scoped shared capacity after protected approval before synthesis
+        if: >-
+          ${{ startsWith(github.event.head_commit.message, 'Bora MS production: Recover unit50 public MS-018') }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 bora-production/ms018_capacity_guard.py
       - id: batch_clock
         name: Set a shared soft deadline for this worker
         run: python bora-production/render_batches.py start
@@ -544,9 +563,42 @@ jobs:
             bora-production/single_pass_runtime.py assemble --lesson-id "$BORA_LESSON" \
             --plan "$RUNNER_TEMP/bora-plan/public-plan.json" --resume-dir "$RUNNER_TEMP/bora-resume" \
             --output "$RUNNER_TEMP/bora-assembled" "${diagnose[@]}"
+      - name: Publish only verified ordinary MP3 parts for the owner-approved MS-018 request
+        if: >-
+          ${{ steps.lesson_staged.outputs.staged != 'true' && matrix.lesson_id == 'MS-018' &&
+              startsWith(github.event.head_commit.message, 'Bora MS production: Recover unit50 public MS-018') &&
+              github.actor == github.repository_owner }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: MS-018-Kim-Bora-public-MP3-parts
+          path: |
+            ${{ runner.temp }}/bora-assembled/MS-018.part-*.mp3
+            ${{ runner.temp }}/bora-assembled/audio-manifest.json
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
+      - name: Join and validate one continuous public MP3 without keys
+        if: >-
+          ${{ steps.lesson_staged.outputs.staged != 'true' && matrix.lesson_id == 'MS-018' &&
+              startsWith(github.event.head_commit.message, 'Bora MS production: Recover unit50 public MS-018') &&
+              github.actor == github.repository_owner }}
+        run: python bora-production/ms018_public_audio.py "$RUNNER_TEMP/bora-assembled" "$RUNNER_TEMP/MS-018_Kim_Bora_FP32.mp3"
+      - name: Publish the continuous ordinary MP3
+        if: >-
+          ${{ steps.lesson_staged.outputs.staged != 'true' && matrix.lesson_id == 'MS-018' &&
+              startsWith(github.event.head_commit.message, 'Bora MS production: Recover unit50 public MS-018') &&
+              github.actor == github.repository_owner }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: MS-018-Kim-Bora-public-MP3
+          path: ${{ runner.temp }}/MS-018_Kim_Bora_FP32.mp3
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
       - name: Stage the complete encrypted lesson in the course draft
         if: >-
-          ${{ steps.lesson_staged.outputs.staged != 'true' && !(github.event.head_commit.message == 'Bora MS checkpoint assembly: Diagnose MS-018 MS-022 MS-034') }}
+          ${{ steps.lesson_staged.outputs.staged != 'true' && !(github.event.head_commit.message == 'Bora MS checkpoint assembly: Diagnose MS-018 MS-022 MS-034') &&
+              !(startsWith(github.event.head_commit.message, 'Bora MS production: Recover unit50 public MS-018')) }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: python bora-production/transport.py publish --profile single_pass --partial --course "$BORA_COURSE" --directory "$RUNNER_TEMP/bora-assembled"

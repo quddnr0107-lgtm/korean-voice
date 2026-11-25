@@ -36,6 +36,7 @@ if str(CODE) not in sys.path:
 from lecture_crypto import namespace_for
 from lecture_pack import MAX_PART_BYTES, MAX_PART_SAMPLES, MAX_PARTS, MAX_TOTAL_SAMPLES, SAMPLE_RATE
 from mp3_gapless import repair as repair_gapless
+import ms018_recovery as ms018
 
 INPUT_RATE = 24000
 MAX_UNIT_BYTES = 64 * 1024 * 1024
@@ -165,7 +166,7 @@ def _without_planning_fingerprint(settings):
 
 
 def validate_entries(plan, entries, expected_recipe_sha256, expected_render_settings_sha256,
-                     *, profile='eager', compatible_settings_sha256=None):
+                     *, profile='eager', compatible_settings_sha256=None, ms018_seed_recovery=False):
     """Return rows in source order; input order itself may be arbitrary."""
     _require(profile in ('eager', 'compiled', 'single_pass'), 'assembly_profile')
     single_pass = profile == 'single_pass'
@@ -175,6 +176,9 @@ def validate_entries(plan, entries, expected_recipe_sha256, expected_render_sett
     plan_hash = identity(plan)
     accepted_settings = {expected_render_settings_sha256}
     comparable_settings = None
+    if ms018_seed_recovery:
+        _require(single_pass and compatible_settings_sha256 is None, 'ms018_recovery_profile')
+        ms018.scope(plan, expected_recipe_sha256, expected_render_settings_sha256)
     if compatible_settings_sha256 is not None:
         from execution_profiles import DR_RECOVERY_LESSONS, DR_RECOVERY_SETTINGS
         _require(single_pass and plan['lesson_id'] in DR_RECOVERY_LESSONS
@@ -197,13 +201,20 @@ def validate_entries(plan, entries, expected_recipe_sha256, expected_render_sett
                  and not any(k in receipt for k in ('review_file', 'review_relative_file', 'review_sha256')),
                  'receipt_review_only')
         _require(receipt.get('natural_eos') is True, 'receipt_missing_natural_eos')
+        receipt_settings_hash = receipt.get('render_settings_sha256')
+        repaired = (ms018_seed_recovery and index == ms018.INDEX
+                    and receipt_settings_hash != expected_render_settings_sha256)
+        if repaired:
+            _require(ms018.is_replacement(receipt.get('render_settings'), receipt_settings_hash),
+                     'ms018_recovery_settings_pin')
+        expected_seed = ms018.NEW_SEED if repaired else 5192
         asr = receipt.get('asr', {})
         if single_pass:
             _require(_asr_skipped(asr), 'receipt_single_pass_asr_marker')
             candidates = receipt.get('candidates')
             _require(isinstance(candidates, list) and len(candidates) == 1
-                     and isinstance(candidates[0], dict) and receipt.get('seed') == 5192
-                     and candidates[0].get('seed') == 5192, 'receipt_single_pass_attempt')
+                     and isinstance(candidates[0], dict) and receipt.get('seed') == expected_seed
+                     and candidates[0].get('seed') == expected_seed, 'receipt_single_pass_attempt')
             candidate = candidates[0]
             _require(_asr_skipped(candidate.get('asr')), 'candidate_single_pass_asr_marker')
             _require(candidate.get('natural_eos') is True and candidate.get('cap_reached') is False
@@ -220,8 +231,7 @@ def validate_entries(plan, entries, expected_recipe_sha256, expected_render_sett
             _require(isinstance(asr, dict) and asr.get('blocked') is False
                      and asr.get('review_required') is False and type(asr.get('character_errors')) is int
                      and asr['character_errors'] == 0 and asr.get('missing_critical') == [], 'receipt_transcript_gate')
-        receipt_settings_hash = receipt.get('render_settings_sha256')
-        _require(_hash(receipt_settings_hash) and receipt_settings_hash in accepted_settings,
+        _require(_hash(receipt_settings_hash) and (receipt_settings_hash in accepted_settings or repaired),
                  'receipt_checkpoint_settings_pin')
         expected = {
             'lesson_id': plan['lesson_id'], 'unit_index': index, 'unit_id': unit['id'],
@@ -257,7 +267,7 @@ def validate_entries(plan, entries, expected_recipe_sha256, expected_render_sett
                  and settings['inference_mode'] is True, 'not_selected_fp32_profile')
         if single_pass:
             _require(all(settings.get(k) == v for k, v in SINGLE_PASS_SETTINGS.items())
-                     and settings.get('seeds') == [5192] and _asr_skipped(settings.get('asr')),
+                     and settings.get('seeds') == [expected_seed] and _asr_skipped(settings.get('asr')),
                      'receipt_single_pass_settings')
         else:
             _require(all(settings.get(k) != v for k, v in SINGLE_PASS_SETTINGS.items()),
@@ -595,7 +605,7 @@ def _encode_ms034_codec_part(pcm, target, expected_samples, ffmpeg, *, diagnosti
 def assemble_lesson(plan, entries, output_dir, *, expected_recipe_sha256,
                     expected_render_settings_sha256, title=None, ffmpeg='ffmpeg', ffprobe='ffprobe',
                     unit_gap_ms=0, paragraph_gap_ms=0, max_part_seconds=60, profile='eager',
-                    compatible_settings_sha256=None):
+                    compatible_settings_sha256=None, ms018_seed_recovery=False):
     """Return metadata and write final MP3 parts to a fresh private directory.
 
     Root's production recipe uses unit_gap_ms=180, paragraph_gap_ms=350.
@@ -605,7 +615,8 @@ def assemble_lesson(plan, entries, output_dir, *, expected_recipe_sha256,
     """
     validated, ordered = validate_entries(plan, entries, expected_recipe_sha256,
                                           expected_render_settings_sha256, profile=profile,
-                                          compatible_settings_sha256=compatible_settings_sha256)
+                                          compatible_settings_sha256=compatible_settings_sha256,
+                                          ms018_seed_recovery=ms018_seed_recovery)
     asr_verified = profile != 'single_pass'
     asr_scope = ('each accepted raw candidate: zero canonical transcript errors; final PCM signal checked separately'
                  if asr_verified else 'not run; first synthesis checked for source coverage, natural EOS and PCM signal')
@@ -718,6 +729,13 @@ def assemble_lesson(plan, entries, output_dir, *, expected_recipe_sha256,
                         status='private_assembly_complete_not_sealed_or_published')
         if compatible_settings_sha256 is not None:
             metadata['compatible_checkpoint_settings_sha256'] = compatible_settings_sha256
+        if ms018_seed_recovery:
+            recovered = ordered[ms018.INDEX]['receipt']
+            metadata['ms018_seed_recovery'] = dict(unit_index=ms018.INDEX,
+                seed=recovered['seed'], render_settings_sha256=recovered['render_settings_sha256'],
+                original_settings_sha256=expected_render_settings_sha256,
+                original_failure='clipped_waveform',
+                replacement_used=recovered['seed'] == ms018.NEW_SEED)
         metadata_path = stage / f'{plan["lesson_id"]}.metadata.json'
         with metadata_path.open('x', encoding='utf-8') as handle:
             os.chmod(metadata_path, 0o600)
