@@ -511,10 +511,11 @@ def _assembled_silence_diagnostic(pcm, decoded, index, begin, segments):
                 nearby_unit_indices=sorted(nearest))
 
 
-def _encode_part(pcm, target, expected_samples, ffmpeg, *, diagnostic_context=None):
+def _encode_part(pcm, target, expected_samples, ffmpeg, *, diagnostic_context=None, bitrate='128k'):
+    _require(bitrate in ('128k', '256k'), 'unsupported_part_bitrate')
     _run([ffmpeg, '-nostdin', '-v', 'error', '-y', '-f', 'f32le', '-ar', str(SAMPLE_RATE),
           '-ac', '1', '-i', 'pipe:0', '-map_metadata', '-1', '-c:a', 'libmp3lame',
-          '-b:a', '128k', '-write_xing', '1', str(target)], pcm)
+          '-b:a', bitrate, '-write_xing', '1', str(target)], pcm)
     os.chmod(target, 0o600)
 
     def decode():
@@ -546,6 +547,49 @@ def _encode_part(pcm, target, expected_samples, ffmpeg, *, diagnostic_context=No
     return dict(plain_bytes=len(raw), audio_sha256=_sha(raw), validation=metrics,
                 decoded_sample_count=len(decoded), decoded_sample_delta=len(decoded) - expected_samples,
                 gapless_metadata_corrected=corrected)
+
+
+def _ms034_codec_scope(plan, profile, recipe_sha256, settings_sha256, alternate_settings):
+    return (profile == 'single_pass' and plan['lesson_id'] == 'MS-034'
+            and identity(plan) == '83a39cc0dabf1a8a861edec5232287f2d395db69dda0121eb024b638abd11b52'
+            and recipe_sha256 == 'd3d35666712d276c0fa60bb5c5b1f7ab7d11c7042d490c95bb6fb8846682502d'
+            and settings_sha256 == '5597ef328c8f1381e634e45a00b11dd556a8423597d7dfc80771f3085649dd32'
+            and alternate_settings is None)
+
+
+def _encode_ms034_codec_part(pcm, target, expected_samples, ffmpeg, *, diagnostic_context):
+    """Try one higher-quality encode of identical PCM only after codec-induced silence.
+
+    Existing source/receipt checks precede this call. No gain, trimming, timing
+    or threshold changes. Both encodes use the existing output validation.
+    Failed candidates stay inside a fresh private temporary directory.
+    """
+    _require(not target.exists(), 'output_directory_not_fresh')
+    with tempfile.TemporaryDirectory(prefix='.ms034-codec-', dir=target.parent) as folder:
+        candidate = Path(folder) / 'original.mp3'
+        bitrate = '128k'
+        try:
+            details = _encode_part(pcm, candidate, expected_samples, ffmpeg,
+                                   diagnostic_context=diagnostic_context)
+        except AssemblyError as exc:
+            evidence = getattr(exc, 'part_silence_diagnostic', None)
+            if not (exc.args == ('long_silence_pcm',) and type(evidence) is dict
+                    and type(evidence.get('pre_run_frames')) is int
+                    and 0 <= evidence['pre_run_frames'] < 150
+                    and type(evidence.get('post_run_frames')) is int
+                    and evidence['post_run_frames'] >= 150
+                    and type(evidence.get('gap_overlap_samples')) is int
+                    and evidence['gap_overlap_samples'] == 0):
+                raise
+            _require(len(pcm) == expected_samples * 4, 'pcm_partition_truncated')
+            _require_signal(_metrics(np.frombuffer(pcm, dtype='<f4')))
+            candidate = Path(folder) / 'recovery.mp3'
+            bitrate = '256k'
+            details = _encode_part(pcm, candidate, expected_samples, ffmpeg,
+                                   diagnostic_context=diagnostic_context, bitrate=bitrate)
+        # Atomic no-overwrite promotion, within the same private filesystem.
+        os.link(candidate, target)
+        return dict(details, encoded_bitrate=bitrate)
 
 
 def assemble_lesson(plan, entries, output_dir, *, expected_recipe_sha256,
@@ -586,6 +630,12 @@ def assemble_lesson(plan, entries, output_dir, *, expected_recipe_sha256,
                              max_part_seconds=max_part_seconds, codec='libmp3lame', bitrate='128k',
                              boundary='measured-unit-boundary', ffmpeg_version=version,
                              assembler_sha256=_sha(Path(__file__).read_bytes()))
+    codec_recovery = _ms034_codec_scope(plan, profile, expected_recipe_sha256,
+                                        expected_render_settings_sha256, compatible_settings_sha256)
+    if codec_recovery:
+        assembly_settings['codec_recovery_policy'] = 'ms034-codec-induced-only-v1'
+        assembly_settings['fallback_bitrate'] = '256k'
+        assembly_settings['part_bitrate_field'] = 'encoded_bitrate'
     stage = Path(tempfile.mkdtemp(prefix='.bora-assembly-', dir=output.parent))
     os.chmod(stage, 0o700)
     try:
@@ -630,9 +680,14 @@ def assemble_lesson(plan, entries, output_dir, *, expected_recipe_sha256,
                 pcm = handle.read((end - begin) * 4)
                 _require(len(pcm) == (end - begin) * 4, 'pcm_partition_truncated')
                 name = f'{plan["lesson_id"]}.part-{index:04d}.mp3'
-                details = _encode_part(pcm, stage / name, end - begin, executable,
-                                       diagnostic_context=(index, begin, segments)
-                                       if profile == 'single_pass' and plan['lesson_id'] == 'MS-034' else None)
+                diagnostic = ((index, begin, segments)
+                              if profile == 'single_pass' and plan['lesson_id'] == 'MS-034' else None)
+                if codec_recovery:
+                    details = _encode_ms034_codec_part(pcm, stage / name, end - begin, executable,
+                                                       diagnostic_context=diagnostic)
+                else:
+                    details = _encode_part(pcm, stage / name, end - begin, executable,
+                                           diagnostic_context=diagnostic)
                 parts.append(dict(index=index, start_sample=begin, end_sample=end,
                                   start_s=begin / SAMPLE_RATE, end_s=end / SAMPLE_RATE,
                                   sample_rate=SAMPLE_RATE, file_name=name, **details))

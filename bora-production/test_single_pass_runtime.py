@@ -166,3 +166,30 @@ class SinglePassRuntimeTests(unittest.TestCase):
         self.assertIn('environment: admin-law-premium-production', assembly)
         self.assertIn("needs.assemble.result == 'success'", publication)
         self.assertIn("steps.gathered.outputs.complete == 'true'", publication)
+
+
+class MSReceiptDetailTests(unittest.TestCase):
+    def test_only_known_signal_reasons_are_exported(self):
+        receipt = {'status': 'blocked_requires_review', 'candidates': [
+            {'natural_eos': True, 'signal': {'blocked': True,
+              'reasons': ['clipped_waveform', 'private sentinel', {'raw': 'private'}]}}]}
+        self.assertEqual(runtime.blocked_checkpoint_detail(receipt),
+                         {'category': 'candidate_signal_blocked',
+                          'signal_reasons': ['clipped_waveform', 'unknown_signal_reason']})
+
+    def test_eos_summary_never_exports_raw_tokens(self):
+        receipt = {'status': 'blocked_requires_review', 'candidates': [
+            {'natural_eos': False, 'cap_reached': True, 'eos_seen': True,
+             'generated_sequence_tokens': 1100, 'last_token': 99, 'eos_token_id': 98,
+             'raw': 'private sentinel'}]}
+        self.assertEqual(runtime.blocked_checkpoint_detail(receipt),
+                         {'category': 'generation_without_natural_eos', 'cap_reached': True,
+                          'eos_seen': True, 'last_token_is_eos': False,
+                          'generated_sequence_tokens': 1100})
+
+    def test_unknown_or_nonprimitive_observations_are_not_exported(self):
+        receipt = {'status': 'blocked_requires_review', 'candidates': [
+            {'natural_eos': False, 'cap_reached': 'private', 'eos_seen': 1,
+             'generated_sequence_tokens': True, 'last_token': 'private', 'eos_token_id': 1}]}
+        self.assertEqual(runtime.blocked_checkpoint_detail(receipt),
+                         {'category': 'generation_without_natural_eos'})
