@@ -51,7 +51,9 @@ def items(url, field, token):
     raise ValueError('ms018_capacity_inventory_limit')
 
 
-def snapshot(token, own_id, own_sha):
+def snapshot(token, own_id, own_sha, *, known_older_runs=None, workers=1):
+    known_older_runs = KNOWN_OLDER_RUNS if known_older_runs is None else known_older_runs
+    require(type(workers) is int and 1 <= workers <= 40, 'ms018_capacity_workers')
     runs = {}
     for status in STATES:
         for row in items(f'{API}/runs?status={status}', 'workflow_runs', token):
@@ -66,7 +68,7 @@ def snapshot(token, own_id, own_sha):
     for run_id, row in sorted(runs.items()):
         if run_id == own_id:
             continue
-        old = KNOWN_OLDER_RUNS.get(run_id)
+        old = known_older_runs.get(run_id)
         require((old is not None and row.get('head_sha') == old)
                 or (row.get('path') in NONRENDER and row.get('head_sha') == own_sha),
                 'ms018_capacity_unclassified_run')
@@ -90,7 +92,7 @@ def snapshot(token, own_id, own_sha):
             count += status != 'completed'
             job_state.append((job['id'], status, job.get('conclusion')))
         result.append((run_id, row.get('head_sha'), row['status'], tuple(sorted(job_state))))
-    require(count < 40, 'ms018_capacity_no_worker_available')
+    require(count + workers <= 40, 'ms018_capacity_no_worker_available')
     return tuple(result), count
 
 

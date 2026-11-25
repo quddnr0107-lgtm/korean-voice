@@ -32,6 +32,7 @@ from lecture_pack import seal_part, open_part, make_pack_manifest, validate_pack
 from namespace_guard import validate_snapshot
 from execution_profiles import request_filename, workflow_filename, validate_profile, validate_request
 import ms018_recovery
+import ms_residual_batch as residual
 
 REPO = 'quddnr0107-lgtm/korean-voice'
 BRANCH = 'integrated-lectures-premium-20261028'
@@ -225,6 +226,20 @@ def course_plan(ident, campaign, source_key, profile):
     return annotated, payload
 
 
+def requested_course_plan(ident, campaign, key, profile, request):
+    if not residual.enabled(request, profile):
+        return course_plan(ident, campaign, key, profile)
+    check(ident in residual.IDS, 'residual_lesson_scope')
+    if ident == 'MS-094':
+        plan, payload = source_plan(ident, campaign, key)
+        return residual.ms094_review(plan), payload
+    plan, payload = course_plan(ident, campaign, key, profile)
+    if ident != residual.MS022:
+        import ms_pronunciation
+        plan = residual.fragment_review(plan, ms_pronunciation._rules())
+    return plan, payload
+
+
 def execution_shard_chars(recipe, request):
     """Execution-only fan-out; never change recipe/plan/audio fingerprints."""
     default = recipe['shard_chars']
@@ -274,8 +289,21 @@ def public_plan(args, profile='eager'):
         check(False, 'ms_source_review_diagnostic_complete_no_render')
     target_chars=execution_shard_chars(recipe,request)
     records=[]; matrix=[]; review_counts=Counter(); costs={}
+    deferred = {}
     for ident in ids:
-        plan,_=course_plan(ident,campaign,source_key,profile)
+        if residual.enabled(request, profile):
+            try:
+                plan,_=requested_course_plan(ident,campaign,source_key,profile,request)
+                if ident == residual.MS022:
+                    residual.ms022_scope(plan, identity(recipe), args.settings_sha)
+            except (ValueError, KeyError, TypeError):
+                deferred[ident] = 'source_or_checkpoint_identity'
+                continue
+            if any(u.get('review') or u.get('review_flags') for u in plan['units']):
+                deferred[ident] = 'remaining_reading_review'
+                continue
+        else:
+            plan,_=course_plan(ident,campaign,source_key,profile)
         review_counts.update(flag for unit in plan['units'] for flag in set(unit.get('review',[])+unit.get('review_flags',[])))
         groups=shards(plan,target_chars)
         if ms018_recovery.enabled(request, profile):
@@ -292,7 +320,17 @@ def public_plan(args, profile='eager'):
         records.append(dict(lesson_id=ident,source_sha256=plan['source_sha256'],
             plan_sha256=identity(plan),unit_count=len(plan['units']),paragraph_count=len(plan['paragraphs']),
             review_units=sum(bool(u.get('review') or u.get('review_flags')) for u in plan['units']),shards=groups))
-        matrix.extend(groups)
+        if residual.enabled(request, profile) and ident == residual.MS022:
+            chosen = [g for g in groups if g['start'] <= residual.MS022_INDEX < g['end']]
+            check(len(chosen) == 1, 'ms022_recovery_shard_scope')
+            matrix.extend(chosen)
+        else:
+            matrix.extend(groups)
+    if residual.enabled(request, profile):
+        ids = [record['lesson_id'] for record in records]
+        print(json.dumps(dict(status='residual_source_admission', admitted=ids,
+                              deferred=deferred), sort_keys=True), flush=True)
+        check(bool(ids), 'residual_no_admitted_lessons')
     selected=request.get('selected_shards')
     if selected is not None:
         check(isinstance(selected,list) and selected, 'selected_shards')
@@ -341,7 +379,7 @@ def matched_plan(args, campaign, recipe, request, key, profile='eager'):
         check(public.get('render_settings_sha256') == request['checkpoint_settings_sha256'],
               'assembly_checkpoint_settings_pin')
     check(args.lesson_id in [r['lesson_id'] for r in public['lessons']], 'planned_lesson_scope')
-    plan,payload=course_plan(args.lesson_id,campaign,key,profile)
+    plan,payload=requested_course_plan(args.lesson_id,campaign,key,profile,request)
     row=next(r for r in public['lessons'] if r['lesson_id']==args.lesson_id)
     check(row['source_sha256']==plan['source_sha256'] and row['plan_sha256']==identity(plan)
           and row['unit_count']==len(plan['units']) and row['shards']==shards(plan,execution_shard_chars(recipe,request)), 'private_plan_reproduction')
@@ -473,6 +511,16 @@ def ms018_rows(directory, media_key, plan, recipe_hash, settings_hash, work):
             profile='single_pass'))
 
 
+def ms022_rows(directory, media_key, plan, recipe_hash, settings_hash, work):
+    residual.ms022_scope(plan, recipe_hash, settings_hash)
+    original = restore(directory, media_key, plan, recipe_hash, settings_hash,
+                       work / 'original', unit_range=(0, len(plan['units'])), profile='single_pass')
+    return residual.resolve_ms022(plan, recipe_hash, settings_hash, original,
+        lambda fingerprint: restore(directory, media_key, plan, recipe_hash, fingerprint,
+            work / 'replacement', unit_range=(residual.MS022_INDEX, residual.MS022_INDEX + 1),
+            profile='single_pass'))
+
+
 def resume_probe(args, profile='eager'):
     """Check encrypted reuse offline BEFORE heavy runtime/model preparation."""
     campaign,recipe,request,ids=config(profile)
@@ -485,6 +533,9 @@ def resume_probe(args, profile='eager'):
     with tempfile.TemporaryDirectory(prefix='bora-probe-',dir=os.environ.get('RUNNER_TEMP')) as td:
         if ms018_recovery.enabled(request, profile):
             restored, repair_settings = ms018_rows(args.resume_dir, media_key, plan,
+                identity(recipe), public['render_settings_sha256'], Path(td))
+        elif residual.enabled(request, profile) and args.lesson_id == residual.MS022:
+            restored, repair_settings = ms022_rows(args.resume_dir, media_key, plan,
                 identity(recipe), public['render_settings_sha256'], Path(td))
         else:
             restored=restore(args.resume_dir,media_key,plan,identity(recipe),
@@ -579,6 +630,9 @@ def render(args, profile='eager'):
         if ms018_recovery.enabled(request, profile):
             restored, repair_settings = ms018_rows(args.resume_dir, media_key, plan,
                 recipe_hash, settings_hash, work)
+        elif residual.enabled(request, profile) and args.lesson_id == residual.MS022:
+            restored, repair_settings = ms022_rows(args.resume_dir, media_key, plan,
+                recipe_hash, settings_hash, work)
         else:
             restored=restore(args.resume_dir,media_key,plan,recipe_hash,settings_hash,work/'restored',
                              unit_range=(begin,end),profile=profile)
@@ -588,6 +642,10 @@ def render(args, profile='eager'):
         if ms018_recovery.enabled(request, profile) and pending:
             check(pending == [ms018_recovery.INDEX] and repair_settings is not None,
                   'ms018_recovery_pending_scope')
+            output_settings_hash = identity(repair_settings)
+        if residual.enabled(request, profile) and args.lesson_id == residual.MS022 and pending:
+            check(pending == [residual.MS022_INDEX] and repair_settings is not None,
+                  'ms022_recovery_pending_scope')
             output_settings_hash = identity(repair_settings)
         renderer=None
         try:
@@ -741,6 +799,10 @@ def assemble(args, profile='eager'):
             check(alternate_settings is None and not diagnose, 'ms018_recovery_assembly_scope')
             restored, repair_settings = ms018_rows(args.resume_dir, media_key, plan,
                 recipe_hash, settings_hash, work / 'seed-recovery')
+        if residual.enabled(request, profile) and args.lesson_id == residual.MS022:
+            check(alternate_settings is None and not diagnose, 'ms022_recovery_assembly_scope')
+            restored, repair_settings = ms022_rows(args.resume_dir, media_key, plan,
+                recipe_hash, settings_hash, work / 'seed-recovery')
         if diagnose and args.lesson_id != 'MS-034':
             index = pins[args.lesson_id][0]
             receipt = restored.get(index, {}).get('receipt')
@@ -756,6 +818,8 @@ def assemble(args, profile='eager'):
             assembly_policy['compatible_settings_sha256'] = alternate_settings
         if ms018_recovery.enabled(request, profile):
             assembly_policy['ms018_seed_recovery'] = True
+        if residual.enabled(request, profile) and args.lesson_id == residual.MS022:
+            assembly_policy['ms022_seed_recovery'] = True
         with quiet():
             metadata=assemble_lesson(plan,list(restored.values()),work/'assembled',
                 expected_recipe_sha256=recipe_hash,expected_render_settings_sha256=settings_hash,
@@ -774,6 +838,15 @@ def assemble(args, profile='eager'):
             print(json.dumps(dict(status='public_audio_parts_ready', lesson_id=plan['lesson_id'],
                                   units=len(plan['units']), parts=len(manifest['parts']),
                                   total_samples=manifest['total_samples'])), flush=True)
+            return
+        if residual.enabled(request, profile):
+            from ms_residual_public_audio import export_parts
+            manifest = export_parts(work/'assembled', metadata, args.output,
+                lesson_id=plan['lesson_id'], plan_sha256=identity(plan),
+                recipe_sha256=recipe_hash, settings_sha256=settings_hash)
+            print(json.dumps(dict(status='residual_public_audio_parts_ready',
+                lesson_id=plan['lesson_id'], parts=len(manifest['parts']),
+                total_samples=manifest['total_samples'])), flush=True)
             return
         pack_id=os.urandom(16).hex(); offset=0; parts=[]; ciphertext=[]
         for part in metadata['audio_parts']:
