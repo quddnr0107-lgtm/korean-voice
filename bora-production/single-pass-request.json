@@ -1,14 +1,19 @@
 {
-    "schema": "bora-fp32-request/v1",
-    "campaign_sha256": "60e9763ab344e8a59264ec634a47ee60321667bc426108100f2973a04cfdca76",
-    "course": "MS",
-    "execution_profile": "bora-python-fp32-single-pass/v1",
-    "execution_shard_chars": 2200,
-    "retry_blocked": false,
-    "request_id": "ms034-checkpoint-only-20261125",
-    "lesson_ids": [
-        "MS-034"
-    ],
-    "assembly_only": true,
-    "checkpoint_settings_sha256": "5597ef328c8f1381e634e45a00b11dd556a8423597d7dfc80771f3085649dd32"
+  "schema": "bora-fp32-request/v1",
+  "campaign_sha256": "60e9763ab344e8a59264ec634a47ee60321667bc426108100f2973a04cfdca76",
+  "course": "MS",
+  "execution_profile": "bora-python-fp32-single-pass/v1",
+  "execution_shard_chars": 2200,
+  "retry_blocked": false,
+  "request_id": "ms018-unit50-seed-recovery-20261126",
+  "lesson_ids": [
+    "MS-018"
+  ],
+  "selected_shards": [
+    {
+      "lesson_id": "MS-018",
+      "shard": 2
+    }
+  ],
+  "render_workers": 1
 }
