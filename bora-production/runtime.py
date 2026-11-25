@@ -766,6 +766,15 @@ def assemble(args, profile='eager'):
             print(json.dumps(dict(status='receipt_diagnostic', lesson_id='MS-034',
                                   category='assembly_checks_passed')), flush=True)
             return  # No encrypted lesson pack is produced by diagnostics.
+        if ms018_recovery.enabled(request, profile):
+            # The owner explicitly requests this one final delivery as ordinary public audio.
+            # Keep all checkpoint/source cryptography and all prior assembly gates unchanged.
+            from ms018_public_audio import export_parts
+            manifest = export_parts(work/'assembled', metadata, args.output)
+            print(json.dumps(dict(status='public_audio_parts_ready', lesson_id=plan['lesson_id'],
+                                  units=len(plan['units']), parts=len(manifest['parts']),
+                                  total_samples=manifest['total_samples'])), flush=True)
+            return
         pack_id=os.urandom(16).hex(); offset=0; parts=[]; ciphertext=[]
         for part in metadata['audio_parts']:
             raw=(work/'assembled'/part['file_name']).read_bytes()
