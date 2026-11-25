@@ -1,0 +1,55 @@
+name: Recover Chagok Japanese master audio
+on:
+  push:
+    branches: ['feat/chagok-three-courses']
+    paths: ['.github/workflows/chagok-ja-recover.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install and verify encoder
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg
+          ffmpeg -version
+          ffprobe -version
+          python -m pip install --quiet numpy soundfile
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45556901723
+          github-token: ${{ github.token }}
+          pattern: chagok-ja-scene-*
+          path: scenes
+          merge-multiple: true
+      - name: Combine and validate existing 17 scenes
+        run: |
+          set -euo pipefail
+          python tools/bake_chagok_ja.py --input scenes --out output
+          (cd output && sha256sum *.mp3 *.json *.txt > SHA256SUMS && sha256sum -c SHA256SUMS)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: chagok-ja-365-fixed-master-audio
+          path: output/*
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish verified Japanese assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG=chagok-ja-365-fixed-v1
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release already exists; refusing overwrite."
+            exit 1
+          fi
+          gh release create "$TAG" output/* --target "$GITHUB_SHA" --title "Chagok Japanese 365 fixed audio v1" --notes "389 aligned Japanese/Korean lines, Supertonic 3 F2, sample-based cues and verified MP3s."
+          gh release view "$TAG" --json url,assets --jq '{url,assets:[.assets[].name]}'
