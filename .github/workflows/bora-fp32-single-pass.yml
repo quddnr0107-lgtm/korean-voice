@@ -11,6 +11,7 @@ concurrency:
     ${{ startsWith(github.event.head_commit.message, 'Bora early RL assembly: ') && 'bora-fp32-single-pass-rl-assembly' ||
         startsWith(github.event.head_commit.message, 'Bora DR overlap: ') && 'bora-fp32-single-pass-dr-overlap' ||
         startsWith(github.event.head_commit.message, 'Bora DR expansion: ') && 'bora-fp32-single-pass-dr-expansion' ||
+        startsWith(github.event.head_commit.message, 'Bora MS production: Residual parallel public ') && 'bora-fp32-single-pass-ms-residual-parallel' ||
         startsWith(github.event.head_commit.message, 'Bora MS production: Recover unit50 ') && 'bora-fp32-single-pass-ms018-unit50' ||
         startsWith(github.event.head_commit.message, 'Bora MS production: Recover setup ') && 'bora-fp32-single-pass-ms-setup-recovery' ||
         startsWith(github.event.head_commit.message, 'Bora MS production: Refill ') && 'bora-fp32-single-pass-ms-refill' ||
@@ -66,6 +67,8 @@ jobs:
             ${{ github.event.head_commit.message == 'Bora MS checkpoint assembly: Diagnose MS-018 MS-022 MS-034' }}
           BORA_MS018_PUBLIC: >-
             ${{ startsWith(github.event.head_commit.message, 'Bora MS production: Recover unit50 public MS-018') && github.actor == github.repository_owner }}
+          BORA_MS_RESIDUAL_PUBLIC: >-
+            ${{ startsWith(github.event.head_commit.message, 'Bora MS production: Residual parallel public ') && github.actor == github.repository_owner }}
         run: |
           PYTHONPATH=bora-production python - <<'PY'
           import json, os
@@ -78,6 +81,9 @@ jobs:
           from ms018_recovery import REQUEST_ID
           if (request['request_id'] == REQUEST_ID) != (os.environ.get('BORA_MS018_PUBLIC', 'false') == 'true'):
               raise SystemExit('MS-018 public recovery requires its exact owner-approved production request.')
+          from ms_residual_batch import REQUEST_ID as RESIDUAL_REQUEST
+          if (request['request_id'] == RESIDUAL_REQUEST) != (os.environ.get('BORA_MS_RESIDUAL_PUBLIC', 'false') == 'true'):
+              raise SystemExit('Residual public batch requires the exact owner-approved request.')
           receipt_diagnostic = os.environ['BORA_MS_RECEIPT_DIAGNOSTIC'] == 'true'
           if receipt_diagnostic or request['request_id'] == 'ms-diagnose-018-022-034-20261121':
               if (not receipt_diagnostic or request['request_id'] != 'ms-diagnose-018-022-034-20261121'
@@ -290,6 +296,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: python3 bora-production/ms018_capacity_guard.py
+      - name: Verify residual parallel capacity
+        if: >-
+          ${{ startsWith(github.event.head_commit.message, 'Bora MS production: Residual parallel public ') }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 bora-production/ms_residual_capacity.py
 
   render:
     needs: [plan, capacity]
@@ -422,6 +434,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: python3 bora-production/ms018_capacity_guard.py
+      - name: Recheck residual shared capacity after protected approval
+        if: >-
+          ${{ startsWith(github.event.head_commit.message, 'Bora MS production: Residual parallel public ') }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 bora-production/ms_residual_capacity.py
       - id: batch_clock
         name: Set a shared soft deadline for this worker
         run: python bora-production/render_batches.py start
@@ -595,10 +613,43 @@ jobs:
           if-no-files-found: error
           compression-level: 0
           retention-days: 7
+      - name: Retain verified residual MP3 parts without encryption
+        if: >-
+          ${{ steps.lesson_staged.outputs.staged != 'true' &&
+              startsWith(github.event.head_commit.message, 'Bora MS production: Residual parallel public ') &&
+              github.actor == github.repository_owner }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ${{ matrix.lesson_id }}-Kim-Bora-public-MP3-parts
+          path: |
+            ${{ runner.temp }}/bora-assembled/${{ matrix.lesson_id }}.part-*.mp3
+            ${{ runner.temp }}/bora-assembled/audio-manifest.json
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
+      - name: Join and verify the ordinary residual MP3
+        if: >-
+          ${{ steps.lesson_staged.outputs.staged != 'true' &&
+              startsWith(github.event.head_commit.message, 'Bora MS production: Residual parallel public ') &&
+              github.actor == github.repository_owner }}
+        run: python bora-production/ms_residual_public_audio.py "$RUNNER_TEMP/bora-assembled" "$RUNNER_TEMP/${BORA_LESSON}_Kim_Bora_FP32.mp3" --lesson-id "$BORA_LESSON"
+      - name: Deliver the completed ordinary residual MP3
+        if: >-
+          ${{ steps.lesson_staged.outputs.staged != 'true' &&
+              startsWith(github.event.head_commit.message, 'Bora MS production: Residual parallel public ') &&
+              github.actor == github.repository_owner }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ${{ matrix.lesson_id }}-Kim-Bora-public-MP3
+          path: ${{ runner.temp }}/${{ matrix.lesson_id }}_Kim_Bora_FP32.mp3
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
       - name: Stage the complete encrypted lesson in the course draft
         if: >-
           ${{ steps.lesson_staged.outputs.staged != 'true' && !(github.event.head_commit.message == 'Bora MS checkpoint assembly: Diagnose MS-018 MS-022 MS-034') &&
-              !(startsWith(github.event.head_commit.message, 'Bora MS production: Recover unit50 public MS-018')) }}
+              !startsWith(github.event.head_commit.message, 'Bora MS production: Recover unit50 public MS-018') &&
+              !startsWith(github.event.head_commit.message, 'Bora MS production: Residual parallel public ') }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: python bora-production/transport.py publish --profile single_pass --partial --course "$BORA_COURSE" --directory "$RUNNER_TEMP/bora-assembled"

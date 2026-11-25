@@ -62,6 +62,8 @@ def validate_single_pass_request(request):
             raise ValueError('single_pass_render_workers_scope')
     from ms018_recovery import validate_request_scope
     validate_request_scope(request)
+    from ms_residual_batch import validate_request_scope as validate_residual_scope
+    validate_residual_scope(request)
     recovery_fields = {'assembly_only', 'checkpoint_settings_sha256'}
     if not recovery_fields.isdisjoint(request):
         fingerprint = request.get('checkpoint_settings_sha256')
