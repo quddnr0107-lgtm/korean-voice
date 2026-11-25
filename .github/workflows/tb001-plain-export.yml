@@ -1,0 +1,66 @@
+name: TB-001 owner-approved plain audio export
+on:
+  pull_request:
+    branches: [integrated-lectures-premium-20261028]
+    paths: ['lecture-premium/code/tb001_plain_export.py', 'lecture-premium/code/test_tb001_plain_export.py', '.github/workflows/tb001-plain-export.yml']
+  push:
+    branches: [integrated-lectures-premium-20261028]
+    paths: ['lecture-premium/code/tb001_plain_export.py', 'lecture-premium/code/test_tb001_plain_export.py', '.github/workflows/tb001-plain-export.yml']
+permissions:
+  contents: read
+concurrency:
+  group: tb001-plain-export-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  verify:
+    if: github.repository == 'quddnr0107-lgtm/korean-voice'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Verify exact one-lesson scope and minimal output
+        run: |
+          cd lecture-premium/code
+          python -m unittest -q test_tb001_plain_export.py
+  export:
+    needs: verify
+    if: github.repository == 'quddnr0107-lgtm/korean-voice' && github.actor == github.repository_owner && github.ref == 'refs/heads/integrated-lectures-premium-20261028' && github.event_name == 'push'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    environment: admin-law-premium-production
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Download only the verified existing TB-001 release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          umask 077
+          python -m pip install --disable-pip-version-check cryptography==50.0.0
+          python lecture-premium/code/tb001_plain_export.py download "$RUNNER_TEMP/tb001-inputs"
+      - name: Owner-approved plain MP3 and spoken timeline export
+        env:
+          ADMIN_LAW_PREMIUM_MEDIA_KEY_B64: ${{ secrets.ADMIN_LAW_PREMIUM_MEDIA_KEY_B64 }}
+        run: |
+          umask 077
+          sudo --preserve-env=ADMIN_LAW_PREMIUM_MEDIA_KEY_B64 \
+            unshare --net --setgid "$(id -g)" --setuid "$(id -u)" \
+            -- "$(command -v python)" lecture-premium/code/tb001_plain_export.py export \
+            "$RUNNER_TEMP/tb001-inputs" "$RUNNER_TEMP/TB-001-bora-render-input.zip" \
+            "$(id -u)" "$(readlink /proc/self/ns/net)"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: tb001-bora-plain-render-input
+          path: ${{ runner.temp }}/TB-001-bora-render-input.zip
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 1
