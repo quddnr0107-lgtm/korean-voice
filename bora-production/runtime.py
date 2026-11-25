@@ -31,6 +31,7 @@ import lecture_crypto as crypto
 from lecture_pack import seal_part, open_part, make_pack_manifest, validate_pack
 from namespace_guard import validate_snapshot
 from execution_profiles import request_filename, workflow_filename, validate_profile, validate_request
+import ms018_recovery
 
 REPO = 'quddnr0107-lgtm/korean-voice'
 BRANCH = 'integrated-lectures-premium-20261028'
@@ -277,6 +278,11 @@ def public_plan(args, profile='eager'):
         plan,_=course_plan(ident,campaign,source_key,profile)
         review_counts.update(flag for unit in plan['units'] for flag in set(unit.get('review',[])+unit.get('review_flags',[])))
         groups=shards(plan,target_chars)
+        if ms018_recovery.enabled(request, profile):
+            ms018_recovery.scope(plan, identity(recipe), args.settings_sha)
+            check(len(groups) > ms018_recovery.SHARD and
+                  groups[ms018_recovery.SHARD]['start'] <= ms018_recovery.INDEX < groups[ms018_recovery.SHARD]['end'],
+                  'ms018_recovery_shard_pin')
         for group in groups:
             # Private cost estimate: favor long spoken input plus per-unit work.
             # Only IDs/ranges, never manuscript or per-unit text, leave this job.
@@ -456,6 +462,17 @@ def terminate(signum,frame):
     raise InterruptedError('termination_requested')
 
 
+def ms018_rows(directory, media_key, plan, recipe_hash, settings_hash, work):
+    """Authenticate all old receipts and only the explicitly scoped replacement."""
+    ms018_recovery.scope(plan, recipe_hash, settings_hash)
+    original = restore(directory, media_key, plan, recipe_hash, settings_hash,
+                       work / 'original', unit_range=(0, len(plan['units'])), profile='single_pass')
+    return ms018_recovery.resolve(plan, recipe_hash, settings_hash, original,
+        lambda fingerprint: restore(directory, media_key, plan, recipe_hash, fingerprint,
+            work / 'replacement', unit_range=(ms018_recovery.INDEX, ms018_recovery.INDEX + 1),
+            profile='single_pass'))
+
+
 def resume_probe(args, profile='eager'):
     """Check encrypted reuse offline BEFORE heavy runtime/model preparation."""
     campaign,recipe,request,ids=config(profile)
@@ -466,9 +483,13 @@ def resume_probe(args, profile='eager'):
     check(type(args.shard) is int and 0<=args.shard<len(row['shards']), 'shard_scope')
     group=row['shards'][args.shard]; begin,end=group['start'],group['end']
     with tempfile.TemporaryDirectory(prefix='bora-probe-',dir=os.environ.get('RUNNER_TEMP')) as td:
-        restored=restore(args.resume_dir,media_key,plan,identity(recipe),
-                         public['render_settings_sha256'],Path(td)/'restored',unit_range=(begin,end),
-                         profile=profile)
+        if ms018_recovery.enabled(request, profile):
+            restored, repair_settings = ms018_rows(args.resume_dir, media_key, plan,
+                identity(recipe), public['render_settings_sha256'], Path(td))
+        else:
+            restored=restore(args.resume_dir,media_key,plan,identity(recipe),
+                             public['render_settings_sha256'],Path(td)/'restored',unit_range=(begin,end),
+                             profile=profile)
         rows={i:v for i,v in restored.items() if begin<=i<end}
         pending=pending_units(rows,begin,end,request['retry_blocked'])
         passed=sum(v['receipt'].get('status')=='passed' for v in rows.values())
@@ -554,16 +575,32 @@ def render(args, profile='eager'):
     envelopes={}
     with tempfile.TemporaryDirectory(prefix='bora-private-',dir=os.environ.get('RUNNER_TEMP')) as td:
         work=Path(td)
-        restored=restore(args.resume_dir,media_key,plan,recipe_hash,settings_hash,work/'restored',
-                         unit_range=(begin,end),profile=profile)
+        repair_settings = None
+        if ms018_recovery.enabled(request, profile):
+            restored, repair_settings = ms018_rows(args.resume_dir, media_key, plan,
+                recipe_hash, settings_hash, work)
+        else:
+            restored=restore(args.resume_dir,media_key,plan,recipe_hash,settings_hash,work/'restored',
+                             unit_range=(begin,end),profile=profile)
         rows={i:v for i,v in restored.items() if begin<=i<end}
         pending=pending_units(rows,begin,end,request['retry_blocked'])
+        output_settings_hash = settings_hash
+        if ms018_recovery.enabled(request, profile) and pending:
+            check(pending == [ms018_recovery.INDEX] and repair_settings is not None,
+                  'ms018_recovery_pending_scope')
+            output_settings_hash = identity(repair_settings)
         renderer=None
         try:
             if pending and (worker_deadline is None or time.monotonic() <= deadline-recipe['unit_timeout_seconds']):
                 with quiet():
                     renderer=make_renderer(recipe,profile,**render_options)
                 check(renderer.settings_sha256==settings_hash, 'preflight_renderer_fingerprint')
+                if repair_settings is not None:
+                    check(ms018_recovery.replacement_settings(renderer.settings) == repair_settings,
+                          'ms018_recovery_renderer_pin')
+                    renderer.settings = repair_settings
+                    renderer.settings_sha256 = output_settings_hash
+                    renderer.seeds = (ms018_recovery.NEW_SEED,)
                 signal.signal(signal.SIGALRM,alarm)
                 for index in pending:
                     if time.monotonic() > deadline-recipe['unit_timeout_seconds']:
@@ -572,7 +609,7 @@ def render(args, profile='eager'):
                     try:
                         signal.alarm(recipe['unit_timeout_seconds'])
                         with quiet(): receipt=renderer.render_unit(plan['units'][index],target)
-                        envelope=seal_unit(media_key,plan,index,receipt,target,recipe_hash,settings_hash)
+                        envelope=seal_unit(media_key,plan,index,receipt,target,recipe_hash,output_settings_hash)
                         # Encrypt and fsync immediately after every completed unit.
                         path=work/f'unit-{index:05d}.sealed.json'
                         atomic(path,enc(envelope)); envelopes[index]=path
@@ -597,7 +634,7 @@ def render(args, profile='eager'):
                 report=dict(schema='bora-fp32-shard-report/v1',lesson_id=plan['lesson_id'],shard=args.shard,
                     start=begin,end=end,passed=passed,blocked=blocked,pending=end-begin-len(rows),
                     timed_out=timed_out,recipe_sha256=recipe_hash,plan_sha256=identity(plan),
-                    render_settings_sha256=settings_hash,run_id=run,run_attempt=attempt)
+                    render_settings_sha256=output_settings_hash,run_id=run,run_attempt=attempt)
                 temp=output/(name+'.pending')
                 with zipfile.ZipFile(temp,'w',zipfile.ZIP_STORED) as z:
                     z.writestr('report.json',enc(report))
@@ -700,6 +737,10 @@ def assemble(args, profile='eager'):
             for index, row in candidates.items():
                 if index not in restored or restored[index]['receipt'].get('status') != 'passed':
                     restored[index] = row
+        if ms018_recovery.enabled(request, profile):
+            check(alternate_settings is None and not diagnose, 'ms018_recovery_assembly_scope')
+            restored, repair_settings = ms018_rows(args.resume_dir, media_key, plan,
+                recipe_hash, settings_hash, work / 'seed-recovery')
         if diagnose and args.lesson_id != 'MS-034':
             index = pins[args.lesson_id][0]
             receipt = restored.get(index, {}).get('receipt')
@@ -713,6 +754,8 @@ def assemble(args, profile='eager'):
         assembly_policy = {'profile': profile} if profile == 'single_pass' else {}
         if alternate_settings is not None:
             assembly_policy['compatible_settings_sha256'] = alternate_settings
+        if ms018_recovery.enabled(request, profile):
+            assembly_policy['ms018_seed_recovery'] = True
         with quiet():
             metadata=assemble_lesson(plan,list(restored.values()),work/'assembled',
                 expected_recipe_sha256=recipe_hash,expected_render_settings_sha256=settings_hash,

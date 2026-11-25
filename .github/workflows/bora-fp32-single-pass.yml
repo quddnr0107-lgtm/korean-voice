@@ -11,6 +11,7 @@ concurrency:
     ${{ startsWith(github.event.head_commit.message, 'Bora early RL assembly: ') && 'bora-fp32-single-pass-rl-assembly' ||
         startsWith(github.event.head_commit.message, 'Bora DR overlap: ') && 'bora-fp32-single-pass-dr-overlap' ||
         startsWith(github.event.head_commit.message, 'Bora DR expansion: ') && 'bora-fp32-single-pass-dr-expansion' ||
+        startsWith(github.event.head_commit.message, 'Bora MS production: Recover unit50 ') && 'bora-fp32-single-pass-ms018-unit50' ||
         startsWith(github.event.head_commit.message, 'Bora MS production: Recover setup ') && 'bora-fp32-single-pass-ms-setup-recovery' ||
         startsWith(github.event.head_commit.message, 'Bora MS production: Refill ') && 'bora-fp32-single-pass-ms-refill' ||
         startsWith(github.event.head_commit.message, 'Bora MS production: Fill verified ') && 'bora-fp32-single-pass-ms-verified-fill' ||
@@ -72,6 +73,9 @@ jobs:
           validate_single_pass_request(request)
           recovery = request.get('assembly_only') is True
           lessons = request.get('lesson_ids')
+          from ms018_recovery import REQUEST_ID
+          if request['request_id'] == REQUEST_ID and os.environ['BORA_MS_PRODUCTION'] != 'true':
+              raise SystemExit('MS-018 recovery requires the existing production capacity path.')
           receipt_diagnostic = os.environ['BORA_MS_RECEIPT_DIAGNOSTIC'] == 'true'
           if receipt_diagnostic or request['request_id'] == 'ms-diagnose-018-022-034-20261121':
               if (not receipt_diagnostic or request['request_id'] != 'ms-diagnose-018-022-034-20261121'
