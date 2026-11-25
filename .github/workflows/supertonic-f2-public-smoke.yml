@@ -48,10 +48,10 @@ jobs:
               assert digest==expected, name
               print('verified',name,f.stat().st_size)
           PY
-      - name: Real Korean F2 synthesis (public test sentence only)
+      - name: Render public statute narration with F2
         run: |
-          cat > "$RUNNER_TEMP/f2-smoke.py" <<'PY'
-          import os,pathlib,sys,time,hashlib,json
+          cat > "$RUNNER_TEMP/f2-article.py" <<'PY'
+          import os, pathlib, sys, time, json, hashlib
           import numpy as np
           import soundfile as sf
           import onnxruntime as ort
@@ -62,31 +62,68 @@ jobs:
           opts=ort.SessionOptions()
           opts.intra_op_num_threads=4
           opts.inter_op_num_threads=1
-          started=time.perf_counter()
           base=str(root/'onnx')
-          sessions=helper.load_onnx_all(base,opts,['CPUExecutionProvider'])
-          tts=helper.TextToSpeech(helper.load_cfgs(base),helper.load_text_processor(base),*sessions)
+          tts=helper.TextToSpeech(helper.load_cfgs(base),helper.load_text_processor(base),*helper.load_onnx_all(base,opts,['CPUExecutionProvider']))
           style=helper.load_voice_style([str(root/'voice_styles/F2.json')])
-          np.random.seed(20261125)
-          source='통합방위법 제일조 목적입니다.'
-          w,_=tts._infer([source],['ko'],style,16,0.95)
-          y=np.asarray(w,dtype=np.float32).reshape(-1)
-          assert np.isfinite(y).all() and 0.001<float(np.abs(y).max()) and len(y)>tts.sample_rate
-          y=y*(0.86/float(np.abs(y).max()))
-          f=pathlib.Path(os.environ['RUNNER_TEMP'])/'F2-public-smoke.wav'
-          sf.write(f,y,tts.sample_rate,subtype='PCM_16')
-          print(json.dumps({'engine':'Supertonic 3 F2','source':source,'seconds':len(y)/tts.sample_rate,'sample_rate':tts.sample_rate,'elapsed':time.perf_counter()-started,'wav_sha256':hashlib.file_digest(f.open('rb'),'sha256').hexdigest(),'human_listening_verified':False},ensure_ascii=False),flush=True)
+          # Only public statute excerpts and generic instructional prompts.
+          items=[
+            (1,'통합방위법 제일조와 시행령 제일조의 목적을 살펴보겠습니다.',0.5),
+            (2,'이 법은 적의 침투, 도발이나 그 위협에 대응하기 위하여,',0.3),
+            (3,'국가 총력전의 개념을 바탕으로,',0.3),
+            (4,'국가방위요소를 통합, 운용하기 위한,',0.3),
+            (5,'통합방위 대책을 수립, 시행하기 위하여,',0.3),
+            (6,'필요한 사항을 규정함을 목적으로 한다.',0.6),
+            (7,'국가방위요소는 통합과 운용입니다. 통합방위 대책은 수립과 시행입니다.',0.5),
+            (7,'두 대상을 구분하고, 각각 연결되는 동사를 기억하세요.',0.5),
+            (8,'이 영은 통합방위법에서 위임된 사항과 그 시행에 필요한 사항을 규정함을 목적으로 한다.',0.6),
+            (8,'법의 목적과 시행령의 목적은 서로 다릅니다.',0.5),
+            (9,'네 가지 빈칸의 답을 스스로 떠올려 보세요.',8.0),
+            (10,'침투, 도발이나 그 위협. 국가 총력전의 개념. 국가방위요소의 통합과 운용. 통합방위 대책의 수립과 시행.',0.6),
+            (11,'이제 제일조 원문 전체를 읽고, 문장의 순서를 확인하세요.',5.0),
+            (12,'시행령은 위임된 사항과 그 시행에 필요한 사항입니다. 두 조문의 목적을 구분하세요.',0.8)
+          ]
+          sr=tts.sample_rate
+          pieces=[]; spans=[]; cursor=0; started=time.perf_counter()
+          for i,(scene,text,pause) in enumerate(items):
+              np.random.seed(20261125+i)
+              wav,_=tts._infer([text],['ko'],style,16,0.95)
+              y=np.asarray(wav,dtype=np.float32).reshape(-1)
+              assert np.isfinite(y).all() and float(np.abs(y).max())>0.001 and len(y)>sr/2
+              # Remove excessive padding only; keep 80/160 ms onset/tail.
+              ix=np.flatnonzero(np.abs(y)>max(float(np.max(np.abs(y)))*10**(-48/20),0.0003))
+              assert len(ix)
+              y=y[max(0,int(ix[0])-int(sr*.08)):min(len(y),int(ix[-1])+1+int(sr*.16))]
+              k=min(int(sr*.008),len(y)//2)
+              if k: y[:k]*=np.linspace(0,1,k); y[-k:]*=np.linspace(1,0,k)
+              y=y.astype(np.float32)
+              n=len(y); p=round(sr*pause)
+              spans.append({'index':i,'scene':scene,'text':text,'start_sample':cursor,'speech_end_sample':cursor+n,'end_sample':cursor+n+p})
+              pieces.extend([y,np.zeros(p,np.float32)])
+              cursor+=n+p
+              print('RENDERED',i,'samples',n,'pause',p,flush=True)
+          audio=np.concatenate(pieces)
+          audio*=np.float32(.86/float(np.abs(audio).max()))
+          out=pathlib.Path(os.environ['RUNNER_TEMP'])/'public-law-audio'
+          out.mkdir()
+          sf.write(str(out/'narration.wav'),audio,sr,subtype='PCM_16')
+          meta={'schema':'public-statute-f2-narration/v1','engine':'Supertonic 3 F2','steps':16,'speed':0.95,'model_revision':'3cadd1ee6394adea1bd021217a0e650ede09a323','sample_rate':sr,'total_samples':cursor,'duration_seconds':cursor/sr,'segments':spans,'ai_generated':True,'independent_listening_verified':False,'elapsed_seconds':time.perf_counter()-started}
+          (out/'timeline.json').write_text(json.dumps(meta,ensure_ascii=False,indent=2),encoding='utf-8')
+          print('NARRATION_RESULT',json.dumps({'segments':len(spans),'samples':cursor,'seconds':cursor/sr,'rate':sr,'elapsed':meta['elapsed_seconds']}),flush=True)
           PY
-          sudo -n unshare --net -- runuser -u "$USER" -- env RUNNER_TEMP="$RUNNER_TEMP" ORT_DISABLE_TELEMETRY=1 OMP_NUM_THREADS=4 OPENBLAS_NUM_THREADS=4 "$RUNNER_TEMP/smoke-env/bin/python" "$RUNNER_TEMP/f2-smoke.py"
-          ffmpeg -hide_banner -loglevel error -i "$RUNNER_TEMP/F2-public-smoke.wav" -map_metadata -1 -ac 1 -ar 16000 -c:a libmp3lame -b:a 16k "$RUNNER_TEMP/F2-public-smoke.mp3"
-          ffmpeg -hide_banner -loglevel error -i "$RUNNER_TEMP/F2-public-smoke.mp3" -f null -
-          sha256sum "$RUNNER_TEMP/F2-public-smoke.mp3"
-          python3 - <<'PY'
-          import os, pathlib, base64
-          f=pathlib.Path(os.environ['RUNNER_TEMP'])/'F2-public-smoke.mp3'
-          assert 100 < f.stat().st_size <= 20000
-          print('PUBLIC_SMOKE_MP3_START')
-          s=base64.b64encode(f.read_bytes()).decode()
-          for i in range(0,len(s),512): print('PUBLIC_SMOKE_MP3 '+s[i:i+512])
-          print('PUBLIC_SMOKE_MP3_END')
-          PY
+          sudo -n unshare --net -- runuser -u "$USER" -- env RUNNER_TEMP="$RUNNER_TEMP" ORT_DISABLE_TELEMETRY=1 OMP_NUM_THREADS=4 OPENBLAS_NUM_THREADS=4 "$RUNNER_TEMP/smoke-env/bin/python" "$RUNNER_TEMP/f2-article.py"
+          cd "$RUNNER_TEMP/public-law-audio"
+          ffmpeg -hide_banner -loglevel error -i narration.wav -map_metadata -1 -ac 1 -c:a libopus -b:a 40k -vbr on narration.ogg
+          ffmpeg -hide_banner -loglevel error -i narration.ogg -f null -
+          rm narration.wav
+          sha256sum narration.ogg timeline.json > SHA256SUMS
+          cp "$RUNNER_TEMP/smoke-model/LICENSE" LICENSE
+          test "$(stat -c %s narration.ogg)" -lt 1000000
+          cat SHA256SUMS
+      - name: Deliver small public-source speech test (one day only)
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: F2-public-statute-narration
+          path: ${{ runner.temp }}/public-law-audio/
+          retention-days: 1
+          compression-level: 0
+          if-no-files-found: error
