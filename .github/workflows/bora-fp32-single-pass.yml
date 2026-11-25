@@ -76,7 +76,7 @@ jobs:
           recovery = request.get('assembly_only') is True
           lessons = request.get('lesson_ids')
           from ms018_recovery import REQUEST_ID
-          if (request['request_id'] == REQUEST_ID) != (os.environ['BORA_MS018_PUBLIC'] == 'true'):
+          if (request['request_id'] == REQUEST_ID) != (os.environ.get('BORA_MS018_PUBLIC', 'false') == 'true'):
               raise SystemExit('MS-018 public recovery requires its exact owner-approved production request.')
           receipt_diagnostic = os.environ['BORA_MS_RECEIPT_DIAGNOSTIC'] == 'true'
           if receipt_diagnostic or request['request_id'] == 'ms-diagnose-018-022-034-20261121':
