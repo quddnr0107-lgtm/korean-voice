@@ -25,6 +25,8 @@ jobs:
           python3 -m venv "$RUNNER_TEMP/smoke-env"
           "$RUNNER_TEMP/smoke-env/bin/python" -m pip install --disable-pip-version-check -r lecture-premium/requirements.txt
           "$RUNNER_TEMP/smoke-env/bin/python" -m pip check
+          sudo apt-get update -qq
+          sudo apt-get install --yes --no-install-recommends ffmpeg
           command -v ffmpeg
           command -v ffprobe
       - name: Fetch and verify the existing pinned F2 assets
