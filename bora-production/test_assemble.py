@@ -432,5 +432,120 @@ class AssemblyTests(unittest.TestCase):
         self.assertFalse(out.exists())
 
 
+class MS034CodecRecoveryTests(unittest.TestCase):
+    def setUp(self):
+        import assemble
+        self.asm = assemble
+        self.temp = tempfile.TemporaryDirectory(prefix='synthetic-ms034-')
+        self.addCleanup(self.temp.cleanup)
+        self.target = Path(self.temp.name) / 'part.mp3'
+        self.pcm = np.full(SAMPLE_RATE, .1, dtype='<f4').tobytes()
+
+    def failure(self, *, pre=0, post=150, gap=0):
+        failure = AssemblyError('long_silence_pcm')
+        failure.part_silence_diagnostic = dict(pre_run_frames=pre, post_run_frames=post,
+                                               gap_overlap_samples=gap)
+        return failure
+
+    def run_part(self, pcm=None):
+        pcm = self.pcm if pcm is None else pcm
+        return self.asm._encode_ms034_codec_part(pcm, self.target, len(pcm)//4, 'ffmpeg',
+                                                diagnostic_context=(0, 0, []))
+
+    def test_default_success_does_not_retry(self):
+        from unittest.mock import patch
+        def encode(pcm, target, samples, ffmpeg, **kwargs):
+            target.write_bytes(b'synthetic-primary')
+            return {'decoded_sample_count': samples}
+        with patch.object(self.asm, '_encode_part', side_effect=encode) as call:
+            result = self.run_part()
+        self.assertEqual(call.call_count, 1)
+        self.assertEqual(result['encoded_bitrate'], '128k')
+        self.assertEqual(self.target.read_bytes(), b'synthetic-primary')
+
+    def test_only_codec_induced_failure_reencodes_identical_pcm(self):
+        from unittest.mock import patch
+        seen = []
+        def encode(pcm, target, samples, ffmpeg, **kwargs):
+            seen.append((pcm, samples, kwargs.get('bitrate', '128k')))
+            if len(seen) == 1:
+                target.write_bytes(b'failed-private-candidate')
+                raise self.failure()
+            target.write_bytes(b'synthetic-recovery')
+            return {'decoded_sample_count': samples}
+        with patch.object(self.asm, '_encode_part', side_effect=encode):
+            result = self.run_part()
+        self.assertEqual(seen, [(self.pcm, SAMPLE_RATE, '128k'), (self.pcm, SAMPLE_RATE, '256k')])
+        self.assertEqual(result['encoded_bitrate'], '256k')
+        self.assertEqual(self.target.read_bytes(), b'synthetic-recovery')
+        self.assertEqual(list(self.target.parent.iterdir()), [self.target])
+
+    def test_other_gates_and_preexisting_or_boundary_silence_never_retry(self):
+        from unittest.mock import patch
+        for failure in (AssemblyError('part_decoded_sample_mismatch'),
+                        AssemblyError('clipped_pcm'), AssemblyError('long_silence_pcm'),
+                        self.failure(pre=150), self.failure(post=149), self.failure(gap=1)):
+            with self.subTest(failure=failure.args), patch.object(
+                    self.asm, '_encode_part', side_effect=failure) as call:
+                with self.assertRaises(AssemblyError):
+                    self.run_part()
+                self.assertEqual(call.call_count, 1)
+                self.assertFalse(self.target.exists())
+
+    def test_entire_input_pcm_must_pass_existing_gate(self):
+        from unittest.mock import patch
+        pcm = np.concatenate((np.full(SAMPLE_RATE, .1, dtype='<f4'),
+                              np.zeros(SAMPLE_RATE*4, dtype='<f4'))).tobytes()
+        with patch.object(self.asm, '_encode_part', side_effect=self.failure()) as call:
+            with self.assertRaisesRegex(AssemblyError, 'long_silence_pcm'):
+                self.run_part(pcm)
+        self.assertEqual(call.call_count, 1)
+        self.assertFalse(self.target.exists())
+
+    def test_second_encode_failure_remains_blocking(self):
+        from unittest.mock import patch
+        with patch.object(self.asm, '_encode_part', side_effect=[
+                self.failure(), AssemblyError('part_bounds')]) as call:
+            with self.assertRaisesRegex(AssemblyError, 'part_bounds'):
+                self.run_part()
+        self.assertEqual(call.call_count, 2)
+        self.assertFalse(self.target.exists())
+
+    def test_existing_target_is_not_overwritten(self):
+        from unittest.mock import patch
+        self.target.write_bytes(b'keep')
+        with patch.object(self.asm, '_encode_part') as call:
+            with self.assertRaisesRegex(AssemblyError, 'output_directory_not_fresh'):
+                self.run_part()
+            call.assert_not_called()
+        self.assertEqual(self.target.read_bytes(), b'keep')
+
+    def test_scope_pins_all_four_identities(self):
+        from unittest.mock import patch
+        plan = {'lesson_id': 'MS-034'}
+        recipe = 'd3d35666712d276c0fa60bb5c5b1f7ab7d11c7042d490c95bb6fb8846682502d'
+        settings = '5597ef328c8f1381e634e45a00b11dd556a8423597d7dfc80771f3085649dd32'
+        with patch.object(self.asm, 'identity', return_value='83a39cc0dabf1a8a861edec5232287f2d395db69dda0121eb024b638abd11b52'):
+            self.assertTrue(self.asm._ms034_codec_scope(plan, 'single_pass', recipe, settings, None))
+            for args in (({'lesson_id': 'MS-035'}, 'single_pass', recipe, settings, None),
+                         (plan, 'eager', recipe, settings, None),
+                         (plan, 'single_pass', '0'*64, settings, None),
+                         (plan, 'single_pass', recipe, '0'*64, None),
+                         (plan, 'single_pass', recipe, settings, '1'*64)):
+                self.assertFalse(self.asm._ms034_codec_scope(*args))
+        self.assertFalse(self.asm._ms034_codec_scope(plan, 'single_pass', recipe, settings, None))
+
+    def test_real_higher_bitrate_encoder_keeps_existing_decode_and_signal_gates(self):
+        import shutil
+        t = np.arange(SAMPLE_RATE, dtype=np.float64) / SAMPLE_RATE
+        pcm = (.1 * np.sin(2*np.pi*440*t)).astype('<f4').tobytes()
+        details = self.asm._encode_part(pcm, self.target, SAMPLE_RATE, shutil.which('ffmpeg'),
+                                       bitrate='256k')
+        self.assertLessEqual(abs(details['decoded_sample_delta']), 1)
+        self.assertLess(details['validation']['max_silence_s'], 3)
+        self.assertEqual(details['validation']['clipped_samples'], 0)
+        self.assertLessEqual(details['plain_bytes'], self.asm.MAX_PART_BYTES)
+
+
 if __name__ == '__main__':
     unittest.main()

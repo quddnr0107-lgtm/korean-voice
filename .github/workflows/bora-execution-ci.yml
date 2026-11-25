@@ -1,5 +1,13 @@
 name: Bora execution scheduling CI
 on:
+  pull_request:
+    branches: [integrated-lectures-premium-20261028]
+    paths:
+      - 'bora-production/assemble.py'
+      - 'bora-production/test_assemble.py'
+      - 'bora-production/runtime.py'
+      - 'bora-production/test_single_pass_runtime.py'
+      - '.github/workflows/bora-execution-ci.yml'
   push:
     branches: [integrated-lectures-premium-20261028]
     paths:

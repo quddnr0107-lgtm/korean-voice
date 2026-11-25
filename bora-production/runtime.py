@@ -639,6 +639,34 @@ def blocked_checkpoint_category(receipt):
     return 'unknown_blocked_gate'
 
 
+def blocked_checkpoint_detail(receipt):
+    """Only fixed labels and bounded observations; never text, raw tokens or keys."""
+    category = blocked_checkpoint_category(receipt)
+    result = {'category': category}
+    if category not in ('candidate_signal_blocked', 'generation_without_natural_eos'):
+        return result
+    candidate = receipt['candidates'][0]
+    if category == 'candidate_signal_blocked':
+        signal = candidate.get('signal')
+        reasons = signal.get('reasons') if isinstance(signal, dict) else None
+        allowed = {'invalid_waveform', 'silent_waveform', 'clipped_waveform',
+                   'possible_token_cap_truncation'}
+        result['signal_reasons'] = (sorted({r for r in reasons if type(r) is str and r in allowed}
+                                          | ({'unknown_signal_reason'} if any(
+                                              type(r) is not str or r not in allowed for r in reasons) else set()))
+                                    if type(reasons) is list and reasons else ['unknown_signal_reason'])
+    else:
+        for key in ('cap_reached', 'eos_seen'):
+            if type(candidate.get(key)) is bool:
+                result[key] = candidate[key]
+        if type(candidate.get('last_token')) is int and type(candidate.get('eos_token_id')) is int:
+            result['last_token_is_eos'] = candidate['last_token'] == candidate['eos_token_id']
+        count = candidate.get('generated_sequence_tokens')
+        if type(count) is int and 0 < count <= 100000:
+            result['generated_sequence_tokens'] = count
+    return result
+
+
 def assemble(args, profile='eager'):
     campaign,recipe,request,ids=config(profile)
     check_lesson_scope(args, request, ids, profile)
@@ -676,7 +704,7 @@ def assemble(args, profile='eager'):
             index = pins[args.lesson_id][0]
             receipt = restored.get(index, {}).get('receipt')
             print(json.dumps(dict(status='receipt_diagnostic', lesson_id=args.lesson_id,
-                                  category=blocked_checkpoint_category(receipt))),
+                                  unit_index=index, **blocked_checkpoint_detail(receipt))),
                   flush=True)
             return  # Never assemble or create any output in this mode.
         check(set(restored)==set(range(len(plan['units']))) and
