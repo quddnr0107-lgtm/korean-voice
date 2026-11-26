@@ -5,7 +5,7 @@ on:
     paths: [.github/workflows/v4-keyless-repack.yml, .github/actions/v4-repack-one/action.yml, bora-production/v4_repack_encrypted.py, bora-production/test_v4_repack_encrypted.py]
   push:
     branches: [integrated-lectures-premium-20261028]
-    paths: [.github/workflows/v4-keyless-repack.yml]
+    paths: [.github/workflows/v4-keyless-repack.yml, .github/actions/v4-repack-one/action.yml, bora-production/v4_repack_encrypted.py]
 permissions:
   contents: read
   actions: read
