@@ -52,22 +52,43 @@ def split(source, root, ids, expected_bytes, digest):
             current+=size
     return stage
 
+def split_downloaded(source,root,ids):
+    """Validate official download-artifact output, preserve each ciphertext byte."""
+    allowed=[ident+'.v4-encrypted.bin' for ident in ids]
+    if source.is_symlink() or not source.is_dir() or {p.name for p in source.iterdir()}!=set(allowed):
+        raise ValueError('official download group membership')
+    root.mkdir(mode=0o700)
+    count=1;current=0
+    for name in allowed:
+        path=source/name
+        if path.is_symlink() or not path.is_file() or not 412 < path.stat().st_size <= 256*1024**2:
+            raise ValueError('official download entry type or size')
+        size=path.stat().st_size
+        if current+size>MAX:count+=1;current=0
+        if count>6:raise ValueError('supported chunk envelope exceeded')
+        directory=root/f'{count:02d}';directory.mkdir(mode=0o700,exist_ok=True)
+        os.link(path,directory/name)
+        current+=size
+    return count
+
+
 def main():
     p=argparse.ArgumentParser()
+    p.add_argument('mode',choices=['pick','split'])
     p.add_argument('group',choices=original.plan())
-    p.add_argument('out',type=Path)
+    p.add_argument('source',type=Path,nargs='?')
+    p.add_argument('out',type=Path,nargs='?')
     x=p.parse_args()
-    if x.out.exists():raise ValueError('repack destination already exists')
-    row=artifact(x.group)
-    if row['size_in_bytes']<=REPACK_IF_ABOVE:
-        print('0');return
-    if type(row['id']) is not int or row['id']<=0:
-        raise ValueError('invalid artifact ID')
-    os.umask(0o077)
-    x.out.mkdir(mode=0o700)
-    with tempfile.TemporaryDirectory(dir=x.out.parent,prefix='.original-encrypted') as d:
-        file=Path(d)/'original.zip'
-        with file.open('xb') as writer:api(f'actions/artifacts/{row["id"]}/zip','-H','Accept: application/octet-stream',out=writer)
-        print(split(file,x.out,original.plan()[x.group],row['size_in_bytes'],row['digest']))
+    if x.mode=='pick':
+        row=artifact(x.group)
+        if row['size_in_bytes']<=REPACK_IF_ABOVE:
+            print('0');return
+        if type(row['id']) is not int or row['id']<=0 or not re.fullmatch(r'sha256:[a-f0-9]{64}',row.get('digest','')):
+            raise ValueError('invalid approved artifact identity')
+        print(row['id'])
+    else:
+        os.umask(0o077)
+        if x.source is None or x.out is None:raise ValueError('missing official download path')
+        print(split_downloaded(x.source,x.out,original.plan()[x.group]))
 
 if __name__=='__main__':main()

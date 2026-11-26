@@ -18,3 +18,15 @@ class Tests(unittest.TestCase):
             self.assertEqual((root/'02'/names[2]).read_bytes(),b'\2'*800)
             with self.assertRaises(ValueError):r.split(z,root,ids[:-1],z.stat().st_size,sha)
             with self.assertRaises(ValueError):r.split(z,root,ids,z.stat().st_size,'sha256:'+'0'*64)
+
+
+    def test_official_path_no_copy_or_cipher_change(self):
+        with tempfile.TemporaryDirectory() as d:
+            p=Path(d);root=p/'src';root.mkdir();out=p/'out'
+            ids=['TB-002','TB-003','TB-004']
+            names=[i+'.v4-encrypted.bin' for i in ids]
+            for i,n in enumerate(names):(root/n).write_bytes(bytes([i])*800)
+            with patch.object(r,'MAX',1700):
+                self.assertEqual(r.split_downloaded(root,out,ids),2)
+            self.assertEqual((root/names[2]).stat().st_ino,(out/'02'/names[2]).stat().st_ino)
+            with self.assertRaises(ValueError):r.split_downloaded(root,p/'reject',ids[:-1])

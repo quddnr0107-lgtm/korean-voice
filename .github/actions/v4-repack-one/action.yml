@@ -7,13 +7,34 @@ runs:
   using: composite
   steps:
     - shell: bash
-      id: split
+      id: pick
       env:
         V4_GROUP: ${{ inputs.group }}
         GITHUB_TOKEN: ${{ github.token }}
       run: |
         set -euo pipefail
-        n="$(python bora-production/v4_repack_encrypted.py "$V4_GROUP" "$RUNNER_TEMP/v4-keyless-split")"
+        n="$(python bora-production/v4_repack_encrypted.py pick "$V4_GROUP")"
+        printf 'id=%s\n' "$n" >> "$GITHUB_OUTPUT"
+    - if: steps.pick.outputs.id != '0'
+      uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+      with:
+        artifact-ids: ${{ steps.pick.outputs.id }}
+        merge-multiple: true
+        run-id: 45762532584
+        github-token: ${{ github.token }}
+        repository: quddnr0107-lgtm/korean-voice
+        path: ${{ runner.temp }}/v4-keyless-original
+    - shell: bash
+      id: split
+      env:
+        V4_GROUP: ${{ inputs.group }}
+        V4_SELECTED: ${{ steps.pick.outputs.id }}
+      run: |
+        set -euo pipefail
+        n=0
+        if [ "$V4_SELECTED" != 0 ]; then
+          n="$(python bora-production/v4_repack_encrypted.py split "$V4_GROUP" "$RUNNER_TEMP/v4-keyless-original" "$RUNNER_TEMP/v4-keyless-split")"
+        fi
         printf 'count=%s\n' "$n" >> "$GITHUB_OUTPUT"
     - if: fromJSON(steps.split.outputs.count) >= 1
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -65,4 +86,6 @@ runs:
         retention-days: 1
     - shell: bash
       run: |
-        test ! -d "$RUNNER_TEMP/v4-keyless-split" || rm -r -- "$RUNNER_TEMP/v4-keyless-split"
+        for folder in v4-keyless-split v4-keyless-original; do
+          test ! -d "$RUNNER_TEMP/$folder" || rm -r -- "$RUNNER_TEMP/$folder"
+        done
