@@ -7,6 +7,8 @@ on:
       - 'bora-production/test_assemble.py'
       - 'bora-production/runtime.py'
       - 'bora-production/test_single_pass_runtime.py'
+      - 'bora-production/ms_residual_capacity.py'
+      - 'bora-production/test_ms_residual_capacity.py'
       - '.github/workflows/bora-execution-ci.yml'
   push:
     branches: [integrated-lectures-premium-20261028]
@@ -23,6 +25,8 @@ on:
       - 'bora-production/test_execution_profiles.py'
       - 'bora-production/test_compiled_runtime.py'
       - 'bora-production/test_single_pass_runtime.py'
+      - 'bora-production/ms_residual_capacity.py'
+      - 'bora-production/test_ms_residual_capacity.py'
       - 'bora-production/single_pass_renderer.py'
       - 'bora-production/test_assemble.py'
       - 'bora-production/assemble.py'
