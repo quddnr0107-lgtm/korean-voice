@@ -1,0 +1,68 @@
+name: Repack one already approved V4 group
+inputs:
+  group:
+    required: true
+    description: Exact group ID from the preapproved run
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      id: split
+      env:
+        V4_GROUP: ${{ inputs.group }}
+        GITHUB_TOKEN: ${{ github.token }}
+      run: |
+        set -euo pipefail
+        n="$(python bora-production/v4_repack_encrypted.py "$V4_GROUP" "$RUNNER_TEMP/v4-keyless-split")"
+        printf 'count=%s\n' "$n" >> "$GITHUB_OUTPUT"
+    - if: fromJSON(steps.split.outputs.count) >= 1
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      with:
+        name: v4-keyless-${{ inputs.group }}-01
+        path: ${{ runner.temp }}/v4-keyless-split/01/*.v4-encrypted.bin
+        if-no-files-found: error
+        compression-level: 0
+        retention-days: 1
+    - if: fromJSON(steps.split.outputs.count) >= 2
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      with:
+        name: v4-keyless-${{ inputs.group }}-02
+        path: ${{ runner.temp }}/v4-keyless-split/02/*.v4-encrypted.bin
+        if-no-files-found: error
+        compression-level: 0
+        retention-days: 1
+    - if: fromJSON(steps.split.outputs.count) >= 3
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      with:
+        name: v4-keyless-${{ inputs.group }}-03
+        path: ${{ runner.temp }}/v4-keyless-split/03/*.v4-encrypted.bin
+        if-no-files-found: error
+        compression-level: 0
+        retention-days: 1
+    - if: fromJSON(steps.split.outputs.count) >= 4
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      with:
+        name: v4-keyless-${{ inputs.group }}-04
+        path: ${{ runner.temp }}/v4-keyless-split/04/*.v4-encrypted.bin
+        if-no-files-found: error
+        compression-level: 0
+        retention-days: 1
+    - if: fromJSON(steps.split.outputs.count) >= 5
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      with:
+        name: v4-keyless-${{ inputs.group }}-05
+        path: ${{ runner.temp }}/v4-keyless-split/05/*.v4-encrypted.bin
+        if-no-files-found: error
+        compression-level: 0
+        retention-days: 1
+    - if: fromJSON(steps.split.outputs.count) >= 6
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      with:
+        name: v4-keyless-${{ inputs.group }}-06
+        path: ${{ runner.temp }}/v4-keyless-split/06/*.v4-encrypted.bin
+        if-no-files-found: error
+        compression-level: 0
+        retention-days: 1
+    - shell: bash
+      run: |
+        test ! -d "$RUNNER_TEMP/v4-keyless-split" || rm -r -- "$RUNNER_TEMP/v4-keyless-split"
