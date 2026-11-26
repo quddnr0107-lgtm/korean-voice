@@ -1,0 +1,64 @@
+name: Verified F1 model for local lecture pilot
+on:
+  push:
+    branches: ['codex/f1-local-runtime-20261126']
+permissions:
+  contents: read
+jobs:
+  assets:
+    if: github.repository == 'quddnr0107-lgtm/korean-voice'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      HF_HUB_DISABLE_TELEMETRY: '1'
+      DO_NOT_TRACK: '1'
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Collect revision-pinned public model only, no lecture content
+        run: |
+          python3 - <<'PY'
+          import concurrent.futures,hashlib,json,os,pathlib,urllib.request,shutil
+          p=json.loads(pathlib.Path('model-pins.json').read_text())
+          assert p['repository']=='Supertone/supertonic-3'
+          assert p['revision']=='3cadd1ee6394adea1bd021217a0e650ede09a323'
+          d=pathlib.Path(os.environ['RUNNER_TEMP'])/'f1-model'
+          entries={k:v for k,v in p['sha256'].items() if k!='voice_styles/F2.json'}
+          entries['voice_styles/F1.json']=None
+          def fetch(entry):
+              name,expected=entry
+              f=d/name
+              f.parent.mkdir(parents=True,exist_ok=True)
+              u=p['helper_url'] if name=='py/helper.py' else 'https://huggingface.co/'+p['repository']+'/resolve/'+p['revision']+'/'+name
+              with urllib.request.urlopen(u,timeout=90) as response, f.open('wb') as out:
+                  shutil.copyfileobj(response,out)
+              with f.open('rb') as h:
+                  digest=hashlib.file_digest(h,'sha256').hexdigest()
+              if expected:
+                  assert digest==expected, name
+              else:
+                  raw=f.read_bytes()
+                  assert 280000 < len(raw) < 310000 and isinstance(json.loads(raw),dict)
+              print('READY',name,f.stat().st_size,digest,flush=True)
+              return name,digest
+          with concurrent.futures.ThreadPoolExecutor(max_workers=5) as ex:
+              actual=dict(ex.map(fetch, entries.items()))
+          (d/'verified.json').write_text(json.dumps({'revision':p['revision'],'sha256':actual}))
+          PY
+          mkdir "$RUNNER_TEMP/f1-transfer"
+          printf '%s' 'LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQ0FRRUFpbG9HMmpIVWgzRXA4U2tuS1VsYQo3VXRuNmVlZGVHRDdEV2c0ZmVFMzRmeXRZdUdYK1FMSlEzdTZLZ29ZUmNKeHRrODdDMGsvNFdGdHdXVkhJbG5xClB2Q2Q0aUQ1NXNscitqL2NEWkRBZTFtMGZLRUl4eTFPZmgxcEEwQ1ZKMzNvaWRkM1NsYzRxREZjL1JqYlA4U0YKVGFYcmsvYkJtdVZsbkp3RUhBV1k1Nmo4NkpoQUZoUTNZL3NKdzZGS05EVWVxWUdWNUpOSFVKS1IwQmtFenFObQo3NW1XRnRlemQ5VFR1TENZVjY4TnM4OWNXQ05qOGlLUFcvWlNVaTBlWi9pNCtlYitaV2xqekJjdC9XSXhVaHJZCitPU1Vadm13UUdJWkJxeWlHKzdreG5zcEV6MzZlSnpxOTVXT3pSS2hSZjVXTnNCYkZUc04rOGlHVFY4NG90bXMKa3dJREFRQUIKLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0tCg==' | base64 -d > "$RUNNER_TEMP/recipient.pem"
+          umask 077
+          openssl rand -base64 32 > "$RUNNER_TEMP/transfer-pass"
+          openssl pkeyutl -encrypt -pubin -inkey "$RUNNER_TEMP/recipient.pem" -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256 -in "$RUNNER_TEMP/transfer-pass" -out "$RUNNER_TEMP/f1-transfer/key.bin"
+          set -o pipefail
+          tar -C "$RUNNER_TEMP/f1-model" -cf - . | openssl enc -aes-256-ctr -pbkdf2 -iter 200000 -salt -pass file:"$RUNNER_TEMP/transfer-pass" -out "$RUNNER_TEMP/f1-transfer/model.bin"
+          (cd "$RUNNER_TEMP/f1-transfer" && sha256sum key.bin model.bin)
+          rm "$RUNNER_TEMP/transfer-pass"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: f1-local-model-encrypted
+          path: ${{ runner.temp }}/f1-transfer/
+          retention-days: 1
+          compression-level: 0
+          if-no-files-found: error
