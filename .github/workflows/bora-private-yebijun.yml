@@ -45,6 +45,7 @@ jobs:
         run: |
           set -eu
           umask 077
+          export GH_TOKEN="$DEST_TOKEN"
           dest="$RUNNER_TEMP/dest"
           cat > "$RUNNER_TEMP/unpack.py" <<'PY'
           import base64, io, os, sys, subprocess, tempfile, zipfile
