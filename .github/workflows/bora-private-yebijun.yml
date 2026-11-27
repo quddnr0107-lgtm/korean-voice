@@ -1,0 +1,88 @@
+name: Store verified Bora MP3s in private Yebijun
+on:
+  push:
+    branches: [integrated-lectures-premium-20261028]
+    paths: [.github/workflows/bora-private-yebijun.yml]
+permissions:
+  contents: read
+concurrency: bora-private-yebijun
+jobs:
+  export:
+    if: github.repository == 'quddnr0107-lgtm/korean-voice'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 350
+    environment: admin-law-premium-production
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: d99883bb7fe2539b599e07feb182f0cedb878a71
+          persist-credentials: false
+      - name: Verify private destination and initialize partial checkout
+        env:
+          GH_TOKEN: ${{ secrets.YEBIJUN_AUDIO_WRITE_TOKEN }}
+        run: |
+          set -eu
+          repo=quddnr0107-lgtm/yebijun-muhanhoidok234
+          gh api "repos/$repo" --jq 'select(.private == true and .permissions.push == true) | .full_name' | grep -Fx "$repo"
+          gh auth setup-git
+          git clone --filter=blob:none --no-checkout --single-branch --depth=1 --branch audio/import-bora-originals-v4 "https://github.com/$repo.git" "$RUNNER_TEMP/dest"
+          cd "$RUNNER_TEMP/dest"
+          git sparse-checkout init --no-cone
+          git sparse-checkout set '/private-assets/bora-audio/'
+          git checkout
+          git config user.name github-actions
+          git config user.email github-actions@users.noreply.github.com
+      - name: Prepare decoder and pinned reader
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          python -m pip install --disable-pip-version-check cryptography==50.0.0
+      - name: Authenticate archives offline and checkpoint private MP3s
+        env:
+          SOURCE_TOKEN: ${{ github.token }}
+          DEST_TOKEN: ${{ secrets.YEBIJUN_AUDIO_WRITE_TOKEN }}
+          MEDIA_KEY: ${{ secrets.ADMIN_LAW_PREMIUM_MEDIA_KEY_B64 }}
+        run: |
+          set -eu
+          umask 077
+          dest="$RUNNER_TEMP/dest"
+          cat > "$RUNNER_TEMP/unpack.py" <<'PY'
+          import base64, io, os, sys, subprocess, tempfile, zipfile
+          from pathlib import Path
+          sys.path.insert(0, str(Path('bora-production').resolve()))
+          import v4_original_283 as source
+          from namespace_guard import validate_snapshot
+          import socket
+          validate_snapshot(os.getuid(), int(sys.argv[3]), socket.if_nameindex(), Path('/proc/net/route').read_text(), os.readlink('/proc/self/ns/net'), sys.argv[4], Path('/proc/net/ipv6_route').read_text())
+          key = base64.b64decode(os.environ.pop('MEDIA_KEY'), validate=True)
+          dest = Path(sys.argv[2])
+          for lesson in sorted(Path(sys.argv[1]).iterdir()):
+              ident = lesson.name
+              folder = dest / 'private-assets/bora-audio' / ident.split('-')[0]
+              folder.mkdir(exist_ok=True, parents=True)
+              path = folder / (ident + '.mp3')
+              with tempfile.TemporaryDirectory() as tmp:
+                  work = Path(tmp)
+                  with zipfile.ZipFile(io.BytesIO(source.recover(lesson, ident, key))) as archive:
+                      parts = sorted(n for n in archive.namelist() if n.startswith('part-') and n.endswith('.mp3'))
+                      if not parts: raise ValueError('Missing audio')
+                      for n in parts: (work / n).write_bytes(archive.read(n))
+                  playlist = work / 'parts.txt'
+                  playlist.write_text(''.join(f"file '{n}'\n" for n in parts))
+                  track = work / 'original.mp3'
+                  subprocess.run(['ffmpeg','-nostdin','-v','error','-f','concat','-safe','1','-i',str(playlist),'-map_metadata','-1','-c:a','copy',str(track)], check=True)
+                  subprocess.run(['ffmpeg','-nostdin','-v','error','-xerror','-i',str(track),'-f','null','-'], check=True)
+                  if path.exists() and path.read_bytes() != track.read_bytes(): raise ValueError('Existing audio differs')
+                  if not path.exists(): path.write_bytes(track.read_bytes())
+          PY
+          for i in $(seq -w 1 18); do
+            stage=$(mktemp -d)
+            env -u DEST_TOKEN -u MEDIA_KEY GITHUB_TOKEN="$SOURCE_TOKEN" python bora-production/v4_original_283.py download "v4-$i" "$stage/input"
+            sudo --preserve-env=MEDIA_KEY unshare --net --setgid "$(id -g)" --setuid "$(id -u)" -- "$(command -v python)" "$RUNNER_TEMP/unpack.py" "$stage/input" "$dest" "$(id -u)" "$(readlink /proc/self/ns/net)"
+            rm -rf "$stage"
+            git -C "$dest" add -- private-assets/bora-audio
+            if ! git -C "$dest" diff --cached --quiet; then
+              git -C "$dest" commit -m "Store authenticated Bora originals v4-$i"
+              GH_TOKEN="$DEST_TOKEN" git -C "$dest" push origin HEAD:refs/heads/audio/import-bora-originals-v4
+            fi
+          done
