@@ -9,6 +9,8 @@ import copy
 
 REQUEST_ID = 'ms-residual-parallel-public-20261126'
 IDS = ['MS-005','MS-006','MS-021','MS-022','MS-028','MS-031','MS-053','MS-054','MS-071','MS-073','MS-075','MS-094','MS-097','MS-103','MS-115','MS-141','MS-144']
+PRIVATE_REQUEST_ID = 'ms-original-private-final15-20261127'
+PRIVATE_IDS = [ident for ident in IDS if ident not in ('MS-022', 'MS-053')]
 WORKERS = 17
 RECIPE = 'd3d35666712d276c0fa60bb5c5b1f7ab7d11c7042d490c95bb6fb8846682502d'
 SETTINGS = '5597ef328c8f1381e634e45a00b11dd556a8423597d7dfc80771f3085649dd32'
@@ -34,17 +36,19 @@ def identity(value):
 
 
 def enabled(request, profile):
-    return profile == 'single_pass' and request.get('request_id') == REQUEST_ID
+    return profile == 'single_pass' and request.get('request_id') in (REQUEST_ID, PRIVATE_REQUEST_ID)
 
 
 def validate_request_scope(request):
-    if request.get('request_id') != REQUEST_ID:
+    request_id = request.get('request_id')
+    if request_id not in (REQUEST_ID, PRIVATE_REQUEST_ID):
         return
     expected = dict(schema='bora-fp32-request/v1',
         campaign_sha256='60e9763ab344e8a59264ec634a47ee60321667bc426108100f2973a04cfdca76',
         course='MS', execution_profile='bora-python-fp32-single-pass/v1',
-        execution_shard_chars=4000, retry_blocked=False, request_id=REQUEST_ID,
-        lesson_ids=IDS, render_workers=WORKERS)
+        execution_shard_chars=4000, retry_blocked=False, request_id=request_id,
+        lesson_ids=PRIVATE_IDS if request_id == PRIVATE_REQUEST_ID else IDS,
+        render_workers=40 if request_id == PRIVATE_REQUEST_ID else WORKERS)
     require(request == expected and type(request['render_workers']) is int
             and type(request['execution_shard_chars']) is int
             and request['retry_blocked'] is False, 'ms_residual_request_scope')

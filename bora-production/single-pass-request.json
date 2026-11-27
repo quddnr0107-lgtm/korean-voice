@@ -5,15 +5,13 @@
   "execution_profile": "bora-python-fp32-single-pass/v1",
   "execution_shard_chars": 4000,
   "retry_blocked": false,
-  "request_id": "ms-residual-parallel-public-20261126",
+  "request_id": "ms-original-private-final15-20261127",
   "lesson_ids": [
     "MS-005",
     "MS-006",
     "MS-021",
-    "MS-022",
     "MS-028",
     "MS-031",
-    "MS-053",
     "MS-054",
     "MS-071",
     "MS-073",
@@ -25,5 +23,5 @@
     "MS-141",
     "MS-144"
   ],
-  "render_workers": 17
+  "render_workers": 40
 }

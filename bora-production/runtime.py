@@ -272,6 +272,9 @@ def public_plan(args, profile='eager'):
     check(HASH.fullmatch(args.settings_sha or ''), 'preflight_settings_hash')
     assembly_only = profile == 'single_pass' and request.get('assembly_only') is True
     workers = request.get('render_workers') if profile == 'single_pass' else None
+    if request.get('request_id') == residual.PRIVATE_REQUEST_ID:
+        check(identity(recipe) == residual.RECIPE and args.settings_sha == residual.SETTINGS,
+              'private_original_voice_settings')
     if assembly_only:
         check(args.settings_sha == request['checkpoint_settings_sha256'], 'assembly_checkpoint_settings_pin')
     from ms_source_review_diagnostic import enabled as ms_diagnostic_enabled, record as ms_diagnostic_record
@@ -300,6 +303,19 @@ def public_plan(args, profile='eager'):
                 deferred[ident] = 'source_or_checkpoint_identity'
                 continue
             if any(u.get('review') or u.get('review_flags') for u in plan['units']):
+                if ident == 'MS-094' and request.get('request_id') == residual.PRIVATE_REQUEST_ID:
+                    import ms_pronunciation
+                    from ms_source_review_diagnostic import record
+                    print(json.dumps(record(plan, ident, ms_pronunciation._rules()), sort_keys=True), flush=True)
+                    for unit in plan['units']:
+                        if not unit.get('review'):
+                            continue
+                        norm = unit.get('normalization', {})
+                        overlay = norm.get('ms_overlay', {})
+                        details = overlay.get('unresolved_middot_details', norm.get('middot_review_details', []))
+                        print(json.dumps(dict(paragraph=unit['paragraph_id'], review=unit['review'],
+                            middot_digests=[residual.sha(d['original'].translate(ms_pronunciation.CANONICAL_SEPARATOR))
+                                            for d in details])), flush=True)
                 deferred[ident] = 'remaining_reading_review'
                 continue
         else:
@@ -839,7 +855,7 @@ def assemble(args, profile='eager'):
                                   units=len(plan['units']), parts=len(manifest['parts']),
                                   total_samples=manifest['total_samples'])), flush=True)
             return
-        if residual.enabled(request, profile):
+        if profile == 'single_pass' and request.get('request_id') == residual.REQUEST_ID:
             from ms_residual_public_audio import export_parts
             manifest = export_parts(work/'assembled', metadata, args.output,
                 lesson_id=plan['lesson_id'], plan_sha256=identity(plan),
