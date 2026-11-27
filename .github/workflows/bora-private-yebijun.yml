@@ -30,6 +30,7 @@ jobs:
           git sparse-checkout init --no-cone
           git sparse-checkout set '/private-assets/bora-audio/'
           git checkout
+          git lfs install --local
           git config user.name github-actions
           git config user.email github-actions@users.noreply.github.com
       - name: Prepare decoder and pinned reader
@@ -81,9 +82,13 @@ jobs:
             env -u DEST_TOKEN -u MEDIA_KEY GITHUB_TOKEN="$SOURCE_TOKEN" python bora-production/v4_original_283.py download "v4-$i" "$stage/input"
             sudo --preserve-env=MEDIA_KEY unshare --net --setgid "$(id -g)" --setuid "$(id -u)" -- "$(command -v python)" "$RUNNER_TEMP/unpack.py" "$stage/input" "$dest" "$(id -u)" "$(readlink /proc/self/ns/net)"
             rm -rf "$stage"
+            while IFS= read -r -d '' file; do
+              (cd "$(dirname "$file")" && git lfs track --filename "$(basename "$file")" >/dev/null)
+            done < <(find "$dest/private-assets/bora-audio" -type f -name '*.mp3' -size +100M -print0)
             git -C "$dest" add -- private-assets/bora-audio
             if ! git -C "$dest" diff --cached --quiet; then
               git -C "$dest" commit -m "Store authenticated Bora originals v4-$i"
+              git -C "$dest" pull --rebase origin audio/import-bora-originals-v4
               GH_TOKEN="$DEST_TOKEN" git -C "$dest" push origin HEAD:refs/heads/audio/import-bora-originals-v4
             fi
           done
