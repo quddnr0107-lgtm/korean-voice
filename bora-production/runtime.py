@@ -230,6 +230,25 @@ def requested_course_plan(ident, campaign, key, profile, request):
     if not residual.enabled(request, profile):
         return course_plan(ident, campaign, key, profile)
     check(ident in residual.IDS, 'residual_lesson_scope')
+    if ident == 'MS-094' and request.get('request_id') == residual.CURRENT_MS094_REQUEST:
+        # Use the existing private course manuscript at revision 2fdfb9d,
+        # whose article 78 attachment list was updated after the campaign input.
+        from planning import build_plan
+        _, original = source_plan(ident, campaign, key)
+        revision = read_json(HERE/'ms094-current-source.sealed.json')
+        cipher = base64.b64decode(revision['cipher_b64'], validate=True)
+        raw = crypto.open_input(key, read_json(HERE/'receiver-public.json'),
+            read_json(HERE/'receiver-wrapped.json'), revision['record'], cipher, ident)
+        source_hash = sha(raw)
+        check(source_hash == 'c8035d8561e76b4f7c9f3738367683b749b806f3e997e78292f9d26a830173ea', 'ms094_current_script_identity')
+        source = raw.decode('utf-8')
+        plan = residual.ms094_review(build_plan(ident, source))
+        chunk = dict(index=0, start_cp=0, end_cp=len(source), text=source, sha256=source_hash)
+        lesson = dict(original['lesson'], chunks=[chunk], source_sha256=source_hash)
+        payload = dict(original, lesson=lesson, source_sha256=source_hash,
+            original_sealed_payload_sha256=identity(original),
+            source_revision='2fdfb9dbcc5736fcab6b5c0dcafd52e1234b31ed')
+        return plan, payload
     if ident == 'MS-094':
         plan, payload = source_plan(ident, campaign, key)
         return residual.ms094_review(plan), payload
@@ -287,7 +306,7 @@ def public_plan(args, profile='eager'):
             print(json.dumps(dict(status='ms_source_review_metadata',
                                   **ms_diagnostic_record(plan, ident, pins)), sort_keys=True), flush=True)
         check(False, 'ms_source_review_diagnostic_complete_no_render')
-    if request.get('request_id') == residual.PRIVATE_REQUEST_ID:
+    if request.get('request_id') in (residual.PRIVATE_REQUEST_ID, residual.CURRENT_MS094_REQUEST):
         check(identity(recipe) == residual.RECIPE and args.settings_sha == residual.SETTINGS,
               'private_original_voice_settings')
     target_chars=execution_shard_chars(recipe,request)
