@@ -272,9 +272,6 @@ def public_plan(args, profile='eager'):
     check(HASH.fullmatch(args.settings_sha or ''), 'preflight_settings_hash')
     assembly_only = profile == 'single_pass' and request.get('assembly_only') is True
     workers = request.get('render_workers') if profile == 'single_pass' else None
-    if request.get('request_id') == residual.PRIVATE_REQUEST_ID:
-        check(identity(recipe) == residual.RECIPE and args.settings_sha == residual.SETTINGS,
-              'private_original_voice_settings')
     if assembly_only:
         check(args.settings_sha == request['checkpoint_settings_sha256'], 'assembly_checkpoint_settings_pin')
     from ms_source_review_diagnostic import enabled as ms_diagnostic_enabled, record as ms_diagnostic_record
@@ -290,6 +287,9 @@ def public_plan(args, profile='eager'):
             print(json.dumps(dict(status='ms_source_review_metadata',
                                   **ms_diagnostic_record(plan, ident, pins)), sort_keys=True), flush=True)
         check(False, 'ms_source_review_diagnostic_complete_no_render')
+    if request.get('request_id') == residual.PRIVATE_REQUEST_ID:
+        check(identity(recipe) == residual.RECIPE and args.settings_sha == residual.SETTINGS,
+              'private_original_voice_settings')
     target_chars=execution_shard_chars(recipe,request)
     records=[]; matrix=[]; review_counts=Counter(); costs={}
     deferred = {}

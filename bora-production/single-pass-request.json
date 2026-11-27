@@ -1,4 +1,5 @@
 {
+  "render_workers": 40,
   "schema": "bora-fp32-request/v1",
   "campaign_sha256": "60e9763ab344e8a59264ec634a47ee60321667bc426108100f2973a04cfdca76",
   "course": "MS",
@@ -22,6 +23,5 @@
     "MS-115",
     "MS-141",
     "MS-144"
-  ],
-  "render_workers": 40
+  ]
 }
