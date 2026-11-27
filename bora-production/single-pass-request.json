@@ -5,9 +5,10 @@
   "execution_profile": "bora-python-fp32-single-pass/v1",
   "execution_shard_chars": 4000,
   "retry_blocked": false,
-  "request_id": "ms-private-original-094-current-script-20261127",
+  "request_id": "ms-original-private-recover-054-094-20261127",
   "lesson_ids": [
+    "MS-054",
     "MS-094"
   ],
-  "render_workers": 6
+  "render_workers": 7
 }

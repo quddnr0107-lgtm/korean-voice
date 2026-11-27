@@ -8,7 +8,8 @@ permissions:
   contents: read
 concurrency:
   group: >-
-    ${{ startsWith(github.event.head_commit.message, 'Bora early RL assembly: ') && 'bora-fp32-single-pass-rl-assembly' ||
+    ${{ startsWith(github.event.head_commit.message, 'Bora MS production: Private source and failed shard ') && 'bora-fp32-private-ms054-ms094' ||
+        startsWith(github.event.head_commit.message, 'Bora early RL assembly: ') && 'bora-fp32-single-pass-rl-assembly' ||
         startsWith(github.event.head_commit.message, 'Bora DR overlap: ') && 'bora-fp32-single-pass-dr-overlap' ||
         startsWith(github.event.head_commit.message, 'Bora DR expansion: ') && 'bora-fp32-single-pass-dr-expansion' ||
         startsWith(github.event.head_commit.message, 'Bora MS production: Residual parallel public ') && 'bora-fp32-single-pass-ms-residual-parallel' ||

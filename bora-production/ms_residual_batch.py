@@ -11,6 +11,7 @@ REQUEST_ID = 'ms-residual-parallel-public-20261126'
 IDS = ['MS-005','MS-006','MS-021','MS-022','MS-028','MS-031','MS-053','MS-054','MS-071','MS-073','MS-075','MS-094','MS-097','MS-103','MS-115','MS-141','MS-144']
 PRIVATE_REQUEST_ID = 'ms-original-private-final15-20261127'
 CURRENT_MS094_REQUEST = 'ms-private-original-094-current-script-20261127'
+RECOVER_054_094 = 'ms-original-private-recover-054-094-20261127'
 PRIVATE_IDS = [ident for ident in IDS if ident not in ('MS-022', 'MS-053')]
 WORKERS = 17
 RECIPE = 'd3d35666712d276c0fa60bb5c5b1f7ab7d11c7042d490c95bb6fb8846682502d'
@@ -37,12 +38,12 @@ def identity(value):
 
 
 def enabled(request, profile):
-    return profile == 'single_pass' and request.get('request_id') in (REQUEST_ID, PRIVATE_REQUEST_ID, CURRENT_MS094_REQUEST)
+    return profile == 'single_pass' and request.get('request_id') in (REQUEST_ID, PRIVATE_REQUEST_ID, CURRENT_MS094_REQUEST, RECOVER_054_094)
 
 
 def validate_request_scope(request):
     request_id = request.get('request_id')
-    if request_id not in (REQUEST_ID, PRIVATE_REQUEST_ID, CURRENT_MS094_REQUEST):
+    if request_id not in (REQUEST_ID, PRIVATE_REQUEST_ID, CURRENT_MS094_REQUEST, RECOVER_054_094):
         return
     expected = dict(schema='bora-fp32-request/v1',
         campaign_sha256='60e9763ab344e8a59264ec634a47ee60321667bc426108100f2973a04cfdca76',
@@ -52,6 +53,8 @@ def validate_request_scope(request):
                     PRIVATE_IDS if request_id == PRIVATE_REQUEST_ID else IDS),
         render_workers=(6 if request_id == CURRENT_MS094_REQUEST else
                         40 if request_id == PRIVATE_REQUEST_ID else WORKERS))
+    if request_id == RECOVER_054_094:
+        expected.update(lesson_ids=['MS-054', 'MS-094'], render_workers=7)
     require(request == expected and type(request['render_workers']) is int
             and type(request['execution_shard_chars']) is int
             and request['retry_blocked'] is False, 'ms_residual_request_scope')

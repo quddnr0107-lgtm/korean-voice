@@ -230,7 +230,7 @@ def requested_course_plan(ident, campaign, key, profile, request):
     if not residual.enabled(request, profile):
         return course_plan(ident, campaign, key, profile)
     check(ident in residual.IDS, 'residual_lesson_scope')
-    if ident == 'MS-094' and request.get('request_id') == residual.CURRENT_MS094_REQUEST:
+    if ident == 'MS-094' and request.get('request_id') in (residual.CURRENT_MS094_REQUEST, residual.RECOVER_054_094):
         # Use the existing private course manuscript at revision 2fdfb9d,
         # whose article 78 attachment list was updated after the campaign input.
         from planning import build_plan
@@ -306,7 +306,7 @@ def public_plan(args, profile='eager'):
             print(json.dumps(dict(status='ms_source_review_metadata',
                                   **ms_diagnostic_record(plan, ident, pins)), sort_keys=True), flush=True)
         check(False, 'ms_source_review_diagnostic_complete_no_render')
-    if request.get('request_id') in (residual.PRIVATE_REQUEST_ID, residual.CURRENT_MS094_REQUEST):
+    if request.get('request_id') in (residual.PRIVATE_REQUEST_ID, residual.CURRENT_MS094_REQUEST, residual.RECOVER_054_094):
         check(identity(recipe) == residual.RECIPE and args.settings_sha == residual.SETTINGS,
               'private_original_voice_settings')
     target_chars=execution_shard_chars(recipe,request)
@@ -359,6 +359,8 @@ def public_plan(args, profile='eager'):
             chosen = [g for g in groups if g['start'] <= residual.MS022_INDEX < g['end']]
             check(len(chosen) == 1, 'ms022_recovery_shard_scope')
             matrix.extend(chosen)
+        elif request.get('request_id') == residual.RECOVER_054_094 and ident == 'MS-054':
+            matrix.extend(group for group in groups if group['shard'] == 0)
         else:
             matrix.extend(groups)
     if residual.enabled(request, profile):
