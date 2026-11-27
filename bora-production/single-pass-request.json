@@ -1,14 +1,14 @@
 {
-  "schema": "bora-fp32-request/v1",
+  "assembly_only": true,
   "campaign_sha256": "60e9763ab344e8a59264ec634a47ee60321667bc426108100f2973a04cfdca76",
+  "checkpoint_settings_sha256": "5597ef328c8f1381e634e45a00b11dd556a8423597d7dfc80771f3085649dd32",
   "course": "MS",
   "execution_profile": "bora-python-fp32-single-pass/v1",
   "execution_shard_chars": 4000,
-  "retry_blocked": false,
-  "request_id": "ms-private-original-094-current-script-20261127",
   "lesson_ids": [
     "MS-094"
   ],
-  "assembly_only": true,
-  "checkpoint_settings_sha256": "5597ef328c8f1381e634e45a00b11dd556a8423597d7dfc80771f3085649dd32"
+  "request_id": "ms-private-original-094-current-script-20261127",
+  "retry_blocked": false,
+  "schema": "bora-fp32-request/v1"
 }

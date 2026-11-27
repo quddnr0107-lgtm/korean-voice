@@ -44,6 +44,17 @@ if __name__ == '__main__':
             if type(getattr(exc, 'unit_index', None)) is int:
                 failure['unit_index'] = exc.unit_index
         if failure.get('gate') == 'long_silence_pcm':
+            part = getattr(exc, 'part_silence_diagnostic', None)
+            fields = ('part_index', 'pre_run_frames', 'post_run_frames', 'start_sample',
+                      'end_sample', 'gap_overlap_samples')
+            if (sys.argv[1:4] == ['assemble', '--lesson-id', 'MS-094']
+                    and type(part) is dict
+                    and all(type(part.get(k)) is int and 0 <= part[k] <= 10**9 for k in fields)):
+                failure['part_silence'] = {k: part[k] for k in fields}
+                nearby = part.get('nearby_unit_indices')
+                if type(nearby) is list and len(nearby) <= 4 and all(
+                        type(i) is int and 0 <= i < 10**6 for i in nearby):
+                    failure['nearby_units'] = nearby
             summary = getattr(exc, 'silence_aggregate', None)
             allowed = (
                 'pre_gate_max_run_frames_20ms',
