@@ -2,7 +2,7 @@ name: Store verified Bora MP3s in private Yebijun
 on:
   push:
     branches: [integrated-lectures-premium-20261028]
-    paths: [.github/workflows/bora-private-yebijun.yml]
+    paths: [.github/workflows/bora-private-yebijun.yml, bora-production/private-final15-ready.json]
 permissions:
   contents: read
 concurrency: bora-private-yebijun
@@ -11,7 +11,7 @@ jobs:
     # GitHub requires push access to read a draft release. Source calls remain GET-only.
     permissions:
       contents: write
-    if: github.repository == 'quddnr0107-lgtm/korean-voice'
+    if: github.repository == 'quddnr0107-lgtm/korean-voice' && github.event.head_commit.message != 'Prepare private receipt-based import for the 15 original Bora lessons'
     runs-on: ubuntu-24.04
     timeout-minutes: 350
     environment: admin-law-premium-production
@@ -20,6 +20,15 @@ jobs:
         with:
           ref: d99883bb7fe2539b599e07feb182f0cedb878a71
           persist-credentials: false
+      - name: Read the reviewed descriptor pins for newly assembled lessons
+        if: startsWith(github.event.head_commit.message, 'Store final Bora originals privately:')
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          path: ready-input
+          persist-credentials: false
+          sparse-checkout: |
+            bora-production/private-final15-ready.json
+          sparse-checkout-cone-mode: false
       - name: Verify private destination and initialize partial checkout
         env:
           GH_TOKEN: ${{ secrets.YEBIJUN_AUDIO_WRITE_TOKEN }}
@@ -43,16 +52,19 @@ jobs:
           python -m pip install --disable-pip-version-check cryptography==50.0.0
       - name: Authenticate archives offline and checkpoint private MP3s
         env:
+          FINAL15_REQUESTED: ${{ startsWith(github.event.head_commit.message, 'Store final Bora originals privately:') }}
           SOURCE_TOKEN: ${{ github.token }}
           DEST_TOKEN: ${{ secrets.YEBIJUN_AUDIO_WRITE_TOKEN }}
           MEDIA_KEY: ${{ secrets.ADMIN_LAW_PREMIUM_MEDIA_KEY_B64 }}
         run: |
           set -eu
           umask 077
+          final_pins="$GITHUB_WORKSPACE/ready-input/bora-production/private-final15-ready.json"
+          export FINAL_PINS="$final_pins"
           export GH_TOKEN="$DEST_TOKEN"
           dest="$RUNNER_TEMP/dest"
           cat > "$RUNNER_TEMP/unpack.py" <<'PY'
-          import base64, io, os, sys, subprocess, tempfile, zipfile
+          import base64, io, json, os, sys, subprocess, tempfile, zipfile
           from pathlib import Path
           sys.path.insert(0, str(Path('bora-production').resolve()))
           import v4_original_283 as source
@@ -74,6 +86,12 @@ jobs:
                   else:
                       package = source.recover(lesson, ident, key)
                   with zipfile.ZipFile(io.BytesIO(package)) as archive:
+                      if ident in ["MS-005","MS-006","MS-021","MS-028","MS-031","MS-054","MS-071","MS-073","MS-075","MS-094","MS-097","MS-103","MS-115","MS-141","MS-144"]:
+                          metadata = json.loads(archive.read('metadata.json'))
+                          if (metadata.get('recipe_sha256') != 'd3d35666712d276c0fa60bb5c5b1f7ab7d11c7042d490c95bb6fb8846682502d'
+                                  or metadata.get('render_settings_sha256') != '5597ef328c8f1381e634e45a00b11dd556a8423597d7dfc80771f3085649dd32'
+                                  or metadata.get('automatic_unit_checks_passed') is not True):
+                              raise ValueError('New lesson original recipe or unit checks differ')
                       parts = sorted(n for n in archive.namelist() if n.startswith('part-') and n.endswith('.mp3'))
                       if not parts: raise ValueError('Missing audio')
                       for n in parts: (work / n).write_bytes(archive.read(n))
@@ -93,7 +111,19 @@ jobs:
           import v4_original_283 as source
           import transport
           group, out = sys.argv[1], Path(sys.argv[2])
-          if group == 'MS-034':
+          if group.startswith('MS-') and group != 'MS-034':
+              import json, os, hashlib
+              pins = json.loads(Path(os.environ['FINAL_PINS']).read_text())
+              folder = out / group
+              backend = transport.GitHubBackend()
+              release = backend.release(source.ms.TAG)
+              if release is None or release['id'] != source.ms.RELEASE or release['draft'] is not True:
+                  raise ValueError('Original encrypted release identity')
+              result = transport.collect_final('MS', folder, group, backend, profile='single_pass')
+              descriptor = folder / (group + '.descriptor.json')
+              if result['collected'] != [group] or hashlib.sha256(descriptor.read_bytes()).hexdigest() != pins[group]:
+                  raise ValueError('Original descriptor differs from verified production receipt')
+          elif group == 'MS-034':
               backend = transport.GitHubBackend()
               rel = backend.release(source.ms.TAG)
               if not rel or (rel['id'], rel['tag_name'], rel['draft']) != (source.ms.RELEASE, source.ms.TAG, True):
@@ -111,14 +141,29 @@ jobs:
               ids = [group] if group == 'TB-001' else source.plan()[group]
               source.download(out, ids)
           PY
-          for group in MS-034 $(seq -f 'v4-%02g' 9 18) TB-001; do
+          if test "$FINAL15_REQUESTED" = true; then
+            test -s "$final_pins"
+            groups=$(env -u GH_TOKEN -u DEST_TOKEN -u SOURCE_TOKEN -u MEDIA_KEY python - "$final_pins" <<'PY'
+          import json, re, sys
+          from pathlib import Path
+          pins = json.loads(Path(sys.argv[1]).read_text())
+          allowed = set(["MS-005","MS-006","MS-021","MS-028","MS-031","MS-054","MS-071","MS-073","MS-075","MS-094","MS-097","MS-103","MS-115","MS-141","MS-144"])
+          if not isinstance(pins, dict) or not pins or not set(pins) <= allowed or not all(isinstance(v, str) and re.fullmatch(r'[a-f0-9]{64}', v) for v in pins.values()):
+              raise ValueError('Unknown lesson or invalid descriptor pin')
+          print(' '.join(sorted(pins)))
+          PY
+            )
+          else
+            groups="MS-034 $(seq -f 'v4-%02g' 9 18) TB-001"
+          fi
+          for group in $groups; do
             stage=$(mktemp -d)
             env -u GH_TOKEN -u DEST_TOKEN -u SOURCE_TOKEN -u MEDIA_KEY python - "$group" > "$stage/paths" <<'PY'
           import sys
           sys.path.insert(0, 'bora-production')
           from v4_original_283 import plan
           group = sys.argv[1]
-          ids = [group] if group in {'TB-001','MS-034'} else plan()[group]
+          ids = [group] if group == 'TB-001' or group.startswith('MS-') else plan()[group]
           for ident in ids:
               print(f"private-assets/bora-audio/{ident[:2]}/{ident}.mp3")
           PY
