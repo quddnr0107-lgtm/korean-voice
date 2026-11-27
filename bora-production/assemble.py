@@ -686,6 +686,32 @@ def assemble_lesson(plan, entries, output_dir, *, expected_recipe_sha256,
                     handle.write(bytes(gap * 4))
                     cursor += gap
                 start = cursor
+                # The original unit and the assembled MP3 part use different
+                # 20 ms frame origins. Apply the existing strict pause policy
+                # on the measured part grid, before committing unit timings.
+                if current_ms094 and 63 <= index <= 66:
+                    provisional = segments + [dict(start_sample=start, end_sample=start + count)]
+                    bounds = _part_boundaries(provisional, start + count, limit)
+                    if len(bounds) >= 24:
+                        lo = bounds[22] + 1935990 - start
+                        hi = bounds[22] + 2068290 - start
+                        frame = SAMPLE_RATE // 50
+                        if frame <= lo and hi + frame <= count:
+                            original = np.frombuffer(final, dtype='<f4')
+                            window = original[lo-frame:hi+frame]
+                            mask = _silent_frames(window.astype(np.float64) ** 2)
+                            if len(mask) == 152 and mask[1:-1].all() and not mask[0] and not mask[-1]:
+                                shorter = _compact_fragmented_pauses(window)
+                                removed = len(window) - len(shorter)
+                                if removed == 10 * frame:
+                                    corrected = np.concatenate((original[:lo-frame], shorter, original[hi+frame:]))
+                                    prior_removed = metrics['removed_long_pause_samples']
+                                    metrics = _metrics(corrected)
+                                    _require_signal(metrics)
+                                    metrics['removed_long_pause_samples'] = prior_removed + removed
+                                    assembly_settings['ms094_verified_pause_samples_removed'] = removed
+                                    final = corrected.astype('<f4', copy=False).tobytes()
+                                    count = len(corrected)
                 handle.write(final)
                 cursor += count
                 _require(cursor <= MAX_TOTAL_SAMPLES, 'lesson_duration_limit')
