@@ -552,7 +552,7 @@ jobs:
       - id: lesson_staged
         name: Reuse a verified completed encrypted lesson from this course draft
         if: >-
-          ${{ (!(github.event.head_commit.message == 'Bora MS checkpoint assembly: Diagnose MS-018 MS-022 MS-034') && github.event.head_commit.message != 'Bora MS checkpoint assembly: Measure MS-094 silent interval') }}
+          ${{ (!(github.event.head_commit.message == 'Bora MS checkpoint assembly: Diagnose MS-018 MS-022 MS-034') && !(github.event.head_commit.message == 'Bora MS checkpoint assembly: Measure MS-094 silent interval')) }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
@@ -648,7 +648,7 @@ jobs:
           retention-days: 7
       - name: Stage the complete encrypted lesson in the course draft
         if: >-
-          ${{ steps.lesson_staged.outputs.staged != 'true' && (!(github.event.head_commit.message == 'Bora MS checkpoint assembly: Diagnose MS-018 MS-022 MS-034') && github.event.head_commit.message != 'Bora MS checkpoint assembly: Measure MS-094 silent interval') &&
+          ${{ steps.lesson_staged.outputs.staged != 'true' && (!(github.event.head_commit.message == 'Bora MS checkpoint assembly: Diagnose MS-018 MS-022 MS-034') && !(github.event.head_commit.message == 'Bora MS checkpoint assembly: Measure MS-094 silent interval')) &&
               !startsWith(github.event.head_commit.message, 'Bora MS production: Recover unit50 public MS-018') &&
               !startsWith(github.event.head_commit.message, 'Bora MS production: Residual parallel public ') }}
         env:
@@ -660,7 +660,7 @@ jobs:
     if: >-
       ${{ always() && !cancelled() && needs.plan.result == 'success' && needs.assemble.result == 'success' &&
           needs.plan.outputs.overlap_tb == 'false' &&
-          (!(github.event.head_commit.message == 'Bora MS checkpoint assembly: Diagnose MS-018 MS-022 MS-034') && github.event.head_commit.message != 'Bora MS checkpoint assembly: Measure MS-094 silent interval') &&
+          (!(github.event.head_commit.message == 'Bora MS checkpoint assembly: Diagnose MS-018 MS-022 MS-034') && !(github.event.head_commit.message == 'Bora MS checkpoint assembly: Measure MS-094 silent interval')) &&
           !startsWith(github.event.head_commit.message, 'Bora early RL assembly: ') &&
           !startsWith(github.event.head_commit.message, 'Bora DR overlap: ') &&
           !startsWith(github.event.head_commit.message, 'Bora DR expansion: ') &&
