@@ -8,6 +8,9 @@ permissions:
 concurrency: bora-private-yebijun
 jobs:
   export:
+    # GitHub requires push access to read a draft release. Source calls remain GET-only.
+    permissions:
+      contents: write
     if: github.repository == 'quddnr0107-lgtm/korean-voice'
     runs-on: ubuntu-24.04
     timeout-minutes: 350
@@ -28,7 +31,7 @@ jobs:
           git clone --filter=blob:none --no-checkout --single-branch --depth=1 --branch audio/import-bora-originals-v4 "https://github.com/$repo.git" "$RUNNER_TEMP/dest"
           cd "$RUNNER_TEMP/dest"
           git sparse-checkout init --no-cone
-          git sparse-checkout set '/private-assets/bora-audio/'
+          git sparse-checkout set '/.gitattributes'
           git checkout
           git lfs install --local
           git config user.name github-actions
@@ -65,7 +68,12 @@ jobs:
               path = folder / (ident + '.mp3')
               with tempfile.TemporaryDirectory() as tmp:
                   work = Path(tmp)
-                  with zipfile.ZipFile(io.BytesIO(source.recover(lesson, ident, key))) as archive:
+                  if ident == 'MS-034':
+                      from ms034_owner_export import recover
+                      package = recover(lesson, key)
+                  else:
+                      package = source.recover(lesson, ident, key)
+                  with zipfile.ZipFile(io.BytesIO(package)) as archive:
                       parts = sorted(n for n in archive.namelist() if n.startswith('part-') and n.endswith('.mp3'))
                       if not parts: raise ValueError('Missing audio')
                       for n in parts: (work / n).write_bytes(archive.read(n))
@@ -77,17 +85,65 @@ jobs:
                   if path.exists() and path.read_bytes() != track.read_bytes(): raise ValueError('Existing audio differs')
                   if not path.exists(): path.write_bytes(track.read_bytes())
           PY
-          for i in $(seq -w 1 18); do
+          cat > "$RUNNER_TEMP/fetch-batch.py" <<'PY'
+          import sys
+          from pathlib import Path
+          sys.path.insert(0, str(Path('bora-production').resolve()))
+          import ms034_owner_export as special
+          import v4_original_283 as source
+          import transport
+          group, out = sys.argv[1], Path(sys.argv[2])
+          if group == 'MS-034':
+              backend = transport.GitHubBackend()
+              rel = backend.release(source.ms.TAG)
+              if not rel or (rel['id'], rel['tag_name'], rel['draft']) != (source.ms.RELEASE, source.ms.TAG, True):
+                  raise ValueError('MS source release identity')
+              assets = transport._assets(backend, rel)
+              folder = out / group
+              folder.mkdir(parents=True)
+              for name, (size, sha) in special.ASSETS.items():
+                  a = assets[name]
+                  if (a['size'], a['digest']) != (size, 'sha256:'+sha):
+                      raise ValueError('MS-034 source differs from reviewed original')
+                  source.fetch(backend, a, folder / name, size)
+              special.verify_pins(folder, special.ASSETS)
+          else:
+              ids = [group] if group == 'TB-001' else source.plan()[group]
+              source.download(out, ids)
+          PY
+          for group in MS-034 $(seq -f 'v4-%02g' 9 18) TB-001; do
             stage=$(mktemp -d)
-            env -u DEST_TOKEN -u MEDIA_KEY GITHUB_TOKEN="$SOURCE_TOKEN" python bora-production/v4_original_283.py download "v4-$i" "$stage/input"
+            env -u GH_TOKEN -u DEST_TOKEN -u SOURCE_TOKEN -u MEDIA_KEY python - "$group" > "$stage/paths" <<'PY'
+          import sys
+          sys.path.insert(0, 'bora-production')
+          from v4_original_283 import plan
+          group = sys.argv[1]
+          ids = [group] if group in {'TB-001','MS-034'} else plan()[group]
+          for ident in ids:
+              print(f"private-assets/bora-audio/{ident[:2]}/{ident}.mp3")
+          PY
+            git -C "$dest" ls-tree -r --name-only HEAD -- private-assets/bora-audio > "$stage/tracked"
+            if test -z "$(comm -23 <(LC_ALL=C sort "$stage/paths") <(LC_ALL=C sort "$stage/tracked"))"; then
+              rm -rf "$stage"
+              continue
+            fi
+            { echo '/.gitattributes'; sed 's|^|/|' "$stage/paths"; sed -E 's|/[^/]+$|/.gitattributes|;s|^|/|' "$stage/paths" | sort -u; } > "$stage/sparse"
+            git -C "$dest" sparse-checkout set --no-cone --stdin < "$stage/sparse"
+            env -u GH_TOKEN -u DEST_TOKEN -u SOURCE_TOKEN -u MEDIA_KEY GITHUB_TOKEN="$SOURCE_TOKEN" python "$RUNNER_TEMP/fetch-batch.py" "$group" "$stage/input"
             sudo --preserve-env=MEDIA_KEY unshare --net --setgid "$(id -g)" --setuid "$(id -u)" -- "$(command -v python)" "$RUNNER_TEMP/unpack.py" "$stage/input" "$dest" "$(id -u)" "$(readlink /proc/self/ns/net)"
+            while IFS= read -r file; do
+              test -s "$dest/$file"
+              if test "$(stat -c %s "$dest/$file")" -gt 104857600; then
+                (cd "$(dirname "$dest/$file")" && git lfs track --filename "$(basename "$file")" >/dev/null)
+              fi
+            done < "$stage/paths"
+            git -C "$dest" add --sparse --pathspec-from-file="$stage/paths"
+            while IFS= read -r attr; do
+              if test -f "$dest/$attr"; then git -C "$dest" add --sparse -- "$attr"; fi
+            done < <(sed -E 's|/[^/]+$|/.gitattributes|' "$stage/paths" | sort -u)
             rm -rf "$stage"
-            while IFS= read -r -d '' file; do
-              (cd "$(dirname "$file")" && git lfs track --filename "$(basename "$file")" >/dev/null)
-            done < <(find "$dest/private-assets/bora-audio" -type f -name '*.mp3' -size +100M -print0)
-            git -C "$dest" add -- private-assets/bora-audio
             if ! git -C "$dest" diff --cached --quiet; then
-              git -C "$dest" commit -m "Store authenticated Bora originals v4-$i"
+              git -C "$dest" commit -m "Store authenticated Bora originals $group"
               git -C "$dest" pull --rebase origin audio/import-bora-originals-v4
               GH_TOKEN="$DEST_TOKEN" git -C "$dest" push origin HEAD:refs/heads/audio/import-bora-originals-v4
             fi
