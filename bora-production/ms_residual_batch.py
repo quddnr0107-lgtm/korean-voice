@@ -55,7 +55,10 @@ def validate_request_scope(request):
                         40 if request_id == PRIVATE_REQUEST_ID else WORKERS))
     if request_id == RECOVER_054_094:
         expected.update(lesson_ids=['MS-054', 'MS-094'], render_workers=7)
-    require(request == expected and type(request['render_workers']) is int
+    if request_id == CURRENT_MS094_REQUEST and request.get('assembly_only') is True:
+        del expected['render_workers']
+        expected.update(assembly_only=True, checkpoint_settings_sha256=SETTINGS)
+    require(request == expected and type(request.get('render_workers', 1)) is int
             and type(request['execution_shard_chars']) is int
             and request['retry_blocked'] is False, 'ms_residual_request_scope')
 

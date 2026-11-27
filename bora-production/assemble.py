@@ -652,8 +652,14 @@ def assemble_lesson(plan, entries, output_dir, *, expected_recipe_sha256,
                              assembler_sha256=_sha(Path(__file__).read_bytes()))
     codec_recovery = _ms034_codec_scope(plan, profile, expected_recipe_sha256,
                                         expected_render_settings_sha256, compatible_settings_sha256)
-    if codec_recovery:
-        assembly_settings['codec_recovery_policy'] = 'ms034-codec-induced-only-v1'
+    current_ms094 = (profile == 'single_pass' and plan['lesson_id'] == 'MS-094'
+                     and plan['source_sha256'] == 'c8035d8561e76b4f7c9f3738367683b749b806f3e997e78292f9d26a830173ea'
+                     and expected_recipe_sha256 == residual.RECIPE
+                     and expected_render_settings_sha256 == residual.SETTINGS
+                     and compatible_settings_sha256 is None)
+    if codec_recovery or current_ms094:
+        assembly_settings['codec_recovery_policy'] = ('ms094-codec-induced-only-v1' if current_ms094
+                                                     else 'ms034-codec-induced-only-v1')
         assembly_settings['fallback_bitrate'] = '256k'
         assembly_settings['part_bitrate_field'] = 'encoded_bitrate'
     stage = Path(tempfile.mkdtemp(prefix='.bora-assembly-', dir=output.parent))
@@ -701,10 +707,16 @@ def assemble_lesson(plan, entries, output_dir, *, expected_recipe_sha256,
                 _require(len(pcm) == (end - begin) * 4, 'pcm_partition_truncated')
                 name = f'{plan["lesson_id"]}.part-{index:04d}.mp3'
                 diagnostic = ((index, begin, segments)
-                              if profile == 'single_pass' and plan['lesson_id'] == 'MS-034' else None)
-                if codec_recovery:
-                    details = _encode_ms034_codec_part(pcm, stage / name, end - begin, executable,
-                                                       diagnostic_context=diagnostic)
+                              if codec_recovery or current_ms094 or (profile == 'single_pass' and plan['lesson_id'] == 'MS-034') else None)
+                if codec_recovery or current_ms094:
+                    try:
+                        details = _encode_ms034_codec_part(pcm, stage / name, end - begin, executable,
+                                                           diagnostic_context=diagnostic)
+                    except AssemblyError as exc:
+                        evidence = getattr(exc, 'part_silence_diagnostic', None)
+                        if current_ms094 and evidence:
+                            print(json.dumps(dict(status='ms094_silence_location', **evidence)), flush=True)
+                        raise
                 else:
                     details = _encode_part(pcm, stage / name, end - begin, executable,
                                            diagnostic_context=diagnostic)
