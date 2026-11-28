@@ -10,7 +10,7 @@ import tempfile
 import sys
 
 HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE.parent / 'lecture-premium' / 'code'))
+sys.path.insert(0, str(HERE))
 import lecture_crypto as crypto
 import lecture_pack as pack
 import transport as tr
@@ -109,13 +109,19 @@ def transcode(raw, expected, work):
     return dest.read_bytes()
 
 
-def transform(folder, target):
+def check_network_isolation():
     import socket
     validate_snapshot(os.getuid(),os.getuid(),socket.if_nameindex(),Path('/proc/net/route').read_text(),
         os.readlink('/proc/self/ns/net'),os.environ['HOST_NS'],Path('/proc/net/ipv6_route').read_text())
+
+
+def transform(folder, target):
     key = base64.b64decode(os.environ.pop('MEDIA_KEY'), validate=True)
     require(len(key)==32, 'key size')
     target.mkdir()
+    for course,n in COURSES.items():
+        for i in (1,n):
+            require(crypto.namespace_for(f'{course}-{i:03d}').startswith('integrated-lectures/v1/'),'producer namespace')
     for item in sorted(folder.iterdir()):
         ident = item.name
         desc, names = tr._read_descriptor(item/(ident+'.descriptor.json'), ident)
@@ -233,6 +239,8 @@ if __name__ == '__main__':
         for c in COURSES: tr._release(gh,tag(c),create=True)
     elif a[0]=='finish': finish()
     elif a[0]=='fetch': fetch(int(a[1]),Path(a[2]))
-    elif a[0]=='seal': transform(Path(a[1]),Path(a[2]))
+    elif a[0]=='seal':
+        check_network_isolation()
+        transform(Path(a[1]),Path(a[2]))
     elif a[0]=='upload': upload(int(a[1]),Path(a[2]))
     else: raise ValueError('unknown operation')

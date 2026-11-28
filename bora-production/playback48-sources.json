@@ -1498,5 +1498,20 @@
     "asset_id": 770676553,
     "sha": "0293c5a52bbae02e8f5e2ab88a832678aafccafd4b488d0908ae5ff29dec855a",
     "release_id": 445935269
+  },
+  "MS-018": {
+    "asset_id": 802810466,
+    "sha": "6f35c0456d8f939b8bf0ef36cd7ce19df86b65722767932840e34899f6c1013e",
+    "release_id": 445935269
+  },
+  "MS-022": {
+    "asset_id": 802811786,
+    "sha": "418fbfb18ed61543841a94f2ea34110ce690991f34fcf80971669a4e9a63dba0",
+    "release_id": 445935269
+  },
+  "MS-053": {
+    "asset_id": 802811394,
+    "sha": "305d40583e81cc4b501ef173d1a0de5f0b69c007aa79ec22e7d06121927d96c2",
+    "release_id": 445935269
   }
 }
