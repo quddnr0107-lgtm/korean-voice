@@ -660,7 +660,7 @@ jobs:
     if: >-
       ${{ always() && !cancelled() && needs.plan.result == 'success' && needs.assemble.result == 'success' &&
           needs.plan.outputs.overlap_tb == 'false' &&
-          github.event.head_commit.message != 'Bora MS checkpoint assembly: Recover three encrypted timing records for 48k playback' &&
+          !(github.event.head_commit.message == 'Bora MS checkpoint assembly: Recover three encrypted timing records for 48k playback') &&
           (!(github.event.head_commit.message == 'Bora MS checkpoint assembly: Diagnose MS-018 MS-022 MS-034') && !(github.event.head_commit.message == 'Bora MS checkpoint assembly: Measure MS-094 silent interval')) &&
           !startsWith(github.event.head_commit.message, 'Bora early RL assembly: ') &&
           !startsWith(github.event.head_commit.message, 'Bora DR overlap: ') &&
