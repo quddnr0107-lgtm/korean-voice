@@ -239,19 +239,44 @@ class MilitaryServiceCheckpointWorkflowTests(unittest.TestCase):
                 exec(compile(self.preflight_script, '<workflow request guard>', 'exec'), {})
             return dict(line.split('=', 1) for line in output.read_text().splitlines())
 
-    def concurrency_group(self, message):
+    def concurrency_group(self, message, sha='0'*40):
+        self.assertRegex(sha, r'^[a-f0-9]{40}\Z')
         group = self.workflow.split('concurrency:\n', 1)[1].split('\nenv:\n', 1)[0]
         self.assertIn('}}-${{ github.ref }}', group)
         self.assertIn('cancel-in-progress: false', group)
         expression = group.split('${{', 1)[1].split('}}', 1)[0]
         expression = re.sub(
-            r"startsWith\(github\.event\.head_commit\.message, '([^']+)'\)",
-            lambda match: str(message.startswith(match.group(1))), expression)
+            r"startsWith\(github\.event\.head_commit\.message,\s*'([^']+)'\)",
+            lambda match: str(message.casefold().startswith(match.group(1).casefold())), expression)
+        expression = re.sub(
+            r"github\.event\.head_commit\.message\s*==\s*'([^']+)'",
+            lambda match: str(message.casefold() == match.group(1).casefold()), expression)
+        expression = re.sub(
+            r"format\('exam80-export-recovery-\{0\}',\s*github\.sha\)",
+            repr('exam80-export-recovery-' + sha), expression)
         expression = expression.replace('&&', 'and').replace('||', 'or').strip()
         tree = ast.parse('(' + expression + ')', mode='eval')
         allowed = (ast.Expression, ast.BoolOp, ast.And, ast.Or, ast.Constant)
         self.assertTrue(all(isinstance(node, allowed) for node in ast.walk(tree)))
         return eval(compile(tree, '<workflow concurrency>', 'eval'), {'__builtins__': {}}, {})
+
+    def test_correction_groups_require_full_messages_and_isolate_exports_by_commit(self):
+        first = 'Render private Exam80 directive corrections 20261128'
+        second = 'Render private Exam80 directive corrections DR038 DR047 20261128'
+        recovery = 'Recover verified Exam80 correction exports for DR-038'
+        self.assertEqual(self.concurrency_group(first), 'exam80-protected-dr-revision')
+        self.assertEqual(self.concurrency_group(second), 'exam80-protected-dr-revision-038-047')
+        for message in (first, second):
+            self.assertEqual(self.concurrency_group(message + ' extra'), 'bora-fp32-single-pass-next')
+        for sha in ('a'*40, 'b'*40):
+            self.assertEqual(self.concurrency_group(recovery, sha), 'exam80-export-recovery-' + sha)
+
+    def test_unrecognized_recovery_format_expression_is_rejected(self):
+        altered, changes = re.subn(r"(format\('exam80-export-recovery-\{0\}',\s*)github\.sha\)",
+                                   r"\1github.actor)", self.workflow)
+        self.assertEqual(changes, 1)
+        with patch.object(self, 'workflow', altered), self.assertRaises(AssertionError):
+            self.concurrency_group('Recover verified Exam80 correction exports for DR-038')
 
     def test_ms_checkpoint_batches_share_one_group_without_waiting_for_directive_synthesis(self):
         first = self.concurrency_group('Bora MS checkpoint assembly: Recover six approved lessons')

@@ -1,15 +1,15 @@
 {
   "schema": "exam80-private-export-recovery/v1",
   "artifacts": {
-    "DR-038": {
+    "DR-054": {
       "attempt": 1,
-      "artifact_id": 15266757131,
-      "artifact_digest": "411e7bfac8cbf4a0106391331aba1e332ee23081c1a9d310165cb9ca81408f7f"
+      "artifact_id": 15266883774,
+      "artifact_digest": "f35e752659190865ea54db26e95415380d9c1d3a4381263bcbfa43a42f808d99"
     },
-    "DR-047": {
+    "DR-052": {
       "attempt": 1,
-      "artifact_id": 15266686352,
-      "artifact_digest": "4f54b037a321d7c13a4c7f85224e1471ff1970643851994654f8f5d941fceec7"
+      "artifact_id": 15266309111,
+      "artifact_digest": "593e9cf30cd80f928b7eafda2ba1c2524b82966935e08d04488ac9671c6847c0"
     }
   }
 }
