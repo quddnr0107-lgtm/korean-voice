@@ -1,0 +1,15 @@
+{
+  "schema": "exam80-private-export-recovery/v1",
+  "artifacts": {
+    "DR-038": {
+      "attempt": 1,
+      "artifact_id": 15266757131,
+      "artifact_digest": "411e7bfac8cbf4a0106391331aba1e332ee23081c1a9d310165cb9ca81408f7f"
+    },
+    "DR-047": {
+      "attempt": 1,
+      "artifact_id": 15266686352,
+      "artifact_digest": "4f54b037a321d7c13a4c7f85224e1471ff1970643851994654f8f5d941fceec7"
+    }
+  }
+}

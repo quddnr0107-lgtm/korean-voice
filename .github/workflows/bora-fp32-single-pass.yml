@@ -6,11 +6,13 @@ on:
       - 'bora-production/single-pass-request.json'
       - 'bora-production/exam80-dr-revision/request.json'
       - 'bora-production/exam80-dr-revision/batch2/request.json'
+      - 'bora-production/exam80-dr-revision/recover-request.json'
 permissions:
   contents: read
 concurrency:
   group: >-
-    ${{ github.event.head_commit.message == 'Render private Exam80 directive corrections DR038 DR047 20261128' && 'exam80-protected-dr-revision-038-047' ||
+    ${{ startsWith(github.event.head_commit.message,'Recover verified Exam80 correction exports for ') && format('exam80-export-recovery-{0}',github.sha) ||
+        github.event.head_commit.message == 'Render private Exam80 directive corrections DR038 DR047 20261128' && 'exam80-protected-dr-revision-038-047' ||
         github.event.head_commit.message == 'Render private Exam80 directive corrections 20261128' && 'exam80-protected-dr-revision' ||
         startsWith(github.event.head_commit.message, 'Bora MS production: Private source and failed shard ') && 'bora-fp32-private-ms054-ms094' ||
         startsWith(github.event.head_commit.message, 'Bora early RL assembly: ') && 'bora-fp32-single-pass-rl-assembly' ||
@@ -38,7 +40,7 @@ env:
 
 jobs:
   preflight:
-    if: github.repository == 'quddnr0107-lgtm/korean-voice' && github.ref == 'refs/heads/integrated-lectures-premium-20261028' && github.event_name == 'push' && github.event.head_commit.message != 'Render private Exam80 directive corrections 20261128' && github.event.head_commit.message != 'Render private Exam80 directive corrections DR038 DR047 20261128'
+    if: github.repository == 'quddnr0107-lgtm/korean-voice' && github.ref == 'refs/heads/integrated-lectures-premium-20261028' && github.event_name == 'push' && github.event.head_commit.message != 'Render private Exam80 directive corrections 20261128' && github.event.head_commit.message != 'Render private Exam80 directive corrections DR038 DR047 20261128' && !startsWith(github.event.head_commit.message,'Recover verified Exam80 correction exports for ')
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     outputs:
@@ -820,3 +822,85 @@ jobs:
           umask 077
           python "$CORRECTION_TOOLS/private_transfer.py" store \
             --lesson "$BORA_LESSON" --verified "$RUNNER_TEMP/exam80-verified"
+
+  recovery_inputs:
+    name: Verify sealed correction artifacts
+    if: >-
+      ${{ github.repository == 'quddnr0107-lgtm/korean-voice' &&
+          github.ref == 'refs/heads/integrated-lectures-premium-20261028' &&
+          github.event_name == 'push' &&
+          startsWith(github.event.head_commit.message,'Recover verified Exam80 correction exports for ') }}
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      lessons: ${{ steps.scope.outputs.lessons }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          sparse-checkout: bora-production/exam80-dr-revision
+      - id: scope
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 bora-production/exam80-dr-revision/recover.py plan
+
+  recover_private_export:
+    needs: recovery_inputs
+    name: Restore verified correction (${{ matrix.lesson }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    environment: admin-law-premium-production
+    permissions:
+      actions: read
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        lesson: ${{ fromJSON(needs.recovery_inputs.outputs.lessons) }}
+    env:
+      LESSON: ${{ matrix.lesson }}
+      HELPER: ${{ (matrix.lesson == 'DR-038' || matrix.lesson == 'DR-047') && 'bora-production/exam80-dr-revision/batch2' || 'bora-production/exam80-dr-revision' }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          sparse-checkout: bora-production/exam80-dr-revision
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: b4d718341fa0599f129e025ddb7a540cffe48a67
+          persist-credentials: false
+          path: producer
+          sparse-checkout: bora-production
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Install the verified decoder and crypto implementation without keys
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install --yes --no-install-recommends ffmpeg
+          python -m pip install --disable-pip-version-check cryptography==50.0.0
+      - name: Download the original encrypted artifact and verify its immutable digest
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python bora-production/exam80-dr-revision/recover.py fetch --lesson "$LESSON" --out "$RUNNER_TEMP/recovered-cipher"
+      - name: Verify immutable private exporter and corrected script
+        env:
+          YEBIJUN_AUDIO_WRITE_TOKEN: ${{ secrets.YEBIJUN_AUDIO_WRITE_TOKEN }}
+        run: python "$HELPER/private_transfer.py" fetch --lesson "$LESSON" --output "$RUNNER_TEMP/private-tools"
+      - name: Recover inside the original protected offline namespace and decode every paragraph
+        env:
+          MEDIA_KEY: ${{ secrets.ADMIN_LAW_PREMIUM_MEDIA_KEY_B64 }}
+        run: |
+          umask 077
+          sudo --preserve-env=MEDIA_KEY unshare --net --setgid "$(id -g)" --setuid "$(id -u)" -- \
+            "$(command -v python)" "$RUNNER_TEMP/private-tools/unpack_audio.py" --lesson "$LESSON" \
+            --sealed "$RUNNER_TEMP/recovered-cipher" --output "$RUNNER_TEMP/recovered-private" \
+            --corrected-source "$RUNNER_TEMP/private-tools/corrected-source.txt" \
+            --producer-dir "$GITHUB_WORKSPACE/producer/bora-production" --uid "$(id -u)" \
+            --host-netns "$(readlink /proc/self/ns/net)"
+      - name: Store and independently read back the immutable private commit
+        env:
+          YEBIJUN_AUDIO_WRITE_TOKEN: ${{ secrets.YEBIJUN_AUDIO_WRITE_TOKEN }}
+        run: python "$HELPER/private_transfer.py" store --lesson "$LESSON" --verified "$RUNNER_TEMP/recovered-private"

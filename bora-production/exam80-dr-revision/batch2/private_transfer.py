@@ -6,7 +6,9 @@ import json
 import os
 from pathlib import Path
 import re
+import subprocess
 import sys
+import tempfile
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote, urlencode
 from urllib.request import HTTPRedirectHandler, Request, build_opener
@@ -33,8 +35,7 @@ LESSONS = {
                [0, 1]),
 }
 LIMIT = 32 * 1024**2
-MUTATION = """mutation($input:CreateCommitOnBranchInput!){
-    createCommitOnBranch(input:$input){commit{oid}}}"""
+PRIVATE_GIT_URL = f"https://github.com/{PRIVATE}.git"
 
 
 class Invalid(RuntimeError):
@@ -70,12 +71,10 @@ class GitHub:
         self.headers = {"Accept": "application/vnd.github+json", "Authorization": "Bearer " + token,
                         "X-GitHub-Api-Version": "2022-11-28", "User-Agent": "exam80-private-corrections"}
 
-    def request(self, path, body=None):
-        assert path == "/graphql" or path.startswith("/repos/" + PRIVATE)
-        raw = None if body is None else json.dumps(body, separators=(",", ":")).encode()
-        request = Request("https://api.github.com" + path, data=raw, headers=self.headers)
-        if body is not None:
-            request.add_header("Content-Type", "application/json")
+    def request(self, path):
+        base = "/repos/" + PRIVATE
+        require(path == base or path.startswith(base + "/"), "GitHub read outside private destination")
+        request = Request("https://api.github.com" + path, headers=self.headers)
         try:
             with self.opener.open(request, timeout=90) as response:
                 data = response.read(LIMIT * 2 + 1)
@@ -135,13 +134,82 @@ class GitHub:
         return data
 
     def append(self, head, lesson, additions):
-        value = {"branch": {"repositoryNameWithOwner": PRIVATE, "refName": "refs/heads/" + BRANCH},
-                 "expectedHeadOid": sha1_id(head),
-                 "message": {"headline": "Store verified correction audio for " + lesson},
-                 "fileChanges": {"additions": additions}}
-        result = self.request("/graphql", {"query": MUTATION, "variables": {"input": value}})
-        require(not result.get("errors"), "Private commit declined by GitHub")
-        return sha1_id(result["data"]["createCommitOnBranch"]["commit"]["oid"])
+        return append_with_git(head, lesson, additions, self.headers["Authorization"].removeprefix("Bearer "))
+
+
+def append_with_git(head, lesson, additions, token):
+    """Push one direct child. The local pre-push hook validates Git's exact advertised old OID."""
+    sha1_id(head)
+    require(lesson in LESSONS and additions, "Invalid private additions")
+    dest = f"production303/corrections/incoming/{lesson}/{LESSONS[lesson][1]}/"
+    allowed = {"index.json"} | {f"p{p:03}.mp3" for p in LESSONS[lesson][2]}
+    require(set(additions) <= {dest + name for name in allowed}, "Private addition outside correction scope")
+    ref = "refs/heads/" + BRANCH
+    env = {"PATH": os.environ["PATH"], "HOME": os.environ["HOME"], "LC_ALL": "C",
+           "GIT_TERMINAL_PROMPT": "0", "GIT_CONFIG_NOSYSTEM": "1", "GIT_CONFIG_GLOBAL": "/dev/null",
+           "GIT_AUTHOR_NAME": "github-actions", "GIT_COMMITTER_NAME": "github-actions",
+           "GIT_AUTHOR_EMAIL": "github-actions@users.noreply.github.com",
+           "GIT_COMMITTER_EMAIL": "github-actions@users.noreply.github.com"}
+
+    with tempfile.TemporaryDirectory(prefix="exam80-git-", dir=os.environ.get("RUNNER_TEMP")) as tmp:
+        repo = Path(tmp)
+
+        def git(stage, *args, data=None, network=False, lease=None):
+            child = env.copy()
+            if network:
+                child.update(GH_TOKEN=token, GH_HOST="github.com")
+            if lease:
+                child.update(EXAM80_REF=ref, EXAM80_PARENT=head, EXAM80_NEW=lease)
+            try:
+                process = subprocess.run(
+                    ["git", "-c", "credential.helper=", "-c", "credential.https://github.com.helper=!gh auth git-credential",
+                     "-c", "http.followRedirects=false", "-C", tmp, *args],
+                    input=data, capture_output=True, env=child, timeout=180)
+            except (OSError, subprocess.TimeoutExpired):
+                raise Invalid("Private Git transport unavailable at " + stage) from None
+            if process.returncode:
+                # Classify only fixed strings. Remote output may contain privileged context.
+                diagnostic = (process.stderr + process.stdout).lower()
+                labels = [(b"exam80-lease", "head_changed"), (b"non-fast-forward", "head_changed"),
+                          (b"fetch first", "head_changed"), (b"stale info", "head_changed"),
+                          (b"gh013", "branch_rules"), (b"gh006", "branch_rules"),
+                          (b"protected branch", "branch_rules"), (b"authentication failed", "authentication"),
+                          (b"permission denied", "permission"), (b"403", "permission"),
+                          (b"repository not found", "repository_access"), (b"remote rejected", "remote_rejected")]
+                reason = next((label for needle, label in labels if needle in diagnostic), "git_exit")
+                raise Invalid(f"Private Git {stage} failed ({reason}, exit {process.returncode})")
+            return process.stdout
+
+        git("initialize", "init", "-q", "--bare", ".")
+        git("configure", "remote", "add", "origin", PRIVATE_GIT_URL)
+        # No working tree, smudge filters, or checkout of existing private premium files.
+        git("fetch", "fetch", "-q", "--filter=blob:none", "--no-tags", "--depth=1", "origin", ref, network=True)
+        require(git("verify_parent", "rev-parse", "FETCH_HEAD").decode().strip() == head,
+                "Private Git head_changed during fetch")
+        git("load_tree", "read-tree", head)
+        for path, value in sorted(additions.items()):
+            oid = git("write_blob", "hash-object", "-w", "--stdin", data=value).decode().strip()
+            require(sha1_id(oid) == git_blob(value), "Private Git local blob differs")
+            git("stage", "update-index", "--add", "--cacheinfo", f"100644,{oid},{path}")
+        tree = sha1_id(git("write_tree", "write-tree", "--missing-ok").decode().strip())
+        commit = sha1_id(git("commit", "commit-tree", tree, "-p", head, "-m",
+                            "Store verified correction audio for " + lesson).decode().strip())
+        require(git("verify_commit", "rev-parse", commit + "^").decode().strip() == head,
+                "Private commit must be a direct child of the expected parent")
+        changed = git("verify_paths", "diff-tree", "-r", "--no-renames", "--no-commit-id",
+                      "--name-status", "-z", head, commit).split(b"\0")
+        require(changed[-1] == b"" and changed[:-1:2] == [b"A"] * len(additions) and
+                sorted(p.decode() for p in changed[1:-1:2]) == sorted(additions),
+                "Private commit may only add specified correction paths")
+        hook = repo / "hooks" / "pre-push"
+        hook.write_text("#!/bin/sh\nset -eu\n"
+                        "read -r localref new target old\n"
+                        "if [ \"$target\" != \"$EXAM80_REF\" ] || [ \"$new\" != \"$EXAM80_NEW\" ] || "
+                        "[ \"$old\" != \"$EXAM80_PARENT\" ] || read -r extra; then\n"
+                        " echo exam80-lease >&2; exit 1\nfi\n")
+        hook.chmod(0o700)
+        git("push", "push", "--porcelain", "origin", f"{commit}:{ref}", network=True, lease=commit)
+        return commit
 
 
 def scope(path):
@@ -202,8 +270,7 @@ def store(gh, lesson, contents):
         if len(rows) == len(receipts):
             result = head
             break
-        additions = [{"path": dest + "/" + name, "contents": base64.b64encode(contents[name]).decode("ascii")}
-                     for name in sorted(contents.keys() - rows.keys())]
+        additions = {dest + "/" + name: contents[name] for name in contents.keys() - rows.keys()}
         try:
             result = gh.append(head, lesson, additions)
             break
