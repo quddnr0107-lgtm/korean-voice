@@ -8,12 +8,14 @@ on:
       - 'bora-production/exam80-dr-revision/batch2/request.json'
       - 'bora-production/exam80-dr-revision/batch3/request.json'
       - 'bora-production/exam80-dr-revision/article5/request.json'
+      - 'bora-production/exam80-dr-revision/supply38/request.json'
       - 'bora-production/exam80-dr-revision/recover-request.json'
 permissions:
   contents: read
 concurrency:
   group: >-
     ${{ startsWith(github.event.head_commit.message,'Recover verified Exam80 correction exports for ') && format('exam80-export-recovery-{0}',github.sha) ||
+        github.event.head_commit.message == 'Render private Exam80 directive acoustic supplement DR038 supply term' && 'exam80-protected-dr038-supply' ||
         github.event.head_commit.message == 'Render private Exam80 directive acoustic supplement DR054 article5' && 'exam80-protected-dr054-article5' ||
         github.event.head_commit.message == 'Render private Exam80 directive corrections DR045 DR076 20261128' && 'exam80-protected-dr-revision-045-076' ||
         github.event.head_commit.message == 'Render private Exam80 directive corrections DR038 DR047 20261128' && 'exam80-protected-dr-revision-038-047' ||
@@ -44,7 +46,7 @@ env:
 
 jobs:
   preflight:
-    if: github.repository == 'quddnr0107-lgtm/korean-voice' && github.ref == 'refs/heads/integrated-lectures-premium-20261028' && github.event_name == 'push' && github.event.head_commit.message != 'Render private Exam80 directive corrections 20261128' && github.event.head_commit.message != 'Render private Exam80 directive corrections DR038 DR047 20261128' && github.event.head_commit.message != 'Render private Exam80 directive corrections DR045 DR076 20261128' && github.event.head_commit.message != 'Render private Exam80 directive acoustic supplement DR054 article5' && !startsWith(github.event.head_commit.message,'Recover verified Exam80 correction exports for ')
+    if: github.repository == 'quddnr0107-lgtm/korean-voice' && github.ref == 'refs/heads/integrated-lectures-premium-20261028' && github.event_name == 'push' && github.event.head_commit.message != 'Render private Exam80 directive corrections 20261128' && github.event.head_commit.message != 'Render private Exam80 directive corrections DR038 DR047 20261128' && github.event.head_commit.message != 'Render private Exam80 directive corrections DR045 DR076 20261128' && github.event.head_commit.message != 'Render private Exam80 directive acoustic supplement DR054 article5' && github.event.head_commit.message != 'Render private Exam80 directive acoustic supplement DR038 supply term' && !startsWith(github.event.head_commit.message,'Recover verified Exam80 correction exports for ')
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     outputs:
@@ -725,7 +727,7 @@ jobs:
       ${{ github.repository == 'quddnr0107-lgtm/korean-voice' &&
           github.ref == 'refs/heads/integrated-lectures-premium-20261028' &&
           github.event_name == 'push' &&
-          (github.event.head_commit.message == 'Render private Exam80 directive corrections 20261128' || github.event.head_commit.message == 'Render private Exam80 directive corrections DR038 DR047 20261128' || github.event.head_commit.message == 'Render private Exam80 directive corrections DR045 DR076 20261128' || github.event.head_commit.message == 'Render private Exam80 directive acoustic supplement DR054 article5') }}
+          (github.event.head_commit.message == 'Render private Exam80 directive corrections 20261128' || github.event.head_commit.message == 'Render private Exam80 directive corrections DR038 DR047 20261128' || github.event.head_commit.message == 'Render private Exam80 directive corrections DR045 DR076 20261128' || github.event.head_commit.message == 'Render private Exam80 directive acoustic supplement DR054 article5' || github.event.head_commit.message == 'Render private Exam80 directive acoustic supplement DR038 supply term') }}
     runs-on: ubuntu-24.04
     environment: admin-law-premium-production
     timeout-minutes: 350
@@ -734,11 +736,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        lesson: ${{ fromJSON(github.event.head_commit.message == 'Render private Exam80 directive acoustic supplement DR054 article5' && '["DR-054"]' || github.event.head_commit.message == 'Render private Exam80 directive corrections DR045 DR076 20261128' && '["DR-045","DR-076"]' || github.event.head_commit.message == 'Render private Exam80 directive corrections DR038 DR047 20261128' && '["DR-038","DR-047"]' || '["DR-052","DR-054"]') }}
+        lesson: ${{ fromJSON(github.event.head_commit.message == 'Render private Exam80 directive acoustic supplement DR038 supply term' && '["DR-038"]' || github.event.head_commit.message == 'Render private Exam80 directive acoustic supplement DR054 article5' && '["DR-054"]' || github.event.head_commit.message == 'Render private Exam80 directive corrections DR045 DR076 20261128' && '["DR-045","DR-076"]' || github.event.head_commit.message == 'Render private Exam80 directive corrections DR038 DR047 20261128' && '["DR-038","DR-047"]' || '["DR-052","DR-054"]') }}
     env:
       BORA_LESSON: ${{ matrix.lesson }}
-      BORA_CORRECTION_SCOPE: ${{ github.event.head_commit.message == 'Render private Exam80 directive acoustic supplement DR054 article5' && 'article5' || 'standard' }}
-      PRIVATE_TRANSFER_ID: ${{ github.event.head_commit.message == 'Render private Exam80 directive acoustic supplement DR054 article5' && 'DR-054-A5' || matrix.lesson }}
+      BORA_CORRECTION_SCOPE: ${{ github.event.head_commit.message == 'Render private Exam80 directive acoustic supplement DR038 supply term' && 'supply-term' || github.event.head_commit.message == 'Render private Exam80 directive acoustic supplement DR054 article5' && 'article5' || 'standard' }}
+      PRIVATE_TRANSFER_ID: ${{ github.event.head_commit.message == 'Render private Exam80 directive acoustic supplement DR038 supply term' && 'DR-038-SUPPLY' || github.event.head_commit.message == 'Render private Exam80 directive acoustic supplement DR054 article5' && 'DR-054-A5' || matrix.lesson }}
       CORRECTION_TOOLS: ${{ github.event.head_commit.message == 'Render private Exam80 directive corrections DR038 DR047 20261128' && 'request/bora-production/exam80-dr-revision/batch2' || 'request/bora-production/exam80-dr-revision' }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262

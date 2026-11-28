@@ -1,0 +1,12 @@
+{
+  "lesson": "DR-038",
+  "schema": "exam80-private-acoustic-supplement/v1",
+  "scope": "supply-term",
+  "source_commit": "f543f423a92843a7e47b5dfeab9c428d0553716f",
+  "source_sha256": "4fdf7b1f185027cd63218fe03b284a4297aadd67efe285e15969f1fea439e43c",
+  "source_span": [
+    2926,
+    2951
+  ],
+  "unit": 36
+}

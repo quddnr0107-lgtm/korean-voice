@@ -31,6 +31,8 @@ LESSONS = {
                "be5637d9242e760f5e1f25f745f662150f7f37b2e49b78de2c51021da20fa37c",
                [30, 33, 56, 58, 59, 62, 70]),
 }
+from supply38 import corrected_plan as supply
+from supply38 import exporter as supply_exporter
 from article5 import corrected_plan as phrase
 from article5 import exporter as phrase_exporter
 from batch3 import config as forms
@@ -38,10 +40,13 @@ from batch3.corrected_plan import SCOPES
 from batch3.exporter import PRIVATE_PATH, COMMIT as FORMS_EXPORTER_COMMIT, SHA256 as FORMS_EXPORTER_SHA256
 for ident, scope_data in SCOPES.items():
     LESSONS[ident] = (forms.PATHS[ident], scope_data["source_sha256"], [r["slot"] for r in scope_data["groups"]])
+LESSONS[supply.KEY] = (supply.PRIVATE_PATH,supply.PINS[supply.LESSON][1],[supply.PARENT_UNIT])
 LESSONS[phrase.KEY] = (LESSONS[phrase.LESSON][0], phrase.PINS[phrase.LESSON][1], [phrase.PARENT_UNIT])
 
 
 def destination(lesson):
+    if lesson == supply.KEY:
+        return f"{phrase.PATH}/{supply.LESSON}/{supply.PINS[supply.LESSON][1]}/{supply.VARIANT}"
     if lesson == phrase.KEY:
         return f"{phrase.PATH}/{phrase.LESSON}/{phrase.PINS[phrase.LESSON][1]}/article5"
     return f"production303/corrections/incoming/{lesson}/{LESSONS[lesson][1]}"
@@ -235,15 +240,18 @@ def fetch(gh, args):
     gh.check_private()
     source_path, source_hash, _ = LESSONS[args.lesson]
     commit, digest, helper = EXPORTER_COMMIT, EXPORTER_SHA256, PRIVATE_HELPER
-    if args.lesson == phrase.KEY:
+    if args.lesson == supply.KEY:
+        commit, digest, helper = supply_exporter.COMMIT, supply_exporter.SHA256, supply_exporter.PRIVATE_PATH
+    elif args.lesson == phrase.KEY:
         commit, digest, helper = phrase_exporter.COMMIT, phrase_exporter.SHA256, phrase_exporter.PRIVATE_PATH
     elif args.lesson in forms.COMMITS:
         commit, digest, helper = FORMS_EXPORTER_COMMIT, FORMS_EXPORTER_SHA256, PRIVATE_PATH
     require((args.exporter_commit or commit) == commit and (args.exporter_sha256 or digest) == digest,
             "Invalid private exporter revision")
+    source_commit = supply.SOURCE_COMMIT if args.lesson == supply.KEY else forms.COMMITS.get(args.lesson,SOURCE_COMMIT)
     files = {
         "unpack_audio.py": gh.fetch_pinned(commit, helper, digest),
-        "corrected-source.txt": gh.fetch_pinned(forms.COMMITS.get(args.lesson, SOURCE_COMMIT), source_path, source_hash),
+        "corrected-source.txt": gh.fetch_pinned(source_commit, source_path, source_hash),
     }
     args.output.mkdir(mode=0o700, parents=False, exist_ok=False)
     for name, data in files.items():
@@ -259,9 +267,13 @@ def verified_files(folder, lesson):
             "Unexpected verified export files")
     contents = {p.name: p.read_bytes() for p in entries}
     index = json.loads(contents["index.json"])
-    require(index["schema"] == "exam80-dr-correction-audio/v1" and index["lesson_id"] == (phrase.LESSON if lesson == phrase.KEY else lesson) and
-            index["source_sha256"] == source_hash and index["private_source_commit"] == forms.COMMITS.get(lesson, SOURCE_COMMIT)
+    actual_lesson = {phrase.KEY:phrase.LESSON,supply.KEY:supply.LESSON}.get(lesson,lesson)
+    source_commit = supply.SOURCE_COMMIT if lesson == supply.KEY else forms.COMMITS.get(lesson,SOURCE_COMMIT)
+    require(index["schema"] == "exam80-dr-correction-audio/v1" and index["lesson_id"] == actual_lesson and
+            index["source_sha256"] == source_hash and index["private_source_commit"] == source_commit
             and [s["paragraph"] for s in index["segments"]] == paragraphs, "Private export index mismatch")
+    if lesson == supply.KEY:
+        require(index.get("correction_variant") == supply.VARIANT,"Wrong private correction variant")
     if lesson == phrase.KEY:
         require(index.get("correction_variant") == "article5", "Wrong private correction variant")
     for row in index["segments"]:

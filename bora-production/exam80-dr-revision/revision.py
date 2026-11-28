@@ -123,13 +123,19 @@ def run(args):
     folder = Path(__file__).resolve().parent
     trigger_fields = dict(schema='exam80-directive-private-corrections/v1', engine_commit=ENGINE)
     envelope_folder = None
-    supplement = args.scope == 'article5'
+    supplement = args.scope != 'standard'
     if supplement:
-        from article5 import corrected_plan as plan_scope
+        if args.scope == 'supply-term':
+            from supply38 import corrected_plan as plan_scope
+            from batch2 import old_media as media_scope
+            envelope_folder = folder / 'batch2'
+            folder = folder / 'supply38'
+        else:
+            from article5 import corrected_plan as plan_scope
+            media_scope = old_media
+            envelope_folder = folder
+            folder = folder / 'article5'
         require(ident == plan_scope.LESSON, 'wrong_supplement_lesson')
-        media_scope = old_media
-        envelope_folder = folder
-        folder = folder / 'article5'
         source_commit = plan_scope.SOURCE_COMMIT
         trigger_fields = plan_scope.REQUEST
     elif ident in forms.COMMITS:
@@ -185,7 +191,7 @@ def run(args):
                          original_audio_sha256=audio_hash, recipe_sha256=RECIPE, render_settings_sha256=SETTINGS,
                          original_receipt=old_receipt, segments=segments, asr_performed=False)
             if supplement:
-                index['correction_variant'] = 'article5'
+                index['correction_variant'] = args.scope
             buffer = io.BytesIO()
             with zipfile.ZipFile(buffer, 'w', compression=zipfile.ZIP_STORED) as archive:
                 archive.writestr('index.json', runtime.enc(index))
@@ -205,7 +211,7 @@ def run(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--lesson', choices=SOURCE_FILES, required=True)
-    parser.add_argument('--scope', choices=('standard', 'article5'), default='standard')
+    parser.add_argument('--scope', choices=('standard', 'article5', 'supply-term'), default='standard')
     for name in ('engine','transport','old-media','output'):
         parser.add_argument('--' + name, type=Path, required=True)
     try:

@@ -27,32 +27,40 @@ def require(value):
 
 
 def select(plan, original_text, corrected_text, lesson):
+    return select_sentence(plan,original_text,corrected_text,lesson,LESSON,PINS,UNIT_SCOPE,SENTENCE,BEGIN,END,PARENT_UNIT)
+
+
+def select_sentence(plan,original_text,corrected_text,lesson,expected_lesson,pins,unit_scope,sentence,begin,end,parent_unit):
     import planning
     import dr_pronunciation
     original=original_text.strip("\r\n")+"\n"
-    require(lesson==LESSON and (digest(original),digest(corrected_text))==PINS[lesson]
+    require(lesson==expected_lesson and (digest(original),digest(corrected_text))==pins[lesson]
             and plan["lesson_id"]==lesson and plan["source"]==corrected_text
-            and plan["source_sha256"]==PINS[lesson][1] and plan["review_unit_count"]==0)
-    parent=plan["units"][PARENT_UNIT]
-    require((parent["source_sha256"],parent["spoken_sha256"])==UNIT_SCOPE
-            and parent["start_cp"] < BEGIN < END < parent["end_cp"]
+            and plan["source_sha256"]==pins[lesson][1] and plan["review_unit_count"]==0)
+    parent=plan["units"][parent_unit]
+    require((parent["source_sha256"],parent["spoken_sha256"])==unit_scope
+            and parent["start_cp"] < begin < end < parent["end_cp"]
             and not parent["review"] and parent["reading_mode_verified"])
-    phrase=corrected_text[BEGIN:END]
-    require(phrase==original[BEGIN:END] and digest(phrase)==SENTENCE[0])
+    phrase=corrected_text[begin:end]
+    require(phrase==original[begin:end] and digest(phrase)==sentence[0])
     sub=dr_pronunciation.apply_to_plan(planning.build_plan(lesson,phrase))
     require(len(sub["units"])==1 and sub["review_unit_count"]==0)
     unit=sub["units"][0]
-    require((unit["source_sha256"],unit["spoken_sha256"])==SENTENCE and unit["source"]==phrase
+    require((unit["source_sha256"],unit["spoken_sha256"])==sentence and unit["source"]==phrase
             and parent["mode"]==unit["mode"]=="explain" and unit["reading_mode_verified"] and not unit["review"])
-    start16=len(corrected_text[:BEGIN].encode("utf-16-le"))//2
+    start16=len(corrected_text[:begin].encode("utf-16-le"))//2
     # Preserve original identity and record coordinates in the canonical manuscript.
     # The scoped sentence has a different source hash and never replaces an original unit checkpoint.
-    unit=dict(unit,id=parent["id"],paragraph_id=parent["paragraph_id"],start_cp=BEGIN,end_cp=END,
+    unit=dict(unit,id=parent["id"],paragraph_id=parent["paragraph_id"],start_cp=begin,end_cp=end,
               start_utf16=start16,end_utf16=start16+len(phrase.encode("utf-16-le"))//2)
-    return [(PARENT_UNIT,BEGIN,END,[(PARENT_UNIT,unit)])]
+    return [(parent_unit,begin,end,[(parent_unit,unit)])]
 
 
 def extra(lesson,slot):
-    require(lesson==LESSON and slot==PARENT_UNIT)
-    return dict(paragraph_index=22,original_unit_indices=[slot],unit_indices=[slot],old_span=[BEGIN,END],
-                new_span=[BEGIN,END],replace_spans=[dict(old=[BEGIN,END],new=[BEGIN,END])])
+    return sentence_ranges(lesson,slot,LESSON,PARENT_UNIT,22,BEGIN,END)
+
+
+def sentence_ranges(lesson,slot,expected_lesson,parent_unit,paragraph,begin,end):
+    require(lesson==expected_lesson and slot==parent_unit)
+    return dict(paragraph_index=paragraph,original_unit_indices=[slot],unit_indices=[slot],old_span=[begin,end],
+                new_span=[begin,end],replace_spans=[dict(old=[begin,end],new=[begin,end])])
