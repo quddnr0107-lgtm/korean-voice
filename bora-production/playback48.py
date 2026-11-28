@@ -54,6 +54,18 @@ class NoRedirect(HTTPRedirectHandler):
 
 
 class PlaybackBackend(tr.GitHubBackend):
+    def quota(self):
+        tr.assert_keyless()
+        return json.loads(super()._run(['api','rate_limit']))['resources']['core']
+
+    def wait_for_budget(self):
+        quota=self.quota()
+        wait=max(0,int(quota['reset'])-int(time.time())+5)
+        print('GitHub API remaining',quota['remaining'],'of',quota['limit'],'reset UTC epoch',quota['reset'],flush=True)
+        if quota['remaining'] < 10:
+            print('Waiting for GitHub API reset:',wait,'seconds',flush=True)
+            time.sleep(wait)
+
     def _run(self, args, *, data=None, output=None, missing=False):
         reading = args[0] == 'api' and '--method' not in args and '-X' not in args
         for attempt in range(6):
@@ -65,7 +77,15 @@ class PlaybackBackend(tr.GitHubBackend):
                 if output is not None:
                     output.seek(0)
                     output.truncate()
-                time.sleep(5 * 2**attempt)
+                delay = 5 * 2**attempt
+                try:
+                    quota = json.loads(super()._run(['api','rate_limit']))['resources']['core']
+                    print('GitHub reads remaining:', quota['remaining'], 'reset UTC epoch:', quota['reset'], flush=True)
+                    if quota['remaining'] == 0:
+                        delay=max(delay, int(quota['reset'])-int(time.time())+3)
+                except (tr.TransportError,KeyError,TypeError,ValueError):
+                    pass
+                time.sleep(max(1,delay))
 
     def release(self, tag_name):
         release_id = PLAYBACK_RELEASES.get(tag_name)
@@ -316,7 +336,8 @@ if __name__ == '__main__':
     a=sys.argv[1:]
     if a[0]=='prepare':
         gh=PlaybackBackend()
-        for c in COURSES: tr._release(gh,tag(c),create=True)
+        gh.wait_for_budget()
+        for c in COURSES: tr._release(gh,tag(c))
     elif a[0]=='finish': finish()
     elif a[0]=='fetch': fetch(int(a[1]),Path(a[2]))
     elif a[0]=='seal':

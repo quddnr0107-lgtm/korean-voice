@@ -81,5 +81,6 @@
     "TB-019",
     "TB-022",
     "TB-023"
-  ]
+  ],
+  "retry": "observe-core-quota-and-respect-reset"
 }
