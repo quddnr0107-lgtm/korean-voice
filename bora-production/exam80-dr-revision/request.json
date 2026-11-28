@@ -1,0 +1,9 @@
+{
+  "engine_commit": "db2081bf68cdc3e4cd6a73a3a719b68f58cb675f",
+  "lessons": [
+    "DR-052",
+    "DR-054"
+  ],
+  "private_source_commit": "367750f745f0d1873290b9885f790f5484be3cd7",
+  "schema": "exam80-directive-private-corrections/v1"
+}

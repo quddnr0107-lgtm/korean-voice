@@ -4,11 +4,13 @@ on:
     branches: [integrated-lectures-premium-20261028]
     paths:
       - 'bora-production/single-pass-request.json'
+      - 'bora-production/exam80-dr-revision/request.json'
 permissions:
   contents: read
 concurrency:
   group: >-
-    ${{ startsWith(github.event.head_commit.message, 'Bora MS production: Private source and failed shard ') && 'bora-fp32-private-ms054-ms094' ||
+    ${{ github.event.head_commit.message == 'Render private Exam80 directive corrections 20261128' && 'exam80-protected-dr-revision' ||
+        startsWith(github.event.head_commit.message, 'Bora MS production: Private source and failed shard ') && 'bora-fp32-private-ms054-ms094' ||
         startsWith(github.event.head_commit.message, 'Bora early RL assembly: ') && 'bora-fp32-single-pass-rl-assembly' ||
         startsWith(github.event.head_commit.message, 'Bora DR overlap: ') && 'bora-fp32-single-pass-dr-overlap' ||
         startsWith(github.event.head_commit.message, 'Bora DR expansion: ') && 'bora-fp32-single-pass-dr-expansion' ||
@@ -34,7 +36,7 @@ env:
 
 jobs:
   preflight:
-    if: github.repository == 'quddnr0107-lgtm/korean-voice' && github.ref == 'refs/heads/integrated-lectures-premium-20261028' && github.event_name == 'push'
+    if: github.repository == 'quddnr0107-lgtm/korean-voice' && github.ref == 'refs/heads/integrated-lectures-premium-20261028' && github.event_name == 'push' && github.event.head_commit.message != 'Render private Exam80 directive corrections 20261128'
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     outputs:
@@ -709,4 +711,109 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: python bora-production/transport.py publish --profile single_pass --course "$BORA_COURSE" --directory "$RUNNER_TEMP/bora-course"
 
-
+  directive_corrections:
+    name: Private directive correction (${{ matrix.lesson }})
+    if: >-
+      ${{ github.repository == 'quddnr0107-lgtm/korean-voice' &&
+          github.ref == 'refs/heads/integrated-lectures-premium-20261028' &&
+          github.event_name == 'push' &&
+          github.event.head_commit.message == 'Render private Exam80 directive corrections 20261128' }}
+    runs-on: ubuntu-24.04
+    environment: admin-law-premium-production
+    timeout-minutes: 350
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        lesson: [DR-052, DR-054]
+    env:
+      BORA_LESSON: ${{ matrix.lesson }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          sparse-checkout: bora-production/exam80-dr-revision
+          path: request
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: db2081bf68cdc3e4cd6a73a3a719b68f58cb675f
+          persist-credentials: false
+          path: engine
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: b4d718341fa0599f129e025ddb7a540cffe48a67
+          persist-credentials: false
+          path: producer
+          sparse-checkout: |
+            bora-production
+            lecture-premium/code
+            research/reading-quality
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Verify immutable private exporter and manuscript
+        env:
+          YEBIJUN_AUDIO_WRITE_TOKEN: ${{ secrets.YEBIJUN_AUDIO_WRITE_TOKEN }}
+        run: |
+          umask 077
+          python request/bora-production/exam80-dr-revision/private_transfer.py fetch \
+            --lesson "$BORA_LESSON" --output "$RUNNER_TEMP/private-export-tools"
+      - name: Install pinned cryptography for read-only receipt transport
+        run: python -m pip install --disable-pip-version-check cryptography==50.0.0
+      - name: Fetch ciphertext for the original fingerprint and clock
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          umask 077
+          python request/bora-production/exam80-dr-revision/old_media.py fetch \
+            --producer "$GITHUB_WORKSPACE/producer/bora-production" --lesson "$BORA_LESSON" \
+            --output "$RUNNER_TEMP/exam80-original"
+      - name: Prepare original speech runtime and revision-pinned model
+        working-directory: engine
+        timeout-minutes: 45
+        run: |
+          python bora-production/cpu_wait_policy.py
+          bash bora-production/setup_single_pass_runtime.sh
+          bash bora-production/download_single_pass_model.sh
+      - name: Render corrected paragraphs inside the original protected offline context
+        timeout-minutes: 290
+        env:
+          ADMIN_LAW_PREMIUM_SOURCE_KEY_B64: ${{ secrets.ADMIN_LAW_PREMIUM_SOURCE_KEY_B64 }}
+          ADMIN_LAW_PREMIUM_MEDIA_KEY_B64: ${{ secrets.ADMIN_LAW_PREMIUM_MEDIA_KEY_B64 }}
+        run: |
+          umask 077
+          export BORA_HOST_NETNS="$(readlink /proc/self/ns/net)"
+          sudo --preserve-env=ADMIN_LAW_PREMIUM_SOURCE_KEY_B64,ADMIN_LAW_PREMIUM_MEDIA_KEY_B64,BORA_HOST_NETNS,BORA_MODEL,MKL_NUM_THREADS,OMP_NUM_THREADS,OPENBLAS_NUM_THREADS,OMP_WAIT_POLICY,GOMP_SPINCOUNT,KMP_BLOCKTIME,ORT_DISABLE_TELEMETRY,HF_HUB_DISABLE_TELEMETRY,DO_NOT_TRACK,GITHUB_REPOSITORY,GITHUB_EVENT_NAME,GITHUB_REF,GITHUB_WORKFLOW_REF,GITHUB_RUN_ID,GITHUB_RUN_ATTEMPT,RUNNER_TEMP \
+            unshare --net --setgid "$(id -g)" --setuid "$(id -u)" -- "$(command -v python)" \
+            request/bora-production/exam80-dr-revision/revision.py --lesson "$BORA_LESSON" \
+            --engine "$GITHUB_WORKSPACE/engine" --transport "$GITHUB_WORKSPACE/producer" \
+            --old-media "$RUNNER_TEMP/exam80-original" --output "$RUNNER_TEMP/exam80-cipher"
+      - name: Preserve only authenticated ciphertext
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: exam80-correction-${{ matrix.lesson }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/exam80-cipher/manifest.json
+            ${{ runner.temp }}/exam80-cipher/payload.bin
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 7
+      - name: Verify each corrected paragraph offline against private source and decoded samples
+        env:
+          MEDIA_KEY: ${{ secrets.ADMIN_LAW_PREMIUM_MEDIA_KEY_B64 }}
+        run: |
+          umask 077
+          sudo --preserve-env=MEDIA_KEY unshare --net --setgid "$(id -g)" --setuid "$(id -u)" -- \
+            "$(command -v python)" "$RUNNER_TEMP/private-export-tools/unpack_audio.py" --lesson "$BORA_LESSON" \
+            --sealed "$RUNNER_TEMP/exam80-cipher" --output "$RUNNER_TEMP/exam80-verified" \
+            --corrected-source "$RUNNER_TEMP/private-export-tools/corrected-source.txt" \
+            --producer-dir "$GITHUB_WORKSPACE/producer/bora-production" --uid "$(id -u)" \
+            --host-netns "$(readlink /proc/self/ns/net)"
+      - name: Persist and read back verified files from the owner's private video branch
+        env:
+          YEBIJUN_AUDIO_WRITE_TOKEN: ${{ secrets.YEBIJUN_AUDIO_WRITE_TOKEN }}
+        run: |
+          umask 077
+          python request/bora-production/exam80-dr-revision/private_transfer.py store \
+            --lesson "$BORA_LESSON" --verified "$RUNNER_TEMP/exam80-verified"
