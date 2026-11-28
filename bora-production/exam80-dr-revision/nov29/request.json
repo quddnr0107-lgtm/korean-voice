@@ -1,0 +1,23 @@
+{
+  "engine_commits": {
+    "DR-038": "db2081bf68cdc3e4cd6a73a3a719b68f58cb675f",
+    "DR-059": "49637dfd44f2890a276308839757a573a92087a9"
+  },
+  "lessons": [
+    "DR-038",
+    "DR-059"
+  ],
+  "private_source_commits": {
+    "DR-038": "f543f423a92843a7e47b5dfeab9c428d0553716f",
+    "DR-059": "eec218e557da3ecc4a2470f8b02d81b4bc205c20"
+  },
+  "schema": "exam80-private-source-and-reading-repair/v1",
+  "source_sha256": {
+    "DR-038": "4fdf7b1f185027cd63218fe03b284a4297aadd67efe285e15969f1fea439e43c",
+    "DR-059": "5904f1fe72419f6009b2670d0918c321742da683e1ec89b632ab28eb2bfefcfb"
+  },
+  "variants": {
+    "DR-038": "supply-word-boundary",
+    "DR-059": "canonical"
+  }
+}

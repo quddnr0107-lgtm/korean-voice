@@ -80,12 +80,16 @@ def derive(before, after):
 
 
 def select(plan, original_text, corrected_text, lesson):
+    return select_scope(plan,original_text,corrected_text,lesson,SCOPES[lesson])
+
+
+def select_scope(plan,original_text,corrected_text,lesson,scope):
     import planning
     import dr_pronunciation
     original = original_text.strip("\r\n") + "\n"
-    scope = SCOPES[lesson]
-    require((digest(original),digest(corrected_text)) == PINS[lesson] and plan["source"] == corrected_text
-            and plan["source_sha256"] == PINS[lesson][1] and plan["lesson_id"] == lesson,
+    pins = (scope["original_source_sha256"],scope["source_sha256"])
+    require((digest(original),digest(corrected_text)) == pins and plan["source"] == corrected_text
+            and plan["source_sha256"] == pins[1] and plan["lesson_id"] == lesson,
             "source_identity_mismatch")
     old = dr_pronunciation.apply_to_plan(planning.build_plan(lesson,original))
     require(old["review_unit_count"] == 0 and plan["review_unit_count"] == 0,
@@ -107,5 +111,9 @@ def select(plan, original_text, corrected_text, lesson):
 
 
 def extra(lesson, slot):
-    row=next(r for r in SCOPES[lesson]["groups"] if r["slot"] == slot)
+    return extra_scope(SCOPES[lesson],slot)
+
+
+def extra_scope(scope,slot):
+    row=next(r for r in scope["groups"] if r["slot"] == slot)
     return {k:row[k] for k in ("paragraph_index","original_unit_indices","unit_indices","old_span","new_span","replace_spans")}

@@ -23,6 +23,8 @@ PINS = {
 }
 from batch3.config import MEDIA
 PINS.update(MEDIA)
+from nov29 import config as november
+PINS[november.NEW] = november.MEDIA
 # This original receipt is also used by the isolated DR-038 pronunciation supplement.
 from batch2.old_media import PINS as reviewed_second_batch_receipts
 PINS['DR-038'] = reviewed_second_batch_receipts['DR-038']

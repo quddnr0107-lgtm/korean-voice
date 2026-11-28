@@ -14,6 +14,7 @@ import zipfile
 import corrected_plan
 import old_media
 from batch3 import config as forms
+from nov29 import config as november
 
 
 SOURCE_COMMIT = '367750f745f0d1873290b9885f790f5484be3cd7'
@@ -33,6 +34,7 @@ SOURCE_FILES = {
                '5d8eb9a58356938246059659e31f42ea48d9339858d2f8d5ec53648e5541668e'),
 }
 SOURCE_FILES.update(forms.SOURCE_FILES)
+SOURCE_FILES[november.NEW] = (november.ENVELOPE,november.AUDIO)
 BATCH2_COMMITS = {'DR-038': 'f543f423a92843a7e47b5dfeab9c428d0553716f',
                   'DR-047': '6ed18c9353a023b7b5287867a3ccefeef0c583a8'}
 
@@ -106,6 +108,8 @@ def render_paragraph(runtime, assembly, renderer, work, row, recipe, repair):
 def run(args):
     os.umask(0o077)
     engine_commit = forms.ENGINES.get(args.lesson, ENGINE)
+    if args.lesson == november.NEW:
+        engine_commit = november.REQUEST["engine_commits"][november.NEW]
     require(current_commit(args.engine) == engine_commit and current_commit(args.transport) == TRANSPORT, 'checkout_pins')
     require(not args.output.exists(), 'output_exists')
     ident = args.lesson
@@ -124,7 +128,19 @@ def run(args):
     trigger_fields = dict(schema='exam80-directive-private-corrections/v1', engine_commit=ENGINE)
     envelope_folder = None
     supplement = args.scope != 'standard'
-    if supplement:
+    if ident == november.NEW or args.scope == november.VARIANT:
+        from nov29 import corrected_plan as plan_scope
+        require((ident, args.scope) in ((november.NEW,'standard'),('DR-038',november.VARIANT)),
+                'wrong_scoped_november_request')
+        if ident == november.NEW:
+            media_scope = old_media
+        else:
+            from batch2 import old_media as media_scope
+            envelope_folder = folder / 'batch2'
+        folder = folder / 'nov29'
+        source_commit = november.REQUEST['private_source_commits'][ident]
+        trigger_fields = november.REQUEST
+    elif supplement:
         if args.scope == 'supply-term':
             from supply38 import corrected_plan as plan_scope
             from batch2 import old_media as media_scope
@@ -179,7 +195,7 @@ def run(args):
                 segments = []
                 for row in selected:
                     segment = render_paragraph(runtime, assemble, renderer, work, row, recipe, repair)
-                    if supplement or ident in BATCH2_COMMITS or ident in forms.COMMITS:
+                    if supplement or ident == november.NEW or ident in BATCH2_COMMITS or ident in forms.COMMITS:
                         segment.update(plan_scope.extra(ident, row[0]))
                     segments.append(segment)
                     print(ident, 'verified paragraphs', len(segments), 'of', len(selected), file=progress)
@@ -211,7 +227,7 @@ def run(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--lesson', choices=SOURCE_FILES, required=True)
-    parser.add_argument('--scope', choices=('standard', 'article5', 'supply-term'), default='standard')
+    parser.add_argument('--scope', choices=('standard', 'article5', 'supply-term', november.VARIANT), default='standard')
     for name in ('engine','transport','old-media','output'):
         parser.add_argument('--' + name, type=Path, required=True)
     try:

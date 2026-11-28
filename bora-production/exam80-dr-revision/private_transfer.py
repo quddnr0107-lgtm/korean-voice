@@ -31,6 +31,7 @@ LESSONS = {
                "be5637d9242e760f5e1f25f745f662150f7f37b2e49b78de2c51021da20fa37c",
                [30, 33, 56, 58, 59, 62, 70]),
 }
+from nov29 import config as november, corrected_plan as november_plan, exporter as november_exporter
 from supply38 import corrected_plan as supply
 from supply38 import exporter as supply_exporter
 from article5 import corrected_plan as phrase
@@ -40,11 +41,23 @@ from batch3.corrected_plan import SCOPES
 from batch3.exporter import PRIVATE_PATH, COMMIT as FORMS_EXPORTER_COMMIT, SHA256 as FORMS_EXPORTER_SHA256
 for ident, scope_data in SCOPES.items():
     LESSONS[ident] = (forms.PATHS[ident], scope_data["source_sha256"], [r["slot"] for r in scope_data["groups"]])
+LESSONS[november.KEY] = (supply.PRIVATE_PATH,supply.PINS[supply.LESSON][1],[supply.PARENT_UNIT])
+LESSONS[november.NEW] = (november.SCRIPT,november.SOURCE,[r['slot'] for r in november_plan.SCOPE['groups']])
 LESSONS[supply.KEY] = (supply.PRIVATE_PATH,supply.PINS[supply.LESSON][1],[supply.PARENT_UNIT])
 LESSONS[phrase.KEY] = (LESSONS[phrase.LESSON][0], phrase.PINS[phrase.LESSON][1], [phrase.PARENT_UNIT])
 
 
+def private_source_commit(lesson):
+    if lesson in (november.KEY,supply.KEY):
+        return supply.SOURCE_COMMIT
+    if lesson == november.NEW:
+        return november.COMMIT
+    return forms.COMMITS.get(lesson,SOURCE_COMMIT)
+
+
 def destination(lesson):
+    if lesson == november.KEY:
+        return f"{phrase.PATH}/{supply.LESSON}/{supply.PINS[supply.LESSON][1]}/{november.VARIANT}"
     if lesson == supply.KEY:
         return f"{phrase.PATH}/{supply.LESSON}/{supply.PINS[supply.LESSON][1]}/{supply.VARIANT}"
     if lesson == phrase.KEY:
@@ -240,7 +253,9 @@ def fetch(gh, args):
     gh.check_private()
     source_path, source_hash, _ = LESSONS[args.lesson]
     commit, digest, helper = EXPORTER_COMMIT, EXPORTER_SHA256, PRIVATE_HELPER
-    if args.lesson == supply.KEY:
+    if args.lesson in (november.KEY,november.NEW):
+        commit,digest,helper = november_exporter.COMMIT,november_exporter.SHA256,november_exporter.PRIVATE_PATH
+    elif args.lesson == supply.KEY:
         commit, digest, helper = supply_exporter.COMMIT, supply_exporter.SHA256, supply_exporter.PRIVATE_PATH
     elif args.lesson == phrase.KEY:
         commit, digest, helper = phrase_exporter.COMMIT, phrase_exporter.SHA256, phrase_exporter.PRIVATE_PATH
@@ -248,7 +263,7 @@ def fetch(gh, args):
         commit, digest, helper = FORMS_EXPORTER_COMMIT, FORMS_EXPORTER_SHA256, PRIVATE_PATH
     require((args.exporter_commit or commit) == commit and (args.exporter_sha256 or digest) == digest,
             "Invalid private exporter revision")
-    source_commit = supply.SOURCE_COMMIT if args.lesson == supply.KEY else forms.COMMITS.get(args.lesson,SOURCE_COMMIT)
+    source_commit = private_source_commit(args.lesson)
     files = {
         "unpack_audio.py": gh.fetch_pinned(commit, helper, digest),
         "corrected-source.txt": gh.fetch_pinned(source_commit, source_path, source_hash),
@@ -267,11 +282,13 @@ def verified_files(folder, lesson):
             "Unexpected verified export files")
     contents = {p.name: p.read_bytes() for p in entries}
     index = json.loads(contents["index.json"])
-    actual_lesson = {phrase.KEY:phrase.LESSON,supply.KEY:supply.LESSON}.get(lesson,lesson)
-    source_commit = supply.SOURCE_COMMIT if lesson == supply.KEY else forms.COMMITS.get(lesson,SOURCE_COMMIT)
+    actual_lesson = {phrase.KEY:phrase.LESSON,supply.KEY:supply.LESSON,november.KEY:supply.LESSON}.get(lesson,lesson)
+    source_commit = private_source_commit(lesson)
     require(index["schema"] == "exam80-dr-correction-audio/v1" and index["lesson_id"] == actual_lesson and
             index["source_sha256"] == source_hash and index["private_source_commit"] == source_commit
             and [s["paragraph"] for s in index["segments"]] == paragraphs, "Private export index mismatch")
+    if lesson == november.KEY:
+        require(index.get("correction_variant")==november.VARIANT,"Wrong private correction variant")
     if lesson == supply.KEY:
         require(index.get("correction_variant") == supply.VARIANT,"Wrong private correction variant")
     if lesson == phrase.KEY:

@@ -1,0 +1,263 @@
+{
+  "groups": [
+    {
+      "new_span": [
+        2331,
+        2572
+      ],
+      "new_unit_hashes": [
+        [
+          "3bc3eae78cc438079aa9f387db5fb43d3f7d9897d160b6d4e0b2f2c442990e80",
+          "2fa82957523b9f1773ccd5a6d055673a8a0ff1c8daa94e1e0f2196ee00873de8"
+        ],
+        [
+          "4906791fa1524b7bfaf681f9c12b6a2c8dd9cecd77d6904094f3bbcf3ac61fc7",
+          "f118a085bc99cb0ce116d05a074230eb4fb3d355f9ad04777d70f6b9585f3e15"
+        ]
+      ],
+      "old_span": [
+        2331,
+        2562
+      ],
+      "old_unit_hashes": [
+        [
+          "e240f55895a0878dd287e89ad16c992d853b6891a37d203eb82ccca3379ad992",
+          "66386a5159cd64dde0249c5c5ad3e409093ff0f5e9e25fc09ce716a59b9dfd31"
+        ],
+        [
+          "009ad48d484f4c328e45a4c3901860154d1aa4918f6d6691e0eda6f302bd65b1",
+          "4eb9fe2d05f0e1e697735cf74816e019701397a2d3f536bd283495a6994e8d38"
+        ]
+      ],
+      "original_unit_indices": [
+        30,
+        31
+      ],
+      "paragraph_index": 24,
+      "replace_spans": [
+        {
+          "new": [
+            2391,
+            2455
+          ],
+          "old": [
+            2391,
+            2450
+          ]
+        },
+        {
+          "new": [
+            2479,
+            2522
+          ],
+          "old": [
+            2474,
+            2512
+          ]
+        }
+      ],
+      "slot": 30,
+      "unit_indices": [
+        30,
+        31
+      ]
+    },
+    {
+      "new_span": [
+        3437,
+        3753
+      ],
+      "new_unit_hashes": [
+        [
+          "3fe997232799e5299fc52b4fb667c747b4f0fb5d3e0a8abc7b8cea7c714dfa49",
+          "fbf758ad2e79beb722e34e68ed164f9311e67fb30c0b16ec586ecbb790457191"
+        ],
+        [
+          "2d81415caa689bd9302dcf01ce36da1399f70d89e0ae5cf2f530bee162a026e2",
+          "41cdc5f17fcf29d7f1bed1cc510d607be138f9464c0ecbfb6b90bd9a0aa68955"
+        ],
+        [
+          "2d5a34f3214b720a25c26c3e50a7a2bdaabc3efdea71cc5e2ca7fca4e0955746",
+          "cc9d4d3b8ac449a9543ba353d903b7679c375fd3900c263f4e009bf1a3028369"
+        ]
+      ],
+      "old_span": [
+        3427,
+        3704
+      ],
+      "old_unit_hashes": [
+        [
+          "5493236bbef9cc29107149210129543e8650e1532ca29877aca9a2540539fcee",
+          "0037a2e6be92456835fd6a6b22601df49cb27500513ad60ca041e15ee0cdc138"
+        ],
+        [
+          "98208bf7a237b84b6ae753027a8c19185cc71ca1b19ca2f1fe4b3acc5d5436a1",
+          "08218ffadbaee27e06654d0051a93dbee679dadb04876bcf0da21520c86eab18"
+        ]
+      ],
+      "original_unit_indices": [
+        43,
+        44
+      ],
+      "paragraph_index": 32,
+      "replace_spans": [
+        {
+          "new": [
+            3437,
+            3534
+          ],
+          "old": [
+            3427,
+            3485
+          ]
+        }
+      ],
+      "slot": 43,
+      "unit_indices": [
+        43,
+        44,
+        45
+      ]
+    },
+    {
+      "new_span": [
+        6957,
+        7036
+      ],
+      "new_unit_hashes": [
+        [
+          "79beba035624b7532636df6a565cb41f514acbac33d0cdfaa35a986f3afe264a",
+          "c14e79ef65f55e451066f8e5e57c6a2a16491c9de8e21e24ccc0387d676399ce"
+        ]
+      ],
+      "old_span": [
+        6908,
+        6995
+      ],
+      "old_unit_hashes": [
+        [
+          "15ee570862618c5cfd8ae1d36fd33030666151577bc93d47fcf5168eeea81424",
+          "76f515048723785a74d50119a04ca709cf67b662736059c43bcb5e5ad4e1e93d"
+        ]
+      ],
+      "original_unit_indices": [
+        81
+      ],
+      "paragraph_index": 58,
+      "replace_spans": [
+        {
+          "new": [
+            7005,
+            7036
+          ],
+          "old": [
+            6956,
+            6995
+          ]
+        }
+      ],
+      "slot": 82,
+      "unit_indices": [
+        82
+      ]
+    },
+    {
+      "new_span": [
+        7160,
+        7260
+      ],
+      "new_unit_hashes": [
+        [
+          "5671e5e5cad3689e3f9759b8c26f6e2405aa894dd8660a6c56f89d58d892c70c",
+          "fc2803ba9812a756acbe52cc51c5f21d9ef864cf5ae4982d984a31b8cdcd8dfe"
+        ]
+      ],
+      "old_span": [
+        7119,
+        7208
+      ],
+      "old_unit_hashes": [
+        [
+          "3de7c988fa418269d1dc43d9b928c668c3915e05d9f153e8aee08feb26be1c1e",
+          "b010724ca5f57ff5fa468a30e90327d95f52a0e703ea0c9380f967e608b79936"
+        ]
+      ],
+      "original_unit_indices": [
+        85
+      ],
+      "paragraph_index": 60,
+      "replace_spans": [
+        {
+          "new": [
+            7234,
+            7260
+          ],
+          "old": [
+            7193,
+            7208
+          ]
+        }
+      ],
+      "slot": 86,
+      "unit_indices": [
+        86
+      ]
+    },
+    {
+      "new_span": [
+        7548,
+        7777
+      ],
+      "new_unit_hashes": [
+        [
+          "10cef481e0ea51af9e4fe7434289ac076b1f5e4b0bf00441d683242dcddefd9f",
+          "c19f0607da0050859d9247511fe3c5ae794c7954386878f6d5fd832cadd95231"
+        ],
+        [
+          "a2fd546da725bc2d5f4a80fecd1808181a3037abb63a007455d600e2f31ae56c",
+          "e73157eee1eaa6f104e8f4be4b46763f0db17b333faf565bf982fb36df1ffdd3"
+        ]
+      ],
+      "old_span": [
+        7496,
+        7692
+      ],
+      "old_unit_hashes": [
+        [
+          "9ecb62edc8ccf8461cb74f408ff65d65427e1dae744ff436dec2fbdc5b559376",
+          "1d8176287be65849a870de9ab8d8c0a5bb4ffbb7ef112fc261e631d51dcb6c28"
+        ],
+        [
+          "a3451b07c5711543e1f8ecee448d700634a7f1e17d6ebc62f044abcc57b86244",
+          "550835878fb0995263aa0f141b281c19e66890778393fc5e1d4675b76e001818"
+        ]
+      ],
+      "original_unit_indices": [
+        92,
+        93
+      ],
+      "paragraph_index": 61,
+      "replace_spans": [
+        {
+          "new": [
+            7608,
+            7687
+          ],
+          "old": [
+            7556,
+            7602
+          ]
+        }
+      ],
+      "slot": 93,
+      "unit_indices": [
+        93,
+        94
+      ]
+    }
+  ],
+  "new_count": 96,
+  "original_count": 95,
+  "original_source_sha256": "c9cb3dcfabb360af5861983aeccbd4bb7a611f23babc26a52daec2c07e3d90a9",
+  "source_sha256": "5904f1fe72419f6009b2670d0918c321742da683e1ec89b632ab28eb2bfefcfb"
+}
