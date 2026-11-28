@@ -7,6 +7,10 @@ import os
 from pathlib import Path
 import subprocess
 import tempfile
+import time
+from urllib.error import HTTPError, URLError
+from urllib.parse import quote
+from urllib.request import Request, build_opener, HTTPRedirectHandler
 import sys
 
 HERE = Path(__file__).resolve().parent
@@ -40,10 +44,82 @@ def tag(course):
     return 'bora-48k-' + course.lower() + '-v1-20261128'
 
 
+
+PLAYBACK_RELEASES = {tag('TB'): 461224961, tag('RL'): 461225015, tag('MS'): 461225118, tag('DR'): 461225065}
+
+
+class NoRedirect(HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, url):
+        return None
+
+
+class PlaybackBackend(tr.GitHubBackend):
+    def _run(self, args, *, data=None, output=None, missing=False):
+        reading = args[0] == 'api' and '--method' not in args and '-X' not in args
+        for attempt in range(6):
+            try:
+                return super()._run(args, data=data, output=output, missing=missing)
+            except tr.TransportError:
+                if not reading or attempt == 5:
+                    raise
+                if output is not None:
+                    output.seek(0)
+                    output.truncate()
+                time.sleep(5 * 2**attempt)
+
+    def release(self, tag_name):
+        release_id = PLAYBACK_RELEASES.get(tag_name)
+        require(release_id is not None, 'unexpected playback release')
+        entry = json.loads(self._run(['api', f'/repos/{REPO}/releases/{release_id}']))
+        require(entry['id'] == release_id and entry['tag_name'] == tag_name, 'playback release identity')
+        return entry
+
+    def upload(self, release, path):
+        tr.assert_keyless()
+        require(PLAYBACK_RELEASES.get(release['tag_name']) == release['id'], 'upload release')
+        name = path.name
+        url = f'https://uploads.github.com/repos/{REPO}/releases/{release["id"]}/assets?name='+quote(name,safe='')
+        expected = tr._sha(path)
+        endpoint = build_opener(NoRedirect())
+        for attempt in range(7):
+            delay = 5 * 2**attempt
+            try:
+                with path.open('rb') as stream:
+                    req = Request(url, method='POST', data=stream, headers={
+                        'Authorization': 'Bearer '+os.environ['GITHUB_TOKEN'],
+                        'Content-Type': 'application/octet-stream', 'User-Agent': 'bora-playback48-release',
+                        'Content-Length': str(path.stat().st_size)})
+                    with endpoint.open(req, timeout=240) as response:
+                        row = json.load(response)
+                require(row['name']==name and row['digest']=='sha256:'+expected, 'uploaded digest')
+                return
+            except HTTPError as error:
+                if error.code == 422:
+                    existing = inventory(self,release).get(name)
+                    require(existing and existing['digest']=='sha256:'+expected, 'existing upload digest')
+                    return
+                if error.code not in (403,429,500,502,503,504):
+                    raise
+                after = error.headers.get('Retry-After','0')
+                if after.isdigit(): delay = max(delay,int(after))
+                if error.headers.get('X-RateLimit-Remaining')=='0':
+                    reset=error.headers.get('X-RateLimit-Reset','0')
+                    if reset.isdigit(): delay=max(delay,int(reset)-int(time.time())+2)
+                print('Upload delayed by HTTP', error.code, 'for', max(1,delay), 'seconds',flush=True)
+            except (URLError,TimeoutError,ConnectionError):
+                pass
+            if attempt == 6:
+                raise RuntimeError('upload retries exhausted')
+            time.sleep(max(1,delay))
+
+
 def paths(group):
     pins = json.loads((HERE / 'playback48-sources.json').read_text())
     ids = sorted(set(pins) - EXTRA)[group::20] if group < 20 else sorted(EXTRA)
-    return [(ident, pins[ident]) for ident in ids]
+    request = json.loads((HERE / 'playback48-request.json').read_text())
+    selected = request.get('remaining', ids)
+    require(isinstance(selected,list) and set(selected) <= set(pins), 'remaining IDs')
+    return [(ident, pins[ident]) for ident in ids if ident in selected]
 
 
 def inventory(gh, release):
@@ -51,7 +127,7 @@ def inventory(gh, release):
 
 
 def fetch(group, folder):
-    gh = tr.GitHubBackend()
+    gh = PlaybackBackend()
     source = {}
     previous = {}
     for ident, pin in paths(group):
@@ -168,20 +244,24 @@ def transform(folder, target):
 
 
 def upload(group, folder):
-    gh=tr.GitHubBackend()
+    gh=PlaybackBackend()
+    releases = {}
     for out in sorted(folder.iterdir()):
         ident=out.name
         require(ident in dict(paths(group)), 'upload scope')
         tr.validate_final_directory(out,ident[:2],partial=True,profile='single_pass')
         files = list(out.glob('*.bin'))
         require(len(files)==2 and len(list(out.iterdir()))==3,'encrypted files only')
-        release = tr._release(gh,tag(ident[:2]))
+        course = ident[:2]
+        if course not in releases:
+            releases[course] = tr._release(gh,tag(course))
+        release = releases[course]
         for f in sorted(files): gh.upload(release,f)
         gh.upload(release,out/(ident+'.descriptor.json'))
 
 
 def finish():
-    gh=tr.GitHubBackend()
+    gh=PlaybackBackend()
     verified = {}
     for course,n in COURSES.items():
         rel=tr._release(gh,tag(course))
@@ -235,7 +315,7 @@ def finish():
 if __name__ == '__main__':
     a=sys.argv[1:]
     if a[0]=='prepare':
-        gh=tr.GitHubBackend()
+        gh=PlaybackBackend()
         for c in COURSES: tr._release(gh,tag(c),create=True)
     elif a[0]=='finish': finish()
     elif a[0]=='fetch': fetch(int(a[1]),Path(a[2]))
