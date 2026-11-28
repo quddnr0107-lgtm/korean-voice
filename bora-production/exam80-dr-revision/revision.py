@@ -122,7 +122,17 @@ def run(args):
     env_hash, audio_hash = SOURCE_FILES[ident]
     folder = Path(__file__).resolve().parent
     trigger_fields = dict(schema='exam80-directive-private-corrections/v1', engine_commit=ENGINE)
-    if ident in forms.COMMITS:
+    envelope_folder = None
+    supplement = args.scope == 'article5'
+    if supplement:
+        from article5 import corrected_plan as plan_scope
+        require(ident == plan_scope.LESSON, 'wrong_supplement_lesson')
+        media_scope = old_media
+        envelope_folder = folder
+        folder = folder / 'article5'
+        source_commit = plan_scope.SOURCE_COMMIT
+        trigger_fields = plan_scope.REQUEST
+    elif ident in forms.COMMITS:
         from batch3 import corrected_plan as plan_scope
         media_scope = old_media
         folder = folder / "batch3"
@@ -138,7 +148,7 @@ def run(args):
         source_commit = SOURCE_COMMIT
         trigger_fields.update(lessons=['DR-052','DR-054'], private_source_commit=SOURCE_COMMIT)
     require(runtime.read_json(folder / 'request.json') == trigger_fields, 'revision_request_scope')
-    envelope_file = folder / (ident + '.sealed.json')
+    envelope_file = (envelope_folder or folder) / (ident + '.sealed.json')
     require(runtime.sha(envelope_file.read_bytes()) == env_hash, 'revised_envelope_pin')
     envelope = runtime.read_json(envelope_file)
     source_key, media_key = runtime.protected_keys(media=True, profile='single_pass')
@@ -163,7 +173,7 @@ def run(args):
                 segments = []
                 for row in selected:
                     segment = render_paragraph(runtime, assemble, renderer, work, row, recipe, repair)
-                    if ident in BATCH2_COMMITS or ident in forms.COMMITS:
+                    if supplement or ident in BATCH2_COMMITS or ident in forms.COMMITS:
                         segment.update(plan_scope.extra(ident, row[0]))
                     segments.append(segment)
                     print(ident, 'verified paragraphs', len(segments), 'of', len(selected), file=progress)
@@ -174,6 +184,8 @@ def run(args):
                          source_sha256=plan['source_sha256'], original_source_sha256=plan_scope.PINS[ident][0],
                          original_audio_sha256=audio_hash, recipe_sha256=RECIPE, render_settings_sha256=SETTINGS,
                          original_receipt=old_receipt, segments=segments, asr_performed=False)
+            if supplement:
+                index['correction_variant'] = 'article5'
             buffer = io.BytesIO()
             with zipfile.ZipFile(buffer, 'w', compression=zipfile.ZIP_STORED) as archive:
                 archive.writestr('index.json', runtime.enc(index))
@@ -193,6 +205,7 @@ def run(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--lesson', choices=SOURCE_FILES, required=True)
+    parser.add_argument('--scope', choices=('standard', 'article5'), default='standard')
     for name in ('engine','transport','old-media','output'):
         parser.add_argument('--' + name, type=Path, required=True)
     try:

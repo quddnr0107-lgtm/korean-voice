@@ -1,0 +1,12 @@
+{
+  "lesson": "DR-054",
+  "schema": "exam80-private-acoustic-supplement/v1",
+  "scope": "article5",
+  "source_commit": "367750f745f0d1873290b9885f790f5484be3cd7",
+  "source_sha256": "be5637d9242e760f5e1f25f745f662150f7f37b2e49b78de2c51021da20fa37c",
+  "source_span": [
+    2645,
+    2652
+  ],
+  "unit": 29
+}
