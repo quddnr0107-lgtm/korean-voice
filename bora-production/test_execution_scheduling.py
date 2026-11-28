@@ -263,10 +263,12 @@ class MilitaryServiceCheckpointWorkflowTests(unittest.TestCase):
     def test_correction_groups_require_full_messages_and_isolate_exports_by_commit(self):
         first = 'Render private Exam80 directive corrections 20261128'
         second = 'Render private Exam80 directive corrections DR038 DR047 20261128'
+        third = 'Render private Exam80 directive corrections DR045 DR076 20261128'
         recovery = 'Recover verified Exam80 correction exports for DR-038'
         self.assertEqual(self.concurrency_group(first), 'exam80-protected-dr-revision')
         self.assertEqual(self.concurrency_group(second), 'exam80-protected-dr-revision-038-047')
-        for message in (first, second):
+        self.assertEqual(self.concurrency_group(third), 'exam80-protected-dr-revision-045-076')
+        for message in (first, second, third):
             self.assertEqual(self.concurrency_group(message + ' extra'), 'bora-fp32-single-pass-next')
         for sha in ('a'*40, 'b'*40):
             self.assertEqual(self.concurrency_group(recovery, sha), 'exam80-export-recovery-' + sha)

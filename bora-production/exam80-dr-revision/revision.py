@@ -13,6 +13,7 @@ import zipfile
 
 import corrected_plan
 import old_media
+from batch3 import config as forms
 
 
 SOURCE_COMMIT = '367750f745f0d1873290b9885f790f5484be3cd7'
@@ -31,6 +32,7 @@ SOURCE_FILES = {
     'DR-047': ('94949b3e77ac8c4986587005d5d809099f8b2acd0fb94c7fd7b341e311690404',
                '5d8eb9a58356938246059659e31f42ea48d9339858d2f8d5ec53648e5541668e'),
 }
+SOURCE_FILES.update(forms.SOURCE_FILES)
 BATCH2_COMMITS = {'DR-038': 'f543f423a92843a7e47b5dfeab9c428d0553716f',
                   'DR-047': '6ed18c9353a023b7b5287867a3ccefeef0c583a8'}
 
@@ -103,7 +105,8 @@ def render_paragraph(runtime, assembly, renderer, work, row, recipe, repair):
 
 def run(args):
     os.umask(0o077)
-    require(current_commit(args.engine) == ENGINE and current_commit(args.transport) == TRANSPORT, 'checkout_pins')
+    engine_commit = forms.ENGINES.get(args.lesson, ENGINE)
+    require(current_commit(args.engine) == engine_commit and current_commit(args.transport) == TRANSPORT, 'checkout_pins')
     require(not args.output.exists(), 'output_exists')
     ident = args.lesson
     engine = args.engine / 'bora-production'
@@ -119,7 +122,13 @@ def run(args):
     env_hash, audio_hash = SOURCE_FILES[ident]
     folder = Path(__file__).resolve().parent
     trigger_fields = dict(schema='exam80-directive-private-corrections/v1', engine_commit=ENGINE)
-    if ident in BATCH2_COMMITS:
+    if ident in forms.COMMITS:
+        from batch3 import corrected_plan as plan_scope
+        media_scope = old_media
+        folder = folder / "batch3"
+        source_commit = forms.COMMITS[ident]
+        trigger_fields = forms.request()
+    elif ident in BATCH2_COMMITS:
         from batch2 import corrected_plan as plan_scope, old_media as media_scope
         folder = folder / 'batch2'
         source_commit = BATCH2_COMMITS[ident]
@@ -154,14 +163,14 @@ def run(args):
                 segments = []
                 for row in selected:
                     segment = render_paragraph(runtime, assemble, renderer, work, row, recipe, repair)
-                    if ident in BATCH2_COMMITS:
+                    if ident in BATCH2_COMMITS or ident in forms.COMMITS:
                         segment.update(plan_scope.extra(ident, row[0]))
                     segments.append(segment)
                     print(ident, 'verified paragraphs', len(segments), 'of', len(selected), file=progress)
             finally:
                 runtime.close_renderer(renderer)
             index = dict(schema='exam80-dr-correction-audio/v1', lesson_id=ident,
-                         private_source_commit=source_commit, engine_commit=ENGINE, transport_commit=TRANSPORT,
+                         private_source_commit=source_commit, engine_commit=engine_commit, transport_commit=TRANSPORT,
                          source_sha256=plan['source_sha256'], original_source_sha256=plan_scope.PINS[ident][0],
                          original_audio_sha256=audio_hash, recipe_sha256=RECIPE, render_settings_sha256=SETTINGS,
                          original_receipt=old_receipt, segments=segments, asr_performed=False)

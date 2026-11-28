@@ -31,6 +31,11 @@ LESSONS = {
                "be5637d9242e760f5e1f25f745f662150f7f37b2e49b78de2c51021da20fa37c",
                [30, 33, 56, 58, 59, 62, 70]),
 }
+from batch3 import config as forms
+from batch3.corrected_plan import SCOPES
+from batch3.exporter import PRIVATE_PATH, COMMIT as FORMS_EXPORTER_COMMIT, SHA256 as FORMS_EXPORTER_SHA256
+for ident, scope_data in SCOPES.items():
+    LESSONS[ident] = (forms.PATHS[ident], scope_data["source_sha256"], [r["slot"] for r in scope_data["groups"]])
 LIMIT = 32 * 1024**2
 PRIVATE_GIT_URL = f"https://github.com/{PRIVATE}.git"
 
@@ -218,11 +223,14 @@ def scope(path):
 def fetch(gh, args):
     gh.check_private()
     source_path, source_hash, _ = LESSONS[args.lesson]
-    require(args.exporter_commit == EXPORTER_COMMIT and args.exporter_sha256 == EXPORTER_SHA256,
+    commit, digest, helper = EXPORTER_COMMIT, EXPORTER_SHA256, PRIVATE_HELPER
+    if args.lesson in forms.COMMITS:
+        commit, digest, helper = FORMS_EXPORTER_COMMIT, FORMS_EXPORTER_SHA256, PRIVATE_PATH
+    require((args.exporter_commit or commit) == commit and (args.exporter_sha256 or digest) == digest,
             "Invalid private exporter revision")
     files = {
-        "unpack_audio.py": gh.fetch_pinned(args.exporter_commit, PRIVATE_HELPER, args.exporter_sha256),
-        "corrected-source.txt": gh.fetch_pinned(SOURCE_COMMIT, source_path, source_hash),
+        "unpack_audio.py": gh.fetch_pinned(commit, helper, digest),
+        "corrected-source.txt": gh.fetch_pinned(forms.COMMITS.get(args.lesson, SOURCE_COMMIT), source_path, source_hash),
     }
     args.output.mkdir(mode=0o700, parents=False, exist_ok=False)
     for name, data in files.items():
@@ -239,7 +247,7 @@ def verified_files(folder, lesson):
     contents = {p.name: p.read_bytes() for p in entries}
     index = json.loads(contents["index.json"])
     require(index["schema"] == "exam80-dr-correction-audio/v1" and index["lesson_id"] == lesson and
-            index["source_sha256"] == source_hash and index["private_source_commit"] == SOURCE_COMMIT
+            index["source_sha256"] == source_hash and index["private_source_commit"] == forms.COMMITS.get(lesson, SOURCE_COMMIT)
             and [s["paragraph"] for s in index["segments"]] == paragraphs, "Private export index mismatch")
     for row in index["segments"]:
         name = f"p{row['paragraph']:03}.mp3"
@@ -290,8 +298,8 @@ def main():
     actions = parser.add_subparsers(dest="action", required=True)
     get = actions.add_parser("fetch")
     get.add_argument("--output", required=True, type=Path)
-    get.add_argument("--exporter-commit", default=EXPORTER_COMMIT)
-    get.add_argument("--exporter-sha256", default=EXPORTER_SHA256)
+    get.add_argument("--exporter-commit")
+    get.add_argument("--exporter-sha256")
     put = actions.add_parser("store")
     put.add_argument("--verified", required=True, type=Path)
     for action in (get, put):

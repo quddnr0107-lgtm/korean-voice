@@ -21,6 +21,10 @@ PINS = {
                '1a3289c6e64971170d302817facad9a9d3c64bc8b87e885983454280ee1f579f',
                74777282, 74833785, 119),
 }
+from batch3.config import MEDIA
+PINS.update(MEDIA)
+
+
 PRODUCER_BLOBS = {
     'transport': 'c66fab15082ca4022e954b0d14572f72615a2194',
     'lecture_crypto': '1ca4d6da5b9272b3f5fae171d533bc2447716b7d',

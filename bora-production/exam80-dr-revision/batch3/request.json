@@ -1,0 +1,15 @@
+{
+  "engine_commits": {
+    "DR-045": "db2081bf68cdc3e4cd6a73a3a719b68f58cb675f",
+    "DR-076": "49637dfd44f2890a276308839757a573a92087a9"
+  },
+  "lessons": [
+    "DR-045",
+    "DR-076"
+  ],
+  "private_source_commits": {
+    "DR-045": "a5d1247b02bb13c656bf885d24acd8059214de43",
+    "DR-076": "71649ea8dfbec359a194ea249d60e9efdc253a59"
+  },
+  "schema": "exam80-directive-private-corrections/v2"
+}

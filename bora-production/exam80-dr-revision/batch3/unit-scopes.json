@@ -1,0 +1,1427 @@
+{
+  "DR-045": {
+    "groups": [
+      {
+        "new_span": [
+          0,
+          31
+        ],
+        "new_unit_hashes": [
+          [
+            "09172df788e0c5bb315c10f8490d3e7ce65de3fb5b0d63ef4ceac854406b736d",
+            "1f14da5e54f96e9c2cc827338e37603a43f0f4466f44b1a49266b9251fb36e45"
+          ]
+        ],
+        "old_span": [
+          0,
+          32
+        ],
+        "old_unit_hashes": [
+          [
+            "63299436b71142faf79608201a42e2e7c47983971623465f3a920620651ff8c3",
+            "46125b88a684f649a4546c79aedd96b66a2bc8fd4e403aad2563d034d8680554"
+          ]
+        ],
+        "original_unit_indices": [
+          0
+        ],
+        "paragraph_index": 0,
+        "replace_spans": [
+          {
+            "new": [
+              0,
+              31
+            ],
+            "old": [
+              0,
+              32
+            ]
+          }
+        ],
+        "slot": 0,
+        "unit_indices": [
+          0
+        ]
+      },
+      {
+        "new_span": [
+          33,
+          84
+        ],
+        "new_unit_hashes": [
+          [
+            "077a98a7c35c7419f336eabc0c1231948444b62ce4a74f7d4064c5ba75359cfd",
+            "dd45767a13cd428212864fa3ae65cde8504d5c1a41ec016b9db945a9125dd511"
+          ]
+        ],
+        "old_span": [
+          34,
+          86
+        ],
+        "old_unit_hashes": [
+          [
+            "2f7ff371bc7472fb99b2590280e33eb8c781bdedc23808dd83464763d096f867",
+            "d70bcae1e1bc25e120f29bdba2e3d65ba4dba5d121d8d3e5934f04566ffee775"
+          ]
+        ],
+        "original_unit_indices": [
+          1
+        ],
+        "paragraph_index": 1,
+        "replace_spans": [
+          {
+            "new": [
+              40,
+              84
+            ],
+            "old": [
+              41,
+              86
+            ]
+          }
+        ],
+        "slot": 1,
+        "unit_indices": [
+          1
+        ]
+      },
+      {
+        "new_span": [
+          86,
+          244
+        ],
+        "new_unit_hashes": [
+          [
+            "7f51dce33370e2c8d6322c7c5db2b5e405f0b11e50a6084114eef202630b4b4d",
+            "fb864dfc1330798e8d0ae3eaadcee858be293f3437d6b11d83c0b162bd4528d8"
+          ]
+        ],
+        "old_span": [
+          88,
+          210
+        ],
+        "old_unit_hashes": [
+          [
+            "a93bc1c499bb29d010bc4364f5ddfaa0ef3b2e5824b74b2b1bc0f5ee8717af76",
+            "5fadc6c0f2326a0400d82707bb362ab685c50b74b6597b78c462e447efda6417"
+          ]
+        ],
+        "original_unit_indices": [
+          2
+        ],
+        "paragraph_index": 2,
+        "replace_spans": [
+          {
+            "new": [
+              86,
+              172
+            ],
+            "old": [
+              88,
+              138
+            ]
+          }
+        ],
+        "slot": 2,
+        "unit_indices": [
+          2
+        ]
+      },
+      {
+        "new_span": [
+          246,
+          368
+        ],
+        "new_unit_hashes": [
+          [
+            "b233621bb69c59a4dbe59f61f082e1e7750122a419bb30f09dee65adcd7ffa2b",
+            "add0b0b5345e896b74e843519bccfb57217ebbe6b778bfa933a0d4f294290362"
+          ]
+        ],
+        "old_span": [
+          212,
+          336
+        ],
+        "old_unit_hashes": [
+          [
+            "33b3beedb214c4eea9af732bb549ddea9755e6aa35f58093c0c258b2d9215697",
+            "3cd710d9d05f344437dd491c9c1bdf94d539c3872fe2073510e3af076b1858a7"
+          ]
+        ],
+        "original_unit_indices": [
+          3
+        ],
+        "paragraph_index": 3,
+        "replace_spans": [
+          {
+            "new": [
+              267,
+              329
+            ],
+            "old": [
+              233,
+              297
+            ]
+          }
+        ],
+        "slot": 3,
+        "unit_indices": [
+          3
+        ]
+      },
+      {
+        "new_span": [
+          525,
+          704
+        ],
+        "new_unit_hashes": [
+          [
+            "a0836685ef2062dc8536c082863e1da354dd45b563b28c0f3b83f73251104bd7",
+            "261387abb4a81b9da4afadd8da22c2e2446fd5289c4cbc868e16d846b95edab5"
+          ]
+        ],
+        "old_span": [
+          493,
+          653
+        ],
+        "old_unit_hashes": [
+          [
+            "88e0f58ecf8ffcdf8a94f1f73e15050c399b6b67f40ca33c2ad85aba64ac5ffc",
+            "51654e319beae550cc6a998bbc59a9ddef6109baeeeee29927c91ace7c486184"
+          ]
+        ],
+        "original_unit_indices": [
+          6
+        ],
+        "paragraph_index": 5,
+        "replace_spans": [
+          {
+            "new": [
+              525,
+              704
+            ],
+            "old": [
+              493,
+              653
+            ]
+          }
+        ],
+        "slot": 6,
+        "unit_indices": [
+          6
+        ]
+      },
+      {
+        "new_span": [
+          1158,
+          1317
+        ],
+        "new_unit_hashes": [
+          [
+            "5054aaf1ad20e9f6617f127755533026f6f507f4785c1b8c8dd331ea6e598fae",
+            "99b569c8f8cc861e35fc5134d16264e9a1b3658dc8f99f2b39ef2d0b5d0d8dd3"
+          ]
+        ],
+        "old_span": [
+          1107,
+          1263
+        ],
+        "old_unit_hashes": [
+          [
+            "425dc047393bcbcf65c48b4f8ed1efaf69a914d9dc46ecab4b4efd3790600f49",
+            "2e0b6a428c15c17851b7cd5a2961077c78d86dc328f10010bf978158e1a93e23"
+          ]
+        ],
+        "original_unit_indices": [
+          12
+        ],
+        "paragraph_index": 10,
+        "replace_spans": [
+          {
+            "new": [
+              1266,
+              1317
+            ],
+            "old": [
+              1215,
+              1263
+            ]
+          }
+        ],
+        "slot": 12,
+        "unit_indices": [
+          12
+        ]
+      },
+      {
+        "new_span": [
+          1319,
+          1430
+        ],
+        "new_unit_hashes": [
+          [
+            "b03d2f0ae5da93477cce35189418eda19be1499d367af8742278ed3de1437ce0",
+            "d234bed570eaa000d9efeb76605896ff23a7a6333815d61a344d32d85b119992"
+          ]
+        ],
+        "old_span": [
+          1265,
+          1363
+        ],
+        "old_unit_hashes": [
+          [
+            "d5eb7be51f82173d45ed0f80c346b669f08225a89e75bea102fd8a60c175eb2e",
+            "c3dead60c3171687b505eaf99e157acb1d729eb8b9d74ef53772390b263520da"
+          ]
+        ],
+        "original_unit_indices": [
+          13
+        ],
+        "paragraph_index": 11,
+        "replace_spans": [
+          {
+            "new": [
+              1360,
+              1414
+            ],
+            "old": [
+              1306,
+              1347
+            ]
+          }
+        ],
+        "slot": 13,
+        "unit_indices": [
+          13
+        ]
+      },
+      {
+        "new_span": [
+          1894,
+          2226
+        ],
+        "new_unit_hashes": [
+          [
+            "029cb1d05f8c67d4d1f30306a9a2dec3b1d38a3dba8a0baf6aa0ebcb1fe76395",
+            "37a4defbcfb9b37d8df3f335b8c22aa885e2d717103581e879cfe22acfa57d81"
+          ],
+          [
+            "f366e2d2b7eeafed43a81e93eb204d68edccfb6f6914745815fab0d3f3fa11ac",
+            "814c9df35e5edbeed61711341baeee561f49c13ed0fc24dced614468b8ac056f"
+          ]
+        ],
+        "old_span": [
+          1827,
+          2152
+        ],
+        "old_unit_hashes": [
+          [
+            "30e77a86e9adbabdbda8245e9bf0f6d56d45cadc37ad4e934dff97e3375303ff",
+            "e3780d2883a2b26e2934012fbd41e41e41946c12117f55235f0c4ae78d0e5b92"
+          ],
+          [
+            "affb1505a1c57b43864519c572ded0d829c842600ae064de90af95c784dae3dd",
+            "4684ba6d71b9785ff7cf58945734450a374ee463b131001a48799ed330cd08ef"
+          ]
+        ],
+        "original_unit_indices": [
+          17,
+          18
+        ],
+        "paragraph_index": 14,
+        "replace_spans": [
+          {
+            "new": [
+              1920,
+              1955
+            ],
+            "old": [
+              1853,
+              1884
+            ]
+          },
+          {
+            "new": [
+              1971,
+              2022
+            ],
+            "old": [
+              1900,
+              1952
+            ]
+          },
+          {
+            "new": [
+              2098,
+              2170
+            ],
+            "old": [
+              2028,
+              2096
+            ]
+          }
+        ],
+        "slot": 17,
+        "unit_indices": [
+          17,
+          18
+        ]
+      },
+      {
+        "new_span": [
+          2264,
+          2378
+        ],
+        "new_unit_hashes": [
+          [
+            "6a6b29f10ce334dc15603dc94b581a24f30b7900c382c2ebc6e1dfdbd585f5bd",
+            "6e1bd50e5fb0077155d1044e97689141d8f88995fc16f60dbb84ca3404bba9ee"
+          ]
+        ],
+        "old_span": [
+          2190,
+          2296
+        ],
+        "old_unit_hashes": [
+          [
+            "2cee1c053b3730ea2533fc56f12a7a59a0d549dc0e148b0e98899c7563ea5748",
+            "84dfc1df476559a69d75095276b4b1a2602eb32b1e6cab4c76350841468931c0"
+          ]
+        ],
+        "original_unit_indices": [
+          20
+        ],
+        "paragraph_index": 16,
+        "replace_spans": [
+          {
+            "new": [
+              2264,
+              2378
+            ],
+            "old": [
+              2190,
+              2296
+            ]
+          }
+        ],
+        "slot": 20,
+        "unit_indices": [
+          20
+        ]
+      },
+      {
+        "new_span": [
+          2380,
+          2618
+        ],
+        "new_unit_hashes": [
+          [
+            "7686e477230ba7b27e4eac52bc1900b0eeb00dac001264b52e41ab497b9ca748",
+            "5eab49d4a97e72f208d9f962aa5b6819d7f817d5e29fb079c4c386c7a704d4c4"
+          ],
+          [
+            "9b6f96ba37787fa9913eb1e41a536ea1b0fbe22391513e30299c86cfa0b284a4",
+            "70d6708e6b01a0ca0dd9e93d24b836e0c4bb6db09e5cd334fe5b2fdaea232d46"
+          ]
+        ],
+        "old_span": [
+          2298,
+          2508
+        ],
+        "old_unit_hashes": [
+          [
+            "cc6f2d40d42dccb28f8075912171d5d24bc6c294a973d414b809344fea9749fd",
+            "7d62f38c61bc4d22feffc8e416bbb42d24c386151ecd220c4ffd02dccaa5e6c7"
+          ],
+          [
+            "be22283c363c4c3f8a983750dc71706ecce847ec94b1d68a8de06c3855816f1a",
+            "b2d0659f09a07eb6792e3272caca28560e7fd2387e729266d4ba1500f1e4d100"
+          ]
+        ],
+        "original_unit_indices": [
+          21,
+          22
+        ],
+        "paragraph_index": 17,
+        "replace_spans": [
+          {
+            "new": [
+              2380,
+              2618
+            ],
+            "old": [
+              2298,
+              2508
+            ]
+          }
+        ],
+        "slot": 21,
+        "unit_indices": [
+          21,
+          22
+        ]
+      },
+      {
+        "new_span": [
+          2831,
+          3027
+        ],
+        "new_unit_hashes": [
+          [
+            "d065d917f348f9989d4e914862adcdd2d5b86e8d497c8766606aa063ac019324",
+            "f0a470374b78a4eb8c97a7ce2a321474f5a7fc7956644abae17e3ddc7e28a563"
+          ],
+          [
+            "f7269ade1436fd2917cb970b4b4bb9f33c6f02837f594cd5704cf21b124e62f1",
+            "99b61a57914c4223981c0ac0ae6a5d41e294ebd667520b44a6b8535f275f157a"
+          ]
+        ],
+        "old_span": [
+          2721,
+          2894
+        ],
+        "old_unit_hashes": [
+          [
+            "3b9fbc70e510c48da07da667fa9df05c2261c9db44bbaf777f0264b28038e216",
+            "56a5e22896d155668b6ccd3a7146262142e50040947c023c8416b9bee734789d"
+          ]
+        ],
+        "original_unit_indices": [
+          26
+        ],
+        "paragraph_index": 20,
+        "replace_spans": [
+          {
+            "new": [
+              2923,
+              2991
+            ],
+            "old": [
+              2813,
+              2858
+            ]
+          }
+        ],
+        "slot": 26,
+        "unit_indices": [
+          26,
+          27
+        ]
+      },
+      {
+        "new_span": [
+          3467,
+          3498
+        ],
+        "new_unit_hashes": [
+          [
+            "532b1c5dac1d57edfe2cd72279bb6348ba51664d11b0a966f3678d13caf14637",
+            "17497ae8b4f5276247c8174695708f7c740d1feb562d1d3fda0ac79f1b0ae93e"
+          ]
+        ],
+        "old_span": [
+          3334,
+          3368
+        ],
+        "old_unit_hashes": [
+          [
+            "e21c956b9d7670911f200d683b24ef3a6a8b6e8089cb69396f124a18d10207dd",
+            "cc8330415d3b8cc349e6318177c6bbfc6e52f892822b5cad65747e274a9796b4"
+          ]
+        ],
+        "original_unit_indices": [
+          30
+        ],
+        "paragraph_index": 24,
+        "replace_spans": [
+          {
+            "new": [
+              3467,
+              3498
+            ],
+            "old": [
+              3334,
+              3368
+            ]
+          }
+        ],
+        "slot": 31,
+        "unit_indices": [
+          31
+        ]
+      },
+      {
+        "new_span": [
+          3583,
+          3752
+        ],
+        "new_unit_hashes": [
+          [
+            "c35358f8d7cb943d6d7731908b6eb58add994cf87867333475d9690bbdfc3d7f",
+            "d0adf05c7ed628c7a23ffc13a05073f9d17cfc0783fe8ca98b6dd707fefa1021"
+          ]
+        ],
+        "old_span": [
+          3453,
+          3605
+        ],
+        "old_unit_hashes": [
+          [
+            "214103eeb9957b832aea601c2bedd7b4b3544c320fa802924808bfea9a050d40",
+            "41b7ab0b53747b75f7025758ade9b757f4312315ee649f1cb7c563f0d192a581"
+          ]
+        ],
+        "original_unit_indices": [
+          32
+        ],
+        "paragraph_index": 24,
+        "replace_spans": [
+          {
+            "new": [
+              3697,
+              3752
+            ],
+            "old": [
+              3567,
+              3605
+            ]
+          }
+        ],
+        "slot": 33,
+        "unit_indices": [
+          33
+        ]
+      },
+      {
+        "new_span": [
+          3802,
+          3867
+        ],
+        "new_unit_hashes": [
+          [
+            "1299b2ca3c304874d29930826a281d9e0f6073d6c38983b67c4f98f32caaeab5",
+            "b5546dbed953b19e65df7beab081fbad5aa9631f5d2a3f56c95a3d2d35752159"
+          ]
+        ],
+        "old_span": [
+          3655,
+          3721
+        ],
+        "old_unit_hashes": [
+          [
+            "05bcd6fbb5b7c3dd107fed9f0b2bbc5728d126d2a3895f533748e30bd18917ef",
+            "231f6843b08a4e60fa43213ca11a1332dba9a6ec8eec55e39c1145046ef28a6c"
+          ]
+        ],
+        "original_unit_indices": [
+          34
+        ],
+        "paragraph_index": 24,
+        "replace_spans": [
+          {
+            "new": [
+              3843,
+              3867
+            ],
+            "old": [
+              3696,
+              3721
+            ]
+          }
+        ],
+        "slot": 35,
+        "unit_indices": [
+          35
+        ]
+      },
+      {
+        "new_span": [
+          3968,
+          4048
+        ],
+        "new_unit_hashes": [
+          [
+            "5c3811ab4edec378c47bcbf960833e5ef64d2d31be5ffa45bfd85db4bae63b95",
+            "dec493aac02220a575c5a08e7a5d662f5d137ec71783a1ff46ae1e0ed340aaa6"
+          ]
+        ],
+        "old_span": [
+          3822,
+          3898
+        ],
+        "old_unit_hashes": [
+          [
+            "add954e3c27cc84cd8c865903743953b1def231e04b2547896b29cf6c9289559",
+            "e8ca220d98519041bbd1c9d0253def9bd1d70c45a8da4d41216fd5ba14c3fa9d"
+          ]
+        ],
+        "original_unit_indices": [
+          36
+        ],
+        "paragraph_index": 26,
+        "replace_spans": [
+          {
+            "new": [
+              3989,
+              4027
+            ],
+            "old": [
+              3843,
+              3877
+            ]
+          }
+        ],
+        "slot": 37,
+        "unit_indices": [
+          37
+        ]
+      },
+      {
+        "new_span": [
+          4152,
+          4244
+        ],
+        "new_unit_hashes": [
+          [
+            "cca67870528cc6261a8c72f0c60f9a888a20a33ff636b067fe236700a4db9015",
+            "1ad2ad1b9de08eba0f969465a2ed6595757a97dfd5c90d553c32fb76db445755"
+          ]
+        ],
+        "old_span": [
+          4002,
+          4080
+        ],
+        "old_unit_hashes": [
+          [
+            "994498ce303c2d35525cbdbed187b89fc5ce1b20f8db70b3a52e1cf3c9773c9b",
+            "9f235fec83b725ce845161c7ea66167be6f3f926e26d3fc017e7d4f55d7a0195"
+          ]
+        ],
+        "original_unit_indices": [
+          40
+        ],
+        "paragraph_index": 28,
+        "replace_spans": [
+          {
+            "new": [
+              4152,
+              4191
+            ],
+            "old": [
+              4002,
+              4035
+            ]
+          },
+          {
+            "new": [
+              4208,
+              4244
+            ],
+            "old": [
+              4052,
+              4080
+            ]
+          }
+        ],
+        "slot": 41,
+        "unit_indices": [
+          41
+        ]
+      },
+      {
+        "new_span": [
+          4408,
+          4501
+        ],
+        "new_unit_hashes": [
+          [
+            "9a9be8c8289a3b05fa1faab92384cdd23a854d9c9b5ea52b5cbdcd432067b4b5",
+            "bfb722434fb8ca8155ec9821723a823f5af5e4470a75dd6fedccd3f98aab6de2"
+          ]
+        ],
+        "old_span": [
+          4244,
+          4291
+        ],
+        "old_unit_hashes": [
+          [
+            "b2476f77e72ad96307d234a1cbdee78c6e09a179ede4ae152c6f9060abf087db",
+            "3343b322673a6410cee25ff245be7285f6db7eec92250e20111fb52ec97c446b"
+          ]
+        ],
+        "original_unit_indices": [
+          44
+        ],
+        "paragraph_index": 28,
+        "replace_spans": [
+          {
+            "new": [
+              4408,
+              4489
+            ],
+            "old": [
+              4244,
+              4279
+            ]
+          }
+        ],
+        "slot": 45,
+        "unit_indices": [
+          45
+        ]
+      },
+      {
+        "new_span": [
+          4503,
+          4565
+        ],
+        "new_unit_hashes": [
+          [
+            "89eac13b7af6d1949b1d3ea40a8b5a8ab54d30161e2247eb797aaa42e5de510b",
+            "dac81c3833ccd8d10c4fd042ec496bb798946733ca14833d90112440fc57efd7"
+          ]
+        ],
+        "old_span": [
+          4293,
+          4353
+        ],
+        "old_unit_hashes": [
+          [
+            "118c35fbec162dd96492ec1f338812f05b74abcf021584496b8b2c271e3f5807",
+            "b05ed1a36fc27ecd377e77c69e5879e5ede5fa0a2dff6637f75f5196eb4b245c"
+          ]
+        ],
+        "original_unit_indices": [
+          45
+        ],
+        "paragraph_index": 29,
+        "replace_spans": [
+          {
+            "new": [
+              4503,
+              4565
+            ],
+            "old": [
+              4293,
+              4353
+            ]
+          }
+        ],
+        "slot": 46,
+        "unit_indices": [
+          46
+        ]
+      }
+    ],
+    "new_count": 48,
+    "original_count": 47,
+    "original_source_sha256": "eaf28c01c9caaa98218f961edba76436d6ff556cb360b37b868698eef8965a18",
+    "source_sha256": "15726d1ad2ddf7d22959bf38bde8b78877e0ce0294336cab67df6f9bca89865d"
+  },
+  "DR-076": {
+    "groups": [
+      {
+        "new_span": [
+          287,
+          551
+        ],
+        "new_unit_hashes": [
+          [
+            "be600395484fcc648c4c3723f42be22ac680bd54b1ad8b37a4822ab423b3beb3",
+            "35cf2831f6b414d01e2b592652029551f8e636f7219d8973df6de080cf2e0c79"
+          ],
+          [
+            "3ef310d2456cc1f35182c6e9acfdb2072a2deb1966806690a92fbb83530757c0",
+            "148b257200a2aa363fc484a44477013382898553884b14d5a4049b144920629d"
+          ]
+        ],
+        "old_span": [
+          287,
+          525
+        ],
+        "old_unit_hashes": [
+          [
+            "2539afd9b5348118cb948bc58fc5de5ee37729d86152b1285d0ce8caa851be19",
+            "6585332d7badbb7591ae5d2e7bf11a52dab7e1e4d90cdeb5a2963a5dcac5abd3"
+          ],
+          [
+            "0bbcc949df9de34c377602f0abf1cfaa90c71428ba2db7b917e92228cb3ac08c",
+            "8bfc1989af07da475c52c89ecf92a3a008c00e4951fc9324bd1a063e79e0bffe"
+          ]
+        ],
+        "original_unit_indices": [
+          4,
+          5
+        ],
+        "paragraph_index": 4,
+        "replace_spans": [
+          {
+            "new": [
+              323,
+              429
+            ],
+            "old": [
+              323,
+              403
+            ]
+          }
+        ],
+        "slot": 4,
+        "unit_indices": [
+          4,
+          5
+        ]
+      },
+      {
+        "new_span": [
+          1268,
+          1386
+        ],
+        "new_unit_hashes": [
+          [
+            "a7316e9d623a961874e45da68dfa6278553f19cf9b15bb85debac1e7dc6c42fa",
+            "39879b7008837428eb7892c56ef45ee4f42fba14430e0dbcab066d12c62ef71d"
+          ]
+        ],
+        "old_span": [
+          1242,
+          1348
+        ],
+        "old_unit_hashes": [
+          [
+            "c378d46baf5424181380ad7eeec97d6d189f4457d2c34d9a662979f2c00d61f0",
+            "145de3262c19ba1dfd8c7c4f79c387b7600eb62a6d1f891c25133c91dbdc7099"
+          ]
+        ],
+        "original_unit_indices": [
+          17
+        ],
+        "paragraph_index": 13,
+        "replace_spans": [
+          {
+            "new": [
+              1305,
+              1386
+            ],
+            "old": [
+              1279,
+              1348
+            ]
+          }
+        ],
+        "slot": 17,
+        "unit_indices": [
+          17
+        ]
+      },
+      {
+        "new_span": [
+          1635,
+          1780
+        ],
+        "new_unit_hashes": [
+          [
+            "9a6e8a18a69e561839c602bebb31ebb5deb2419938c2a507e480300c2df24509",
+            "b4b2ea9714b9e1445c41dd34f69ca67290ad30278fe0cca402a9413e852d85ec"
+          ]
+        ],
+        "old_span": [
+          1597,
+          1730
+        ],
+        "old_unit_hashes": [
+          [
+            "d399c4c5e14e4c9dd0c8856e5a1838da0aa1191886408d2a1305e8371ce8b906",
+            "50d6d149417bb86365957d1aabb25d0d2cea8d80b4599428b0978c88ce73585e"
+          ]
+        ],
+        "original_unit_indices": [
+          20
+        ],
+        "paragraph_index": 15,
+        "replace_spans": [
+          {
+            "new": [
+              1742,
+              1780
+            ],
+            "old": [
+              1704,
+              1730
+            ]
+          }
+        ],
+        "slot": 20,
+        "unit_indices": [
+          20
+        ]
+      },
+      {
+        "new_span": [
+          3713,
+          3842
+        ],
+        "new_unit_hashes": [
+          [
+            "d8b5e733721eea8b59b926c7d1ce3e4a3730a6fbb4984ebdb40ad03bcd4aefbc",
+            "9d29227122636eaf1e9e663a44aed43b50c044e8f447cf48e207788dcfbe2602"
+          ]
+        ],
+        "old_span": [
+          3663,
+          3786
+        ],
+        "old_unit_hashes": [
+          [
+            "6ceff3a3914b6ec4bf64545cfa6fa6116868d2ab840a3b4ea76c33ffbf73d143",
+            "e44ce1dcdef0fe00648684d71f84fcdf85c6b8251b582971484de39af6d995a1"
+          ]
+        ],
+        "original_unit_indices": [
+          42
+        ],
+        "paragraph_index": 34,
+        "replace_spans": [
+          {
+            "new": [
+              3786,
+              3842
+            ],
+            "old": [
+              3736,
+              3786
+            ]
+          }
+        ],
+        "slot": 42,
+        "unit_indices": [
+          42
+        ]
+      },
+      {
+        "new_span": [
+          5589,
+          5720
+        ],
+        "new_unit_hashes": [
+          [
+            "5b61d98c58e847d9f949971772612222e3489e77c4ebefc953b9dcc1e0fc071a",
+            "e20709ee13d1b590d3cb1f73aa689f0625095df647c778b4348e80f1a159ec4e"
+          ]
+        ],
+        "old_span": [
+          5533,
+          5658
+        ],
+        "old_unit_hashes": [
+          [
+            "4dc5f7db006c45886e99b9924637c76887ef7dcf22b712b2a4c0d7a018f3bb2d",
+            "5247112e4f8f46a9d3b83aafb2ad1573284c1a2692e3643b96f6b4cf72783036"
+          ]
+        ],
+        "original_unit_indices": [
+          64
+        ],
+        "paragraph_index": 52,
+        "replace_spans": [
+          {
+            "new": [
+              5609,
+              5650
+            ],
+            "old": [
+              5553,
+              5588
+            ]
+          }
+        ],
+        "slot": 64,
+        "unit_indices": [
+          64
+        ]
+      },
+      {
+        "new_span": [
+          6015,
+          6185
+        ],
+        "new_unit_hashes": [
+          [
+            "ee85bcd940b17fb2327174baaa8e6eeba2858e81c46cfcd846f222e9f3492045",
+            "7a66f06c7b4a09f9f23a9d20b0e19c8a19f751ddea14df1699598fb5099f5e0c"
+          ]
+        ],
+        "old_span": [
+          5953,
+          6088
+        ],
+        "old_unit_hashes": [
+          [
+            "19a51a240f8cb2b8bf1b99f23cf5b2614356023bd949953d1037a9ff626bc82a",
+            "ab359522a01ee7f0f89d63272d9a92ad10ecc81275b0106f3a18abac28e03758"
+          ]
+        ],
+        "original_unit_indices": [
+          68
+        ],
+        "paragraph_index": 56,
+        "replace_spans": [
+          {
+            "new": [
+              6124,
+              6185
+            ],
+            "old": [
+              6062,
+              6088
+            ]
+          }
+        ],
+        "slot": 68,
+        "unit_indices": [
+          68
+        ]
+      },
+      {
+        "new_span": [
+          6304,
+          6450
+        ],
+        "new_unit_hashes": [
+          [
+            "30694aec5c5fe8f6b811727c57f6631340ca9e1a6d6ae1744ecd107d32c07627",
+            "5ab59d8805cdcf8e8bc5053342e3e20e53e440302343c6aa354a4156184d1794"
+          ]
+        ],
+        "old_span": [
+          6207,
+          6335
+        ],
+        "old_unit_hashes": [
+          [
+            "b8735291e72bfef76e89c763a56eff6dd8f06701cc3bc075f38230389c585767",
+            "1db2a7a1dc5c9adad30b49b869cbf8a25e5ed73c0e1d80c7e5e33f76c5c365e8"
+          ]
+        ],
+        "original_unit_indices": [
+          70
+        ],
+        "paragraph_index": 58,
+        "replace_spans": [
+          {
+            "new": [
+              6326,
+              6419
+            ],
+            "old": [
+              6229,
+              6304
+            ]
+          }
+        ],
+        "slot": 70,
+        "unit_indices": [
+          70
+        ]
+      },
+      {
+        "new_span": [
+          6560,
+          6714
+        ],
+        "new_unit_hashes": [
+          [
+            "c59d1c65ff26d563f26ea7d092ad8e7a1123de1b181b1ae33a5155a502b6957c",
+            "b3153192f0ade8e724bb06bd5c52a2cc5987e79bd3fcdbd26ea3e01214b8ab62"
+          ]
+        ],
+        "old_span": [
+          6445,
+          6603
+        ],
+        "old_unit_hashes": [
+          [
+            "34cb50eaafe4e05c0c6f9d8f9d991a572bc5930bae20ffb306d7fc601d77de03",
+            "289a76dd7ed34dcc6adbc09cecabef22cd40789326e8f8141babdf1af3eb6691"
+          ]
+        ],
+        "original_unit_indices": [
+          73
+        ],
+        "paragraph_index": 60,
+        "replace_spans": [
+          {
+            "new": [
+              6604,
+              6641
+            ],
+            "old": [
+              6489,
+              6530
+            ]
+          }
+        ],
+        "slot": 73,
+        "unit_indices": [
+          73
+        ]
+      },
+      {
+        "new_span": [
+          6898,
+          7054
+        ],
+        "new_unit_hashes": [
+          [
+            "986b60dd54053902667f17095418e55070d5b6c9425b860f73b04bb58981cef5",
+            "44dba58447142e10062ebc1aab1fab0e1791da9b35e048300f4ef2f2968c8fc6"
+          ]
+        ],
+        "old_span": [
+          6787,
+          6903
+        ],
+        "old_unit_hashes": [
+          [
+            "1cd872d4bbfc261c95c239bf458b4b66e586ea56cf5baaa90310a6561845ed69",
+            "b0537bb682ba87ca488b7475501fe21596b952bee64be8b278ce812fa6431328"
+          ]
+        ],
+        "original_unit_indices": [
+          77
+        ],
+        "paragraph_index": 63,
+        "replace_spans": [
+          {
+            "new": [
+              6946,
+              7017
+            ],
+            "old": [
+              6835,
+              6866
+            ]
+          }
+        ],
+        "slot": 77,
+        "unit_indices": [
+          77
+        ]
+      },
+      {
+        "new_span": [
+          7249,
+          7325
+        ],
+        "new_unit_hashes": [
+          [
+            "f08feecf7cc1b0dee0ed8c627adf43bb6ead9f2771925cde837545d57556a439",
+            "178e66ebe91f7255ab4b4ada20029155de21717fe1abe9ea4184046fcf319f26"
+          ]
+        ],
+        "old_span": [
+          7098,
+          7154
+        ],
+        "old_unit_hashes": [
+          [
+            "01dfeb36ca639c44fae72f242e41a555983b093206ca615343bed12bf22c6ee9",
+            "39eae7cad46f97a511c4f71f460a07475ec22ac546ba295e2779263cad3c3d13"
+          ]
+        ],
+        "original_unit_indices": [
+          81
+        ],
+        "paragraph_index": 65,
+        "replace_spans": [
+          {
+            "new": [
+              7277,
+              7325
+            ],
+            "old": [
+              7126,
+              7154
+            ]
+          }
+        ],
+        "slot": 81,
+        "unit_indices": [
+          81
+        ]
+      },
+      {
+        "new_span": [
+          7570,
+          7715
+        ],
+        "new_unit_hashes": [
+          [
+            "4b6d6a713cdf0b69414c72187d3821cb0e20cb2fb2dfcd45b72ebda057419642",
+            "7183db357d2076a0969eed85514897fe392cb3493a3d07031bef8d0e5851c31d"
+          ]
+        ],
+        "old_span": [
+          7399,
+          7533
+        ],
+        "old_unit_hashes": [
+          [
+            "063a6144d3f21aa71683b1294a275c8afc06fe441039dae8f187157cbb66332a",
+            "e8e09d6d23af12055bf7bb5cf83652034b92cdede01fd1a080b195cf85701a0a"
+          ]
+        ],
+        "original_unit_indices": [
+          85
+        ],
+        "paragraph_index": 68,
+        "replace_spans": [
+          {
+            "new": [
+              7635,
+              7683
+            ],
+            "old": [
+              7464,
+              7501
+            ]
+          }
+        ],
+        "slot": 85,
+        "unit_indices": [
+          85
+        ]
+      },
+      {
+        "new_span": [
+          8233,
+          8329
+        ],
+        "new_unit_hashes": [
+          [
+            "a3377b72cd06b6beeddfa57a6b8ef529b44e5082bb0a2afc71b9de545cf64891",
+            "a51ec6c724b007d350e2a3dec812a1268ed920c7dc4cf255feb56b2282f91289"
+          ]
+        ],
+        "old_span": [
+          8051,
+          8142
+        ],
+        "old_unit_hashes": [
+          [
+            "0823cc0a0e49e08f0ed339b2316c3e24aa99c2abf91e2d58ea98e04454e4e2a0",
+            "889570494b2524a8fadace0d5eda92b5cdadb99bab43522f0aa53f846ed14d2d"
+          ]
+        ],
+        "original_unit_indices": [
+          96
+        ],
+        "paragraph_index": 72,
+        "replace_spans": [
+          {
+            "new": [
+              8233,
+              8277
+            ],
+            "old": [
+              8051,
+              8090
+            ]
+          }
+        ],
+        "slot": 96,
+        "unit_indices": [
+          96
+        ]
+      },
+      {
+        "new_span": [
+          8479,
+          8560
+        ],
+        "new_unit_hashes": [
+          [
+            "8e2b8a9cd6652119bc115ddcb14ac7aa171e6dca50f2925c22ebddac6e85eeee",
+            "07f03b27d84d860e27f3639120afb02155d2eb547271462ac7aab27b7c9c6988"
+          ]
+        ],
+        "old_span": [
+          8292,
+          8351
+        ],
+        "old_unit_hashes": [
+          [
+            "200e8a99232b48b9a0a8da369c4db832331ae91f32515b7f6ba98899c486473c",
+            "308c51f0ba889f8377ec2ff01b531af57e54a0babbc1e7aa535778b500577f4e"
+          ]
+        ],
+        "original_unit_indices": [
+          100
+        ],
+        "paragraph_index": 72,
+        "replace_spans": [
+          {
+            "new": [
+              8479,
+              8548
+            ],
+            "old": [
+              8292,
+              8339
+            ]
+          }
+        ],
+        "slot": 100,
+        "unit_indices": [
+          100
+        ]
+      },
+      {
+        "new_span": [
+          8562,
+          8733
+        ],
+        "new_unit_hashes": [
+          [
+            "3ac7fa22f620d4c101f74dfe86979d9f1766ab97abbc1bee75b8216a9a949aa3",
+            "d5852f1e4758e32c847ac66f1cd0b807be37593d02596294e239413ce45e7f55"
+          ]
+        ],
+        "old_span": [
+          8353,
+          8492
+        ],
+        "old_unit_hashes": [
+          [
+            "c2a678530e9f1f3b0df33d2f25d9c488f8603ccf41bb8108a4c747ca3323cc6c",
+            "17a65cee7718167eb60b8c6dea9b46ba53f3e9fbd6c41f52289a20161d73442a"
+          ]
+        ],
+        "original_unit_indices": [
+          101
+        ],
+        "paragraph_index": 73,
+        "replace_spans": [
+          {
+            "new": [
+              8628,
+              8733
+            ],
+            "old": [
+              8419,
+              8492
+            ]
+          }
+        ],
+        "slot": 101,
+        "unit_indices": [
+          101
+        ]
+      }
+    ],
+    "new_count": 104,
+    "original_count": 104,
+    "original_source_sha256": "16253b8ca9adec816f0029e6d9db649dc68dfc19fe6fcf31efeb25d13a0fe239",
+    "source_sha256": "ed509a1fce90d3bd823c316151761450c50ad4ca94b480407c337c24bfc20214"
+  }
+}
