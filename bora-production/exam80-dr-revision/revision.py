@@ -26,7 +26,13 @@ SOURCE_FILES = {
                '53853f6a740b3db05a5124ba0c48b36176ceced7fd5782fa7866c57a545542e9'),
     'DR-054': ('6f6f0f9c09fd32b4b1900fcbbdf11f59bfa886880e420b6bf54e31812b8d7e5a',
                '2cb376a69315e5d79688770c922be8b840325baa3fb4ee14a9ec0cd0868ce031'),
+    'DR-038': ('cd2b20afe540b780582a9087bf6877800c5c477b88e68a32daa03856645659c0',
+               '6cf7c384362c909a4ff0e48fae50e17382cef4689695de2379e386e84bd77ec0'),
+    'DR-047': ('94949b3e77ac8c4986587005d5d809099f8b2acd0fb94c7fd7b341e311690404',
+               '5d8eb9a58356938246059659e31f42ea48d9339858d2f8d5ec53648e5541668e'),
 }
+BATCH2_COMMITS = {'DR-038': 'f543f423a92843a7e47b5dfeab9c428d0553716f',
+                  'DR-047': '6ed18c9353a023b7b5287867a3ccefeef0c583a8'}
 
 
 class RevisionError(Exception):
@@ -111,11 +117,19 @@ def run(args):
     require(runtime.identity(recipe) == RECIPE and ident in eligible and request['course'] == 'DR',
             'original_campaign_authorization')
     env_hash, audio_hash = SOURCE_FILES[ident]
-    trigger = runtime.read_json(Path(__file__).with_name('request.json'))
-    require(trigger == {'schema': 'exam80-directive-private-corrections/v1',
-                        'lessons': ['DR-052','DR-054'], 'engine_commit': ENGINE,
-                        'private_source_commit': SOURCE_COMMIT}, 'revision_request_scope')
-    envelope_file = Path(__file__).with_name(ident + '.sealed.json')
+    folder = Path(__file__).resolve().parent
+    trigger_fields = dict(schema='exam80-directive-private-corrections/v1', engine_commit=ENGINE)
+    if ident in BATCH2_COMMITS:
+        from batch2 import corrected_plan as plan_scope, old_media as media_scope
+        folder = folder / 'batch2'
+        source_commit = BATCH2_COMMITS[ident]
+        trigger_fields.update(lessons=list(BATCH2_COMMITS), private_source_commits=BATCH2_COMMITS)
+    else:
+        plan_scope, media_scope = corrected_plan, old_media
+        source_commit = SOURCE_COMMIT
+        trigger_fields.update(lessons=['DR-052','DR-054'], private_source_commit=SOURCE_COMMIT)
+    require(runtime.read_json(folder / 'request.json') == trigger_fields, 'revision_request_scope')
+    envelope_file = folder / (ident + '.sealed.json')
     require(runtime.sha(envelope_file.read_bytes()) == env_hash, 'revised_envelope_pin')
     envelope = runtime.read_json(envelope_file)
     source_key, media_key = runtime.protected_keys(media=True, profile='single_pass')
@@ -127,8 +141,8 @@ def run(args):
         del source_key
         source = raw.decode('utf-8', errors='strict')
         plan = runtime.course_pronunciation('single_pass', 'DR').apply_to_plan(planning.build_plan(ident, source))
-        selected = corrected_plan.select(plan, old_plan['source'], source, ident)
-        old_receipt = old_media.open_receipt(args.transport / 'bora-production', args.old_media, ident, media_key)
+        selected = plan_scope.select(plan, old_plan['source'], source, ident)
+        old_receipt = media_scope.open_receipt(args.transport / 'bora-production', args.old_media, ident, media_key)
         require(old_receipt['lesson_id'] == ident and old_receipt['recipe_sha256'] == RECIPE
                 and old_receipt['render_settings_sha256'] == SETTINGS, 'original_media_receipt')
         signal.signal(signal.SIGALRM, runtime.alarm)
@@ -139,13 +153,16 @@ def run(args):
                 require(renderer.settings_sha256 == SETTINGS, 'renderer_identity')
                 segments = []
                 for row in selected:
-                    segments.append(render_paragraph(runtime, assemble, renderer, work, row, recipe, repair))
+                    segment = render_paragraph(runtime, assemble, renderer, work, row, recipe, repair)
+                    if ident in BATCH2_COMMITS:
+                        segment.update(plan_scope.extra(ident, row[0]))
+                    segments.append(segment)
                     print(ident, 'verified paragraphs', len(segments), 'of', len(selected), file=progress)
             finally:
                 runtime.close_renderer(renderer)
             index = dict(schema='exam80-dr-correction-audio/v1', lesson_id=ident,
-                         private_source_commit=SOURCE_COMMIT, engine_commit=ENGINE, transport_commit=TRANSPORT,
-                         source_sha256=plan['source_sha256'], original_source_sha256=corrected_plan.PINS[ident][0],
+                         private_source_commit=source_commit, engine_commit=ENGINE, transport_commit=TRANSPORT,
+                         source_sha256=plan['source_sha256'], original_source_sha256=plan_scope.PINS[ident][0],
                          original_audio_sha256=audio_hash, recipe_sha256=RECIPE, render_settings_sha256=SETTINGS,
                          original_receipt=old_receipt, segments=segments, asr_performed=False)
             buffer = io.BytesIO()

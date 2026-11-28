@@ -1,0 +1,12 @@
+{
+  "engine_commit": "db2081bf68cdc3e4cd6a73a3a719b68f58cb675f",
+  "lessons": [
+    "DR-038",
+    "DR-047"
+  ],
+  "private_source_commits": {
+    "DR-038": "f543f423a92843a7e47b5dfeab9c428d0553716f",
+    "DR-047": "6ed18c9353a023b7b5287867a3ccefeef0c583a8"
+  },
+  "schema": "exam80-directive-private-corrections/v1"
+}
