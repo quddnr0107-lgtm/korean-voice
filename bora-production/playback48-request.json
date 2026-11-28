@@ -82,5 +82,5 @@
     "TB-022",
     "TB-023"
   ],
-  "retry": "observe-core-quota-and-respect-reset"
+  "retry": "honor-reset-on-release-endpoint"
 }
