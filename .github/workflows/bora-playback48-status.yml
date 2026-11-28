@@ -1,0 +1,29 @@
+name: Read Bora playback transport status
+on:
+  push:
+    branches: [integrated-lectures-premium-20261028]
+    paths: [.github/workflows/bora-playback48-status.yml]
+permissions:
+  contents: read
+jobs:
+  status:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Read one known release and classify any GitHub response
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          import json,os,time
+          from urllib.request import Request,urlopen
+          from urllib.error import HTTPError
+          for path in ['rate_limit','repos/quddnr0107-lgtm/korean-voice/releases/461224961']:
+              req=Request('https://api.github.com/'+path,headers={'User-Agent':'bora-packaging-status','Authorization':'Bearer '+os.environ['GH_TOKEN']})
+              try:
+                  with urlopen(req,timeout=30) as res:
+                      print(path,res.status,res.headers.get('X-RateLimit-Remaining'),res.headers.get('X-RateLimit-Reset'),flush=True)
+              except HTTPError as err:
+                  obj=json.loads(err.read(4096));message=str(obj.get('message','')).lower()
+                  known=('secondary rate limit','api rate limit exceeded','resource not accessible','not found','abuse detection','rate limit','temporarily blocked')
+                  print('read status',err.code,'reason',next((x for x in known if x in message),'other'),'retry-after',err.headers.get('Retry-After'),'remaining',err.headers.get('X-RateLimit-Remaining'),'reset',err.headers.get('X-RateLimit-Reset'),flush=True)
+          PY
