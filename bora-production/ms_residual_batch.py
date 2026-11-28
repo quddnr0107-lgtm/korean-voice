@@ -12,6 +12,7 @@ IDS = ['MS-005','MS-006','MS-021','MS-022','MS-028','MS-031','MS-053','MS-054','
 PRIVATE_REQUEST_ID = 'ms-original-private-final15-20261127'
 CURRENT_MS094_REQUEST = 'ms-private-original-094-current-script-20261127'
 RECOVER_054_094 = 'ms-original-private-recover-054-094-20261127'
+PLAYBACK_TIMINGS = 'ms-private-playback-timings-20261128'
 PRIVATE_IDS = [ident for ident in IDS if ident not in ('MS-022', 'MS-053')]
 WORKERS = 17
 RECIPE = 'd3d35666712d276c0fa60bb5c5b1f7ab7d11c7042d490c95bb6fb8846682502d'
@@ -38,12 +39,12 @@ def identity(value):
 
 
 def enabled(request, profile):
-    return profile == 'single_pass' and request.get('request_id') in (REQUEST_ID, PRIVATE_REQUEST_ID, CURRENT_MS094_REQUEST, RECOVER_054_094)
+    return profile == 'single_pass' and request.get('request_id') in (REQUEST_ID, PRIVATE_REQUEST_ID, CURRENT_MS094_REQUEST, RECOVER_054_094, PLAYBACK_TIMINGS)
 
 
 def validate_request_scope(request):
     request_id = request.get('request_id')
-    if request_id not in (REQUEST_ID, PRIVATE_REQUEST_ID, CURRENT_MS094_REQUEST, RECOVER_054_094):
+    if request_id not in (REQUEST_ID, PRIVATE_REQUEST_ID, CURRENT_MS094_REQUEST, RECOVER_054_094, PLAYBACK_TIMINGS):
         return
     expected = dict(schema='bora-fp32-request/v1',
         campaign_sha256='60e9763ab344e8a59264ec634a47ee60321667bc426108100f2973a04cfdca76',
@@ -53,6 +54,9 @@ def validate_request_scope(request):
                     PRIVATE_IDS if request_id == PRIVATE_REQUEST_ID else IDS),
         render_workers=(6 if request_id == CURRENT_MS094_REQUEST else
                         40 if request_id == PRIVATE_REQUEST_ID else WORKERS))
+    if request_id == PLAYBACK_TIMINGS:
+        del expected['render_workers']
+        expected.update(lesson_ids=['MS-018', 'MS-022', 'MS-053'], assembly_only=True, checkpoint_settings_sha256=SETTINGS)
     if request_id == RECOVER_054_094:
         expected.update(lesson_ids=['MS-054', 'MS-094'], render_workers=7)
     if request_id == CURRENT_MS094_REQUEST and request.get('assembly_only') is True:

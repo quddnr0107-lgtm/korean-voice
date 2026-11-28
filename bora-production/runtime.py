@@ -227,6 +227,8 @@ def course_plan(ident, campaign, source_key, profile):
 
 
 def requested_course_plan(ident, campaign, key, profile, request):
+    if request.get('request_id') == residual.PLAYBACK_TIMINGS and ident == ms018_recovery.LESSON:
+        return course_plan(ident, campaign, key, profile)
     if not residual.enabled(request, profile):
         return course_plan(ident, campaign, key, profile)
     check(ident in residual.IDS, 'residual_lesson_scope')
@@ -832,7 +834,9 @@ def assemble(args, profile='eager'):
             for index, row in candidates.items():
                 if index not in restored or restored[index]['receipt'].get('status') != 'passed':
                     restored[index] = row
-        if ms018_recovery.enabled(request, profile):
+        recover_018 = ms018_recovery.enabled(request, profile) or (
+            request.get('request_id') == residual.PLAYBACK_TIMINGS and args.lesson_id == ms018_recovery.LESSON)
+        if recover_018:
             check(alternate_settings is None and not diagnose, 'ms018_recovery_assembly_scope')
             restored, repair_settings = ms018_rows(args.resume_dir, media_key, plan,
                 recipe_hash, settings_hash, work / 'seed-recovery')
@@ -853,7 +857,7 @@ def assemble(args, profile='eager'):
         assembly_policy = {'profile': profile} if profile == 'single_pass' else {}
         if alternate_settings is not None:
             assembly_policy['compatible_settings_sha256'] = alternate_settings
-        if ms018_recovery.enabled(request, profile):
+        if recover_018:
             assembly_policy['ms018_seed_recovery'] = True
         if residual.enabled(request, profile) and args.lesson_id == residual.MS022:
             assembly_policy['ms022_seed_recovery'] = True

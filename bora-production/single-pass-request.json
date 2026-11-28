@@ -6,9 +6,11 @@
   "execution_profile": "bora-python-fp32-single-pass/v1",
   "execution_shard_chars": 4000,
   "lesson_ids": [
-    "MS-094"
+    "MS-018",
+    "MS-022",
+    "MS-053"
   ],
-  "request_id": "ms-private-original-094-current-script-20261127",
+  "request_id": "ms-private-playback-timings-20261128",
   "retry_blocked": false,
   "schema": "bora-fp32-request/v1"
 }
